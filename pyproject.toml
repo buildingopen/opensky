@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "skyroute"
+version = "0.1.0"
+description = "Flight search with conflict zone filtering"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Federico De Ponte" },
+]
+keywords = ["flights", "travel", "safety", "conflict-zones", "google-flights"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Internet",
+]
+dependencies = [
+    "curl-cffi>=0.7",
+    "typer>=0.15",
+    "rich>=13.0",
+    "pydantic>=2.10",
+    "airportsdata>=20240101",
+    "diskcache>=5.6",
+    "ratelimit>=2.2",
+]
+
+[project.scripts]
+skyroute = "skyroute.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/federicodeponte/skyroute"
+Repository = "https://github.com/federicodeponte/skyroute"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/skyroute"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

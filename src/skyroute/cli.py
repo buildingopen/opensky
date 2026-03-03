@@ -1,0 +1,279 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Annotated, Optional
+
+import typer
+from rich.console import Console
+
+from skyroute import __version__
+
+app = typer.Typer(
+    name="skyroute",
+    help="Flight search with conflict zone filtering.",
+    no_args_is_help=True,
+)
+console = Console()
+
+
+def version_callback(value: bool) -> None:
+    if value:
+        console.print(f"skyroute {__version__}")
+        raise typer.Exit()
+
+
+@app.callback()
+def main(
+    version: Annotated[
+        Optional[bool],
+        typer.Option("--version", "-v", callback=version_callback, is_eager=True),
+    ] = None,
+) -> None:
+    pass
+
+
+@app.command()
+def search(
+    origin: Annotated[str, typer.Argument(help="Origin airport IATA code")],
+    destination: Annotated[str, typer.Argument(help="Destination airport IATA code")],
+    date: Annotated[str, typer.Argument(help="Travel date (YYYY-MM-DD)")],
+    currency: Annotated[str, typer.Option("--currency", "-c")] = "EUR",
+    cabin: Annotated[str, typer.Option("--cabin")] = "economy",
+    stops: Annotated[str, typer.Option("--stops")] = "any",
+    show_risky: Annotated[bool, typer.Option("--show-risky")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+    csv_output: Annotated[bool, typer.Option("--csv")] = False,
+    no_cache: Annotated[bool, typer.Option("--no-cache")] = False,
+    proxy: Annotated[Optional[str], typer.Option("--proxy")] = None,
+    output: Annotated[Optional[str], typer.Option("--output", "-o", help="Save results to file")] = None,
+) -> None:
+    """Search flights for a single route."""
+    from datetime import date as date_cls
+
+    from skyroute import display
+    from skyroute.models import RiskLevel
+    from skyroute.safety import zones_age_warning
+    from skyroute.search import SearchEngine
+
+    origin = origin.upper()
+    destination = destination.upper()
+
+    # Validate date early with a clear message
+    try:
+        d = date_cls.fromisoformat(date)
+        if d < date_cls.today():
+            console.print(f"[red]Date {date} is in the past.[/red]")
+            raise typer.Exit(1)
+    except ValueError:
+        console.print(f"[red]Invalid date format: {date}. Use YYYY-MM-DD.[/red]")
+        raise typer.Exit(1)
+
+    warning = zones_age_warning()
+    if warning:
+        console.print(f"[yellow]{warning}[/yellow]")
+
+    engine = SearchEngine(
+        currency=currency,
+        proxy=proxy,
+        use_cache=not no_cache,
+        seat=cabin,
+        stops=stops,
+    )
+
+    # When showing risky flights, don't filter at engine level (use None).
+    # Otherwise, filter at HIGH_RISK threshold.
+    threshold = None if show_risky else RiskLevel.HIGH_RISK
+
+    try:
+        results = engine.search_scored(
+            origin, destination, date,
+            risk_threshold=threshold,
+        )
+    except Exception as e:
+        console.print(f"[red]Search failed: {e}[/red]")
+        raise typer.Exit(1)
+    finally:
+        engine.close()
+
+    if not results:
+        console.print("[dim]No flights found.[/dim]")
+        raise typer.Exit()
+
+    results.sort(key=lambda x: x.score)
+
+    if json_output:
+        text = display.flights_json(results)
+        if output:
+            Path(output).write_text(text)
+            console.print(f"Saved to {output}")
+        else:
+            print(text)
+    elif csv_output:
+        text = display.flights_csv(results)
+        if output:
+            Path(output).write_text(text)
+            console.print(f"Saved to {output}")
+        else:
+            print(text)
+    else:
+        display.flights_table(results, title="Flight Results")
+        if output:
+            text = display.flights_json(results)
+            Path(output).write_text(text)
+            console.print(f"Saved to {output}")
+
+
+@app.command()
+def scan(
+    config_path: Annotated[str, typer.Option("--config", "-f", help="TOML config file")],
+    workers: Annotated[int, typer.Option("--workers", "-w")] = 3,
+    delay: Annotated[float, typer.Option("--delay")] = 1.0,
+    show_risky: Annotated[bool, typer.Option("--show-risky")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+    csv_output: Annotated[bool, typer.Option("--csv")] = False,
+    no_cache: Annotated[bool, typer.Option("--no-cache")] = False,
+    proxy: Annotated[Optional[str], typer.Option("--proxy")] = None,
+    output: Annotated[Optional[str], typer.Option("--output", "-o", help="Save results to file")] = None,
+) -> None:
+    """Run exhaustive multi-route scan from a TOML config."""
+    from skyroute import display
+    from skyroute.config import load_config
+    from skyroute.models import RiskLevel
+    from skyroute.safety import zones_age_warning
+    from skyroute.search import SearchEngine
+
+    warning = zones_age_warning()
+    if warning:
+        console.print(f"[yellow]{warning}[/yellow]")
+
+    cfg = load_config(config_path)
+
+    dates = cfg.search.date_range.dates()
+    total = len(cfg.search.origins) * len(cfg.search.destinations) * len(dates)
+    console.print(
+        f"Scanning {len(cfg.search.origins)} origins x "
+        f"{len(cfg.search.destinations)} destinations x "
+        f"{len(dates)} dates = {total} combos"
+    )
+
+    engine = SearchEngine(
+        currency=cfg.search.currency,
+        proxy=proxy,
+        use_cache=not no_cache,
+        seat=cfg.search.cabin,
+        stops=cfg.search.stops,
+    )
+
+    progress = display.scan_progress()
+    with progress:
+        task = progress.add_task("Scanning", total=total, errors=0)
+
+        def on_progress(completed: int, total: int, errors: int) -> None:
+            progress.update(task, completed=completed, errors=errors)
+
+        scan_kwargs = {}
+        if show_risky:
+            scan_kwargs["risk_threshold_override"] = None
+
+        try:
+            results = engine.scan(
+                cfg,
+                workers=workers,
+                delay=delay,
+                on_progress=on_progress,
+                **scan_kwargs,
+            )
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Scan interrupted. Cached results preserved for resume.[/yellow]")
+            raise typer.Exit(1)
+        finally:
+            engine.close()
+
+    if json_output:
+        text = display.flights_json(results)
+        if output:
+            Path(output).write_text(text)
+            console.print(f"Saved to {output}")
+        else:
+            print(text)
+    elif csv_output:
+        text = display.flights_csv(results)
+        if output:
+            Path(output).write_text(text)
+            console.print(f"Saved to {output}")
+        else:
+            print(text)
+    else:
+        display.flights_table(
+            results,
+            title=f"Scan Results ({len(results)} flights)",
+        )
+
+        if output:
+            text = display.flights_json(results)
+            Path(output).write_text(text)
+            console.print(f"Saved to {output}")
+
+
+@app.command()
+def zones(
+    update: Annotated[bool, typer.Option("--update", help="Fetch latest conflict zone data")] = False,
+) -> None:
+    """Display active conflict zones."""
+    from skyroute import display
+    from skyroute.safety import load_zones, save_cached_zones
+
+    if update:
+        import urllib.request
+
+        url = "https://raw.githubusercontent.com/federicodeponte/skyroute/main/src/skyroute/data/conflict_zones.json"
+        console.print(f"Fetching from {url}...")
+        try:
+            with urllib.request.urlopen(url, timeout=10) as resp:
+                data = resp.read().decode()
+            save_cached_zones(data)
+            console.print("[green]Conflict zone data updated.[/green]")
+        except Exception as e:
+            console.print(f"[red]Update failed: {e}[/red]")
+            console.print("Using bundled data instead.")
+
+    zone_list = load_zones(force_bundled=not update)
+    display.zones_table(zone_list)
+
+
+@app.command(name="cache")
+def cache_cmd(
+    action: Annotated[str, typer.Argument(help="Action: clear | stats")] = "stats",
+) -> None:
+    """Manage the search cache."""
+    from skyroute import cache as cache_mod
+
+    if action == "clear":
+        cache_mod.clear()
+        console.print("Cache cleared.")
+    elif action == "stats":
+        s = cache_mod.stats()
+        console.print(f"Entries: {s['size']}")
+        console.print(f"Directory: {s['directory']}")
+        console.print(f"Size: {s['volume'] / 1024:.1f} KB")
+    else:
+        console.print(f"[red]Unknown action: {action}. Use 'clear' or 'stats'.[/red]")
+
+
+@app.command(name="config")
+def config_cmd(
+    action: Annotated[str, typer.Argument(help="Action: init")] = "init",
+    output: Annotated[str, typer.Option("--output", "-o")] = "scan.toml",
+) -> None:
+    """Generate example config files."""
+    from skyroute.config import EXAMPLE_CONFIG
+
+    if action == "init":
+        p = Path(output)
+        if p.exists():
+            console.print(f"[yellow]{output} already exists. Overwrite? (use -o to specify different path)[/yellow]")
+            raise typer.Exit(1)
+        p.write_text(EXAMPLE_CONFIG)
+        console.print(f"Created {output}")
+    else:
+        console.print(f"[red]Unknown action: {action}. Use 'init'.[/red]")
