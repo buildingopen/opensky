@@ -16,6 +16,16 @@ app = typer.Typer(
 console = Console()
 
 
+VALID_PROVIDERS = ("google", "duffel", "amadeus")
+
+
+def _validate_provider(provider: str | None) -> None:
+    if provider is not None and provider not in VALID_PROVIDERS:
+        console.print(f"[red]Unknown provider: {provider}. Choose from: {', '.join(VALID_PROVIDERS)}.[/red]")
+        console.print("[dim]Env vars: SKYROUTE_DUFFEL_TOKEN, SKYROUTE_AMADEUS_KEY + SKYROUTE_AMADEUS_SECRET[/dim]")
+        raise typer.Exit(1)
+
+
 def version_callback(value: bool) -> None:
     if value:
         console.print(f"skyroute {__version__}")
@@ -38,13 +48,15 @@ def search(
     destination: Annotated[str, typer.Argument(help="Destination airport IATA code")],
     date: Annotated[str, typer.Argument(help="Travel date (YYYY-MM-DD)")],
     currency: Annotated[str, typer.Option("--currency", "-c")] = "EUR",
-    cabin: Annotated[str, typer.Option("--cabin")] = "economy",
-    stops: Annotated[str, typer.Option("--stops")] = "any",
+    cabin: Annotated[str, typer.Option("--cabin", help="Cabin class: economy, premium_economy, business, first")] = "economy",
+    stops: Annotated[str, typer.Option("--stops", help="Stop filter: any, non_stop, one_stop_or_fewer, two_or_fewer_stops")] = "any",
+    max_price: Annotated[float, typer.Option("--max-price", help="Max price filter (0 = no limit)")] = 0,
     show_risky: Annotated[bool, typer.Option("--show-risky")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
     csv_output: Annotated[bool, typer.Option("--csv")] = False,
     no_cache: Annotated[bool, typer.Option("--no-cache")] = False,
     proxy: Annotated[Optional[str], typer.Option("--proxy")] = None,
+    provider: Annotated[Optional[str], typer.Option("--provider", "-p", help="Provider: google (default), duffel (SKYROUTE_DUFFEL_TOKEN), amadeus (SKYROUTE_AMADEUS_KEY + _SECRET)")] = None,
     output: Annotated[Optional[str], typer.Option("--output", "-o", help="Save results to file")] = None,
 ) -> None:
     """Search flights for a single route."""
@@ -68,26 +80,34 @@ def search(
         console.print(f"[red]Invalid date format: {date}. Use YYYY-MM-DD.[/red]")
         raise typer.Exit(1)
 
+    _validate_provider(provider)
+
     warning = zones_age_warning()
     if warning:
         console.print(f"[yellow]{warning}[/yellow]")
 
-    engine = SearchEngine(
-        currency=currency,
-        proxy=proxy,
-        use_cache=not no_cache,
-        seat=cabin,
-        stops=stops,
-    )
-
-    # When showing risky flights, don't filter at engine level (use None).
-    # Otherwise, filter at HIGH_RISK threshold.
-    threshold = None if show_risky else RiskLevel.HIGH_RISK
-
     try:
-        results = engine.search_scored(
+        engine = SearchEngine(
+            currency=currency,
+            proxy=proxy,
+            use_cache=not no_cache,
+            seat=cabin,
+            stops=stops,
+            provider=provider,
+        )
+    except ValueError as e:
+        console.print(f"[red]{e}[/red]")
+        raise typer.Exit(1)
+
+    names = ", ".join(p.name for p in engine._providers)
+    console.print(f"[dim]Searching {names}...[/dim]")
+
+    # Always search unfiltered, then split safe/risky in CLI for messaging
+    try:
+        all_results = engine.search_scored(
             origin, destination, date,
-            risk_threshold=threshold,
+            risk_threshold=None,
+            max_price=max_price,
         )
     except Exception as e:
         console.print(f"[red]Search failed: {e}[/red]")
@@ -95,8 +115,19 @@ def search(
     finally:
         engine.close()
 
+    if not all_results:
+        if max_price > 0:
+            console.print(f"[dim]No flights found under {display.format_price(max_price, currency)}.[/dim]")
+        else:
+            console.print("[dim]No flights found.[/dim]")
+        raise typer.Exit()
+
+    safe = [sf for sf in all_results if sf.risk.risk_level < RiskLevel.HIGH_RISK]
+    risky = [sf for sf in all_results if sf.risk.risk_level >= RiskLevel.HIGH_RISK]
+    results = all_results if show_risky else safe
+
     if not results:
-        console.print("[dim]No flights found.[/dim]")
+        console.print("[dim]No safe flights found. Use --show-risky to see all options.[/dim]")
         raise typer.Exit()
 
     results.sort(key=lambda x: x.score)
@@ -117,6 +148,11 @@ def search(
             print(text)
     else:
         display.flights_table(results, title="Flight Results")
+        if not show_risky and risky:
+            console.print(
+                f"[dim]{len(safe)} safe flights shown "
+                f"({len(risky)} risky hidden, use --show-risky)[/dim]"
+            )
         if output:
             text = display.flights_json(results)
             Path(output).write_text(text)
@@ -128,11 +164,14 @@ def scan(
     config_path: Annotated[str, typer.Option("--config", "-f", help="TOML config file")],
     workers: Annotated[int, typer.Option("--workers", "-w")] = 3,
     delay: Annotated[float, typer.Option("--delay")] = 1.0,
+    max_price: Annotated[float, typer.Option("--max-price", help="Max price filter, overrides config (0 = no limit)")] = 0,
+    detail: Annotated[bool, typer.Option("--detail", help="Show flat table instead of summary")] = False,
     show_risky: Annotated[bool, typer.Option("--show-risky")] = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
     csv_output: Annotated[bool, typer.Option("--csv")] = False,
     no_cache: Annotated[bool, typer.Option("--no-cache")] = False,
     proxy: Annotated[Optional[str], typer.Option("--proxy")] = None,
+    provider: Annotated[Optional[str], typer.Option("--provider", "-p", help="Provider: google (default), duffel (SKYROUTE_DUFFEL_TOKEN), amadeus (SKYROUTE_AMADEUS_KEY + _SECRET)")] = None,
     output: Annotated[Optional[str], typer.Option("--output", "-o", help="Save results to file")] = None,
 ) -> None:
     """Run exhaustive multi-route scan from a TOML config."""
@@ -142,26 +181,41 @@ def scan(
     from skyroute.safety import zones_age_warning
     from skyroute.search import SearchEngine
 
+    _validate_provider(provider)
+
     warning = zones_age_warning()
     if warning:
         console.print(f"[yellow]{warning}[/yellow]")
 
     cfg = load_config(config_path)
 
+    # CLI --max-price overrides config value
+    if max_price > 0:
+        cfg.search.max_price = max_price
+
     dates = cfg.search.date_range.dates()
     total = len(cfg.search.origins) * len(cfg.search.destinations) * len(dates)
+
+    try:
+        engine = SearchEngine(
+            currency=cfg.search.currency,
+            proxy=proxy,
+            use_cache=not no_cache,
+            seat=cfg.search.cabin,
+            stops=cfg.search.stops,
+            provider=provider,
+        )
+    except ValueError as e:
+        console.print(f"[red]{e}[/red]")
+        raise typer.Exit(1)
+
+    names = ", ".join(p.name for p in engine._providers)
+    provider_info = f" via {names}"
+
     console.print(
         f"Scanning {len(cfg.search.origins)} origins x "
         f"{len(cfg.search.destinations)} destinations x "
-        f"{len(dates)} dates = {total} combos"
-    )
-
-    engine = SearchEngine(
-        currency=cfg.search.currency,
-        proxy=proxy,
-        use_cache=not no_cache,
-        seat=cfg.search.cabin,
-        stops=cfg.search.stops,
+        f"{len(dates)} dates = {total} combos{provider_info}"
     )
 
     progress = display.scan_progress()
@@ -203,12 +257,17 @@ def scan(
             console.print(f"Saved to {output}")
         else:
             print(text)
-    else:
+    elif detail:
         display.flights_table(
             results,
             title=f"Scan Results ({len(results)} flights)",
         )
-
+        if output:
+            text = display.flights_json(results)
+            Path(output).write_text(text)
+            console.print(f"Saved to {output}")
+    else:
+        display.scan_summary(results, cfg.search.currency)
         if output:
             text = display.flights_json(results)
             Path(output).write_text(text)
@@ -239,6 +298,68 @@ def zones(
 
     zone_list = load_zones(force_bundled=not update)
     display.zones_table(zone_list)
+
+
+@app.command()
+def demo(
+    show_risky: Annotated[bool, typer.Option("--show-risky")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+    csv_output: Annotated[bool, typer.Option("--csv")] = False,
+) -> None:
+    """Show example output using bundled fixture data (no API calls needed)."""
+    import json
+    from importlib import resources
+
+    from skyroute import display
+    from skyroute._vendor.google_flights import SearchFlights
+    from skyroute.models import RiskLevel
+    from skyroute.providers.google import _convert_result
+    from skyroute.search import SearchEngine
+
+    # Load bundled fixture
+    fixture_path = resources.files("skyroute") / "data" / "demo_flights.json"
+    flights_data = json.loads(fixture_path.read_text())
+    parsed = SearchFlights._deduplicate(
+        [SearchFlights._parse_flight(f) for f in flights_data]
+    )
+    domain_results = [_convert_result(f, "EUR") for f in parsed]
+
+    # Score through the real engine (safety filtering, scoring)
+    engine = SearchEngine(currency="EUR", use_cache=False)
+    from unittest.mock import MagicMock
+    mock_provider = MagicMock()
+    mock_provider.name = "google"
+    mock_provider.search.return_value = domain_results
+    engine._providers = [mock_provider]
+
+    all_results = engine.search_scored(
+        "BLR", "HAM", "2026-03-10", risk_threshold=None,
+    )
+    engine.close()
+
+    safe = [sf for sf in all_results if sf.risk.risk_level < RiskLevel.HIGH_RISK]
+    risky = [sf for sf in all_results if sf.risk.risk_level >= RiskLevel.HIGH_RISK]
+    results = all_results if show_risky else safe
+
+    if not results:
+        console.print("[dim]No flights to show.[/dim]")
+        raise typer.Exit()
+
+    results.sort(key=lambda x: x.score)
+
+    console.print("[dim]Demo: BLR -> HAM, 2026-03-10 (bundled fixture data, no API calls)[/dim]\n")
+
+    if json_output:
+        print(display.flights_json(results))
+    elif csv_output:
+        print(display.flights_csv(results))
+    else:
+        display.flights_table(results, title="Flight Results (Demo)")
+        if not show_risky and risky:
+            console.print(
+                f"[dim]{len(safe)} safe flights shown "
+                f"({len(risky)} risky hidden, use --show-risky)[/dim]"
+            )
 
 
 @app.command(name="cache")

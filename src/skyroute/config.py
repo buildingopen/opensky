@@ -34,6 +34,7 @@ class SearchConfig(BaseModel):
     cabin: str = "economy"
     currency: str = "EUR"
     stops: str = "any"
+    max_price: float = 0
 
 
 class SafetyConfig(BaseModel):
@@ -71,6 +72,7 @@ destinations = ["HAM", "FRA", "MUC", "BER", "AMS", "CPH"]
 cabin = "economy"
 currency = "EUR"
 stops = "any"   # any | non_stop | one_stop_or_fewer | two_or_fewer_stops
+# max_price = 500  # filter out flights above this price (0 = no limit)
 
 [search.date_range]
 start = "2026-03-10"

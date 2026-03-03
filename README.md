@@ -1,6 +1,6 @@
 # skyroute
 
-Flight search with conflict zone filtering. Searches Google Flights and filters out routes through active conflict zones, airspace closures, and high-risk regions.
+Flight search with conflict zone filtering. Searches Google Flights, Duffel, and Amadeus, then filters out routes through active conflict zones, airspace closures, and high-risk regions.
 
 ## The problem
 
@@ -9,6 +9,8 @@ When booking flights, especially between Asia and Europe, many routes transit th
 skyroute solves this: search thousands of origin/destination/date combinations, automatically flag routes through conflict zones, and find the safest cheapest option.
 
 ## Install
+
+Requires Python 3.11+.
 
 ```bash
 pip install skyroute
@@ -19,8 +21,40 @@ Or from source:
 ```bash
 git clone https://github.com/federicodeponte/skyroute.git
 cd skyroute
+python -m venv .venv && source .venv/bin/activate
 pip install -e .
 ```
+
+Copy `.env.example` to `.env` and fill in any API keys you have (optional, Google Flights works without any keys).
+
+## Providers
+
+skyroute supports three flight data providers. Google Flights is always available. Duffel and Amadeus activate automatically when their env vars are set.
+
+| Provider | Env vars | Notes |
+|----------|----------|-------|
+| Google Flights | none (default) | Scrapes Google Flights. Needs residential IP. |
+| [Duffel](https://duffel.com) | `SKYROUTE_DUFFEL_TOKEN` | Free unlimited searches. |
+| [Amadeus](https://developers.amadeus.com) | `SKYROUTE_AMADEUS_KEY` + `SKYROUTE_AMADEUS_SECRET` | Free tier: 2,000 calls/month. |
+
+When multiple providers are configured, results are aggregated and deduplicated (same flight from two sources keeps the cheapest price).
+
+Use `--provider` / `-p` to limit to a single provider:
+
+```bash
+skyroute search BLR HAM 2026-03-10 --provider duffel
+```
+
+## Quick demo
+
+See what skyroute does without any API keys or network calls:
+
+```bash
+skyroute demo
+skyroute demo --show-risky
+```
+
+![skyroute demo](demo.gif)
 
 ## Usage
 
@@ -30,6 +64,7 @@ pip install -e .
 skyroute search BLR HAM 2026-03-10
 skyroute search BLR HAM 2026-03-10 --currency EUR --show-risky
 skyroute search BLR HAM 2026-03-10 --json
+skyroute search BLR HAM 2026-03-10 --provider duffel
 ```
 
 ### Multi-route scan
@@ -111,9 +146,9 @@ Run `skyroute zones --update` to fetch the latest version.
 
 ## Limitations
 
-- **Residential IP required**: Google Flights blocks datacenter IPs with a consent wall. Use `--proxy` if running on a server.
-- **Rate limits**: Google will throttle aggressive scanning. Default settings (3 workers, 1s delay) are conservative. Increase at your own risk.
-- **Price accuracy**: Prices come from Google Flights and may differ from airline websites. Always verify before booking.
+- **Residential IP required**: Google Flights blocks datacenter IPs with a consent wall. Use `--proxy` if running on a server. Duffel and Amadeus work from any IP.
+- **Rate limits**: All providers are rate-limited to 10 req/sec. Google will throttle aggressive scanning. Default scan settings (3 workers, 1s delay) are conservative.
+- **Price accuracy**: Prices may differ from airline websites. Always verify before booking.
 - **Safety data**: The conflict zone database is a best-effort compilation. It may be incomplete or outdated. This tool is not a substitute for official aviation safety advisories.
 
 ## Credits

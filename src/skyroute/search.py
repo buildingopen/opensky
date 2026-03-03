@@ -4,79 +4,55 @@ import logging
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any
 
 from skyroute import cache
-from skyroute._vendor.google_flights import (
-    FlightSearchFilters,
-    FlightSegment,
-    MaxStops,
-    PassengerInfo,
-    SeatType,
-    SearchFlights,
-    SortBy,
-)
 from skyroute.config import ScanConfig
 from skyroute.models import FlightLeg, FlightResult, RiskLevel, ScoredFlight
+from skyroute.providers import FlightProvider, configured_providers
 from skyroute.safety import check_route
 
 log = logging.getLogger(__name__)
+
 
 class _Unset:
     """Sentinel for distinguishing 'not provided' from None."""
 
 _UNSET = _Unset()
 
-SEAT_MAP = {
-    "economy": SeatType.ECONOMY,
-    "premium_economy": SeatType.PREMIUM_ECONOMY,
-    "business": SeatType.BUSINESS,
-    "first": SeatType.FIRST,
+STOPS_INT: dict[str, int | None] = {
+    "any": None,
+    "non_stop": 0,
+    "one_stop_or_fewer": 1,
+    "two_or_fewer_stops": 2,
 }
 
 
-def _build_filters(
-    origin: str,
-    dest: str,
-    date: str,
-    seat: SeatType = SeatType.ECONOMY,
-    stops: MaxStops = MaxStops.ANY,
-) -> FlightSearchFilters:
-    return FlightSearchFilters(
-        flight_segments=[
-            FlightSegment(
-                departure_airport=[[origin, 0]],
-                arrival_airport=[[dest, 0]],
-                travel_date=date,
-            )
-        ],
-        passenger_info=PassengerInfo(adults=1),
-        seat_type=seat,
-        stops=stops,
-        sort_by=SortBy.CHEAPEST,
-    )
+def _deduplicate(results: list[FlightResult]) -> list[FlightResult]:
+    """Deduplicate flights across providers.
 
-
-def _convert_result(raw: Any, currency: str) -> FlightResult:
-    legs = []
-    for leg in raw.legs:
-        legs.append(FlightLeg(
-            airline=leg.airline,
-            flight_number=leg.flight_number,
-            departure_airport=leg.departure_airport,
-            arrival_airport=leg.arrival_airport,
-            departure_time=leg.departure_datetime.isoformat(),
-            arrival_time=leg.arrival_datetime.isoformat(),
-            duration_minutes=leg.duration,
-        ))
-
-    return FlightResult(
-        price=raw.price,
-        currency=currency,
-        duration_minutes=raw.duration,
-        stops=raw.stops,
-        legs=legs,
-    )
+    Key = airline+flight_number per leg + departure date.
+    Same flight from two providers: keep the one with the lowest price
+    (prefer priced over unpriced).
+    """
+    best: dict[str, FlightResult] = {}
+    for flight in results:
+        if not flight.legs:
+            continue
+        dep_date = flight.legs[0].departure_time[:10] if flight.legs[0].departure_time else ""
+        key = dep_date + "|" + "|".join(
+            f"{leg.airline}{leg.flight_number}:{leg.departure_airport}-{leg.arrival_airport}"
+            for leg in flight.legs
+        )
+        existing = best.get(key)
+        if existing is None:
+            best[key] = flight
+        else:
+            # Prefer priced over unpriced; then cheapest
+            if existing.price <= 0 and flight.price > 0:
+                best[key] = flight
+            elif flight.price > 0 and (existing.price <= 0 or flight.price < existing.price):
+                best[key] = flight
+    return list(best.values())
 
 
 def _route_string(origin: str, dest: str, legs: list[FlightLeg]) -> str:
@@ -109,23 +85,23 @@ class SearchEngine:
         use_cache: bool = True,
         seat: str = "economy",
         stops: str = "any",
+        provider: str | None = None,
     ):
         self.currency = currency
-        self.proxy = proxy
         self.use_cache = use_cache
-        self.seat = SEAT_MAP.get(seat, SeatType.ECONOMY)
-        self.stops = getattr(MaxStops, stops.upper(), MaxStops.ANY)
-        self._api: SearchFlights | None = None
-
-    def _get_api(self) -> SearchFlights:
-        if self._api is None:
-            self._api = SearchFlights(currency=self.currency, proxy=self.proxy)
-        return self._api
+        self.seat = seat
+        self.max_stops = STOPS_INT.get(stops, None)
+        self._providers: list[FlightProvider] = configured_providers(
+            currency=currency, proxy=proxy, only=provider,
+        )
 
     def close(self) -> None:
-        if self._api:
-            self._api.close()
-            self._api = None
+        for p in self._providers:
+            try:
+                p.close()
+            except Exception:
+                pass
+        self._providers = []
 
     def search_one(
         self,
@@ -133,29 +109,41 @@ class SearchEngine:
         dest: str,
         date: str,
     ) -> list[FlightResult]:
-        ck = cache.cache_key(
-            origin, dest, date,
-            seat=self.seat.name, currency=self.currency, stops=self.stops.name,
-        )
+        all_results: list[FlightResult] = []
 
-        if self.use_cache:
-            cached = cache.get(ck)
-            if cached is not None:
-                return cached
+        for provider in self._providers:
+            ck = cache.cache_key(
+                origin, dest, date,
+                seat=self.seat, currency=self.currency,
+                stops=self.max_stops, provider=provider.name,
+            )
 
-        filters = _build_filters(origin, dest, date, self.seat, self.stops)
-        api = self._get_api()
-        raw_results = api.search(filters)
+            if self.use_cache:
+                cached = cache.get(ck)
+                if cached is not None:
+                    all_results.extend(cached)
+                    continue
 
-        if not raw_results:
-            results: list[FlightResult] = []
-        else:
-            results = [_convert_result(r, self.currency) for r in raw_results]
+            try:
+                results = provider.search(
+                    origin, dest, date,
+                    cabin=self.seat,
+                    currency=self.currency,
+                    max_stops=self.max_stops,
+                )
+            except Exception as e:
+                log.warning("Provider %s failed for %s->%s %s: %s", provider.name, origin, dest, date, e)
+                continue
 
-        if self.use_cache:
-            cache.put(ck, results)
+            if self.use_cache:
+                cache.put(ck, results)
 
-        return results
+            all_results.extend(results)
+
+        if len(self._providers) > 1:
+            all_results = _deduplicate(all_results)
+
+        return all_results
 
     def search_scored(
         self,
@@ -166,11 +154,15 @@ class SearchEngine:
         price_weight: float = 1.0,
         duration_weight: float = 0.5,
         transit_hours: dict[str, float] | None = None,
+        max_price: float = 0,
     ) -> list[ScoredFlight]:
         results = self.search_one(origin, dest, date)
         scored = []
 
         for flight in results:
+            if max_price > 0 and flight.price > 0 and flight.price > max_price:
+                continue
+
             airports = _all_airports(flight.legs)
             risk = check_route(airports)
 
@@ -222,6 +214,7 @@ class SearchEngine:
         transit_hours = config.connections.transit_hours
         pw = config.scoring.price_weight
         dw = config.scoring.duration_weight
+        mp = config.search.max_price
 
         all_scored: list[ScoredFlight] = []
         completed = 0
@@ -238,6 +231,7 @@ class SearchEngine:
                     price_weight=pw,
                     duration_weight=dw,
                     transit_hours=transit_hours,
+                    max_price=mp,
                 )
                 return (origin, dest, date, results)
             except Exception as e:

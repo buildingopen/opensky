@@ -65,6 +65,7 @@ class FlightResult(BaseModel):
     duration_minutes: int
     stops: int
     legs: list[FlightLeg]
+    provider: str = ""
 
 
 class ScoredFlight(BaseModel):
