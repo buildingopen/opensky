@@ -252,15 +252,44 @@ class ZonesResponse(BaseModel):
 # ---------------------------------------------------------------------------
 def _google_flights_url(origin: str, dest: str, date: str, currency: str = "EUR") -> str:
     """Generate a Google Flights deep link with route and date pre-filled."""
-    # Google Flights booking URL format with pre-filled route
     return f"https://www.google.com/travel/flights?q=Flights+from+{origin}+to+{dest}+on+{date}&curr={currency}&hl=en"
 
 
-def _skyscanner_url(origin: str, dest: str, date: str) -> str:
-    """Fallback booking link via Skyscanner."""
-    # Date format: YYMMDD
-    d = date.replace("-", "")[2:]
-    return f"https://www.skyscanner.com/transport/flights/{origin.lower()}/{dest.lower()}/{d}/"
+def _skyscanner_url(origin: str, dest: str, date: str, currency: str = "EUR") -> str:
+    """Skyscanner deep link with pre-filled route search."""
+    d = date.replace("-", "")[2:]  # YYMMDD
+    return f"https://www.skyscanner.com/transport/flights/{origin.lower()}/{dest.lower()}/{d}/?adultsv2=1&currency={currency}"
+
+
+def _filter_price_anomalies(flights: list[dict]) -> list[dict]:
+    """Drop flights with anomalous prices (>3x cheapest for same O/D pair).
+
+    When multiple providers return results, one may have wildly wrong prices.
+    This filters out those outliers to keep results looking sane.
+    """
+    by_od: dict[tuple, list[dict]] = defaultdict(list)
+    for f in flights:
+        by_od[(f["origin"], f["destination"])].append(f)
+
+    filtered = []
+    for group in by_od.values():
+        priced = [f for f in group if f["price"] > 0]
+        if len(priced) < 2:
+            filtered.extend(group)
+            continue
+
+        cheapest = min(f["price"] for f in priced)
+        threshold = cheapest * 3
+        for f in group:
+            if f["price"] <= 0 or f["price"] <= threshold:
+                filtered.append(f)
+            else:
+                log.info(
+                    "Dropped anomalous price: %s %s->%s %.0f (cheapest: %.0f, provider: %s)",
+                    f["date"], f["origin"], f["destination"], f["price"], cheapest, f["provider"],
+                )
+
+    return filtered
 
 
 def _scored_to_out(sf: ScoredFlight) -> FlightOut:
@@ -289,7 +318,7 @@ def _scored_to_out(sf: ScoredFlight) -> FlightOut:
             for leg in sf.flight.legs
         ],
         provider=sf.flight.provider,
-        booking_url=getattr(sf.flight, 'booking_url', '') or _google_flights_url(sf.origin, sf.destination, sf.date, sf.flight.currency),
+        booking_url=getattr(sf.flight, 'booking_url', '') or _skyscanner_url(sf.origin, sf.destination, sf.date, sf.flight.currency),
         origin=sf.origin,
         destination=sf.destination,
         date=sf.date,
@@ -522,13 +551,15 @@ async def search_flights(req: PromptRequest, request: Request):
         else:
             scored = result_holder[0] if result_holder else []
             flights = [_scored_to_out(sf).model_dump() for sf in scored]
-            # Filter out flights with no price (Google scrape failures)
+            # Filter out flights with no price (scrape failures)
             priced = [f for f in flights if f["price"] > 0]
             flights = priced if priced else flights
-            # Dedup: keep cheapest per route+date+duration+stops
+            # Drop anomalous prices (e.g. Google returning 10x Duffel price)
+            flights = _filter_price_anomalies(flights)
+            # Dedup: keep cheapest per route+date+stops
             seen: dict[tuple, dict] = {}
             for f in flights:
-                key = (f["route"], f["date"], f["duration_minutes"], f["stops"])
+                key = (f["route"], f["date"], f["stops"])
                 if key not in seen or f["price"] < seen[key]["price"]:
                     seen[key] = f
             flights = sorted(seen.values(), key=lambda x: x["score"])

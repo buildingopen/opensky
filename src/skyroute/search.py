@@ -39,8 +39,9 @@ def _deduplicate(results: list[FlightResult]) -> list[FlightResult]:
         if not flight.legs:
             continue
         dep_date = flight.legs[0].departure_time[:10] if flight.legs[0].departure_time else ""
+        # Normalize flight numbers: strip leading zeros for cross-provider matching
         key = dep_date + "|" + "|".join(
-            f"{leg.airline}{leg.flight_number}:{leg.departure_airport}-{leg.arrival_airport}"
+            f"{leg.airline}{leg.flight_number.lstrip('0') or '0'}:{leg.departure_airport}-{leg.arrival_airport}"
             for leg in flight.legs
         )
         existing = best.get(key)

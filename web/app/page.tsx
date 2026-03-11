@@ -341,8 +341,9 @@ function FlightCard({ flight }: { flight: FlightOut }) {
             <>
               <div className="text-right">
                 <div className="text-lg font-semibold text-[var(--color-text)]">
-                  {currencySymbol(flight.currency)} {Math.round(flight.price)}
+                  {currencySymbol(flight.currency)}{Math.round(flight.price)}
                 </div>
+                <div className="text-[10px] text-[var(--color-text-muted)] capitalize">{flight.provider}</div>
               </div>
               <a
                 href={flight.booking_url}
@@ -350,7 +351,7 @@ function FlightCard({ flight }: { flight: FlightOut }) {
                 rel="noopener noreferrer"
                 className="shrink-0 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
               >
-                View flight
+                Book
               </a>
             </>
           ) : (
@@ -769,7 +770,7 @@ export default function Home() {
             </a>
           </span>
           <span>
-            Conflict zone data updated March 2026. Flights from Duffel and Google.
+            Flights from Duffel and Google. Conflict zones updated March 2026.
           </span>
         </div>
       </footer>
