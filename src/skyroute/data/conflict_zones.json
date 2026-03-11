@@ -131,13 +131,13 @@
     },
     {
       "id": "gulf_states",
-      "name": "Gulf States (Airspace Risk)",
-      "risk_level": "high_risk",
+      "name": "Gulf States (Proximity Advisory)",
+      "risk_level": "caution",
       "countries": [],
       "airports": ["DXB", "AUH", "SHJ", "RKT", "DOH", "BAH", "KWI", "MCT"],
       "source": "safeairspace.net",
-      "details": "Adjacent to Iran/Iraq conflict. Overflights at risk during escalations. Gulf FIRs periodically restricted.",
-      "updated": "2026-02-28"
+      "details": "Major transit hubs adjacent to Iran/Iraq conflict zones. Airports themselves operate normally. Overflights may route around restricted FIRs.",
+      "updated": "2026-03-11"
     },
     {
       "id": "eritrea",
