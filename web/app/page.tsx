@@ -126,8 +126,8 @@ function currencySymbol(c: string): string {
 const AIRLINE_NAMES: Record<string, string> = {
   "5F": "Fly One", "6E": "IndiGo", "9W": "Jet Airways", A3: "Aegean", AA: "American", AC: "Air Canada",
   AF: "Air France", AI: "Air India", AK: "AirAsia", AS: "Alaska",
-  AZ: "ITA Airways", BA: "British Airways", BR: "EVA Air", CX: "Cathay Pacific",
-  DL: "Delta", EK: "Emirates", ET: "Ethiopian", EW: "Eurowings",
+  AY: "Finnair", AZ: "ITA Airways", B6: "JetBlue", BA: "British Airways", BR: "EVA Air", CX: "Cathay Pacific",
+  DL: "Delta", DY: "Norwegian", EK: "Emirates", ET: "Ethiopian", EW: "Eurowings",
   EN: "Air Dolomiti", EY: "Etihad", FI: "Icelandair", FR: "Ryanair", G9: "Air Arabia",
   GA: "Garuda", GF: "Gulf Air", HA: "Hawaiian",
   HG: "NIKI", IB: "Iberia", J2: "Azerbaijan Airlines", JL: "JAL",
@@ -137,8 +137,8 @@ const AIRLINE_NAMES: Record<string, string> = {
   QF: "Qantas", QR: "Qatar Airways", RJ: "Royal Jordanian", SA: "South African", SK: "SAS",
   SN: "Brussels Airlines", SQ: "Singapore Airlines", SU: "Aeroflot",
   TF: "Braathens Regional", TG: "Thai Airways", TK: "Turkish Airlines", TP: "TAP Portugal",
-  UA: "United", UX: "Air Europa", VN: "Vietnam Airlines", VS: "Virgin Atlantic",
-  VL: "Mediterranean Airways", VY: "Vueling", WN: "Southwest", WY: "Oman Air",
+  U2: "easyJet", UA: "United", UX: "Air Europa", VN: "Vietnam Airlines", VS: "Virgin Atlantic",
+  VL: "Mediterranean Airways", VY: "Vueling", W6: "Wizz Air", WN: "Southwest", WY: "Oman Air",
 };
 
 function airlineName(code: string): string {
