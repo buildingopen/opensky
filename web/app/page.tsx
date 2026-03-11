@@ -11,6 +11,7 @@ interface ParsedSearch {
   origins: string[];
   destinations: string[];
   dates: string[];
+  return_dates: string[];
   max_price: number;
   currency: string;
   cabin: string;
@@ -67,6 +68,7 @@ interface ScanSummaryData {
 interface SearchResponse {
   parsed: ParsedSearch;
   flights: FlightOut[];
+  return_flights: FlightOut[] | null;
   count: number;
   remaining_searches: number;
   zones_warning: string | null;
@@ -159,6 +161,12 @@ function ParsedSummary({ parsed }: { parsed: ParsedSearch }) {
   const dateRange = parsed.dates.length > 1
     ? `${formatDate(parsed.dates[0])} - ${formatDate(parsed.dates[parsed.dates.length - 1])}`
     : formatDate(parsed.dates[0]);
+  const isRoundTrip = parsed.return_dates && parsed.return_dates.length > 0;
+  const returnDateRange = isRoundTrip
+    ? parsed.return_dates.length > 1
+      ? `${formatDate(parsed.return_dates[0])} - ${formatDate(parsed.return_dates[parsed.return_dates.length - 1])}`
+      : formatDate(parsed.return_dates[0])
+    : "";
   const names = parsed.airport_names || {};
 
   return (
@@ -166,10 +174,10 @@ function ParsedSummary({ parsed }: { parsed: ParsedSearch }) {
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[var(--color-text-muted)]">
         <span>
           <span className="text-[var(--color-text)] font-medium">{parsed.origins.map(o => airportLabel(o, names)).join(", ")}</span>
-          {" "}&rarr;{" "}
+          {isRoundTrip ? " \u21C4 " : " \u2192 "}
           <span className="text-[var(--color-text)] font-medium">{parsed.destinations.map(d => airportLabel(d, names)).join(", ")}</span>
         </span>
-        <span>{dateRange}</span>
+        <span>{dateRange}{isRoundTrip ? ` / return ${returnDateRange}` : ""}</span>
         <span className="capitalize">{parsed.cabin}</span>
         {parsed.max_price > 0 && (
           <span>Max {currencySymbol(parsed.currency)}{parsed.max_price}</span>
@@ -351,7 +359,7 @@ function FlightCard({ flight }: { flight: FlightOut }) {
                 rel="noopener noreferrer"
                 className="shrink-0 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
               >
-                Book
+                Compare prices
               </a>
             </>
           ) : (
@@ -381,7 +389,7 @@ function FlightCard({ flight }: { flight: FlightOut }) {
           {flight.legs.map((leg, i) => (
             <div key={i} className="flex items-center gap-3 text-sm">
               <span className="font-mono text-xs text-[var(--color-accent)] w-14 shrink-0">
-                {leg.airline}{leg.flight_number}
+                {leg.airline && leg.airline !== "ZZ" ? `${leg.airline}${leg.flight_number}` : leg.flight_number || "---"}
               </span>
               <span className="text-[var(--color-text-muted)]">{leg.from}</span>
               <span className="text-xs text-[var(--color-text-muted)]">{formatTime(leg.departs)}</span>
@@ -465,7 +473,7 @@ function SearchingState({ parsed, progress }: { parsed: ParsedSearch | null; pro
 const EXAMPLES = [
   "Bangalore to Hamburg, next week, under \u20AC500",
   "Bangkok, Delhi, Mumbai to Frankfurt, Berlin, Amsterdam, March 20-25, economy",
-  "Nairobi to London, April 1-7, direct flights only",
+  "JFK to London round trip, April 10 returning April 17, under $800",
   "New York to Tokyo, business class, under $3000",
 ];
 
@@ -479,6 +487,7 @@ export default function Home() {
   const [parsed, setParsed] = useState<ParsedSearch | null>(null);
   const [progress, setProgress] = useState<ProgressInfo | null>(null);
   const [flights, setFlights] = useState<FlightOut[]>([]);
+  const [returnFlights, setReturnFlights] = useState<FlightOut[] | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [zonesWarning, setZonesWarning] = useState<string | null>(null);
@@ -507,6 +516,7 @@ export default function Home() {
     setParsed(null);
     setProgress(null);
     setFlights([]);
+    setReturnFlights(null);
     setRemaining(null);
     setTotalCount(0);
     setZonesWarning(null);
@@ -562,6 +572,7 @@ export default function Home() {
               setProgress(msg);
             } else if (msg.type === "results") {
               setFlights(msg.flights);
+              setReturnFlights(msg.return_flights || null);
               setTotalCount(msg.count);
               setRemaining(msg.remaining_searches);
               setZonesWarning(msg.zones_warning);
@@ -702,9 +713,11 @@ export default function Home() {
 
             <div className="flex items-center justify-between mt-4 mb-3">
               <p className="text-sm text-[var(--color-text-muted)]">
-                {totalCount > flights.length
-                  ? `Top ${flights.length} of ${totalCount} flights, sorted by best value`
-                  : `${flights.length} flight${flights.length !== 1 ? "s" : ""} found, sorted by best value`
+                {returnFlights
+                  ? `${flights.length} outbound + ${returnFlights.length} return flights`
+                  : totalCount > flights.length
+                    ? `Top ${flights.length} of ${totalCount} flights, sorted by best value`
+                    : `${flights.length} flight${flights.length !== 1 ? "s" : ""} found, sorted by best value`
                 }
                 {remaining !== null && (
                   <span className="ml-2 text-xs">({remaining} search{remaining !== 1 ? "es" : ""} left this hour)</span>
@@ -715,7 +728,7 @@ export default function Home() {
               )}
             </div>
 
-            {flights.length === 0 ? (
+            {flights.length === 0 && (!returnFlights || returnFlights.length === 0) ? (
               <div className="text-center py-12">
                 <p className="text-[var(--color-text-muted)]">No safe flights found.</p>
                 <p className="text-sm text-[var(--color-text-muted)] mt-2">
@@ -729,11 +742,28 @@ export default function Home() {
                     We found routes but couldn&apos;t fetch live prices for this search. Click the link on any flight to see current prices and book on Google Flights.
                   </div>
                 )}
+
+                {/* Outbound section */}
+                {returnFlights && (
+                  <h3 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Outbound</h3>
+                )}
                 <div className="space-y-3">
                   {flights.map((flight, i) => (
-                    <FlightCard key={i} flight={flight} />
+                    <FlightCard key={`out-${i}`} flight={flight} />
                   ))}
                 </div>
+
+                {/* Return section */}
+                {returnFlights && returnFlights.length > 0 && (
+                  <>
+                    <h3 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mt-6 mb-2">Return</h3>
+                    <div className="space-y-3">
+                      {returnFlights.map((flight, i) => (
+                        <FlightCard key={`ret-${i}`} flight={flight} />
+                      ))}
+                    </div>
+                  </>
+                )}
               </>
             )}
           </>

@@ -95,6 +95,7 @@ Return ONLY valid JSON with this exact structure:
   "origins": ["IATA", ...],
   "destinations": ["IATA", ...],
   "dates": ["YYYY-MM-DD", ...],
+  "return_dates": [],
   "max_price": 0,
   "currency": "EUR",
   "cabin": "economy",
@@ -106,6 +107,11 @@ Rules:
 - For date ranges like "March 10-20", list every date in the range.
 - For relative dates like "next week" or "tomorrow", calculate from today ({today}).
 - If no dates specified, use next 7 days from today.
+- return_dates: list of return dates for round trips. Empty list [] for one-way trips.
+  - If user says "round trip", "return", "returning on", "back on", parse the return date(s).
+  - "JFK to London April 10 returning April 17" -> dates=["2026-04-10"], return_dates=["2026-04-17"]
+  - "round trip March 10-12 returning March 20-22" -> dates=["2026-03-10","2026-03-11","2026-03-12"], return_dates=["2026-03-20","2026-03-21","2026-03-22"]
+  - If user says "round trip" but no specific return date, set return_dates to 7 days after each outbound date.
 - max_price 0 means no limit.
 - cabin: economy | premium_economy | business | first
 - stops: any | non_stop | one_stop_or_fewer | two_or_fewer_stops
@@ -115,8 +121,9 @@ Rules:
 - Never return city codes like LON, NYC, PAR, TYO, MOW, MIL, CHI, WAS, STO, SAO. Always use specific airport codes.
 
 Examples:
-- "Bangkok to Hamburg next week under 400 euros" -> {{"origins":["BKK"],"destinations":["HAM"],"dates":["2026-03-16","2026-03-17",...],"max_price":400,"currency":"EUR","cabin":"economy","stops":"any"}}
-- "BLR, DEL, BKK to FRA, HAM, BER March 15-20 economy max 1 stop" -> {{"origins":["BLR","DEL","BKK"],"destinations":["FRA","HAM","BER"],"dates":["2026-03-15",...,"2026-03-20"],"max_price":0,"currency":"EUR","cabin":"economy","stops":"one_stop_or_fewer"}}"""
+- "Bangkok to Hamburg next week under 400 euros" -> {{"origins":["BKK"],"destinations":["HAM"],"dates":["2026-03-16","2026-03-17",...],"return_dates":[],"max_price":400,"currency":"EUR","cabin":"economy","stops":"any"}}
+- "BLR, DEL, BKK to FRA, HAM, BER March 15-20 economy max 1 stop" -> {{"origins":["BLR","DEL","BKK"],"destinations":["FRA","HAM","BER"],"dates":["2026-03-15",...,"2026-03-20"],"return_dates":[],"max_price":0,"currency":"EUR","cabin":"economy","stops":"one_stop_or_fewer"}}
+- "JFK to London round trip April 10 returning April 17 under $800" -> {{"origins":["JFK"],"destinations":["LHR"],"dates":["2026-04-10"],"return_dates":["2026-04-17"],"max_price":800,"currency":"USD","cabin":"economy","stops":"any"}}"""
 
 
 async def parse_prompt(prompt: str) -> dict:
@@ -175,6 +182,11 @@ async def parse_prompt(prompt: str) -> dict:
     # Cap dates to 14 to avoid abuse
     parsed["dates"] = parsed["dates"][:14]
 
+    # Ensure return_dates is always a list
+    if not parsed.get("return_dates"):
+        parsed["return_dates"] = []
+    parsed["return_dates"] = parsed["return_dates"][:14]
+
     return parsed
 
 
@@ -210,6 +222,7 @@ class ParsedSearch(BaseModel):
     origins: list[str]
     destinations: list[str]
     dates: list[str]
+    return_dates: list[str] = []
     max_price: float = 0
     currency: str = "EUR"
     cabin: str = "economy"
@@ -256,10 +269,11 @@ def _google_flights_url(origin: str, dest: str, date: str, currency: str = "EUR"
     return f"https://www.google.com/travel/flights?q=Flights+from+{origin}+to+{dest}+on+{date}&curr={currency}&hl=en"
 
 
-def _skyscanner_url(origin: str, dest: str, date: str, currency: str = "EUR", cabin: str = "economy") -> str:
+def _skyscanner_url(origin: str, dest: str, date: str, currency: str = "EUR", cabin: str = "economy", return_date: str = "") -> str:
     """Skyscanner deep link with pre-filled route, date, cabin, and currency."""
+    date_part = f"{date}/{return_date}" if return_date else date
     return (
-        f"https://www.skyscanner.net/transport/flights/{origin.lower()}/{dest.lower()}/{date}/"
+        f"https://www.skyscanner.net/transport/flights/{origin.lower()}/{dest.lower()}/{date_part}/"
         f"?adultsv2=1&cabinclass={cabin}&currency={currency}&sortby=cheapest&preferDirects=false"
     )
 
@@ -480,10 +494,16 @@ async def search_flights(req: PromptRequest, request: Request):
     parsed = await parse_prompt(req.prompt)
     total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"])
 
-    if total > 100:
+    return_dates = parsed.get("return_dates", [])
+    is_round_trip = len(return_dates) > 0
+    # For round trips, total includes outbound + return combos
+    return_total = len(parsed["destinations"]) * len(parsed["origins"]) * len(return_dates) if is_round_trip else 0
+    combined_total = total + return_total
+
+    if combined_total > 100:
         raise HTTPException(
             status_code=400,
-            detail=f"Search too broad: {total} route combinations. Narrow your origins, destinations, or date range.",
+            detail=f"Search too broad: {combined_total} route combinations. Narrow your origins, destinations, or date range.",
         )
 
     names = _airport_names(parsed["origins"] + parsed["destinations"])
@@ -491,11 +511,12 @@ async def search_flights(req: PromptRequest, request: Request):
         origins=parsed["origins"],
         destinations=parsed["destinations"],
         dates=parsed["dates"],
+        return_dates=return_dates,
         max_price=parsed.get("max_price", 0),
         currency=parsed.get("currency", "EUR"),
         cabin=parsed.get("cabin", "economy"),
         stops=parsed.get("stops", "any"),
-        total_routes=total,
+        total_routes=combined_total,
         airport_names=names,
     )
 
@@ -552,28 +573,95 @@ async def search_flights(req: PromptRequest, request: Request):
 
         if error_holder:
             yield f"data: {json.dumps({'type': 'error', 'detail': error_holder[0]})}\n\n"
-        else:
-            scored = result_holder[0] if result_holder else []
-            cabin = parsed.get("cabin", "economy")
-            flights = [_scored_to_out(sf, cabin=cabin).model_dump() for sf in scored]
-            # Filter out flights with no price (scrape failures)
+            return
+
+        scored = result_holder[0] if result_holder else []
+        cabin = parsed.get("cabin", "economy")
+
+        def _process_flights(scored_list, direction="outbound"):
+            flights = [_scored_to_out(sf, cabin=cabin).model_dump() for sf in scored_list]
             priced = [f for f in flights if f["price"] > 0]
             flights = priced if priced else flights
-            # Drop anomalous prices (e.g. Google returning 10x Duffel price)
             flights = _filter_price_anomalies(flights)
-            # Dedup: keep cheapest per route+date+stops
             seen: dict[tuple, dict] = {}
             for f in flights:
                 key = (f["route"], f["date"], f["stops"])
                 if key not in seen or f["price"] < seen[key]["price"]:
                     seen[key] = f
-            flights = sorted(seen.values(), key=lambda x: x["score"])
-            total_count = len(flights)
-            warning = zones_age_warning()
-            summary = _build_summary(flights, parsed.get("currency", "EUR"))
-            # Send all flights for summary computation, but cap displayed list
-            top_flights = flights[:20]
-            yield f"data: {json.dumps({'type': 'results', 'flights': top_flights, 'count': total_count, 'remaining_searches': remaining, 'zones_warning': warning, 'summary': summary})}\n\n"
+            return sorted(seen.values(), key=lambda x: x["score"])
+
+        flights = _process_flights(scored)
+        total_count = len(flights)
+        warning = zones_age_warning()
+        summary = _build_summary(flights, parsed.get("currency", "EUR"))
+        top_flights = flights[:20]
+
+        # Round-trip: run return searches
+        return_flights_out = None
+        if is_round_trip:
+            return_parsed = {
+                **parsed,
+                "origins": parsed["destinations"],
+                "destinations": parsed["origins"],
+                "dates": return_dates,
+            }
+
+            return_progress_offset = total
+
+            def on_return_progress(done, total_r, origin, dest, dt):
+                progress_q.put({
+                    "type": "progress",
+                    "done": return_progress_offset + done,
+                    "total": combined_total,
+                    "route": f"{origin} -> {dest}",
+                    "date": dt,
+                })
+
+            return_result_holder: list = []
+
+            def run_return():
+                try:
+                    return_result_holder.append(_run_scan(return_parsed, progress_cb=on_return_progress))
+                except Exception as e:
+                    log.warning("Return search failed: %s", e)
+                    return_result_holder.append([])
+                finally:
+                    progress_q.put(None)
+
+            return_thread = threading.Thread(target=run_return)
+            return_thread.start()
+
+            # Stream return progress
+            while True:
+                if time.time() - scan_start > 120:
+                    yield f"data: {json.dumps({'type': 'error', 'detail': 'Search timed out. Try a narrower search.'})}\n\n"
+                    return_thread.join(timeout=5)
+                    return
+                try:
+                    msg = progress_q.get(timeout=2.0)
+                except queue.Empty:
+                    yield ": keepalive\n\n"
+                    continue
+                if msg is None:
+                    break
+                yield f"data: {json.dumps(msg)}\n\n"
+
+            return_thread.join(timeout=10)
+            return_scored = return_result_holder[0] if return_result_holder else []
+            return_flights = _process_flights(return_scored, "return")
+            return_flights_out = return_flights[:20] if return_flights else []
+
+        result_data = {
+            "type": "results",
+            "flights": top_flights,
+            "count": total_count,
+            "remaining_searches": remaining,
+            "zones_warning": warning,
+            "summary": summary,
+        }
+        if return_flights_out is not None:
+            result_data["return_flights"] = return_flights_out
+        yield f"data: {json.dumps(result_data)}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
