@@ -289,7 +289,7 @@ def _scored_to_out(sf: ScoredFlight) -> FlightOut:
             for leg in sf.flight.legs
         ],
         provider=sf.flight.provider,
-        booking_url=_google_flights_url(sf.origin, sf.destination, sf.date, sf.flight.currency),
+        booking_url=sf.flight.booking_url or _google_flights_url(sf.origin, sf.destination, sf.date, sf.flight.currency),
         origin=sf.origin,
         destination=sf.destination,
         date=sf.date,

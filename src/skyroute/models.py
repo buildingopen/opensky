@@ -66,6 +66,7 @@ class FlightResult(BaseModel):
     stops: int
     legs: list[FlightLeg]
     provider: str = ""
+    booking_url: str = ""
 
 
 class ScoredFlight(BaseModel):
