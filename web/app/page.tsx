@@ -482,7 +482,7 @@ export default function Home() {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [zonesWarning, setZonesWarning] = useState<string | null>(null);
   const [summary, setSummary] = useState<ScanSummaryData | null>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const hasResults = phase === "done" || phase === "searching" || phase === "parsing";
@@ -638,21 +638,21 @@ export default function Home() {
         )}
 
         {/* Prompt Input */}
-        <div className={`relative ${hasResults ? "mt-4" : "mt-8"}`}>
-          <textarea
+        <div className={`flex items-center ${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 focus-within:border-[var(--color-accent)] focus-within:ring-1 focus-within:ring-[var(--color-accent)]/30 transition-colors`}>
+          <input
             ref={inputRef}
+            type="text"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Where do you want to fly?"
             disabled={isLoading}
-            rows={1}
-            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-5 py-3.5 pr-28 text-base text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)]/30 transition-colors resize-none disabled:opacity-50"
+            className="flex-1 bg-transparent py-3.5 text-base text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none disabled:opacity-50"
           />
           <button
             onClick={() => search()}
             disabled={isLoading || !prompt.trim()}
-            className="absolute right-3 top-1/2 -translate-y-1/2 px-5 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-colors"
+            className="shrink-0 ml-3 px-5 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-colors"
           >
             {isLoading ? "Searching..." : "Search"}
           </button>
