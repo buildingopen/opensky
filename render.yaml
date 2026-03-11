@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: opensky-api
+    runtime: python
+    plan: starter
+    buildCommand: pip install . && pip install -r api/requirements.txt
+    startCommand: cd api && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.11"
+      - key: SKYROUTE_DUFFEL_TOKEN
+        sync: false
+      - key: SKYROUTE_AMADEUS_KEY
+        sync: false
+      - key: SKYROUTE_AMADEUS_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: RATE_LIMIT_PER_HOUR
+        value: "10"

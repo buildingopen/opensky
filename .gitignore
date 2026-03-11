@@ -14,3 +14,8 @@ venv/
 .mypy_cache/
 WORKPLAN-*.md
 demo.tape
+
+# Web frontend
+web/node_modules/
+web/.next/
+web/.env.local
