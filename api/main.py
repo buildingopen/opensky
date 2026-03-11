@@ -77,7 +77,8 @@ Rules:
 - stops: any | non_stop | one_stop_or_fewer | two_or_fewer_stops
 - If currency is mentioned ($ or USD), use "USD". Default is "EUR".
 - If the user says "direct" or "nonstop", set stops to "non_stop".
-- Always return valid IATA codes. If unsure about a city's airport, use the most common one.
+- Always return valid IATA airport codes (3-letter), NOT city codes. For cities with multiple airports, use the main one (e.g. London=LHR, New York=JFK, Paris=CDG, Tokyo=NRT, Moscow=SVO, Milan=MXP, Chicago=ORD, Washington=IAD, Stockholm=ARN, Sao Paulo=GRU).
+- Never return city codes like LON, NYC, PAR, TYO, MOW, MIL, CHI, WAS, STO, SAO. Always use specific airport codes.
 
 Examples:
 - "Bangkok to Hamburg next week under 400 euros" -> {{"origins":["BKK"],"destinations":["HAM"],"dates":["2026-03-16","2026-03-17",...],"max_price":400,"currency":"EUR","cabin":"economy","stops":"any"}}
@@ -384,6 +385,13 @@ async def search_flights(req: PromptRequest, request: Request):
         else:
             scored = result_holder[0] if result_holder else []
             flights = [_scored_to_out(sf).model_dump() for sf in scored]
+            # Dedup: keep cheapest per route+date+duration+stops
+            seen: dict[tuple, dict] = {}
+            for f in flights:
+                key = (f["route"], f["date"], f["duration_minutes"], f["stops"])
+                if key not in seen or f["price"] < seen[key]["price"]:
+                    seen[key] = f
+            flights = sorted(seen.values(), key=lambda x: x["score"])
             warning = zones_age_warning()
             yield f"data: {json.dumps({'type': 'results', 'flights': flights, 'count': len(flights), 'remaining_searches': remaining, 'zones_warning': warning})}\n\n"
 
