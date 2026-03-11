@@ -135,7 +135,7 @@ Examples:
 - "BLR, DEL, BKK to FRA, HAM, BER March 15-20 economy max 1 stop" -> {{"origins":["BLR","DEL","BKK"],"destinations":["FRA","HAM","BER"],"dates":["2026-03-15",...,"2026-03-20"],"return_dates":[],"max_price":0,"currency":"EUR","cabin":"economy","stops":"one_stop_or_fewer"}}
 - "JFK to London round trip April 10 returning April 17 under $800" -> {{"origins":["JFK"],"destinations":["LHR"],"dates":["2026-04-10"],"return_dates":["2026-04-17"],"max_price":800,"currency":"USD","cabin":"economy","stops":"any"}}
 - "Barcelona to anywhere in Europe, cheapest week in July" -> {{"origins":["BCN"],"destinations":["LHR","CDG","FCO","BER","AMS","LIS","ATH","VIE"],"dates":["2026-07-01","2026-07-04","2026-07-07","2026-07-10","2026-07-13","2026-07-16","2026-07-19","2026-07-22","2026-07-25","2026-07-28"],"return_dates":[],"max_price":0,"currency":"EUR","cabin":"economy","stops":"any"}}
-- "cheapest week to fly JFK to CDG" -> {{"origins":["JFK"],"destinations":["CDG"],"dates":["{today_plus_7}","{today_plus_14}","{today_plus_21}","{today_plus_28}"],"return_dates":[],"max_price":0,"currency":"EUR","cabin":"economy","stops":"any"}}"""
+- "cheapest week to fly JFK to CDG" -> one date per week for next 4 weeks from today ({today})"""
 
 
 async def parse_prompt(prompt: str) -> dict:
