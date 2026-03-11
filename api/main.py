@@ -368,11 +368,13 @@ async def search_flights(req: PromptRequest, request: Request):
         thread = threading.Thread(target=run)
         thread.start()
 
-        # Stream progress events
+        # Stream progress events with keepalive
         while True:
             try:
-                msg = progress_q.get(timeout=0.5)
+                msg = progress_q.get(timeout=2.0)
             except queue.Empty:
+                # Send SSE comment as keepalive to prevent connection drop
+                yield ": keepalive\n\n"
                 continue
             if msg is None:
                 break
