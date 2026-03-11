@@ -387,7 +387,7 @@ export default function Home() {
 
   const handleExample = (ex: string) => {
     setPrompt(ex);
-    search(ex);
+    inputRef.current?.focus();
   };
 
   const isLoading = phase === "parsing" || phase === "searching";
