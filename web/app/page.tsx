@@ -358,9 +358,9 @@ function FlightCard({ flight }: { flight: FlightOut }) {
               href={flight.booking_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 px-5 py-2 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 text-sm font-medium rounded-lg transition-colors"
+              className="shrink-0 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
             >
-              Check on Google
+              See prices
             </a>
           )}
         </div>
@@ -482,7 +482,7 @@ export default function Home() {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [zonesWarning, setZonesWarning] = useState<string | null>(null);
   const [summary, setSummary] = useState<ScanSummaryData | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const hasResults = phase === "done" || phase === "searching" || phase === "parsing";
@@ -638,21 +638,26 @@ export default function Home() {
         )}
 
         {/* Prompt Input */}
-        <div className={`flex items-center ${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 focus-within:border-[var(--color-accent)] focus-within:ring-1 focus-within:ring-[var(--color-accent)]/30 transition-colors`}>
-          <input
+        <div className={`flex items-start ${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-2 focus-within:border-[var(--color-accent)] focus-within:ring-1 focus-within:ring-[var(--color-accent)]/30 transition-colors`}>
+          <textarea
             ref={inputRef}
-            type="text"
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => {
+              setPrompt(e.target.value);
+              // Auto-resize
+              e.target.style.height = "auto";
+              e.target.style.height = e.target.scrollHeight + "px";
+            }}
             onKeyDown={handleKeyDown}
             placeholder="Where do you want to fly?"
             disabled={isLoading}
-            className="flex-1 bg-transparent py-3.5 text-base text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none disabled:opacity-50"
+            rows={1}
+            className="flex-1 bg-transparent py-1.5 text-base text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none disabled:opacity-50 resize-none overflow-hidden"
           />
           <button
             onClick={() => search()}
             disabled={isLoading || !prompt.trim()}
-            className="shrink-0 ml-3 px-5 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-colors"
+            className="shrink-0 ml-3 mt-0.5 px-5 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-colors"
           >
             {isLoading ? "Searching..." : "Search"}
           </button>
@@ -719,8 +724,8 @@ export default function Home() {
             ) : (
               <>
                 {flights.every(f => f.price === 0) && (
-                  <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-xs text-[var(--color-text-muted)] mb-3">
-                    Prices not available for this route from our providers. Click "Check on Google" for current pricing on Google Flights.
+                  <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-sm text-[var(--color-text-muted)] mb-3">
+                    We found routes but couldn&apos;t fetch live prices for this search. Click the link on any flight to see current prices and book on Google Flights.
                   </div>
                 )}
                 <div className="space-y-3">
