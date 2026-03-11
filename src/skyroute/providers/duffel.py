@@ -37,7 +37,7 @@ def _convert_offer(offer: dict, currency: str) -> FlightResult:
 
             carrier = seg.get("operating_carrier", {})
             airline = carrier.get("iata_code", seg.get("marketing_carrier", {}).get("iata_code", ""))
-            flight_num = seg.get("operating_carrier_flight_number", seg.get("marketing_carrier_flight_number", ""))
+            flight_num = seg.get("operating_carrier_flight_number") or seg.get("marketing_carrier_flight_number") or ""
 
             legs.append(FlightLeg(
                 airline=airline,
