@@ -701,7 +701,7 @@ export default function Home() {
                   : `${flights.length} flight${flights.length !== 1 ? "s" : ""} found, sorted by best value`
                 }
                 {remaining !== null && (
-                  <span className="ml-2 text-xs">({remaining} searches left this hour)</span>
+                  <span className="ml-2 text-xs">({remaining} search{remaining !== 1 ? "es" : ""} left this hour)</span>
                 )}
               </p>
               {zonesWarning && (
