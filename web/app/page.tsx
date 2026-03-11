@@ -210,7 +210,7 @@ function ScanSummary({ summary, currency, airportNames }: { summary: ScanSummary
                   rel="noopener noreferrer"
                   className="ml-auto text-xs text-[var(--color-accent)] hover:underline"
                 >
-                  Book
+                  View
                 </a>
               </div>
             ))}
@@ -329,7 +329,7 @@ function FlightCard({ flight }: { flight: FlightOut }) {
                 rel="noopener noreferrer"
                 className="shrink-0 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
               >
-                Book
+                View flight
               </a>
             </>
           ) : (
@@ -631,7 +631,7 @@ export default function Home() {
           <button
             onClick={() => search()}
             disabled={isLoading || !prompt.trim()}
-            className="absolute right-3 bottom-3 px-5 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 px-5 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-colors"
           >
             {isLoading ? "Searching..." : "Search"}
           </button>
