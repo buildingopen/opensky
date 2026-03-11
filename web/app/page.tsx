@@ -122,18 +122,18 @@ function currencySymbol(c: string): string {
 }
 
 const AIRLINE_NAMES: Record<string, string> = {
-  "6E": "IndiGo", "9W": "Jet Airways", AA: "American", AC: "Air Canada",
+  "6E": "IndiGo", "9W": "Jet Airways", A3: "Aegean", AA: "American", AC: "Air Canada",
   AF: "Air France", AI: "Air India", AK: "AirAsia", AS: "Alaska",
   AZ: "ITA Airways", BA: "British Airways", BR: "EVA Air", CX: "Cathay Pacific",
   DL: "Delta", EK: "Emirates", ET: "Ethiopian", EW: "Eurowings",
-  EY: "Etihad", FR: "Ryanair", GA: "Garuda", HA: "Hawaiian",
-  HG: "NIKI", IB: "Iberia", JL: "JAL", KE: "Korean Air",
-  KL: "KLM", KC: "Air Astana", LH: "Lufthansa", LO: "LOT",
+  EN: "Air Dolomiti", EY: "Etihad", FR: "Ryanair", GA: "Garuda", HA: "Hawaiian",
+  HG: "NIKI", IB: "Iberia", J2: "Azerbaijan Airlines", JL: "JAL",
+  KC: "Air Astana", KE: "Korean Air", KL: "KLM", LH: "Lufthansa", LO: "LOT",
   LX: "SWISS", MH: "Malaysia Airlines", MS: "EgyptAir", NH: "ANA",
   NZ: "Air New Zealand", OS: "Austrian", OZ: "Asiana", PK: "PIA",
   QF: "Qantas", QR: "Qatar Airways", SA: "South African", SK: "SAS",
   SN: "Brussels Airlines", SQ: "Singapore Airlines", SU: "Aeroflot",
-  TG: "Thai Airways", TK: "Turkish Airlines", TP: "TAP Portugal",
+  TF: "Braathens Regional", TG: "Thai Airways", TK: "Turkish Airlines", TP: "TAP Portugal",
   UA: "United", UX: "Air Europa", VN: "Vietnam Airlines", VS: "Virgin Atlantic",
   VY: "Vueling", WN: "Southwest", WY: "Oman Air",
 };
