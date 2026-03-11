@@ -16,6 +16,7 @@ interface ParsedSearch {
   cabin: string;
   stops: string;
   total_routes: number;
+  airport_names: Record<string, string>;
 }
 
 interface FlightLeg {
@@ -123,18 +124,24 @@ function currencySymbol(c: string): string {
 // ---------------------------------------------------------------------------
 // Parsed Search Summary
 // ---------------------------------------------------------------------------
+function airportLabel(code: string, names: Record<string, string>): string {
+  const city = names[code];
+  return city ? `${code} (${city})` : code;
+}
+
 function ParsedSummary({ parsed }: { parsed: ParsedSearch }) {
   const dateRange = parsed.dates.length > 1
     ? `${formatDate(parsed.dates[0])} - ${formatDate(parsed.dates[parsed.dates.length - 1])}`
     : formatDate(parsed.dates[0]);
+  const names = parsed.airport_names || {};
 
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-sm">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[var(--color-text-muted)]">
         <span>
-          <span className="text-[var(--color-text)] font-medium">{parsed.origins.join(", ")}</span>
+          <span className="text-[var(--color-text)] font-medium">{parsed.origins.map(o => airportLabel(o, names)).join(", ")}</span>
           {" "}&rarr;{" "}
-          <span className="text-[var(--color-text)] font-medium">{parsed.destinations.join(", ")}</span>
+          <span className="text-[var(--color-text)] font-medium">{parsed.destinations.map(d => airportLabel(d, names)).join(", ")}</span>
         </span>
         <span>{dateRange}</span>
         <span className="capitalize">{parsed.cabin}</span>
@@ -155,7 +162,7 @@ function ParsedSummary({ parsed }: { parsed: ParsedSearch }) {
 // ---------------------------------------------------------------------------
 // Scan Summary (best per destination + price matrix)
 // ---------------------------------------------------------------------------
-function ScanSummary({ summary, currency }: { summary: ScanSummaryData; currency: string }) {
+function ScanSummary({ summary, currency, airportNames }: { summary: ScanSummaryData; currency: string; airportNames: Record<string, string> }) {
   const { best_destinations, price_matrix, stats } = summary;
   const sym = currencySymbol(currency);
   const isMultiDest = best_destinations.length > 1;
@@ -188,7 +195,8 @@ function ScanSummary({ summary, currency }: { summary: ScanSummaryData; currency
           <div className="divide-y divide-[var(--color-border)]">
             {best_destinations.map((f, i) => (
               <div key={i} className="px-4 py-2.5 flex items-center gap-4 text-sm">
-                <span className="font-mono text-[var(--color-text)] font-medium w-10">{f.destination}</span>
+                <span className="font-mono text-[var(--color-text)] font-medium w-10 shrink-0">{f.destination}</span>
+                <span className="text-[var(--color-text-muted)] text-xs w-20 truncate hidden sm:inline">{airportNames[f.destination] || ""}</span>
                 <span className="text-[var(--color-accent)] font-semibold w-16 text-right">
                   {f.price > 0 ? `${sym}${Math.round(f.price)}` : "-"}
                 </span>
@@ -230,7 +238,9 @@ function ScanSummary({ summary, currency }: { summary: ScanSummaryData; currency
             <tbody className="divide-y divide-[var(--color-border)]">
               {price_matrix.destinations.map(dest => (
                 <tr key={dest}>
-                  <td className="px-3 py-2 font-mono font-medium text-[var(--color-text)]">{dest}</td>
+                  <td className="px-3 py-2 font-mono font-medium text-[var(--color-text)]">
+                    {dest} <span className="font-sans font-normal text-[var(--color-text-muted)] hidden sm:inline">{airportNames[dest] || ""}</span>
+                  </td>
                   {price_matrix.dates.map(dt => {
                     const price = price_matrix.prices[`${dest}|${dt}`];
                     const isCheapest = price != null && price === price_matrix.cheapest_per_dest[dest];
@@ -619,7 +629,7 @@ export default function Home() {
 
             {summary && summary.stats.total_flights > 0 && (
               <div className="mt-4">
-                <ScanSummary summary={summary} currency={parsed.currency} />
+                <ScanSummary summary={summary} currency={parsed.currency} airportNames={parsed.airport_names || {}} />
               </div>
             )}
 

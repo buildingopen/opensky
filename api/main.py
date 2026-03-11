@@ -41,6 +41,16 @@ def _iata_city_name(code: str) -> str:
     """Get city name for an IATA code."""
     entry = _IATA_DB.get(code.upper())
     return entry["city"] if entry else code
+
+
+def _airport_names(codes: list[str]) -> dict[str, str]:
+    """Build IATA -> 'City' mapping for a list of codes."""
+    names = {}
+    for code in codes:
+        entry = _IATA_DB.get(code.upper())
+        if entry:
+            names[code.upper()] = entry["city"]
+    return names
 log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -199,6 +209,7 @@ class ParsedSearch(BaseModel):
     cabin: str = "economy"
     stops: str = "any"
     total_routes: int = 0
+    airport_names: dict[str, str] = {}  # IATA -> "City (Airport Name)"
 
 
 class FlightOut(BaseModel):
@@ -406,6 +417,7 @@ async def parse_search(req: PromptRequest):
     """Parse a natural language prompt into structured search params (no search executed)."""
     parsed = await parse_prompt(req.prompt)
     total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"])
+    names = _airport_names(parsed["origins"] + parsed["destinations"])
     return ParsedSearch(
         origins=parsed["origins"],
         destinations=parsed["destinations"],
@@ -415,6 +427,7 @@ async def parse_search(req: PromptRequest):
         cabin=parsed.get("cabin", "economy"),
         stops=parsed.get("stops", "any"),
         total_routes=total,
+        airport_names=names,
     )
 
 
@@ -434,6 +447,7 @@ async def search_flights(req: PromptRequest, request: Request):
             detail=f"Search too broad: {total} route combinations. Narrow your origins, destinations, or date range.",
         )
 
+    names = _airport_names(parsed["origins"] + parsed["destinations"])
     parsed_out = ParsedSearch(
         origins=parsed["origins"],
         destinations=parsed["destinations"],
@@ -443,6 +457,7 @@ async def search_flights(req: PromptRequest, request: Request):
         cabin=parsed.get("cabin", "economy"),
         stops=parsed.get("stops", "any"),
         total_routes=total,
+        airport_names=names,
     )
 
     async def event_stream():
