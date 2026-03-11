@@ -57,6 +57,9 @@ log = logging.getLogger(__name__)
 # Config
 # ---------------------------------------------------------------------------
 RATE_LIMIT = int(os.environ.get("RATE_LIMIT_PER_HOUR", "10"))
+RATE_LIMIT_WHITELIST = set(
+    ip.strip() for ip in os.environ.get("RATE_LIMIT_WHITELIST", "").split(",") if ip.strip()
+)
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = "gemini-2.0-flash"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
@@ -65,6 +68,8 @@ _request_log: dict[str, list[float]] = defaultdict(list)
 
 
 def _check_rate_limit(ip: str) -> int:
+    if ip in RATE_LIMIT_WHITELIST:
+        return 999
     now = time.time()
     window = 3600
     _request_log[ip] = [t for t in _request_log[ip] if now - t < window]
