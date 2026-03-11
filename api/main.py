@@ -465,7 +465,12 @@ async def search_flights(req: PromptRequest, request: Request):
         import threading
 
         # Send parsed params immediately
-        yield f"data: {json.dumps({'type': 'parsed', 'parsed': parsed_out.model_dump()})}\n\n"
+        try:
+            parsed_data = parsed_out.model_dump()
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'detail': 'Internal error preparing search.'})}\n\n"
+            return
+        yield f"data: {json.dumps({'type': 'parsed', 'parsed': parsed_data})}\n\n"
 
         progress_q: queue.Queue = queue.Queue()
 
@@ -487,8 +492,13 @@ async def search_flights(req: PromptRequest, request: Request):
         thread = threading.Thread(target=run)
         thread.start()
 
-        # Stream progress events with keepalive
+        # Stream progress events with keepalive (max 60s total)
+        scan_start = time.time()
         while True:
+            if time.time() - scan_start > 60:
+                yield f"data: {json.dumps({'type': 'error', 'detail': 'Search timed out after 60 seconds. Try a narrower search.'})}\n\n"
+                thread.join(timeout=5)
+                return
             try:
                 msg = progress_q.get(timeout=2.0)
             except queue.Empty:
@@ -499,7 +509,7 @@ async def search_flights(req: PromptRequest, request: Request):
                 break
             yield f"data: {json.dumps(msg)}\n\n"
 
-        thread.join()
+        thread.join(timeout=10)
 
         if error_holder:
             yield f"data: {json.dumps({'type': 'error', 'detail': error_holder[0]})}\n\n"

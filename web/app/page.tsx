@@ -196,7 +196,7 @@ function ScanSummary({ summary, currency, airportNames }: { summary: ScanSummary
             {best_destinations.map((f, i) => (
               <div key={i} className="px-4 py-2.5 flex items-center gap-4 text-sm">
                 <span className="font-mono text-[var(--color-text)] font-medium w-10 shrink-0">{f.destination}</span>
-                <span className="text-[var(--color-text-muted)] text-xs w-20 truncate hidden sm:inline">{airportNames[f.destination] || ""}</span>
+                <span className="text-[var(--color-text-muted)] text-xs w-32 truncate hidden sm:inline" title={airportNames[f.destination] || ""}>{airportNames[f.destination] || ""}</span>
                 <span className="text-[var(--color-accent)] font-semibold w-16 text-right">
                   {f.price > 0 ? `${sym}${Math.round(f.price)}` : "-"}
                 </span>
@@ -462,11 +462,15 @@ export default function Home() {
     setZonesWarning(null);
     setSummary(null);
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90_000); // 90s total timeout
+
     try {
       const resp = await fetch(`${API_URL}/api/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: q }),
+        signal: controller.signal,
       });
 
       if (resp.status === 429) {
@@ -522,9 +526,15 @@ export default function Home() {
           }
         }
       }
-    } catch {
-      setError("Could not reach the search API. Please try again.");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("Search timed out. The flight providers may be slow. Try a narrower search.");
+      } else {
+        setError("Could not reach the search API. Please try again.");
+      }
       setPhase("idle");
+    } finally {
+      clearTimeout(timeout);
     }
   };
 
