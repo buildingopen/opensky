@@ -378,6 +378,9 @@ class SearchFlights:
     def __init__(self, currency: str = "USD", proxy: str | None = None):
         self.client = Client(proxy=proxy)
         self.currency = currency
+        # Set SOCS consent cookie to bypass Google's GDPR consent wall
+        # Without this, datacenter IPs get blocked with a consent page
+        self.client._client.cookies.set("SOCS", "CAAaBgiA4cLNBg", domain=".google.com")
 
     def close(self) -> None:
         self.client.close()
