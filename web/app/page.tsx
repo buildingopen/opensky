@@ -152,7 +152,7 @@ function ParsedSummary({ parsed }: { parsed: ParsedSearch }) {
           <span className="capitalize">{parsed.stops.replace(/_/g, " ")}</span>
         )}
         <span className="ml-auto font-mono text-xs text-[var(--color-accent)]">
-          {parsed.total_routes} routes scanned
+          {parsed.origins.length}x{parsed.destinations.length}x{parsed.dates.length} scanned
         </span>
       </div>
     </div>
@@ -271,18 +271,35 @@ function ScanSummary({ summary, currency, airportNames }: { summary: ScanSummary
 // ---------------------------------------------------------------------------
 function FlightCard({ flight }: { flight: FlightOut }) {
   const [expanded, setExpanded] = useState(false);
+  const firstLeg = flight.legs[0];
+  const lastLeg = flight.legs[flight.legs.length - 1];
+  const airlines = flight.legs.length > 0
+    ? [...new Set(flight.legs.map(l => l.airline))].join(", ")
+    : "";
+  const departTime = firstLeg ? formatTime(firstLeg.departs) : "";
+  const arriveTime = lastLeg ? formatTime(lastLeg.arrives) : "";
 
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         <div className="flex-1 min-w-0">
-          <div className="font-mono text-sm text-[var(--color-text)] tracking-wide">
-            {flight.route}
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-sm text-[var(--color-text)] tracking-wide">
+              {flight.route}
+            </span>
+            {airlines && (
+              <span className="text-xs text-[var(--color-text-muted)]">{airlines}</span>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-1.5">
             <span className="text-xs text-[var(--color-text-muted)]">
               {formatDate(flight.date)}
             </span>
+            {departTime && arriveTime && (
+              <span className="text-xs text-[var(--color-text)]">
+                {departTime} - {arriveTime}
+              </span>
+            )}
             <span className="text-xs text-[var(--color-text-muted)]">
               {flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}
             </span>
@@ -320,18 +337,18 @@ function FlightCard({ flight }: { flight: FlightOut }) {
               rel="noopener noreferrer"
               className="shrink-0 px-5 py-2 border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 text-sm font-medium rounded-lg transition-colors"
             >
-              Check price
+              Check on Google
             </a>
           )}
         </div>
       </div>
 
-      {flight.legs.length > 0 && (
+      {flight.legs.length > 1 && (
         <button
           onClick={() => setExpanded(!expanded)}
           className="mt-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
         >
-          {expanded ? "Hide details" : "Show flight details"}
+          {expanded ? "Hide details" : `Show ${flight.legs.length} segments`}
         </button>
       )}
 
@@ -443,10 +460,19 @@ export default function Home() {
   const [zonesWarning, setZonesWarning] = useState<string | null>(null);
   const [summary, setSummary] = useState<ScanSummaryData | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const hasResults = phase === "done" || phase === "searching" || phase === "parsing";
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (phase === "done" && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [phase]);
 
   const search = async (text?: string) => {
     const q = text || prompt;
@@ -577,17 +603,19 @@ export default function Home() {
       </header>
 
       {/* Hero + Prompt */}
-      <section className="max-w-3xl mx-auto px-4 pt-16 sm:pt-24 pb-6 w-full text-center">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
+      <section className={`max-w-3xl mx-auto px-4 w-full text-center transition-all duration-300 ${hasResults ? "pt-6 pb-4" : "pt-16 sm:pt-24 pb-6"}`}>
+        <h1 className={`font-bold tracking-tight transition-all duration-300 ${hasResults ? "text-2xl" : "text-4xl sm:text-5xl"}`}>
           Prompt to{" "}
           <span className="text-[var(--color-accent)]">fly.</span>
         </h1>
-        <p className="mt-4 text-[var(--color-text-muted)] text-base sm:text-lg max-w-lg mx-auto">
-          Describe your trip in plain English. We search hundreds of routes across multiple providers, filtering out conflict zones automatically.
-        </p>
+        {!hasResults && (
+          <p className="mt-4 text-[var(--color-text-muted)] text-base sm:text-lg max-w-lg mx-auto">
+            Describe your trip in plain English. We search hundreds of routes across multiple providers, filtering out conflict zones automatically.
+          </p>
+        )}
 
         {/* Prompt Input */}
-        <div className="mt-8 relative">
+        <div className={`relative ${hasResults ? "mt-4" : "mt-8"}`}>
           <textarea
             ref={inputRef}
             value={prompt}
@@ -595,7 +623,7 @@ export default function Home() {
             onKeyDown={handleKeyDown}
             placeholder="Where do you want to fly?"
             disabled={isLoading}
-            rows={2}
+            rows={hasResults ? 1 : 2}
             className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-5 py-4 pr-24 text-base text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)]/30 transition-colors resize-none disabled:opacity-50"
           />
           <button
@@ -624,7 +652,7 @@ export default function Home() {
       </section>
 
       {/* Results */}
-      <section className="max-w-3xl mx-auto px-4 py-4 w-full flex-1">
+      <section ref={resultsRef} className="max-w-3xl mx-auto px-4 py-4 w-full flex-1">
         {error && (
           <div className="bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/30 rounded-lg px-4 py-3 text-sm text-[var(--color-danger)] mb-4">
             {error}
@@ -666,11 +694,18 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {flights.map((flight, i) => (
-                  <FlightCard key={i} flight={flight} />
-                ))}
-              </div>
+              <>
+                {flights.every(f => f.price === 0) && (
+                  <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-xs text-[var(--color-text-muted)] mb-3">
+                    Prices not available for this route from our providers. Click "Check on Google" for current pricing on Google Flights.
+                  </div>
+                )}
+                <div className="space-y-3">
+                  {flights.map((flight, i) => (
+                    <FlightCard key={i} flight={flight} />
+                  ))}
+                </div>
+              </>
             )}
           </>
         )}
@@ -706,7 +741,7 @@ export default function Home() {
             </a>
           </span>
           <span>
-            Conflict zone data updated March 2026. Flights from Duffel, Amadeus, Google.
+            Conflict zone data updated March 2026. Flights from Duffel and Google.
           </span>
         </div>
       </footer>
