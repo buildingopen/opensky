@@ -258,7 +258,9 @@ def _get_client_ip(request: Request) -> str:
 
 
 def _run_scan(parsed: dict, progress_cb: callable = None) -> list[ScoredFlight]:
-    """Run multi-origin x multi-dest x multi-date search."""
+    """Run multi-origin x multi-dest x multi-date search with parallel workers."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     engine = SearchEngine(
         currency=parsed.get("currency", "EUR"),
         use_cache=True,
@@ -274,24 +276,96 @@ def _run_scan(parsed: dict, progress_cb: callable = None) -> list[ScoredFlight]:
             for dt in parsed["dates"]
         ]
         total = len(combos)
-        for i, (origin, dest, dt) in enumerate(combos):
+        completed = 0
+
+        def _search_one(combo):
+            origin, dest, dt = combo
             try:
-                results = engine.search_scored(
-                    origin=origin,
-                    dest=dest,
-                    date=dt,
+                return engine.search_scored(
+                    origin=origin, dest=dest, date=dt,
                     risk_threshold=RiskLevel.HIGH_RISK,
                     max_price=parsed.get("max_price", 0),
                 )
-                all_scored.extend(results)
             except Exception as e:
                 log.warning("Search failed %s->%s %s: %s", origin, dest, dt, e)
-            if progress_cb:
-                progress_cb(i + 1, total, origin, dest, dt)
+                return []
+
+        workers = min(3, total)
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            i = 0
+            while i < total:
+                batch = combos[i:i + workers]
+                futures = {executor.submit(_search_one, c): c for c in batch}
+                for future in as_completed(futures):
+                    results = future.result()
+                    all_scored.extend(results)
+                    completed += 1
+                    combo = futures[future]
+                    if progress_cb:
+                        progress_cb(completed, total, combo[0], combo[1], combo[2])
+                i += len(batch)
+                if i < total:
+                    time.sleep(0.5)
+
         all_scored.sort(key=lambda x: x.score)
         return all_scored
     finally:
         engine.close()
+
+
+def _build_summary(flights: list[dict], currency: str) -> dict:
+    """Build scan summary: best per destination + date/destination price matrix."""
+    if not flights:
+        return {}
+
+    priced = [f for f in flights if f["price"] > 0]
+    destinations = sorted({f["destination"] for f in flights})
+    dates = sorted({f["date"] for f in flights})
+
+    # Best per destination (lowest score = best value)
+    best_per_dest = {}
+    for f in flights:
+        d = f["destination"]
+        if d not in best_per_dest or f["score"] < best_per_dest[d]["score"]:
+            best_per_dest[d] = f
+    best_destinations = [best_per_dest[d] for d in sorted(best_per_dest)]
+
+    # Date x destination price matrix (cheapest price per cell)
+    matrix: dict[tuple[str, str], float] = {}
+    for f in priced:
+        key = (f["destination"], f["date"])
+        if key not in matrix or f["price"] < matrix[key]:
+            matrix[key] = f["price"]
+
+    # Cheapest date per destination (for highlighting)
+    cheapest_per_dest: dict[str, float] = {}
+    for (dest, _), price in matrix.items():
+        if dest not in cheapest_per_dest or price < cheapest_per_dest[dest]:
+            cheapest_per_dest[dest] = price
+
+    price_matrix = {
+        "destinations": destinations,
+        "dates": dates,
+        "prices": {f"{dest}|{dt}": matrix.get((dest, dt)) for dest in destinations for dt in dates},
+        "cheapest_per_dest": cheapest_per_dest,
+    }
+
+    # Stats
+    price_values = [f["price"] for f in priced]
+    stats = {
+        "total_flights": len(flights),
+        "destinations": len(destinations),
+        "origins": len({f["origin"] for f in flights}),
+        "dates": len(dates),
+        "min_price": min(price_values) if price_values else 0,
+        "max_price": max(price_values) if price_values else 0,
+    }
+
+    return {
+        "best_destinations": best_destinations,
+        "price_matrix": price_matrix,
+        "stats": stats,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -398,7 +472,8 @@ async def search_flights(req: PromptRequest, request: Request):
                     seen[key] = f
             flights = sorted(seen.values(), key=lambda x: x["score"])
             warning = zones_age_warning()
-            yield f"data: {json.dumps({'type': 'results', 'flights': flights, 'count': len(flights), 'remaining_searches': remaining, 'zones_warning': warning})}\n\n"
+            summary = _build_summary(flights, parsed.get("currency", "EUR"))
+            yield f"data: {json.dumps({'type': 'results', 'flights': flights, 'count': len(flights), 'remaining_searches': remaining, 'zones_warning': warning, 'summary': summary})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 

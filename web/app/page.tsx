@@ -45,12 +45,31 @@ interface FlightOut {
   date: string;
 }
 
+interface ScanSummaryData {
+  best_destinations: FlightOut[];
+  price_matrix: {
+    destinations: string[];
+    dates: string[];
+    prices: Record<string, number | null>;
+    cheapest_per_dest: Record<string, number>;
+  };
+  stats: {
+    total_flights: number;
+    destinations: number;
+    origins: number;
+    dates: number;
+    min_price: number;
+    max_price: number;
+  };
+}
+
 interface SearchResponse {
   parsed: ParsedSearch;
   flights: FlightOut[];
   count: number;
   remaining_searches: number;
   zones_warning: string | null;
+  summary: ScanSummaryData | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -129,6 +148,110 @@ function ParsedSummary({ parsed }: { parsed: ParsedSearch }) {
           {parsed.total_routes} routes scanned
         </span>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Scan Summary (best per destination + price matrix)
+// ---------------------------------------------------------------------------
+function ScanSummary({ summary, currency }: { summary: ScanSummaryData; currency: string }) {
+  const { best_destinations, price_matrix, stats } = summary;
+  const sym = currencySymbol(currency);
+  const isMultiDest = best_destinations.length > 1;
+  const isMultiDate = price_matrix.dates.length > 1;
+  const showMatrix = isMultiDest && isMultiDate && Object.values(price_matrix.prices).some(v => v != null);
+
+  return (
+    <div className="space-y-4 mb-6">
+      {/* Stats bar */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
+        <span><span className="text-[var(--color-text)] font-semibold">{stats.total_flights}</span> flights</span>
+        <span><span className="text-[var(--color-text)] font-semibold">{stats.destinations}</span> destination{stats.destinations !== 1 ? "s" : ""}</span>
+        <span><span className="text-[var(--color-text)] font-semibold">{stats.dates}</span> date{stats.dates !== 1 ? "s" : ""}</span>
+        {stats.min_price > 0 && (
+          <span>
+            {stats.min_price === stats.max_price
+              ? <>{sym}<span className="text-[var(--color-accent)] font-semibold">{Math.round(stats.min_price)}</span></>
+              : <>{sym}<span className="text-[var(--color-accent)] font-semibold">{Math.round(stats.min_price)}</span> - {sym}{Math.round(stats.max_price)}</>
+            }
+          </span>
+        )}
+      </div>
+
+      {/* Best per destination table */}
+      {isMultiDest && (
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-[var(--color-border)]">
+            <span className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Best per destination</span>
+          </div>
+          <div className="divide-y divide-[var(--color-border)]">
+            {best_destinations.map((f, i) => (
+              <div key={i} className="px-4 py-2.5 flex items-center gap-4 text-sm">
+                <span className="font-mono text-[var(--color-text)] font-medium w-10">{f.destination}</span>
+                <span className="text-[var(--color-accent)] font-semibold w-16 text-right">
+                  {f.price > 0 ? `${sym}${Math.round(f.price)}` : "-"}
+                </span>
+                <span className="text-[var(--color-text-muted)] text-xs">{formatDate(f.date)}</span>
+                <span className="text-[var(--color-text-muted)] text-xs">{formatDuration(f.duration_minutes)}</span>
+                <span className="text-[var(--color-text-muted)] text-xs hidden sm:inline">{f.route}</span>
+                <RiskBadge level={f.risk_level} />
+                <a
+                  href={f.booking_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-auto text-xs text-[var(--color-accent)] hover:underline"
+                >
+                  Book
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Date x Destination price matrix */}
+      {showMatrix && (
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-x-auto">
+          <div className="px-4 py-2.5 border-b border-[var(--color-border)]">
+            <span className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Price by date</span>
+          </div>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-[var(--color-border)]">
+                <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)]">Dest</th>
+                {price_matrix.dates.map(d => (
+                  <th key={d} className="px-2 py-2 text-right font-mono font-normal text-[var(--color-text-muted)]">
+                    {d.slice(5)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-border)]">
+              {price_matrix.destinations.map(dest => (
+                <tr key={dest}>
+                  <td className="px-3 py-2 font-mono font-medium text-[var(--color-text)]">{dest}</td>
+                  {price_matrix.dates.map(dt => {
+                    const price = price_matrix.prices[`${dest}|${dt}`];
+                    const isCheapest = price != null && price === price_matrix.cheapest_per_dest[dest];
+                    return (
+                      <td key={dt} className={`px-2 py-2 text-right font-mono ${
+                        price == null
+                          ? "text-[var(--color-text-muted)]"
+                          : isCheapest
+                            ? "text-[var(--color-accent)] font-semibold"
+                            : "text-[var(--color-text)]"
+                      }`}>
+                        {price != null ? `${sym}${Math.round(price)}` : "-"}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -307,6 +430,7 @@ export default function Home() {
   const [flights, setFlights] = useState<FlightOut[]>([]);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [zonesWarning, setZonesWarning] = useState<string | null>(null);
+  const [summary, setSummary] = useState<ScanSummaryData | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -324,6 +448,7 @@ export default function Home() {
     setFlights([]);
     setRemaining(null);
     setZonesWarning(null);
+    setSummary(null);
 
     try {
       const resp = await fetch(`${API_URL}/api/search`, {
@@ -373,6 +498,7 @@ export default function Home() {
               setFlights(msg.flights);
               setRemaining(msg.remaining_searches);
               setZonesWarning(msg.zones_warning);
+              setSummary(msg.summary || null);
               setPhase("done");
             } else if (msg.type === "error") {
               setError(msg.detail);
@@ -487,6 +613,12 @@ export default function Home() {
         {phase === "done" && parsed && (
           <>
             <ParsedSummary parsed={parsed} />
+
+            {summary && summary.stats.total_flights > 0 && (
+              <div className="mt-4">
+                <ScanSummary summary={summary} currency={parsed.currency} />
+              </div>
+            )}
 
             <div className="flex items-center justify-between mt-4 mb-3">
               <p className="text-sm text-[var(--color-text-muted)]">
