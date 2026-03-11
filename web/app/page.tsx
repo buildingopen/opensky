@@ -121,6 +121,32 @@ function currencySymbol(c: string): string {
   return c === "EUR" ? "\u20AC" : c === "USD" ? "$" : c === "GBP" ? "\u00A3" : c;
 }
 
+const AIRLINE_NAMES: Record<string, string> = {
+  "6E": "IndiGo", "9W": "Jet Airways", AA: "American", AC: "Air Canada",
+  AF: "Air France", AI: "Air India", AK: "AirAsia", AS: "Alaska",
+  AZ: "ITA Airways", BA: "British Airways", BR: "EVA Air", CX: "Cathay Pacific",
+  DL: "Delta", EK: "Emirates", ET: "Ethiopian", EW: "Eurowings",
+  EY: "Etihad", FR: "Ryanair", GA: "Garuda", HA: "Hawaiian",
+  HG: "NIKI", IB: "Iberia", JL: "JAL", KE: "Korean Air",
+  KL: "KLM", KC: "Air Astana", LH: "Lufthansa", LO: "LOT",
+  LX: "SWISS", MH: "Malaysia Airlines", MS: "EgyptAir", NH: "ANA",
+  NZ: "Air New Zealand", OS: "Austrian", OZ: "Asiana", PK: "PIA",
+  QF: "Qantas", QR: "Qatar Airways", SA: "South African", SK: "SAS",
+  SN: "Brussels Airlines", SQ: "Singapore Airlines", SU: "Aeroflot",
+  TG: "Thai Airways", TK: "Turkish Airlines", TP: "TAP Portugal",
+  UA: "United", UX: "Air Europa", VN: "Vietnam Airlines", VS: "Virgin Atlantic",
+  VY: "Vueling", WN: "Southwest", WY: "Oman Air",
+};
+
+function airlineName(code: string): string {
+  return AIRLINE_NAMES[code] || code;
+}
+
+function formatAirlines(codes: string): string {
+  if (!codes) return "";
+  return codes.split(", ").map(c => airlineName(c.trim())).join(", ");
+}
+
 // ---------------------------------------------------------------------------
 // Parsed Search Summary
 // ---------------------------------------------------------------------------
@@ -152,7 +178,7 @@ function ParsedSummary({ parsed }: { parsed: ParsedSearch }) {
           <span className="capitalize">{parsed.stops.replace(/_/g, " ")}</span>
         )}
         <span className="ml-auto font-mono text-xs text-[var(--color-accent)]">
-          {parsed.total_routes} combinations
+          {parsed.total_routes} combination{parsed.total_routes !== 1 ? "s" : ""}
         </span>
       </div>
     </div>
@@ -202,8 +228,8 @@ function ScanSummary({ summary, currency, airportNames }: { summary: ScanSummary
                 </span>
                 <span className="text-[var(--color-text-muted)] text-xs">{formatDate(f.date)}</span>
                 <span className="text-[var(--color-text-muted)] text-xs">{formatDuration(f.duration_minutes)}</span>
-                <span className="text-[var(--color-text-muted)] text-xs hidden sm:inline">{f.route}</span>
-                <RiskBadge level={f.risk_level} />
+                <span className="text-[var(--color-text-muted)] text-xs hidden sm:inline">{f.route.replace(/ -> /g, " \u2192 ")}</span>
+                {f.risk_level !== "safe" && <RiskBadge level={f.risk_level} />}
                 <a
                   href={f.booking_url}
                   target="_blank"
@@ -285,10 +311,10 @@ function FlightCard({ flight }: { flight: FlightOut }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3">
             <span className="font-mono text-sm text-[var(--color-text)] tracking-wide">
-              {flight.route}
+              {flight.route.replace(/ -> /g, " \u2192 ")}
             </span>
             {airlines && (
-              <span className="text-xs text-[var(--color-text-muted)]">{airlines}</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{formatAirlines(airlines)}</span>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-1.5">
@@ -306,7 +332,7 @@ function FlightCard({ flight }: { flight: FlightOut }) {
             <span className="text-xs text-[var(--color-text-muted)]">
               {formatDuration(flight.duration_minutes)}
             </span>
-            <RiskBadge level={flight.risk_level} />
+            {flight.risk_level !== "safe" && <RiskBadge level={flight.risk_level} />}
           </div>
         </div>
 
@@ -317,11 +343,6 @@ function FlightCard({ flight }: { flight: FlightOut }) {
                 <div className="text-lg font-semibold text-[var(--color-text)]">
                   {currencySymbol(flight.currency)} {Math.round(flight.price)}
                 </div>
-                {airlines && (
-                  <div className="text-xs text-[var(--color-text-muted)]">
-                    {airlines}
-                  </div>
-                )}
               </div>
               <a
                 href={flight.booking_url}
