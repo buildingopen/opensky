@@ -124,20 +124,21 @@ function currencySymbol(c: string): string {
 }
 
 const AIRLINE_NAMES: Record<string, string> = {
-  "6E": "IndiGo", "9W": "Jet Airways", A3: "Aegean", AA: "American", AC: "Air Canada",
+  "5F": "Fly One", "6E": "IndiGo", "9W": "Jet Airways", A3: "Aegean", AA: "American", AC: "Air Canada",
   AF: "Air France", AI: "Air India", AK: "AirAsia", AS: "Alaska",
   AZ: "ITA Airways", BA: "British Airways", BR: "EVA Air", CX: "Cathay Pacific",
   DL: "Delta", EK: "Emirates", ET: "Ethiopian", EW: "Eurowings",
-  EN: "Air Dolomiti", EY: "Etihad", FR: "Ryanair", GA: "Garuda", HA: "Hawaiian",
+  EN: "Air Dolomiti", EY: "Etihad", FI: "Icelandair", FR: "Ryanair", G9: "Air Arabia",
+  GA: "Garuda", GF: "Gulf Air", HA: "Hawaiian",
   HG: "NIKI", IB: "Iberia", J2: "Azerbaijan Airlines", JL: "JAL",
   KC: "Air Astana", KE: "Korean Air", KL: "KLM", LH: "Lufthansa", LO: "LOT",
   LX: "SWISS", MH: "Malaysia Airlines", MS: "EgyptAir", NH: "ANA",
   NZ: "Air New Zealand", OS: "Austrian", OZ: "Asiana", PK: "PIA",
-  QF: "Qantas", QR: "Qatar Airways", SA: "South African", SK: "SAS",
+  QF: "Qantas", QR: "Qatar Airways", RJ: "Royal Jordanian", SA: "South African", SK: "SAS",
   SN: "Brussels Airlines", SQ: "Singapore Airlines", SU: "Aeroflot",
   TF: "Braathens Regional", TG: "Thai Airways", TK: "Turkish Airlines", TP: "TAP Portugal",
   UA: "United", UX: "Air Europa", VN: "Vietnam Airlines", VS: "Virgin Atlantic",
-  VY: "Vueling", WN: "Southwest", WY: "Oman Air",
+  VL: "Mediterranean Airways", VY: "Vueling", WN: "Southwest", WY: "Oman Air",
 };
 
 function airlineName(code: string): string {
