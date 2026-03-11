@@ -481,6 +481,20 @@ function SearchingState({ parsed, progress }: { parsed: ParsedSearch | null; pro
 }
 
 // ---------------------------------------------------------------------------
+// Sort
+// ---------------------------------------------------------------------------
+type SortKey = "score" | "price" | "duration" | "stops";
+
+function sortFlights(flights: FlightOut[], key: SortKey): FlightOut[] {
+  return [...flights].sort((a, b) => {
+    if (key === "price") return (a.price || Infinity) - (b.price || Infinity);
+    if (key === "duration") return a.duration_minutes - b.duration_minutes;
+    if (key === "stops") return a.stops - b.stops || (a.price || Infinity) - (b.price || Infinity);
+    return a.score - b.score; // "score" = best value
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Example prompts
 // ---------------------------------------------------------------------------
 const EXAMPLES = [
@@ -506,6 +520,7 @@ export default function Home() {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [zonesWarning, setZonesWarning] = useState<string | null>(null);
   const [summary, setSummary] = useState<ScanSummaryData | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("score");
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -535,6 +550,7 @@ export default function Home() {
     setTotalCount(0);
     setZonesWarning(null);
     setSummary(null);
+    setSortKey("score");
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90_000); // 90s total timeout
@@ -680,13 +696,20 @@ export default function Home() {
             rows={1}
             className="flex-1 bg-transparent py-1.5 text-base text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none disabled:opacity-50 resize-none overflow-hidden"
           />
-          <button
-            onClick={() => search()}
-            disabled={isLoading || !prompt.trim()}
-            className="shrink-0 ml-3 mt-0.5 px-5 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-colors"
-          >
-            {isLoading ? "Searching..." : "Search"}
-          </button>
+          <div className="flex items-center gap-2 shrink-0 ml-3">
+            {!isLoading && prompt.trim() && (
+              <kbd className="hidden sm:inline text-[10px] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded px-1.5 py-0.5">
+                Enter
+              </kbd>
+            )}
+            <button
+              onClick={() => search()}
+              disabled={isLoading || !prompt.trim()}
+              className="px-5 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-colors"
+            >
+              {isLoading ? "Searching..." : "Search"}
+            </button>
+          </div>
         </div>
 
         {/* Example prompts */}
@@ -725,21 +748,53 @@ export default function Home() {
               </div>
             )}
 
-            <div className="flex items-center justify-between mt-4 mb-3">
+            {/* Round-trip total price hint */}
+            {returnFlights && returnFlights.length > 0 && flights.length > 0 && (() => {
+              const cheapOut = flights.filter(f => f.price > 0).reduce((min, f) => f.price < min ? f.price : min, Infinity);
+              const cheapRet = returnFlights.filter(f => f.price > 0).reduce((min, f) => f.price < min ? f.price : min, Infinity);
+              if (cheapOut < Infinity && cheapRet < Infinity) {
+                const sym = currencySymbol(flights[0]?.currency || "EUR");
+                return (
+                  <div className="mt-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-lg px-4 py-3 text-sm">
+                    <span className="text-[var(--color-accent)] font-semibold">Round trip from {sym}{Math.round(cheapOut + cheapRet)}</span>
+                    <span className="text-[var(--color-text-muted)] ml-2">({sym}{Math.round(cheapOut)} out + {sym}{Math.round(cheapRet)} return)</span>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 mb-3 gap-2">
               <p className="text-sm text-[var(--color-text-muted)]">
                 {returnFlights
                   ? `${flights.length} outbound + ${returnFlights.length} return flights`
                   : totalCount > flights.length
-                    ? `Top ${flights.length} of ${totalCount} flights, sorted by best value`
-                    : `${flights.length} flight${flights.length !== 1 ? "s" : ""} found, sorted by best value`
+                    ? `Top ${flights.length} of ${totalCount} flights`
+                    : `${flights.length} flight${flights.length !== 1 ? "s" : ""} found`
                 }
                 {remaining !== null && (
                   <span className="ml-2 text-xs">({remaining} search{remaining !== 1 ? "es" : ""} left this hour)</span>
                 )}
               </p>
-              {zonesWarning && (
-                <p className="text-xs text-[var(--color-caution)]">{zonesWarning}</p>
-              )}
+              <div className="flex items-center gap-1.5">
+                {zonesWarning && (
+                  <p className="text-xs text-[var(--color-caution)] mr-3">{zonesWarning}</p>
+                )}
+                <span className="text-xs text-[var(--color-text-muted)] mr-1">Sort:</span>
+                {(["score", "price", "duration", "stops"] as SortKey[]).map(k => (
+                  <button
+                    key={k}
+                    onClick={() => setSortKey(k)}
+                    className={`text-xs px-2 py-1 rounded transition-colors ${
+                      sortKey === k
+                        ? "bg-[var(--color-accent)]/15 text-[var(--color-accent)] font-medium"
+                        : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                    }`}
+                  >
+                    {k === "score" ? "Best" : k === "price" ? "Price" : k === "duration" ? "Time" : "Stops"}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {flights.length === 0 && (!returnFlights || returnFlights.length === 0) ? (
@@ -762,7 +817,7 @@ export default function Home() {
                   <h3 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Outbound</h3>
                 )}
                 <div className="space-y-3">
-                  {flights.map((flight, i) => (
+                  {sortFlights(flights, sortKey).map((flight, i) => (
                     <FlightCard key={`out-${i}`} flight={flight} />
                   ))}
                 </div>
@@ -772,7 +827,7 @@ export default function Home() {
                   <>
                     <h3 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mt-6 mb-2">Return</h3>
                     <div className="space-y-3">
-                      {returnFlights.map((flight, i) => (
+                      {sortFlights(returnFlights, sortKey).map((flight, i) => (
                         <FlightCard key={`ret-${i}`} flight={flight} />
                       ))}
                     </div>
@@ -783,6 +838,33 @@ export default function Home() {
           </>
         )}
 
+        {/* New search button after results */}
+        {phase === "done" && flights.length > 0 && (
+          <div className="text-center mt-8 mb-4">
+            <button
+              onClick={() => {
+                setPhase("idle");
+                setPrompt("");
+                setFlights([]);
+                setReturnFlights(null);
+                setParsed(null);
+                setSummary(null);
+                setTotalCount(0);
+                setZonesWarning(null);
+                setSortKey("score");
+                if (inputRef.current) {
+                  inputRef.current.style.height = "auto";
+                  inputRef.current.focus();
+                }
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="px-5 py-2 text-sm border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-text)] transition-colors"
+            >
+              New search
+            </button>
+          </div>
+        )}
+
         {/* Empty state */}
         {phase === "idle" && flights.length === 0 && !error && (
           <div className="text-center py-8">
@@ -790,6 +872,14 @@ export default function Home() {
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-safe)]" />
                 Multi-city search
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-safe)]" />
+                Round-trip support
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-safe)]" />
+                Flexible dates
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-safe)]" />
@@ -814,7 +904,7 @@ export default function Home() {
             </a>
           </span>
           <span>
-            Flights from Duffel and Google. Conflict zones updated March 2026.
+            Flights from Duffel &amp; Google. Conflict zones updated March 2026. Prices via Skyscanner.
           </span>
         </div>
       </footer>
