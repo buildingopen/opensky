@@ -742,7 +742,7 @@ export default function Home() {
           <>
             <ParsedSummary parsed={parsed} />
 
-            {summary && summary.stats.total_flights > 0 && (
+            {summary && summary.stats && summary.stats.total_flights > 0 && (
               <div className="mt-4">
                 <ScanSummary summary={summary} currency={parsed.currency} airportNames={parsed.airport_names || {}} />
               </div>

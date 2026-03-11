@@ -423,7 +423,7 @@ def _run_scan(parsed: dict, progress_cb: callable = None) -> list[ScoredFlight]:
 def _build_summary(flights: list[dict], currency: str) -> dict:
     """Build scan summary: best per destination + date/destination price matrix."""
     if not flights:
-        return {}
+        return None
 
     priced = [f for f in flights if f["price"] > 0]
     destinations = sorted({f["destination"] for f in flights})
