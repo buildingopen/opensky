@@ -255,10 +255,12 @@ def _google_flights_url(origin: str, dest: str, date: str, currency: str = "EUR"
     return f"https://www.google.com/travel/flights?q=Flights+from+{origin}+to+{dest}+on+{date}&curr={currency}&hl=en"
 
 
-def _skyscanner_url(origin: str, dest: str, date: str, currency: str = "EUR") -> str:
-    """Skyscanner deep link with pre-filled route search."""
-    d = date.replace("-", "")[2:]  # YYMMDD
-    return f"https://www.skyscanner.com/transport/flights/{origin.lower()}/{dest.lower()}/{d}/?adultsv2=1&currency={currency}"
+def _skyscanner_url(origin: str, dest: str, date: str, currency: str = "EUR", cabin: str = "economy") -> str:
+    """Skyscanner deep link with pre-filled route, date, cabin, and currency."""
+    return (
+        f"https://www.skyscanner.net/transport/flights/{origin.lower()}/{dest.lower()}/{date}/"
+        f"?adultsv2=1&cabinclass={cabin}&currency={currency}&sortby=cheapest&preferDirects=false"
+    )
 
 
 def _filter_price_anomalies(flights: list[dict]) -> list[dict]:
@@ -292,7 +294,7 @@ def _filter_price_anomalies(flights: list[dict]) -> list[dict]:
     return filtered
 
 
-def _scored_to_out(sf: ScoredFlight) -> FlightOut:
+def _scored_to_out(sf: ScoredFlight, cabin: str = "economy") -> FlightOut:
     return FlightOut(
         price=sf.flight.price,
         currency=sf.flight.currency,
@@ -318,7 +320,7 @@ def _scored_to_out(sf: ScoredFlight) -> FlightOut:
             for leg in sf.flight.legs
         ],
         provider=sf.flight.provider,
-        booking_url=getattr(sf.flight, 'booking_url', '') or _skyscanner_url(sf.origin, sf.destination, sf.date, sf.flight.currency),
+        booking_url=getattr(sf.flight, 'booking_url', '') or _skyscanner_url(sf.origin, sf.destination, sf.date, sf.flight.currency, cabin),
         origin=sf.origin,
         destination=sf.destination,
         date=sf.date,
@@ -550,7 +552,8 @@ async def search_flights(req: PromptRequest, request: Request):
             yield f"data: {json.dumps({'type': 'error', 'detail': error_holder[0]})}\n\n"
         else:
             scored = result_holder[0] if result_holder else []
-            flights = [_scored_to_out(sf).model_dump() for sf in scored]
+            cabin = parsed.get("cabin", "economy")
+            flights = [_scored_to_out(sf, cabin=cabin).model_dump() for sf in scored]
             # Filter out flights with no price (scrape failures)
             priced = [f for f in flights if f["price"] > 0]
             flights = priced if priced else flights
