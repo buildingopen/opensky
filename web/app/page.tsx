@@ -429,6 +429,7 @@ export default function Home() {
   const [progress, setProgress] = useState<ProgressInfo | null>(null);
   const [flights, setFlights] = useState<FlightOut[]>([]);
   const [remaining, setRemaining] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [zonesWarning, setZonesWarning] = useState<string | null>(null);
   const [summary, setSummary] = useState<ScanSummaryData | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -447,6 +448,7 @@ export default function Home() {
     setProgress(null);
     setFlights([]);
     setRemaining(null);
+    setTotalCount(0);
     setZonesWarning(null);
     setSummary(null);
 
@@ -496,6 +498,7 @@ export default function Home() {
               setProgress(msg);
             } else if (msg.type === "results") {
               setFlights(msg.flights);
+              setTotalCount(msg.count);
               setRemaining(msg.remaining_searches);
               setZonesWarning(msg.zones_warning);
               setSummary(msg.summary || null);
@@ -622,7 +625,10 @@ export default function Home() {
 
             <div className="flex items-center justify-between mt-4 mb-3">
               <p className="text-sm text-[var(--color-text-muted)]">
-                {flights.length} flight{flights.length !== 1 ? "s" : ""} found, sorted by best value
+                {totalCount > flights.length
+                  ? `Top ${flights.length} of ${totalCount} flights, sorted by best value`
+                  : `${flights.length} flight${flights.length !== 1 ? "s" : ""} found, sorted by best value`
+                }
                 {remaining !== null && (
                   <span className="ml-2 text-xs">({remaining} searches left this hour)</span>
                 )}

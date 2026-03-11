@@ -18,11 +18,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+import airportsdata
+
 from skyroute.models import ConflictZone, RiskLevel, ScoredFlight
 from skyroute.safety import load_zones, zones_age_warning
 from skyroute.search import SearchEngine
 
 logging.basicConfig(level=logging.INFO)
+
+# Valid IATA airport codes (loaded once at import)
+_IATA_DB = airportsdata.load("IATA")
+_VALID_IATA = set(_IATA_DB.keys())
+
+
+def _validate_iata_codes(codes: list[str], label: str) -> list[str]:
+    """Validate IATA codes, return list of invalid ones."""
+    invalid = [c for c in codes if c.upper() not in _VALID_IATA]
+    return invalid
+
+
+def _iata_city_name(code: str) -> str:
+    """Get city name for an IATA code."""
+    entry = _IATA_DB.get(code.upper())
+    return entry["city"] if entry else code
 log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -120,6 +138,18 @@ async def parse_prompt(prompt: str) -> dict:
     # Validate required fields
     if not parsed.get("origins") or not parsed.get("destinations"):
         raise HTTPException(status_code=400, detail="Could not understand origin or destination from your prompt.")
+
+    # Validate IATA codes against known airports
+    parsed["origins"] = [c.upper() for c in parsed["origins"]]
+    parsed["destinations"] = [c.upper() for c in parsed["destinations"]]
+    bad_origins = _validate_iata_codes(parsed["origins"], "origin")
+    bad_dests = _validate_iata_codes(parsed["destinations"], "destination")
+    all_bad = bad_origins + bad_dests
+    if all_bad:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown airport code(s): {', '.join(all_bad)}. Please use valid IATA airport codes or clearer city names.",
+        )
 
     if not parsed.get("dates"):
         # Default: next 7 days
@@ -471,9 +501,12 @@ async def search_flights(req: PromptRequest, request: Request):
                 if key not in seen or f["price"] < seen[key]["price"]:
                     seen[key] = f
             flights = sorted(seen.values(), key=lambda x: x["score"])
+            total_count = len(flights)
             warning = zones_age_warning()
             summary = _build_summary(flights, parsed.get("currency", "EUR"))
-            yield f"data: {json.dumps({'type': 'results', 'flights': flights, 'count': len(flights), 'remaining_searches': remaining, 'zones_warning': warning, 'summary': summary})}\n\n"
+            # Send all flights for summary computation, but cap displayed list
+            top_flights = flights[:20]
+            yield f"data: {json.dumps({'type': 'results', 'flights': top_flights, 'count': total_count, 'remaining_searches': remaining, 'zones_warning': warning, 'summary': summary})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
