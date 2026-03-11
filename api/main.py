@@ -387,6 +387,9 @@ async def search_flights(req: PromptRequest, request: Request):
         else:
             scored = result_holder[0] if result_holder else []
             flights = [_scored_to_out(sf).model_dump() for sf in scored]
+            # Filter out flights with no price (Google scrape failures)
+            priced = [f for f in flights if f["price"] > 0]
+            flights = priced if priced else flights
             # Dedup: keep cheapest per route+date+duration+stops
             seen: dict[tuple, dict] = {}
             for f in flights:
