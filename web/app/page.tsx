@@ -317,9 +317,11 @@ function FlightCard({ flight }: { flight: FlightOut }) {
                 <div className="text-lg font-semibold text-[var(--color-text)]">
                   {currencySymbol(flight.currency)} {Math.round(flight.price)}
                 </div>
-                <div className="text-xs text-[var(--color-text-muted)]">
-                  {airlines || flight.provider}
-                </div>
+                {airlines && (
+                  <div className="text-xs text-[var(--color-text-muted)]">
+                    {airlines}
+                  </div>
+                )}
               </div>
               <a
                 href={flight.booking_url}
