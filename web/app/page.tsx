@@ -152,7 +152,7 @@ function ParsedSummary({ parsed }: { parsed: ParsedSearch }) {
           <span className="capitalize">{parsed.stops.replace(/_/g, " ")}</span>
         )}
         <span className="ml-auto font-mono text-xs text-[var(--color-accent)]">
-          {parsed.origins.length}x{parsed.destinations.length}x{parsed.dates.length} scanned
+          {parsed.total_routes} combinations
         </span>
       </div>
     </div>
@@ -274,7 +274,7 @@ function FlightCard({ flight }: { flight: FlightOut }) {
   const firstLeg = flight.legs[0];
   const lastLeg = flight.legs[flight.legs.length - 1];
   const airlines = flight.legs.length > 0
-    ? [...new Set(flight.legs.map(l => l.airline))].join(", ")
+    ? [...new Set(flight.legs.map(l => l.airline).filter(a => a && a !== "ZZ"))].join(", ")
     : "";
   const departTime = firstLeg ? formatTime(firstLeg.departs) : "";
   const arriveTime = lastLeg ? formatTime(lastLeg.arrives) : "";
@@ -317,8 +317,8 @@ function FlightCard({ flight }: { flight: FlightOut }) {
                 <div className="text-lg font-semibold text-[var(--color-text)]">
                   {currencySymbol(flight.currency)} {Math.round(flight.price)}
                 </div>
-                <div className="text-xs text-[var(--color-text-muted)] capitalize">
-                  via {flight.provider}
+                <div className="text-xs text-[var(--color-text-muted)]">
+                  {airlines || flight.provider}
                 </div>
               </div>
               <a
