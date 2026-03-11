@@ -646,8 +646,8 @@ export default function Home() {
             onKeyDown={handleKeyDown}
             placeholder="Where do you want to fly?"
             disabled={isLoading}
-            rows={hasResults ? 1 : 2}
-            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-5 py-4 pr-24 text-base text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)]/30 transition-colors resize-none disabled:opacity-50"
+            rows={1}
+            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-5 py-3.5 pr-28 text-base text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)]/30 transition-colors resize-none disabled:opacity-50"
           />
           <button
             onClick={() => search()}
