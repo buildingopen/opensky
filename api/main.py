@@ -309,7 +309,7 @@ def _filter_price_anomalies(flights: list[dict]) -> list[dict]:
     return filtered
 
 
-def _scored_to_out(sf: ScoredFlight, cabin: str = "economy") -> FlightOut:
+def _scored_to_out(sf: ScoredFlight, cabin: str = "economy", return_date: str = "") -> FlightOut:
     return FlightOut(
         price=sf.flight.price,
         currency=sf.flight.currency,
@@ -335,7 +335,7 @@ def _scored_to_out(sf: ScoredFlight, cabin: str = "economy") -> FlightOut:
             for leg in sf.flight.legs
         ],
         provider=sf.flight.provider,
-        booking_url=getattr(sf.flight, 'booking_url', '') or _skyscanner_url(sf.origin, sf.destination, sf.date, sf.flight.currency, cabin),
+        booking_url=getattr(sf.flight, 'booking_url', '') or _skyscanner_url(sf.origin, sf.destination, sf.date, sf.flight.currency, cabin, return_date=return_date),
         origin=sf.origin,
         destination=sf.destination,
         date=sf.date,
@@ -579,7 +579,8 @@ async def search_flights(req: PromptRequest, request: Request):
         cabin = parsed.get("cabin", "economy")
 
         def _process_flights(scored_list, direction="outbound"):
-            flights = [_scored_to_out(sf, cabin=cabin).model_dump() for sf in scored_list]
+            rd = return_dates[0] if return_dates and direction == "outbound" else ""
+            flights = [_scored_to_out(sf, cabin=cabin, return_date=rd).model_dump() for sf in scored_list]
             priced = [f for f in flights if f["price"] > 0]
             flights = priced if priced else flights
             flights = _filter_price_anomalies(flights)
