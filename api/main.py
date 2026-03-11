@@ -63,6 +63,7 @@ RATE_LIMIT_WHITELIST = set(
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = "gemini-2.0-flash"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+PROXY = os.environ.get("SKYROUTE_PROXY")
 
 _request_log: dict[str, list[float]] = defaultdict(list)
 
@@ -344,6 +345,7 @@ def _run_scan(parsed: dict, progress_cb: callable = None) -> list[ScoredFlight]:
         use_cache=True,
         seat=parsed.get("cabin", "economy"),
         stops=parsed.get("stops", "any"),
+        proxy=PROXY,
     )
     try:
         all_scored: list[ScoredFlight] = []
