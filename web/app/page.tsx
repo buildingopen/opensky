@@ -170,6 +170,13 @@ function ParsedSummary({ parsed }: { parsed: ParsedSearch }) {
     : "";
   const names = parsed.airport_names || {};
 
+  // Detect flexible date search: dates span more than 14 days
+  const isFlexible = parsed.dates.length > 1 && (() => {
+    const first = new Date(parsed.dates[0] + "T00:00:00");
+    const last = new Date(parsed.dates[parsed.dates.length - 1] + "T00:00:00");
+    return (last.getTime() - first.getTime()) / (1000 * 60 * 60 * 24) > 14;
+  })();
+
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-sm">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[var(--color-text-muted)]">
@@ -178,6 +185,11 @@ function ParsedSummary({ parsed }: { parsed: ParsedSearch }) {
           {isRoundTrip ? " \u21C4 " : " \u2192 "}
           <span className="text-[var(--color-text)] font-medium">{parsed.destinations.map(d => airportLabel(d, names)).join(", ")}</span>
         </span>
+        {isFlexible && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--color-accent)]/15 text-[var(--color-accent)]">
+            Flexible dates
+          </span>
+        )}
         <span>{dateRange}{isRoundTrip ? ` / return ${returnDateRange}` : ""}</span>
         <span className="capitalize">{parsed.cabin}</span>
         {parsed.max_price > 0 && (
@@ -476,6 +488,7 @@ const EXAMPLES = [
   "Bangkok, Delhi, Mumbai to Frankfurt, Berlin, Amsterdam, March 20-25, economy",
   "JFK to London round trip, April 10 returning April 17, under $800",
   "New York to Tokyo, business class, under $3000",
+  "Barcelona to anywhere in Europe, cheapest week in July",
 ];
 
 // ---------------------------------------------------------------------------

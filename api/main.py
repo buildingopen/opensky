@@ -120,10 +120,22 @@ Rules:
 - Always return valid IATA airport codes (3-letter), NOT city codes. For cities with multiple airports, use the main one (e.g. London=LHR, New York=JFK, Paris=CDG, Tokyo=NRT, Moscow=SVO, Milan=MXP, Chicago=ORD, Washington=IAD, Stockholm=ARN, Sao Paulo=GRU).
 - Never return city codes like LON, NYC, PAR, TYO, MOW, MIL, CHI, WAS, STO, SAO. Always use specific airport codes.
 
+FLEXIBLE / INSPIRATIONAL DATE SEARCHES:
+When the user does NOT specify exact dates but instead wants to explore a period (e.g. "cheapest in July", "flexible dates in April", "anytime in summer", "cheapest week", "best time to fly in June"), use SAMPLED dates instead of listing every single day. This keeps the search fast and under limits.
+- "cheapest in July" or "anytime in July" -> sample every 3rd day: Jul 1, 4, 7, 10, 13, 16, 19, 22, 25, 28
+- "flexible dates in April" or "flexible April" -> sample weekly: Apr 1, 8, 15, 22, 29
+- "anytime next month" -> sample weekly across next month (1st, 8th, 15th, 22nd, 29th if exists)
+- "cheapest week" or "best week to fly" -> one date per week for the next 4 weeks from today
+- "anytime in summer" -> sample every 2 weeks across Jun-Aug: Jun 1, 15, Jul 1, 15, Aug 1, 15
+- For return_dates in flexible searches: if outbound dates are sampled, generate a return date 7 days after each outbound date (unless the user specified a trip duration, then use that duration).
+- IMPORTANT: never list more than 15 dates for a flexible search. Always sample/skip days to stay within this limit.
+
 Examples:
 - "Bangkok to Hamburg next week under 400 euros" -> {{"origins":["BKK"],"destinations":["HAM"],"dates":["2026-03-16","2026-03-17",...],"return_dates":[],"max_price":400,"currency":"EUR","cabin":"economy","stops":"any"}}
 - "BLR, DEL, BKK to FRA, HAM, BER March 15-20 economy max 1 stop" -> {{"origins":["BLR","DEL","BKK"],"destinations":["FRA","HAM","BER"],"dates":["2026-03-15",...,"2026-03-20"],"return_dates":[],"max_price":0,"currency":"EUR","cabin":"economy","stops":"one_stop_or_fewer"}}
-- "JFK to London round trip April 10 returning April 17 under $800" -> {{"origins":["JFK"],"destinations":["LHR"],"dates":["2026-04-10"],"return_dates":["2026-04-17"],"max_price":800,"currency":"USD","cabin":"economy","stops":"any"}}"""
+- "JFK to London round trip April 10 returning April 17 under $800" -> {{"origins":["JFK"],"destinations":["LHR"],"dates":["2026-04-10"],"return_dates":["2026-04-17"],"max_price":800,"currency":"USD","cabin":"economy","stops":"any"}}
+- "Barcelona to anywhere in Europe, cheapest week in July" -> {{"origins":["BCN"],"destinations":["LHR","CDG","FCO","BER","AMS","LIS","ATH","VIE"],"dates":["2026-07-01","2026-07-04","2026-07-07","2026-07-10","2026-07-13","2026-07-16","2026-07-19","2026-07-22","2026-07-25","2026-07-28"],"return_dates":[],"max_price":0,"currency":"EUR","cabin":"economy","stops":"any"}}
+- "cheapest week to fly JFK to CDG" -> {{"origins":["JFK"],"destinations":["CDG"],"dates":["{today_plus_7}","{today_plus_14}","{today_plus_21}","{today_plus_28}"],"return_dates":[],"max_price":0,"currency":"EUR","cabin":"economy","stops":"any"}}"""
 
 
 async def parse_prompt(prompt: str) -> dict:
@@ -179,13 +191,14 @@ async def parse_prompt(prompt: str) -> dict:
         today_dt = date.today()
         parsed["dates"] = [(today_dt + timedelta(days=i)).isoformat() for i in range(1, 8)]
 
-    # Cap dates to 14 to avoid abuse
-    parsed["dates"] = parsed["dates"][:14]
+    # Cap dates to 21 to allow broader flexible/inspirational searches
+    # while staying under the 100-combo limit for single O/D pairs
+    parsed["dates"] = parsed["dates"][:21]
 
     # Ensure return_dates is always a list
     if not parsed.get("return_dates"):
         parsed["return_dates"] = []
-    parsed["return_dates"] = parsed["return_dates"][:14]
+    parsed["return_dates"] = parsed["return_dates"][:21]
 
     return parsed
 

@@ -11,7 +11,9 @@ from skyroute.providers import parse_iso_duration
 
 log = logging.getLogger(__name__)
 
-DEFAULT_BASE_URL = "https://test.api.amadeus.com"
+API_BASE = "https://api.amadeus.com"
+TOKEN_URL = f"{API_BASE}/v1/security/oauth2/token"
+SEARCH_URL = f"{API_BASE}/v2/shopping/flight-offers"
 
 CABIN_MAP: dict[str, str] = {
     "economy": "ECONOMY",
@@ -26,35 +28,33 @@ def _convert_offer(offer: dict, currency: str) -> FlightResult:
     price = float(offer.get("price", {}).get("grandTotal", 0))
     offer_currency = offer.get("price", {}).get("currency", currency)
 
-    itineraries = offer.get("itineraries", [])
-    if not itineraries:
-        return FlightResult(
-            price=price, currency=offer_currency,
-            duration_minutes=0, stops=0, legs=[], provider="amadeus",
-        )
-
-    itin = itineraries[0]
-    total_duration = parse_iso_duration(itin.get("duration", ""))
-    segments = itin.get("segments", [])
-
     legs: list[FlightLeg] = []
-    for seg in segments:
-        dep = seg.get("departure", {})
-        arr = seg.get("arrival", {})
-        dur = parse_iso_duration(seg.get("duration", ""))
+    total_duration = 0
 
-        carrier = seg.get("operating", {}).get("carrierCode", seg.get("carrierCode", ""))
-        flight_num = seg.get("number", "")
+    for itinerary in offer.get("itineraries", []):
+        itin_duration = parse_iso_duration(itinerary.get("duration", ""))
+        total_duration += itin_duration
 
-        legs.append(FlightLeg(
-            airline=carrier,
-            flight_number=flight_num,
-            departure_airport=dep.get("iataCode", ""),
-            arrival_airport=arr.get("iataCode", ""),
-            departure_time=dep.get("at", ""),
-            arrival_time=arr.get("at", ""),
-            duration_minutes=dur,
-        ))
+        for seg in itinerary.get("segments", []):
+            dep = seg.get("departure", {})
+            arr = seg.get("arrival", {})
+            dur = parse_iso_duration(seg.get("duration", ""))
+
+            carrier = (
+                seg.get("operating", {}).get("carrierCode", "")
+                or seg.get("carrierCode", "")
+            )
+            flight_num = seg.get("number", "")
+
+            legs.append(FlightLeg(
+                airline=carrier,
+                flight_number=flight_num,
+                departure_airport=dep.get("iataCode", ""),
+                arrival_airport=arr.get("iataCode", ""),
+                departure_time=dep.get("at", ""),
+                arrival_time=arr.get("at", ""),
+                duration_minutes=dur,
+            ))
 
     return FlightResult(
         price=price,
@@ -69,26 +69,22 @@ def _convert_offer(offer: dict, currency: str) -> FlightResult:
 class AmadeusProvider:
     name = "amadeus"
 
-    def __init__(
-        self,
-        key: str,
-        secret: str,
-        base_url: str = DEFAULT_BASE_URL,
-    ):
+    def __init__(self, key: str, secret: str, currency: str = "EUR"):
         self._key = key
         self._secret = secret
-        self._base_url = base_url
-        self._client = httpx.Client(base_url=base_url, timeout=30.0)
+        self._currency = currency
+        self._client = httpx.Client(timeout=30.0)
         self._token: str | None = None
-        self._token_expires: float = 0
+        self._token_expires_at: float = 0.0
 
     def _authenticate(self) -> str:
-        """Get a valid access token, refreshing if needed."""
-        if self._token and time.time() < self._token_expires - 60:
+        """Get a valid bearer token, refreshing if expired."""
+        now = time.monotonic()
+        if self._token and now < self._token_expires_at:
             return self._token
 
         resp = self._client.post(
-            "/v1/security/oauth2/token",
+            TOKEN_URL,
             data={
                 "grant_type": "client_credentials",
                 "client_id": self._key,
@@ -97,13 +93,15 @@ class AmadeusProvider:
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         resp.raise_for_status()
-        data = resp.json()
-        self._token = data["access_token"]
-        self._token_expires = time.time() + data.get("expires_in", 1799)
+        body = resp.json()
+
+        self._token = body["access_token"]
+        # Expire 60s early to avoid edge-case failures
+        self._token_expires_at = now + body.get("expires_in", 1799) - 60
         return self._token
 
     @sleep_and_retry
-    @limits(calls=10, period=1)
+    @limits(calls=5, period=1)
     def search(
         self,
         origin: str,
@@ -114,33 +112,54 @@ class AmadeusProvider:
         max_stops: int | None,
     ) -> list[FlightResult]:
         token = self._authenticate()
-        travel_class = CABIN_MAP.get(cabin, "ECONOMY")
+        cabin_class = CABIN_MAP.get(cabin, "ECONOMY")
 
-        params: dict[str, str | int | bool] = {
-            "originLocationCode": origin,
-            "destinationLocationCode": dest,
-            "departureDate": date,
-            "adults": 1,
+        payload: dict = {
             "currencyCode": currency,
-            "travelClass": travel_class,
-            "max": 50,
+            "originDestinations": [
+                {
+                    "id": "1",
+                    "originLocationCode": origin,
+                    "destinationLocationCode": dest,
+                    "departureDateTimeRange": {"date": date},
+                }
+            ],
+            "travelers": [{"id": "1", "travelerType": "ADULT"}],
+            "sources": ["GDS"],
+            "searchCriteria": {
+                "maxFlightOffers": 30,
+                "flightFilters": {
+                    "cabinRestrictions": [
+                        {
+                            "cabin": cabin_class,
+                            "coverage": "MOST_SEGMENTS",
+                            "originDestinationIds": ["1"],
+                        }
+                    ],
+                },
+            },
         }
 
-        # Amadeus only supports nonStop boolean, not max_stops count
+        # Direct flights only when max_stops == 0
         if max_stops == 0:
-            params["nonStop"] = "true"
+            payload["searchCriteria"]["flightFilters"]["connectionRestrictions"] = {
+                "nonStop": True,
+            }
 
-        resp = self._client.get(
-            "/v2/shopping/flight-offers",
-            params=params,
-            headers={"Authorization": f"Bearer {token}"},
+        resp = self._client.post(
+            SEARCH_URL,
+            json=payload,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
         )
         resp.raise_for_status()
         offers = resp.json().get("data", [])
 
         results = [_convert_offer(o, currency) for o in offers]
 
-        # Client-side stops filter for 1-2 stop limits
+        # Client-side stops filter for cases where max_stops > 0
         if max_stops is not None and max_stops > 0:
             results = [r for r in results if r.stops <= max_stops]
 
