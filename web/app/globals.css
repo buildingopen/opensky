@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #0a0f1a;
+  --color-surface: #111827;
+  --color-surface-2: #1a2234;
+  --color-border: #1e293b;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-accent: #22c55e;
+  --color-accent-hover: #16a34a;
+  --color-safe: #22c55e;
+  --color-caution: #eab308;
+  --color-high-risk: #f97316;
+  --color-danger: #ef4444;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+/* Autocomplete dropdown */
+.airport-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  margin-top: 4px;
+}
+
+.airport-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.1s;
+}
+
+.airport-option:hover,
+.airport-option.active {
+  background: var(--color-border);
+}
+
+.airport-option .iata {
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+/* Pulse animation for loading */
+@keyframes pulse-bar {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.loading-bar {
+  animation: pulse-bar 1.5s ease-in-out infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
