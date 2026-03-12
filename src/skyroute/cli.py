@@ -16,6 +16,7 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 console = Console()
+stderr_console = Console(stderr=True)
 
 
 VALID_PROVIDERS = ("google", "duffel", "amadeus")
@@ -23,14 +24,14 @@ VALID_PROVIDERS = ("google", "duffel", "amadeus")
 
 def _validate_provider(provider: str | None) -> None:
     if provider is not None and provider not in VALID_PROVIDERS:
-        console.print(f"[red]Unknown provider: {provider}. Choose from: {', '.join(VALID_PROVIDERS)}.[/red]")
-        console.print("[dim]Env vars: SKYROUTE_DUFFEL_TOKEN, SKYROUTE_AMADEUS_KEY + SKYROUTE_AMADEUS_SECRET[/dim]")
+        stderr_console.print(f"[red]Unknown provider: {provider}. Choose from: {', '.join(VALID_PROVIDERS)}.[/red]")
+        stderr_console.print("[dim]Env vars: SKYROUTE_DUFFEL_TOKEN, SKYROUTE_AMADEUS_KEY + SKYROUTE_AMADEUS_SECRET[/dim]")
         raise typer.Exit(1)
 
 
 def _validate_cabin(cabin: str) -> None:
     if cabin not in VALID_CABINS:
-        console.print(
+        stderr_console.print(
             f"[red]Unknown cabin: {cabin}. Choose from: {', '.join(VALID_CABINS)}.[/red]"
         )
         raise typer.Exit(1)
@@ -38,7 +39,7 @@ def _validate_cabin(cabin: str) -> None:
 
 def _validate_stops(stops: str) -> None:
     if stops not in VALID_STOPS:
-        console.print(
+        stderr_console.print(
             f"[red]Unknown stops filter: {stops}. Choose from: {', '.join(VALID_STOPS)}.[/red]"
         )
         raise typer.Exit(1)
@@ -59,6 +60,10 @@ def _format_scan_failures(
         f"{provider} x{count} ({failed_provider_errors.get(provider, 'error')})"
         for provider, count in sorted(failed_providers.items())
     )
+
+
+def _status_console(machine_output: bool) -> Console:
+    return stderr_console if machine_output else console
 
 
 def version_callback(value: bool) -> None:
@@ -104,15 +109,17 @@ def search(
 
     origin = origin.upper()
     destination = destination.upper()
+    machine_output = json_output or csv_output
+    status_console = _status_console(machine_output)
 
     # Validate date early with a clear message
     try:
         d = date_cls.fromisoformat(date)
         if d < date_cls.today():
-            console.print(f"[red]Date {date} is in the past.[/red]")
+            status_console.print(f"[red]Date {date} is in the past.[/red]")
             raise typer.Exit(1)
     except ValueError:
-        console.print(f"[red]Invalid date format: {date}. Use YYYY-MM-DD.[/red]")
+        status_console.print(f"[red]Invalid date format: {date}. Use YYYY-MM-DD.[/red]")
         raise typer.Exit(1)
 
     _validate_provider(provider)
@@ -121,7 +128,7 @@ def search(
 
     warning = zones_age_warning()
     if warning:
-        console.print(f"[yellow]{warning}[/yellow]")
+        status_console.print(f"[yellow]{warning}[/yellow]")
 
     try:
         engine = SearchEngine(
@@ -133,11 +140,11 @@ def search(
             provider=provider,
         )
     except ValueError as e:
-        console.print(f"[red]{e}[/red]")
+        status_console.print(f"[red]{e}[/red]")
         raise typer.Exit(1)
 
     names = ", ".join(p.name for p in engine._providers)
-    console.print(f"[dim]Searching {names}...[/dim]")
+    status_console.print(f"[dim]Searching {names}...[/dim]")
 
     # Always search unfiltered, then split safe/risky in CLI for messaging
     try:
@@ -147,28 +154,28 @@ def search(
             max_price=max_price,
         )
     except Exception as e:
-        console.print(f"[red]Search failed: {e}[/red]")
+        status_console.print(f"[red]Search failed: {e}[/red]")
         raise typer.Exit(1)
     finally:
         engine.close()
 
     if report.failed_providers and not report.successful_providers:
-        console.print(
+        status_console.print(
             f"[red]Search failed: {_format_provider_failures(report.failed_providers)}[/red]"
         )
         raise typer.Exit(1)
 
     if report.failed_providers:
-        console.print(
+        status_console.print(
             f"[yellow]Partial results: {_format_provider_failures(report.failed_providers)}[/yellow]"
         )
 
     all_results = report.results
     if not all_results:
         if max_price > 0:
-            console.print(f"[dim]No flights found under {display.format_price(max_price, currency)}.[/dim]")
+            status_console.print(f"[dim]No flights found under {display.format_price(max_price, currency)}.[/dim]")
         else:
-            console.print("[dim]No flights found.[/dim]")
+            status_console.print("[dim]No flights found.[/dim]")
         raise typer.Exit()
 
     safe = [sf for sf in all_results if sf.risk.risk_level < RiskLevel.HIGH_RISK]
@@ -176,7 +183,7 @@ def search(
     results = all_results if show_risky else safe
 
     if not results:
-        console.print("[dim]No safe flights found. Use --show-risky to see all options.[/dim]")
+        status_console.print("[dim]No safe flights found. Use --show-risky to see all options.[/dim]")
         raise typer.Exit()
 
     results.sort(key=lambda x: x.score)
@@ -185,14 +192,14 @@ def search(
         text = display.flights_json(results)
         if output:
             Path(output).write_text(text)
-            console.print(f"Saved to {output}")
+            status_console.print(f"Saved to {output}")
         else:
             print(text)
     elif csv_output:
         text = display.flights_csv(results)
         if output:
             Path(output).write_text(text)
-            console.print(f"Saved to {output}")
+            status_console.print(f"Saved to {output}")
         else:
             print(text)
     else:
@@ -232,15 +239,17 @@ def scan(
     from skyroute.search import SearchEngine
 
     _validate_provider(provider)
+    machine_output = json_output or csv_output
+    status_console = _status_console(machine_output)
 
     warning = zones_age_warning()
     if warning:
-        console.print(f"[yellow]{warning}[/yellow]")
+        status_console.print(f"[yellow]{warning}[/yellow]")
 
     try:
         cfg = load_config(config_path)
     except (OSError, ValidationError, ValueError) as e:
-        console.print(f"[red]Invalid config: {e}[/red]")
+        status_console.print(f"[red]Invalid config: {e}[/red]")
         raise typer.Exit(1)
 
     # CLI --max-price overrides config value
@@ -266,13 +275,15 @@ def scan(
     names = ", ".join(p.name for p in engine._providers)
     provider_info = f" via {names}"
 
-    console.print(
+    status_console.print(
         f"Scanning {len(cfg.search.origins)} origins x "
         f"{len(cfg.search.destinations)} destinations x "
         f"{len(dates)} dates = {total} combos{provider_info}"
     )
 
-    progress = display.scan_progress()
+    progress = display.scan_progress(
+        progress_console=stderr_console if machine_output else None,
+    )
     with progress:
         task = progress.add_task("Scanning", total=total, errors=0)
 
@@ -292,19 +303,19 @@ def scan(
                 **scan_kwargs,
             )
         except KeyboardInterrupt:
-            console.print("\n[yellow]Scan interrupted. Cached results preserved for resume.[/yellow]")
+            status_console.print("\n[yellow]Scan interrupted. Cached results preserved for resume.[/yellow]")
             raise typer.Exit(1)
         finally:
             engine.close()
 
     if report.failed_providers and not report.successful_providers:
-        console.print(
+        status_console.print(
             f"[red]Scan failed: {_format_scan_failures(report.failed_providers, report.failed_provider_errors)}[/red]"
         )
         raise typer.Exit(1)
 
     if report.failed_providers:
-        console.print(
+        status_console.print(
             f"[yellow]Partial results: {_format_scan_failures(report.failed_providers, report.failed_provider_errors)}[/yellow]"
         )
 
@@ -313,14 +324,14 @@ def scan(
         text = display.flights_json(results)
         if output:
             Path(output).write_text(text)
-            console.print(f"Saved to {output}")
+            status_console.print(f"Saved to {output}")
         else:
             print(text)
     elif csv_output:
         text = display.flights_csv(results)
         if output:
             Path(output).write_text(text)
-            console.print(f"Saved to {output}")
+            status_console.print(f"Saved to {output}")
         else:
             print(text)
     elif detail:

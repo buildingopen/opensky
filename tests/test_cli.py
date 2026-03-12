@@ -1,5 +1,6 @@
 """CLI tests for provider-related flags and error paths."""
 
+import json
 import os
 import tempfile
 from pathlib import Path
@@ -130,8 +131,11 @@ def test_search_warns_on_partial_results():
     with patch("skyroute.search.configured_providers", return_value=providers):
         result = runner.invoke(app, ["search", "BLR", "HAM", DATE, "--json", "--no-cache"])
     assert result.exit_code == 0
-    assert "Partial results: duffel (API down)" in result.output
-    assert '"provider": "google"' in result.output
+    payload = json.loads(result.stdout)
+    assert len(payload) == 1
+    assert payload[0]["flight"]["provider"] == "google"
+    assert "Searching google, duffel..." in result.stderr
+    assert "Partial results: duffel (API down)" in result.stderr
 
 
 def test_scan_reports_total_provider_failure():
@@ -158,8 +162,11 @@ def test_scan_warns_on_partial_results():
                 ["scan", "--config", config_path, "--json", "--workers", "1", "--delay", "0", "--no-cache"],
             )
         assert result.exit_code == 0
-        assert "Partial results: duffel x1 (API down)" in result.output
-        assert '"provider": "google"' in result.output
+        payload = json.loads(result.stdout)
+        assert len(payload) == 1
+        assert payload[0]["flight"]["provider"] == "google"
+        assert "Scanning 1 origins x 1 destinations x 1 dates = 1 combos via google, duffel" in result.stderr
+        assert "Partial results: duffel x1 (API down)" in result.stderr
     finally:
         Path(config_path).unlink(missing_ok=True)
 
@@ -167,4 +174,5 @@ def test_scan_warns_on_partial_results():
 def test_demo_json_is_machine_readable():
     result = runner.invoke(app, ["demo", "--json"])
     assert result.exit_code == 0
-    assert result.output.lstrip().startswith("[")
+    payload = json.loads(result.stdout)
+    assert len(payload) > 0

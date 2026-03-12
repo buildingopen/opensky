@@ -307,12 +307,12 @@ def zones_table(zones: list[ConflictZone]) -> None:
     console.print(table)
 
 
-def scan_progress() -> Progress:
+def scan_progress(progress_console: Console | None = None) -> Progress:
     return Progress(
         TextColumn("[bold]{task.description}"),
         BarColumn(),
         MofNCompleteColumn(),
         TextColumn("[dim]errors: {task.fields[errors]}"),
         TimeRemainingColumn(),
-        console=console,
+        console=progress_console or console,
     )
