@@ -269,7 +269,7 @@ def scan(
             provider=provider,
         )
     except ValueError as e:
-        console.print(f"[red]{e}[/red]")
+        status_console.print(f"[red]{e}[/red]")
         raise typer.Exit(1)
 
     names = ", ".join(p.name for p in engine._providers)

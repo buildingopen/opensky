@@ -152,6 +152,21 @@ def test_scan_reports_total_provider_failure():
         Path(config_path).unlink(missing_ok=True)
 
 
+def test_scan_missing_provider_creds_keeps_stdout_clean_in_json_mode():
+    config_path = _write_scan_config()
+    try:
+        with patch.dict(os.environ, {}, clear=True):
+            result = runner.invoke(
+                app,
+                ["scan", "--config", config_path, "--provider", "duffel", "--json"],
+            )
+        assert result.exit_code == 1
+        assert result.stdout == ""
+        assert "SKYROUTE_DUFFEL_TOKEN" in result.stderr
+    finally:
+        Path(config_path).unlink(missing_ok=True)
+
+
 def test_scan_warns_on_partial_results():
     config_path = _write_scan_config()
     try:
