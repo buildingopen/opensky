@@ -8,7 +8,7 @@ def test_load_zones():
     names = [z.name for z in zones]
     assert "Ukraine" in names
     assert "Iran" in names
-    assert "Gulf States (Airspace Risk)" in names
+    assert "Gulf States (Proximity Advisory)" in names
 
 
 def test_airport_country():
@@ -26,10 +26,10 @@ def test_safe_route():
     assert len(risk.flagged_airports) == 0
 
 
-def test_gulf_state_high_risk():
+def test_gulf_state_caution():
     for airport in ["DXB", "AUH", "DOH", "BAH", "KWI"]:
         risk = check_route(["BLR", airport, "HAM"])
-        assert risk.risk_level == RiskLevel.HIGH_RISK, f"{airport} not flagged as HIGH_RISK"
+        assert risk.risk_level == RiskLevel.CAUTION, f"{airport} not flagged as CAUTION"
         assert len(risk.flagged_airports) == 1
         assert risk.flagged_airports[0].code == airport
 

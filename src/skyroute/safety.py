@@ -16,6 +16,8 @@ _airports_db: dict[str, dict] | None = None
 _zones: list[ConflictZone] | None = None
 _country_risk: dict[str, tuple[RiskLevel, str]] | None = None
 _airport_risk: dict[str, tuple[RiskLevel, str]] | None = None
+_zones_warning_computed = False
+_zones_warning_value: str | None = None
 
 
 def _get_airports_db() -> dict[str, dict]:
@@ -70,7 +72,8 @@ def load_zones(force_bundled: bool = False) -> list[ConflictZone]:
 
 def check_route(airports: list[str]) -> RiskAssessment:
     load_zones()
-    assert _country_risk is not None and _airport_risk is not None
+    if _country_risk is None or _airport_risk is None:
+        raise RuntimeError("Conflict zones not loaded")
 
     worst = RiskLevel.SAFE
     flagged: list[FlaggedAirport] = []
@@ -105,29 +108,35 @@ def check_route(airports: list[str]) -> RiskAssessment:
 
 def zones_age_warning() -> str | None:
     """Return a warning string if the conflict zone data is stale, else None."""
+    global _zones_warning_computed, _zones_warning_value
+    if _zones_warning_computed:
+        return _zones_warning_value
+
     load_zones()
+    result = None
 
     # Check if using cached version
     if _CACHE_PATH.exists():
         age_days = (time.time() - _CACHE_PATH.stat().st_mtime) / 86400
         if age_days > 7:
-            return f"Conflict zone data is {int(age_days)} days old. Run `skyroute zones --update` to refresh."
-        return None
+            result = f"Conflict zone data is {int(age_days)} days old. Run `skyroute zones --update` to refresh."
+    else:
+        # Using bundled -- check its age from metadata
+        data = json.loads(_BUNDLED_PATH.read_text())
+        updated = data.get("metadata", {}).get("updated", "")
+        if updated:
+            from datetime import datetime
+            try:
+                updated_dt = datetime.strptime(updated, "%Y-%m-%d")
+                age_days = (datetime.now() - updated_dt).days
+                if age_days > 14:
+                    result = f"Bundled conflict zone data is {age_days} days old. Run `skyroute zones --update` to refresh."
+            except ValueError:
+                pass
 
-    # Using bundled -- check its age from metadata
-    data = json.loads(_BUNDLED_PATH.read_text())
-    updated = data.get("metadata", {}).get("updated", "")
-    if updated:
-        from datetime import datetime
-        try:
-            updated_dt = datetime.strptime(updated, "%Y-%m-%d")
-            age_days = (datetime.now() - updated_dt).days
-            if age_days > 14:
-                return f"Bundled conflict zone data is {age_days} days old. Run `skyroute zones --update` to refresh."
-        except ValueError:
-            pass
-
-    return None
+    _zones_warning_computed = True
+    _zones_warning_value = result
+    return result
 
 
 def save_cached_zones(data: str) -> None:

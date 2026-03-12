@@ -11,6 +11,9 @@ from skyroute._vendor.google_flights import (
     SeatType,
     SortBy,
 )
+from tests.utils import future_date
+
+DATE = future_date(14)
 
 
 def test_filter_encode_roundtrip():
@@ -20,7 +23,7 @@ def test_filter_encode_roundtrip():
             FlightSegment(
                 departure_airport=[["BLR", 0]],
                 arrival_airport=[["HAM", 0]],
-                travel_date="2026-03-10",
+                travel_date=DATE,
             )
         ],
         passenger_info=PassengerInfo(adults=1),
@@ -41,7 +44,7 @@ def test_filter_format_structure():
             FlightSegment(
                 departure_airport=[["BLR", 0]],
                 arrival_airport=[["HAM", 0]],
-                travel_date="2026-03-10",
+                travel_date=DATE,
             )
         ],
     )
@@ -119,7 +122,7 @@ def test_string_airports_in_segment():
     seg = FlightSegment(
         departure_airport=[["BLR", 0]],
         arrival_airport=[["HAM", 0]],
-        travel_date="2026-03-10",
+        travel_date=DATE,
     )
     assert seg.departure_airport[0][0] == "BLR"
     assert seg.arrival_airport[0][0] == "HAM"
@@ -132,7 +135,7 @@ def test_string_airlines_filter():
             FlightSegment(
                 departure_airport=[["BLR", 0]],
                 arrival_airport=[["HAM", 0]],
-                travel_date="2026-03-10",
+                travel_date=DATE,
             )
         ],
         airlines=["LH", "EK", "AI"],

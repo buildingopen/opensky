@@ -6,26 +6,28 @@ from unittest.mock import patch
 from typer.testing import CliRunner
 
 from skyroute.cli import app
+from tests.utils import future_date
 
 runner = CliRunner()
+DATE = future_date(14)
 
 
 def test_invalid_provider_name():
-    result = runner.invoke(app, ["search", "BLR", "HAM", "2026-03-10", "--provider", "fake"])
+    result = runner.invoke(app, ["search", "BLR", "HAM", DATE, "--provider", "fake"])
     assert result.exit_code == 1
     assert "Unknown provider: fake" in result.output
 
 
 def test_duffel_missing_env_var():
     with patch.dict(os.environ, {}, clear=True):
-        result = runner.invoke(app, ["search", "BLR", "HAM", "2026-03-10", "--provider", "duffel"])
+        result = runner.invoke(app, ["search", "BLR", "HAM", DATE, "--provider", "duffel"])
     assert result.exit_code == 1
     assert "SKYROUTE_DUFFEL_TOKEN" in result.output
 
 
 def test_amadeus_missing_env_vars():
     with patch.dict(os.environ, {}, clear=True):
-        result = runner.invoke(app, ["search", "BLR", "HAM", "2026-03-10", "--provider", "amadeus"])
+        result = runner.invoke(app, ["search", "BLR", "HAM", DATE, "--provider", "amadeus"])
     assert result.exit_code == 1
     assert "SKYROUTE_AMADEUS_KEY" in result.output
 

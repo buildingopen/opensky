@@ -27,7 +27,6 @@ dependencies = [
     "rich>=13.0",
     "pydantic>=2.10",
     "airportsdata>=20240101",
-    "diskcache>=5.6",
     "ratelimit>=2.2",
     "httpx>=0.27",
 ]

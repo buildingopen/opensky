@@ -8,8 +8,14 @@ from skyroute._vendor.google_flights import SearchFlights
 from skyroute.models import FlightLeg, FlightResult, RiskLevel
 from skyroute.providers.google import _convert_result
 from skyroute.search import SearchEngine
+from tests.utils import future_date, future_datetime
 
 FIXTURE = Path(__file__).parent / "fixture_flights_blr_ham.json"
+DATE = future_date(14)
+DATE_PLUS_1 = future_date(15)
+DATE_PLUS_2 = future_date(16)
+DEP_TIME = future_datetime(14, 8, 0)
+ARR_TIME = future_datetime(14, 18, 0)
 
 
 def _load_fixture():
@@ -37,14 +43,14 @@ def _make_mock_engine():
 
 def test_search_one_returns_all_flights():
     engine, parsed = _make_mock_engine()
-    results = engine.search_one("BLR", "HAM", "2026-03-10")
+    results = engine.search_one("BLR", "HAM", DATE)
     assert len(results) == len(parsed)
     engine.close()
 
 
 def test_search_one_converts_to_domain_models():
     engine, _ = _make_mock_engine()
-    results = engine.search_one("BLR", "HAM", "2026-03-10")
+    results = engine.search_one("BLR", "HAM", DATE)
 
     for r in results:
         assert hasattr(r, "price")
@@ -62,10 +68,10 @@ def test_search_one_converts_to_domain_models():
 def test_search_scored_filters_conflict_zones():
     engine, _ = _make_mock_engine()
 
-    # Default: filter at HIGH_RISK (should remove DXB/DOH routes)
-    scored = engine.search_scored("BLR", "HAM", "2026-03-10")
+    # Default: filter at HIGH_RISK (caution routes remain)
+    scored = engine.search_scored("BLR", "HAM", DATE)
     dxb_flights = [s for s in scored if "DXB" in s.route]
-    assert len(dxb_flights) == 0, "DXB flights should be filtered at HIGH_RISK"
+    assert len(dxb_flights) > 0, "DXB flights remain when only HIGH_RISK is filtered"
 
     engine.close()
 
@@ -75,7 +81,7 @@ def test_search_scored_show_all_with_none_threshold():
 
     # None threshold: no filtering, all flights returned
     scored = engine.search_scored(
-        "BLR", "HAM", "2026-03-10", risk_threshold=None,
+        "BLR", "HAM", DATE, risk_threshold=None,
     )
     dxb_flights = [s for s in scored if "DXB" in s.route]
     assert len(dxb_flights) > 0, "DXB flights should appear when threshold is None"
@@ -87,14 +93,14 @@ def test_search_scored_risky_flights_have_risk_data():
     engine, _ = _make_mock_engine()
 
     scored = engine.search_scored(
-        "BLR", "HAM", "2026-03-10", risk_threshold=None,
+        "BLR", "HAM", DATE, risk_threshold=None,
     )
-    risky = [s for s in scored if s.risk.risk_level >= RiskLevel.HIGH_RISK]
+    risky = [s for s in scored if s.risk.risk_level >= RiskLevel.CAUTION]
     assert len(risky) > 0
 
     for sf in risky:
         assert len(sf.risk.flagged_airports) > 0
-        assert sf.risk.risk_level in (RiskLevel.HIGH_RISK, RiskLevel.DO_NOT_FLY)
+        assert sf.risk.risk_level in (RiskLevel.CAUTION, RiskLevel.HIGH_RISK, RiskLevel.DO_NOT_FLY)
 
     engine.close()
 
@@ -103,7 +109,7 @@ def test_search_scored_prices():
     engine, _ = _make_mock_engine()
 
     scored = engine.search_scored(
-        "BLR", "HAM", "2026-03-10", risk_threshold=None,
+        "BLR", "HAM", DATE, risk_threshold=None,
     )
 
     priced = [s for s in scored if s.flight.price > 0]
@@ -124,7 +130,7 @@ def test_search_scored_sorting():
     engine, _ = _make_mock_engine()
 
     scored = engine.search_scored(
-        "BLR", "HAM", "2026-03-10", risk_threshold=None,
+        "BLR", "HAM", DATE, risk_threshold=None,
     )
     scores = [s.score for s in scored]
     # search_scored returns unsorted; CLI sorts. Verify scores are computed.
@@ -137,7 +143,7 @@ def test_search_scored_route_strings():
     engine, _ = _make_mock_engine()
 
     scored = engine.search_scored(
-        "BLR", "HAM", "2026-03-10", risk_threshold=None,
+        "BLR", "HAM", DATE, risk_threshold=None,
     )
     for sf in scored:
         assert sf.route.startswith("BLR")
@@ -150,7 +156,7 @@ def test_search_scored_route_strings():
 # ---- Multi-provider dedup through search_one ----
 
 def _make_leg(airline="LH", num="760", dep="BLR", arr="HAM",
-              dep_t="2026-03-10T08:00:00", arr_t="2026-03-10T18:00:00", dur=600):
+              dep_t=DEP_TIME, arr_t=ARR_TIME, dur=600):
     return FlightLeg(
         airline=airline, flight_number=num,
         departure_airport=dep, arrival_airport=arr,
@@ -182,7 +188,7 @@ def test_search_one_multi_provider_deduplicates():
     engine = SearchEngine(currency="EUR", use_cache=False)
     engine._providers = [mock_google, mock_duffel]
 
-    results = engine.search_one("BLR", "HAM", "2026-03-10")
+    results = engine.search_one("BLR", "HAM", DATE)
     assert len(results) == 1
     assert results[0].price == 350.0
     assert results[0].provider == "duffel"
@@ -211,7 +217,7 @@ def test_search_one_multi_provider_keeps_unique():
     engine = SearchEngine(currency="EUR", use_cache=False)
     engine._providers = [mock_google, mock_duffel]
 
-    results = engine.search_one("BLR", "HAM", "2026-03-10")
+    results = engine.search_one("BLR", "HAM", DATE)
     assert len(results) == 2
     providers = {r.provider for r in results}
     assert providers == {"google", "duffel"}
@@ -236,7 +242,7 @@ def test_search_one_provider_failure_still_returns_others():
     engine = SearchEngine(currency="EUR", use_cache=False)
     engine._providers = [mock_google, mock_duffel]
 
-    results = engine.search_one("BLR", "HAM", "2026-03-10")
+    results = engine.search_one("BLR", "HAM", DATE)
     assert len(results) == 1
     assert results[0].provider == "google"
     engine.close()

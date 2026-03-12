@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 import time
 
 import httpx
@@ -76,6 +77,7 @@ class AmadeusProvider:
         self._client = httpx.Client(timeout=30.0)
         self._token: str | None = None
         self._token_expires_at: float = 0.0
+        self._auth_lock = threading.Lock()
 
     def _authenticate(self) -> str:
         """Get a valid bearer token, refreshing if expired."""
@@ -83,22 +85,28 @@ class AmadeusProvider:
         if self._token and now < self._token_expires_at:
             return self._token
 
-        resp = self._client.post(
-            TOKEN_URL,
-            data={
-                "grant_type": "client_credentials",
-                "client_id": self._key,
-                "client_secret": self._secret,
-            },
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-        )
-        resp.raise_for_status()
-        body = resp.json()
+        with self._auth_lock:
+            # Double-check after acquiring lock
+            now = time.monotonic()
+            if self._token and now < self._token_expires_at:
+                return self._token
 
-        self._token = body["access_token"]
-        # Expire 60s early to avoid edge-case failures
-        self._token_expires_at = now + body.get("expires_in", 1799) - 60
-        return self._token
+            resp = self._client.post(
+                TOKEN_URL,
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": self._key,
+                    "client_secret": self._secret,
+                },
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+            )
+            resp.raise_for_status()
+            body = resp.json()
+
+            self._token = body["access_token"]
+            # Expire 60s early to avoid edge-case failures
+            self._token_expires_at = now + body.get("expires_in", 1799) - 60
+            return self._token
 
     @sleep_and_retry
     @limits(calls=5, period=1)

@@ -247,7 +247,7 @@ def test_amadeus_auth_refreshes_expired_token():
 
     # Set an expired token
     provider._token = "old_tok"
-    provider._token_expires = time.time() - 10  # expired
+    provider._token_expires_at = time.monotonic() - 10  # expired
 
     token = provider._authenticate()
     assert token == "new_tok"
@@ -285,16 +285,16 @@ def test_amadeus_search_parses_response():
     provider = AmadeusProvider(key="k", secret="s")
     # Pre-set a valid token to skip auth
     provider._token = "valid_tok"
-    provider._token_expires = time.time() + 600
+    provider._token_expires_at = time.monotonic() + 600
 
     mock_client = MagicMock()
     mock_resp = MagicMock()
     mock_resp.json.return_value = {"data": [AMADEUS_OFFER]}
-    mock_client.get.return_value = mock_resp
+    mock_client.post.return_value = mock_resp
     provider._client = mock_client
 
     results = provider.search("BLR", "HAM", "2026-03-10", "economy", "EUR", None)
     assert len(results) == 1
     assert results[0].provider == "amadeus"
     assert results[0].price == 420.50
-    mock_client.get.assert_called_once()
+    mock_client.post.assert_called_once()
