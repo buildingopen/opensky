@@ -7,10 +7,12 @@ import typer
 from rich.console import Console
 
 from skyroute import __version__
+from skyroute.config import VALID_CABINS, VALID_STOPS
+from skyroute.search import ProviderFailure
 
 app = typer.Typer(
     name="skyroute",
-    help="Flight search with conflict zone filtering.",
+    help="Flight search with itinerary conflict-zone flagging.",
     no_args_is_help=True,
 )
 console = Console()
@@ -24,6 +26,39 @@ def _validate_provider(provider: str | None) -> None:
         console.print(f"[red]Unknown provider: {provider}. Choose from: {', '.join(VALID_PROVIDERS)}.[/red]")
         console.print("[dim]Env vars: SKYROUTE_DUFFEL_TOKEN, SKYROUTE_AMADEUS_KEY + SKYROUTE_AMADEUS_SECRET[/dim]")
         raise typer.Exit(1)
+
+
+def _validate_cabin(cabin: str) -> None:
+    if cabin not in VALID_CABINS:
+        console.print(
+            f"[red]Unknown cabin: {cabin}. Choose from: {', '.join(VALID_CABINS)}.[/red]"
+        )
+        raise typer.Exit(1)
+
+
+def _validate_stops(stops: str) -> None:
+    if stops not in VALID_STOPS:
+        console.print(
+            f"[red]Unknown stops filter: {stops}. Choose from: {', '.join(VALID_STOPS)}.[/red]"
+        )
+        raise typer.Exit(1)
+
+
+def _format_provider_failures(failures: list[ProviderFailure]) -> str:
+    return ", ".join(
+        f"{failure.provider} ({failure.error})"
+        for failure in failures
+    )
+
+
+def _format_scan_failures(
+    failed_providers: dict[str, int],
+    failed_provider_errors: dict[str, str],
+) -> str:
+    return ", ".join(
+        f"{provider} x{count} ({failed_provider_errors.get(provider, 'error')})"
+        for provider, count in sorted(failed_providers.items())
+    )
 
 
 def version_callback(value: bool) -> None:
@@ -81,6 +116,8 @@ def search(
         raise typer.Exit(1)
 
     _validate_provider(provider)
+    _validate_cabin(cabin)
+    _validate_stops(stops)
 
     warning = zones_age_warning()
     if warning:
@@ -104,7 +141,7 @@ def search(
 
     # Always search unfiltered, then split safe/risky in CLI for messaging
     try:
-        all_results = engine.search_scored(
+        report = engine.search_scored_report(
             origin, destination, date,
             risk_threshold=None,
             max_price=max_price,
@@ -115,6 +152,18 @@ def search(
     finally:
         engine.close()
 
+    if report.failed_providers and not report.successful_providers:
+        console.print(
+            f"[red]Search failed: {_format_provider_failures(report.failed_providers)}[/red]"
+        )
+        raise typer.Exit(1)
+
+    if report.failed_providers:
+        console.print(
+            f"[yellow]Partial results: {_format_provider_failures(report.failed_providers)}[/yellow]"
+        )
+
+    all_results = report.results
     if not all_results:
         if max_price > 0:
             console.print(f"[dim]No flights found under {display.format_price(max_price, currency)}.[/dim]")
@@ -178,6 +227,7 @@ def scan(
     from skyroute import display
     from skyroute.config import load_config
     from skyroute.models import RiskLevel
+    from pydantic import ValidationError
     from skyroute.safety import zones_age_warning
     from skyroute.search import SearchEngine
 
@@ -187,7 +237,11 @@ def scan(
     if warning:
         console.print(f"[yellow]{warning}[/yellow]")
 
-    cfg = load_config(config_path)
+    try:
+        cfg = load_config(config_path)
+    except (OSError, ValidationError, ValueError) as e:
+        console.print(f"[red]Invalid config: {e}[/red]")
+        raise typer.Exit(1)
 
     # CLI --max-price overrides config value
     if max_price > 0:
@@ -230,7 +284,7 @@ def scan(
             scan_kwargs["risk_threshold_override"] = None
 
         try:
-            results = engine.scan(
+            report = engine.scan_report(
                 cfg,
                 workers=workers,
                 delay=delay,
@@ -243,6 +297,18 @@ def scan(
         finally:
             engine.close()
 
+    if report.failed_providers and not report.successful_providers:
+        console.print(
+            f"[red]Scan failed: {_format_scan_failures(report.failed_providers, report.failed_provider_errors)}[/red]"
+        )
+        raise typer.Exit(1)
+
+    if report.failed_providers:
+        console.print(
+            f"[yellow]Partial results: {_format_scan_failures(report.failed_providers, report.failed_provider_errors)}[/yellow]"
+        )
+
+    results = report.results
     if json_output:
         text = display.flights_json(results)
         if output:
@@ -285,7 +351,7 @@ def zones(
     if update:
         import urllib.request
 
-        url = "https://raw.githubusercontent.com/federicodeponte/skyroute/main/src/skyroute/data/conflict_zones.json"
+        url = "https://raw.githubusercontent.com/buildingopen/opensky/master/src/skyroute/data/conflict_zones.json"
         console.print(f"Fetching from {url}...")
         try:
             with urllib.request.urlopen(url, timeout=10) as resp:
@@ -347,13 +413,12 @@ def demo(
 
     results.sort(key=lambda x: x.score)
 
-    console.print("[dim]Demo: BLR -> HAM, 2026-03-10 (bundled fixture data, no API calls)[/dim]\n")
-
     if json_output:
         print(display.flights_json(results))
     elif csv_output:
         print(display.flights_csv(results))
     else:
+        console.print("[dim]Demo: BLR -> HAM, 2026-03-10 (bundled fixture data, no API calls)[/dim]\n")
         display.flights_table(results, title="Flight Results (Demo)")
         if not show_risky and risky:
             console.print(

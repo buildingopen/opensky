@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "skyroute"
 version = "0.1.0"
-description = "Flight search with conflict zone filtering"
+description = "Flight search CLI with itinerary conflict-zone flagging"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
@@ -35,8 +35,17 @@ dependencies = [
 skyroute = "skyroute.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/federicodeponte/skyroute"
-Repository = "https://github.com/federicodeponte/skyroute"
+Homepage = "https://github.com/buildingopen/opensky"
+Repository = "https://github.com/buildingopen/opensky"
+
+[tool.hatch.build]
+exclude = [
+    ".venv*",
+    "venv*",
+    ".pytest_cache",
+    "dist",
+    "build",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/skyroute"]

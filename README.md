@@ -1,53 +1,40 @@
-# skyroute
+# opensky
 
-Flight search with conflict zone filtering. Searches Google Flights, Duffel, and Amadeus, then filters out routes through active conflict zones, airspace closures, and high-risk regions.
+`skyroute` is an open-source flight search CLI that aggregates Google Flights, Duffel, and Amadeus results, then flags itineraries that transit through airports or countries listed in the bundled conflict-zone dataset.
 
-## The problem
+## What The Engine Evaluates Today
 
-When booking flights, especially between Asia and Europe, many routes transit through the Middle East. During airspace closures (e.g., Iran strikes Feb 2026), these routes become dangerous or impossible. No existing flight search tool filters by airspace safety.
+- one-way itineraries returned by the configured providers
+- airports and countries present in the itinerary
+- risk levels from the bundled or refreshed conflict-zone dataset
+- price and duration scoring across single-route searches and multi-route scans
 
-skyroute solves this: search thousands of origin/destination/date combinations, automatically flag routes through conflict zones, and find the safest cheapest option.
+It does not currently analyze actual overflight paths, FIR boundaries, or airspace closures that do not appear in the itinerary itself.
 
 ## Install
 
 Requires Python 3.11+.
 
+Install directly from GitHub:
+
 ```bash
-pip install skyroute
+pip install "git+https://github.com/buildingopen/opensky.git"
 ```
 
 Or from source:
 
 ```bash
-git clone https://github.com/federicodeponte/skyroute.git
-cd skyroute
+git clone https://github.com/buildingopen/opensky.git
+cd opensky
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
 ```
 
-Copy `.env.example` to `.env` and fill in any API keys you have (optional, Google Flights works without any keys).
+Copy `.env.example` to `.env` and fill in any API keys you have. Google Flights works without any keys.
 
-## Providers
+## Quick Demo
 
-skyroute supports three flight data providers. Google Flights is always available. Duffel and Amadeus activate automatically when their env vars are set.
-
-| Provider | Env vars | Notes |
-|----------|----------|-------|
-| Google Flights | none (default) | Scrapes Google Flights. Needs residential IP. |
-| [Duffel](https://duffel.com) | `SKYROUTE_DUFFEL_TOKEN` | Free unlimited searches. |
-| [Amadeus](https://developers.amadeus.com) | `SKYROUTE_AMADEUS_KEY` + `SKYROUTE_AMADEUS_SECRET` | Free tier: 2,000 calls/month. |
-
-When multiple providers are configured, results are aggregated and deduplicated (same flight from two sources keeps the cheapest price).
-
-Use `--provider` / `-p` to limit to a single provider:
-
-```bash
-skyroute search BLR HAM 2026-03-10 --provider duffel
-```
-
-## Quick demo
-
-See what skyroute does without any API keys or network calls:
+See the full output without any API keys or network calls:
 
 ```bash
 skyroute demo
@@ -56,15 +43,33 @@ skyroute demo --show-risky
 
 ![skyroute demo](demo.gif)
 
+## Providers
+
+`skyroute` supports three providers. Google Flights is always available. Duffel and Amadeus activate automatically when their env vars are set.
+
+| Provider | Env vars | Notes |
+|----------|----------|-------|
+| Google Flights | none (default) | Scrapes Google Flights. Needs a residential IP. |
+| [Duffel](https://duffel.com) | `SKYROUTE_DUFFEL_TOKEN` | API-based search. |
+| [Amadeus](https://developers.amadeus.com) | `SKYROUTE_AMADEUS_KEY` + `SKYROUTE_AMADEUS_SECRET` | API-based search. |
+
+When multiple providers are configured, results are aggregated and deduplicated. If one provider fails, the CLI reports partial results. If every provider fails, the command exits non-zero.
+
+Use `--provider` / `-p` to limit to a single provider:
+
+```bash
+skyroute search BLR HAM 2026-04-10 --provider duffel
+```
+
 ## Usage
 
 ### Single route search
 
 ```bash
-skyroute search BLR HAM 2026-03-10
-skyroute search BLR HAM 2026-03-10 --currency EUR --show-risky
-skyroute search BLR HAM 2026-03-10 --json
-skyroute search BLR HAM 2026-03-10 --provider duffel
+skyroute search BLR HAM 2026-04-10
+skyroute search BLR HAM 2026-04-10 --currency EUR --show-risky
+skyroute search BLR HAM 2026-04-10 --json
+skyroute search BLR HAM 2026-04-10 --provider duffel
 ```
 
 ### Multi-route scan
@@ -82,13 +87,13 @@ skyroute scan --config scan.toml
 skyroute scan --config scan.toml --workers 5 --json -o results.json
 ```
 
-Scans are cached. If interrupted, re-run the same command to resume from where it left off.
+Scans are cached. If interrupted, rerun the same command to reuse cached provider results.
 
 ### Conflict zones
 
 ```bash
-skyroute zones              # list active conflict zones
-skyroute zones --update     # fetch latest data from GitHub
+skyroute zones
+skyroute zones --update
 ```
 
 ### Cache management
@@ -98,7 +103,7 @@ skyroute cache stats
 skyroute cache clear
 ```
 
-## Scan config
+## Scan Config
 
 ```toml
 [search]
@@ -106,13 +111,14 @@ origins = ["BLR", "DEL", "BOM", "KUL", "BKK", "SIN"]
 destinations = ["HAM", "FRA", "MUC", "BER", "AMS", "CPH"]
 cabin = "economy"
 currency = "EUR"
+stops = "any"
 
 [search.date_range]
-start = "2026-03-10"
-end = "2026-03-20"
+start = "2026-04-10"
+end = "2026-04-20"
 
 [safety]
-# Filter threshold. Routes at or above this level are hidden.
+# Hide routes at or above this level.
 # Options: do_not_fly | high_risk | caution
 risk_threshold = "high_risk"
 
@@ -120,36 +126,42 @@ risk_threshold = "high_risk"
 price_weight = 1.0
 duration_weight = 0.5
 
-# Optional: add ground transit time for scoring
-[connections]
-final_destination = "Hamburg"
-
 [connections.transit_hours]
 HAM = 0
 HAJ = 1.5
 BER = 2
 FRA = 4
+MUC = 5.5
+AMS = 5
+CPH = 5
 ```
 
-## Safety data
+## Safety Data
 
-skyroute ships with a bundled conflict zone database based on:
+`skyroute` ships with a bundled conflict-zone database based on:
+
 - [EASA Conflict Zone Information Bulletins (CZIB)](https://www.easa.europa.eu/en/domains/air-operations/czibs)
 - [Safe Airspace](https://safeairspace.net)
 - FAA NOTAMs
 
-The database maps countries and specific airports to risk levels: `SAFE`, `CAUTION`, `HIGH_RISK`, `DO_NOT_FLY`.
+The dataset maps countries and specific airports to `SAFE`, `CAUTION`, `HIGH_RISK`, and `DO_NOT_FLY`.
 
-Run `skyroute zones --update` to fetch the latest version.
+Run `skyroute zones --update` to fetch the latest dataset from GitHub.
 
-**This is informational only. Always check official NOTAMs and airline advisories before booking.**
+This is informational only. Always check official NOTAMs and airline advisories before booking.
 
 ## Limitations
 
-- **Residential IP required**: Google Flights blocks datacenter IPs with a consent wall. Use `--proxy` if running on a server. Duffel and Amadeus work from any IP.
-- **Rate limits**: All providers are rate-limited to 10 req/sec. Google will throttle aggressive scanning. Default scan settings (3 workers, 1s delay) are conservative.
-- **Price accuracy**: Prices may differ from airline websites. Always verify before booking.
-- **Safety data**: The conflict zone database is a best-effort compilation. It may be incomplete or outdated. This tool is not a substitute for official aviation safety advisories.
+- Google Flights often requires a residential IP. Use `--proxy` if you are running searches from a server.
+- Prices can differ from airline and OTA checkout pages.
+- The conflict-zone database is a best-effort dataset and can be incomplete or stale.
+- The current engine does not analyze overflight paths or FIR-level closures.
+
+## Release
+
+CI runs on Python 3.11 through 3.14. Tagging `v*` triggers the release workflow, which builds distributions, creates a GitHub release, and can optionally publish to PyPI if trusted publishing is configured.
+
+See [RELEASING.md](RELEASING.md) for the release steps.
 
 ## Credits
 

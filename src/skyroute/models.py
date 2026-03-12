@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RiskLevel(str, Enum):
@@ -42,7 +42,7 @@ class FlaggedAirport(BaseModel):
 
 class RiskAssessment(BaseModel):
     risk_level: RiskLevel = RiskLevel.SAFE
-    flagged_airports: list[FlaggedAirport] = []
+    flagged_airports: list[FlaggedAirport] = Field(default_factory=list)
 
     @property
     def is_safe(self) -> bool:
@@ -84,8 +84,8 @@ class ConflictZone(BaseModel):
     id: str
     name: str
     risk_level: RiskLevel
-    countries: list[str] = []
-    airports: list[str] = []
+    countries: list[str] = Field(default_factory=list)
+    airports: list[str] = Field(default_factory=list)
     source: str = ""
     details: str = ""
     updated: str = ""

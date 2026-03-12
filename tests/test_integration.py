@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 from skyroute._vendor.google_flights import SearchFlights
 from skyroute.models import FlightLeg, FlightResult, RiskLevel
 from skyroute.providers.google import _convert_result
+from skyroute.config import ScanConfig
 from skyroute.search import SearchEngine
 from tests.utils import future_date, future_datetime
 
@@ -245,4 +246,81 @@ def test_search_one_provider_failure_still_returns_others():
     results = engine.search_one("BLR", "HAM", DATE)
     assert len(results) == 1
     assert results[0].provider == "google"
+    engine.close()
+
+
+def test_search_scored_report_tracks_partial_provider_failures():
+    good_flight = FlightResult(
+        price=300.0, currency="EUR", duration_minutes=600, stops=0,
+        legs=[_make_leg()], provider="google",
+    )
+
+    mock_google = MagicMock()
+    mock_google.name = "google"
+    mock_google.search.return_value = [good_flight]
+
+    mock_duffel = MagicMock()
+    mock_duffel.name = "duffel"
+    mock_duffel.search.side_effect = RuntimeError("API down")
+
+    engine = SearchEngine(currency="EUR", use_cache=False)
+    engine._providers = [mock_google, mock_duffel]
+
+    report = engine.search_scored_report("BLR", "HAM", DATE)
+    assert len(report.results) == 1
+    assert report.successful_providers == ["google"]
+    assert len(report.failed_providers) == 1
+    assert report.failed_providers[0].provider == "duffel"
+    assert report.failed_providers[0].error == "API down"
+    engine.close()
+
+
+def test_search_scored_report_detects_total_provider_failure():
+    mock_google = MagicMock()
+    mock_google.name = "google"
+    mock_google.search.side_effect = RuntimeError("Consent wall")
+
+    mock_duffel = MagicMock()
+    mock_duffel.name = "duffel"
+    mock_duffel.search.side_effect = RuntimeError("API down")
+
+    engine = SearchEngine(currency="EUR", use_cache=False)
+    engine._providers = [mock_google, mock_duffel]
+
+    report = engine.search_scored_report("BLR", "HAM", DATE)
+    assert report.results == []
+    assert report.successful_providers == []
+    assert {failure.provider for failure in report.failed_providers} == {"google", "duffel"}
+    engine.close()
+
+
+def test_scan_report_aggregates_provider_failures():
+    good_flight = FlightResult(
+        price=300.0, currency="EUR", duration_minutes=600, stops=0,
+        legs=[_make_leg()], provider="google",
+    )
+
+    mock_google = MagicMock()
+    mock_google.name = "google"
+    mock_google.search.return_value = [good_flight]
+
+    mock_duffel = MagicMock()
+    mock_duffel.name = "duffel"
+    mock_duffel.search.side_effect = RuntimeError("API down")
+
+    engine = SearchEngine(currency="EUR", use_cache=False)
+    engine._providers = [mock_google, mock_duffel]
+
+    cfg = ScanConfig(
+        search={
+            "origins": ["BLR"],
+            "destinations": ["HAM"],
+            "date_range": {"start": DATE, "end": DATE},
+        }
+    )
+    report = engine.scan_report(cfg, workers=1, delay=0)
+    assert len(report.results) == 1
+    assert report.successful_providers == {"google": 1}
+    assert report.failed_providers == {"duffel": 1}
+    assert report.failed_provider_errors == {"duffel": "API down"}
     engine.close()

@@ -65,15 +65,6 @@ def configured_providers(
 
         providers.append(DuffelProvider(token=duffel_token))
 
-    # Kiwi / Tequila
-    kiwi_token = os.environ.get("SKYROUTE_KIWI_TOKEN")
-    if only == "kiwi" or (only is None and kiwi_token):
-        if not kiwi_token:
-            raise ValueError("SKYROUTE_KIWI_TOKEN not set")
-        from skyroute.providers.kiwi import KiwiProvider
-
-        providers.append(KiwiProvider(token=kiwi_token))
-
     # Amadeus
     amadeus_key = os.environ.get("SKYROUTE_AMADEUS_KEY")
     amadeus_secret = os.environ.get("SKYROUTE_AMADEUS_SECRET")
