@@ -1,15 +1,17 @@
 # opensky
 
-`skyroute` is an open-source flight search CLI that aggregates Google Flights, Duffel, and Amadeus results, then flags itineraries that transit through airports or countries listed in the bundled conflict-zone dataset.
+`skyroute` is an open-source flight search CLI that aggregates Google Flights, Duffel, and Amadeus results, then flags itineraries that transit through risky airports, land in risky countries, or appear to overfly whole-country conflict zones on regional segments.
 
 ## What The Engine Evaluates Today
 
 - one-way itineraries returned by the configured providers
 - airports and countries present in the itinerary
+- regional great-circle overflight screening for whole-country conflict zones
+- airport-based advisories for partial-region conflict zones
 - risk levels from the bundled or refreshed conflict-zone dataset
 - price and duration scoring across single-route searches and multi-route scans
 
-It does not currently analyze actual overflight paths, FIR boundaries, or airspace closures that do not appear in the itinerary itself.
+It does not ingest filed routings, live FIR closures, or airline-specific detours. Partial-region and FIR-style advisories without bundled geometry remain airport-based.
 
 ## Install
 
@@ -143,8 +145,9 @@ CPH = 5
 - [EASA Conflict Zone Information Bulletins (CZIB)](https://www.easa.europa.eu/en/domains/air-operations/czibs)
 - [Safe Airspace](https://safeairspace.net)
 - FAA NOTAMs
+- [Natural Earth 50m admin 0 country geometry](https://www.naturalearthdata.com/)
 
-The dataset maps countries and specific airports to `SAFE`, `CAUTION`, `HIGH_RISK`, and `DO_NOT_FLY`.
+The dataset maps countries and specific airports to `SAFE`, `CAUTION`, `HIGH_RISK`, and `DO_NOT_FLY`. Whole-country zones also use bundled country geometry for regional overflight screening.
 
 Run `skyroute zones --update` to fetch the latest dataset from GitHub.
 
@@ -155,7 +158,8 @@ This is informational only. Always check official NOTAMs and airline advisories 
 - Google Flights often requires a residential IP. Use `--proxy` if you are running searches from a server.
 - Prices can differ from airline and OTA checkout pages.
 - The conflict-zone database is a best-effort dataset and can be incomplete or stale.
-- The current engine does not analyze overflight paths or FIR-level closures.
+- Overflight screening uses a regional great-circle proxy, not filed flight plans or live ATC reroutes.
+- FIR-level closures without bundled geometry still require airport-based or manual review.
 
 ## Release
 

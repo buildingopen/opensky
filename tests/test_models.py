@@ -48,7 +48,7 @@ def test_risk_assessment_safe():
 
 
 def test_risk_assessment_flagged():
-    from skyroute.models import FlaggedAirport
+    from skyroute.models import FlaggedAirport, FlaggedOverflight
 
     ra = RiskAssessment(
         risk_level=RiskLevel.HIGH_RISK,
@@ -58,9 +58,18 @@ def test_risk_assessment_flagged():
                 zone_name="Gulf States", risk_level=RiskLevel.HIGH_RISK,
             )
         ],
+        flagged_overflights=[
+            FlaggedOverflight(
+                country="SY",
+                zone_name="Syria",
+                risk_level=RiskLevel.DO_NOT_FLY,
+                segment="TBS -> AMM",
+            )
+        ],
     )
     assert not ra.is_safe
     assert ra.flagged_airports[0].code == "DXB"
+    assert ra.flagged_overflights[0].country == "SY"
 
 
 def test_scored_flight_json_roundtrip():

@@ -294,6 +294,33 @@ def test_search_scored_report_detects_total_provider_failure():
     engine.close()
 
 
+def test_search_scored_report_carries_overflight_findings():
+    overflight_flight = FlightResult(
+        price=280.0,
+        currency="EUR",
+        duration_minutes=160,
+        stops=0,
+        legs=[_make_leg(dep="TBS", arr="AMM", dur=160)],
+        provider="google",
+    )
+
+    mock_google = MagicMock()
+    mock_google.name = "google"
+    mock_google.search.return_value = [overflight_flight]
+
+    engine = SearchEngine(currency="EUR", use_cache=False)
+    engine._providers = [mock_google]
+
+    report = engine.search_scored_report("TBS", "AMM", DATE, risk_threshold=None)
+    assert len(report.results) == 1
+    assert report.results[0].risk.risk_level == RiskLevel.DO_NOT_FLY
+    assert any(
+        finding.country == "SY"
+        for finding in report.results[0].risk.flagged_overflights
+    )
+    engine.close()
+
+
 def test_scan_report_aggregates_provider_failures():
     good_flight = FlightResult(
         price=300.0, currency="EUR", duration_minutes=600, stops=0,

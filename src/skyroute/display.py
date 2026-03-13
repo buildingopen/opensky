@@ -78,8 +78,13 @@ def flights_table(
         risk_text = RISK_ICONS[sf.risk.risk_level]
         safety_cell = f"[{risk_color}]{risk_text}[/{risk_color}]"
 
-        if sf.risk.flagged_airports:
-            flagged = ", ".join(a.code for a in sf.risk.flagged_airports)
+        flagged_labels = [airport.code for airport in sf.risk.flagged_airports]
+        flagged_labels.extend(
+            f"OF:{overflight.country}"
+            for overflight in sf.risk.flagged_overflights
+        )
+        if flagged_labels:
+            flagged = ", ".join(flagged_labels)
             safety_cell += f" [dim]({flagged})[/dim]"
 
         transit_note = ""

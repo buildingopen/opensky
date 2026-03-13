@@ -50,8 +50,24 @@ def test_country_level_do_not_fly():
 
 
 def test_caution_level():
-    risk = check_route(["IST", "ROV", "HAM"])
+    risk = check_route(["IST", "ROV", "TBS"])
     assert risk.risk_level == RiskLevel.CAUTION
+
+
+def test_regional_overflight_proxy_flags_syria():
+    risk = check_route(["TBS", "AMM"])
+    assert risk.risk_level == RiskLevel.DO_NOT_FLY
+    assert len(risk.flagged_airports) == 0
+    assert len(risk.flagged_overflights) == 1
+    assert risk.flagged_overflights[0].country == "SY"
+    assert risk.flagged_overflights[0].segment == "TBS -> AMM"
+
+
+def test_regional_overflight_proxy_flags_ukraine():
+    risk = check_route(["BUD", "TBS"])
+    assert risk.risk_level == RiskLevel.DO_NOT_FLY
+    assert len(risk.flagged_airports) == 0
+    assert any(finding.country == "UA" for finding in risk.flagged_overflights)
 
 
 def test_worst_risk_wins():

@@ -7,11 +7,19 @@ from skyroute.display import (
     _date_matrix,
     _scan_stats,
     _top_flights,
+    flights_table,
     format_duration,
     format_price,
     scan_summary,
 )
-from skyroute.models import FlightLeg, FlightResult, RiskAssessment, RiskLevel, ScoredFlight
+from skyroute.models import (
+    FlaggedOverflight,
+    FlightLeg,
+    FlightResult,
+    RiskAssessment,
+    RiskLevel,
+    ScoredFlight,
+)
 
 
 def test_format_duration():
@@ -151,6 +159,23 @@ def test_top_flights_limits():
     flights = [_make_scored_flight(score=float(i)) for i in range(20)]
     out = _capture(_top_flights, flights, 5)
     assert "Top 5" in out
+
+
+def test_flights_table_shows_overflight_marker():
+    flight = _make_scored_flight(risk_level=RiskLevel.DO_NOT_FLY)
+    flight.risk = RiskAssessment(
+        risk_level=RiskLevel.DO_NOT_FLY,
+        flagged_overflights=[
+            FlaggedOverflight(
+                country="SY",
+                zone_name="Syria",
+                risk_level=RiskLevel.DO_NOT_FLY,
+                segment="TBS -> AMM",
+            )
+        ],
+    )
+    out = _capture(flights_table, [flight])
+    assert "OF:SY" in out
 
 
 def test_scan_summary_empty():

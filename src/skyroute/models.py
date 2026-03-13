@@ -40,9 +40,17 @@ class FlaggedAirport(BaseModel):
     risk_level: RiskLevel
 
 
+class FlaggedOverflight(BaseModel):
+    country: str
+    zone_name: str
+    risk_level: RiskLevel
+    segment: str
+
+
 class RiskAssessment(BaseModel):
     risk_level: RiskLevel = RiskLevel.SAFE
     flagged_airports: list[FlaggedAirport] = Field(default_factory=list)
+    flagged_overflights: list[FlaggedOverflight] = Field(default_factory=list)
 
     @property
     def is_safe(self) -> bool:
