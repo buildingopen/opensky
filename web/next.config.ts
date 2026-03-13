@@ -4,6 +4,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 const apiHost = API_URL ? new URL(API_URL).host : "";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: __dirname,
+  },
   async headers() {
     return [
       {

@@ -15,6 +15,9 @@ venv/
 WORKPLAN-*.md
 demo.tape
 
+# Local artifacts
+.tmp/
+
 # Web frontend
 web/node_modules/
 web/.next/

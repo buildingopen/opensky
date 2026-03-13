@@ -1,6 +1,8 @@
+# Staging API - deploy separately from production
+# Use for rollback drills and pre-production verification
 services:
   - type: web
-    name: opensky-api
+    name: opensky-api-staging
     runtime: python
     plan: starter
     buildCommand: pip install "git+https://github.com/buildingopen/opensky.git@eb315fb6498404db84aa85ed1757bd79f05a9f62" && pip install -r api/requirements.txt
@@ -20,8 +22,8 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: RATE_LIMIT_PER_HOUR
-        value: "10"
+        value: "20"
       - key: REDIS_URL
         sync: false
       - key: RATE_LIMIT_PREFIX
-        value: "opensky:ratelimit"
+        value: "opensky:ratelimit:staging"

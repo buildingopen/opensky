@@ -7,18 +7,22 @@ import json
 import logging
 import os
 import queue
+import random
 import threading
 import time
 import urllib.parse
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta
+from uuid import uuid4
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+from redis import asyncio as redis
+from redis.exceptions import RedisError
 
 import airportsdata
 
@@ -62,11 +66,18 @@ RATE_LIMIT = int(os.environ.get("RATE_LIMIT_PER_HOUR", "10"))
 RATE_LIMIT_WHITELIST = set(
     ip.strip() for ip in os.environ.get("RATE_LIMIT_WHITELIST", "").split(",") if ip.strip()
 )
+RATE_LIMIT_PREFIX = os.environ.get("RATE_LIMIT_PREFIX", "opensky:ratelimit")
+API_KEYS = set(k.strip() for k in os.environ.get("API_KEYS", "").split(",") if k.strip())
+API_KEY_QUOTA = int(os.environ.get("API_KEY_QUOTA", "100"))
+REDIS_URL = os.environ.get("REDIS_URL", "").strip()
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = "gemini-2.0-flash"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+GEMINI_TIMEOUT_SECONDS = float(os.environ.get("GEMINI_TIMEOUT_SECONDS", "10"))
+GEMINI_MAX_RETRIES = int(os.environ.get("GEMINI_MAX_RETRIES", "2"))
 PROXY = os.environ.get("SKYROUTE_PROXY")
 TRUST_PROXY = os.environ.get("TRUST_PROXY", "").lower() in ("1", "true", "yes")
+REQUIRE_GEMINI_KEY = os.environ.get("REQUIRE_GEMINI_KEY", "true").lower() in ("1", "true", "yes")
 
 # Validation constants for Gemini output sanitization
 VALID_CURRENCIES = frozenset({
@@ -82,9 +93,13 @@ MAX_DESTINATIONS = 10
 MAX_RATE_LIMIT_IPS = 10_000
 
 _request_log: dict[str, list[float]] = defaultdict(list)
+_api_key_log: dict[str, list[float]] = defaultdict(list)
+redis_client: redis.Redis | None = None
+_startup_at = time.time()
+_zones_loaded = False
 
 
-def _check_rate_limit(ip: str) -> int:
+def _check_rate_limit_memory(ip: str) -> int:
     if ip in RATE_LIMIT_WHITELIST:
         return 999
     now = time.time()
@@ -104,6 +119,107 @@ def _check_rate_limit(ip: str) -> int:
         )
     _request_log[ip].append(now)
     return RATE_LIMIT - len(_request_log[ip])
+
+
+async def _check_rate_limit_redis(ip: str) -> int:
+    if ip in RATE_LIMIT_WHITELIST:
+        return 999
+    if not redis_client:
+        return _check_rate_limit_memory(ip)
+
+    key = f"{RATE_LIMIT_PREFIX}:{ip}"
+    ttl = 3600
+    try:
+        count = await redis_client.incr(key)
+        if count == 1:
+            await redis_client.expire(key, ttl)
+    except RedisError as exc:
+        log.warning("Redis rate-limit failed, falling back to memory: %s", exc)
+        return _check_rate_limit_memory(ip)
+
+    if count > RATE_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded. Max {RATE_LIMIT} searches per hour.",
+        )
+    return RATE_LIMIT - count
+
+
+async def _check_rate_limit(ip: str) -> int:
+    if redis_client:
+        return await _check_rate_limit_redis(ip)
+    return _check_rate_limit_memory(ip)
+
+
+def _extract_api_key(request: Request) -> str | None:
+    """Extract API key from X-API-Key or Authorization: Bearer header."""
+    key = request.headers.get("X-API-Key", "").strip()
+    if key:
+        return key
+    auth = request.headers.get("Authorization", "")
+    if auth.lower().startswith("bearer "):
+        return auth[7:].strip()
+    return None
+
+
+def _hash_key(key: str) -> str:
+    """Return a short hash for rate-limit key storage (avoid leaking raw keys)."""
+    import hashlib
+    return hashlib.sha256(key.encode()).hexdigest()[:16]
+
+
+def _check_rate_limit_api_key_memory(key_hash: str) -> int:
+    """In-memory rate limit for API keys."""
+    now = time.time()
+    window = 3600
+    if len(_api_key_log) > MAX_RATE_LIMIT_IPS:
+        stale = [k for k, v in _api_key_log.items() if not v or now - v[-1] > window]
+        for k in stale:
+            del _api_key_log[k]
+    _api_key_log[key_hash] = [t for t in _api_key_log[key_hash] if now - t < window]
+    if len(_api_key_log[key_hash]) >= API_KEY_QUOTA:
+        raise HTTPException(
+            status_code=429,
+            detail=f"API key rate limit exceeded. Max {API_KEY_QUOTA} searches per hour.",
+        )
+    _api_key_log[key_hash].append(now)
+    return API_KEY_QUOTA - len(_api_key_log[key_hash])
+
+
+async def _check_rate_limit_api_key_redis(key_hash: str) -> int:
+    """Redis rate limit for API keys."""
+    if not redis_client:
+        return _check_rate_limit_api_key_memory(key_hash)
+    key = f"{RATE_LIMIT_PREFIX}:key:{key_hash}"
+    ttl = 3600
+    try:
+        count = await redis_client.incr(key)
+        if count == 1:
+            await redis_client.expire(key, ttl)
+    except RedisError as exc:
+        log.warning("Redis API-key rate-limit failed, falling back to memory: %s", exc)
+        return _check_rate_limit_api_key_memory(key_hash)
+    if count > API_KEY_QUOTA:
+        raise HTTPException(
+            status_code=429,
+            detail=f"API key rate limit exceeded. Max {API_KEY_QUOTA} searches per hour.",
+        )
+    return API_KEY_QUOTA - count
+
+
+def _extract_gemini_text(data: dict) -> str:
+    """Extract parser JSON text from Gemini response safely."""
+    try:
+        candidates = data.get("candidates", [])
+        if not candidates:
+            return ""
+        content = candidates[0].get("content", {})
+        parts = content.get("parts", [])
+        if not parts:
+            return ""
+        return str(parts[0].get("text", ""))
+    except (AttributeError, IndexError, TypeError):
+        return ""
 
 
 # ---------------------------------------------------------------------------
@@ -163,29 +279,51 @@ Examples:
 
 async def parse_prompt(prompt: str) -> dict:
     """Use Gemini Flash to parse a natural language flight search prompt."""
+    if not GEMINI_KEY:
+        raise HTTPException(status_code=503, detail="Search parser is not configured.")
+
     today = date.today().isoformat()
     system = PARSE_SYSTEM.format(today=today)
+    text = ""
+    for attempt in range(GEMINI_MAX_RETRIES + 1):
+        try:
+            async with httpx.AsyncClient(timeout=GEMINI_TIMEOUT_SECONDS) as client:
+                resp = await client.post(
+                    GEMINI_URL,
+                    params={"key": GEMINI_KEY},
+                    json={
+                        "contents": [{"parts": [{"text": prompt}]}],
+                        "systemInstruction": {"parts": [{"text": system}]},
+                        "generationConfig": {
+                            "temperature": 0,
+                            "responseMimeType": "application/json",
+                        },
+                    },
+                )
+        except httpx.RequestError as exc:
+            log.warning("Gemini request failed (attempt %s): %s", attempt + 1, exc)
+            if attempt < GEMINI_MAX_RETRIES:
+                await asyncio.sleep((0.25 * (2**attempt)) + random.uniform(0, 0.15))
+                continue
+            raise HTTPException(status_code=502, detail="Failed to parse search prompt")
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.post(
-            GEMINI_URL,
-            params={"key": GEMINI_KEY},
-            json={
-                "contents": [{"parts": [{"text": prompt}]}],
-                "systemInstruction": {"parts": [{"text": system}]},
-                "generationConfig": {
-                    "temperature": 0,
-                    "responseMimeType": "application/json",
-                },
-            },
-        )
+        if resp.status_code != 200:
+            log.warning("Gemini API error status=%s attempt=%s", resp.status_code, attempt + 1)
+            if attempt < GEMINI_MAX_RETRIES:
+                await asyncio.sleep((0.25 * (2**attempt)) + random.uniform(0, 0.15))
+                continue
+            raise HTTPException(status_code=502, detail="Failed to parse search prompt")
 
-    if resp.status_code != 200:
-        log.error("Gemini API error: status %s", resp.status_code)
+        data = resp.json()
+        text = _extract_gemini_text(data)
+        if text:
+            break
+        if attempt < GEMINI_MAX_RETRIES:
+            await asyncio.sleep((0.25 * (2**attempt)) + random.uniform(0, 0.15))
+
+    if not text:
+        log.error("Gemini returned empty payload")
         raise HTTPException(status_code=502, detail="Failed to parse search prompt")
-
-    data = resp.json()
-    text = data["candidates"][0]["content"]["parts"][0]["text"]
 
     try:
         parsed = json.loads(text)
@@ -272,9 +410,33 @@ async def parse_prompt(prompt: str) -> dict:
 # ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    load_zones()
+    global redis_client
+    global _zones_loaded
+
+    if REQUIRE_GEMINI_KEY and not GEMINI_KEY:
+        raise RuntimeError("GEMINI_API_KEY is required for startup.")
+
+    try:
+        load_zones()
+        _zones_loaded = True
+    except Exception:
+        _zones_loaded = False
+        raise
+
+    if REDIS_URL:
+        try:
+            redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+            await redis_client.ping()
+            log.info("Redis rate limiting enabled")
+        except RedisError as exc:
+            log.warning("Redis unavailable, falling back to memory rate limiting: %s", exc)
+            redis_client = None
+
     log.info("Conflict zones loaded, Gemini key: %s", "set" if GEMINI_KEY else "MISSING")
     yield
+
+    if redis_client:
+        await redis_client.aclose()
 
 
 app = FastAPI(title="OpenSky API", version="0.2.0", lifespan=lifespan)
@@ -284,7 +446,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
 
@@ -453,6 +615,9 @@ def _scored_to_out(sf: ScoredFlight, cabin: str = "economy", return_date: str = 
 
 def _get_client_ip(request: Request) -> str:
     if TRUST_PROXY:
+        forwarded_for = request.headers.get("x-forwarded-for", "")
+        if forwarded_for:
+            return forwarded_for.split(",")[0].strip()
         real_ip = request.headers.get("x-real-ip")
         if real_ip:
             return real_ip.strip()
@@ -598,8 +763,16 @@ async def parse_search(req: PromptRequest):
 @app.post("/api/search")
 async def search_flights(req: PromptRequest, request: Request):
     """Parse prompt with AI, then stream search progress via SSE."""
-    ip = _get_client_ip(request)
-    remaining = _check_rate_limit(ip)
+    api_key = _extract_api_key(request)
+    if api_key and api_key in API_KEYS:
+        key_hash = _hash_key(api_key)
+        if redis_client:
+            remaining = await _check_rate_limit_api_key_redis(key_hash)
+        else:
+            remaining = _check_rate_limit_api_key_memory(key_hash)
+    else:
+        ip = _get_client_ip(request)
+        remaining = await _check_rate_limit(ip)
 
     # Step 1: Parse with Gemini
     parsed = await parse_prompt(req.prompt)
@@ -682,7 +855,9 @@ async def search_flights(req: PromptRequest, request: Request):
         thread.join(timeout=10)
 
         if error_holder:
-            yield f"data: {json.dumps({'type': 'error', 'detail': error_holder[0]})}\n\n"
+            error_id = str(uuid4())[:8]
+            log.error("Search worker failed [%s]: %s", error_id, error_holder[0])
+            yield f"data: {json.dumps({'type': 'error', 'detail': f'Search failed. Reference: {error_id}'})}\n\n"
             return
 
         scored = result_holder[0] if result_holder else []
@@ -786,6 +961,27 @@ async def get_zones():
     return ZonesResponse(zones=zones, warning=warning)
 
 
-@app.get("/api/health")
-async def health():
-    return {"status": "ok"}
+@app.get("/api/healthz")
+async def healthz():
+    """Liveness probe: process is up."""
+    return {"status": "ok", "uptime_seconds": int(time.time() - _startup_at)}
+
+
+@app.get("/api/readyz")
+async def readyz():
+    """Readiness probe: critical dependencies are available."""
+    checks = {
+        "zones_loaded": _zones_loaded,
+        "gemini_key": bool(GEMINI_KEY),
+        "redis": True,
+    }
+    if REDIS_URL and redis_client:
+        try:
+            checks["redis"] = bool(await redis_client.ping())
+        except RedisError:
+            checks["redis"] = False
+
+    ready = checks["zones_loaded"] and (checks["gemini_key"] or not REQUIRE_GEMINI_KEY) and checks["redis"]
+    if not ready:
+        raise HTTPException(status_code=503, detail={"status": "not_ready", "checks": checks})
+    return {"status": "ready", "checks": checks}
