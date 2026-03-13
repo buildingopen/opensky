@@ -546,7 +546,7 @@ const EXAMPLES = [
 // Main Page
 // ---------------------------------------------------------------------------
 function HomePage() {
-  const [searchMode, setSearchMode] = useState<"structured" | "natural">("structured");
+  const [searchMode, setSearchMode] = useState<"structured" | "natural">("natural");
   const [form, setForm] = useState<SearchFormState>({
     from: "",
     to: "",
