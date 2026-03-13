@@ -1,4 +1,4 @@
-from skyroute.models import (
+from opensky.models import (
     FlightLeg,
     FlightResult,
     RiskAssessment,
@@ -48,7 +48,7 @@ def test_risk_assessment_safe():
 
 
 def test_risk_assessment_flagged():
-    from skyroute.models import FlaggedAirport, FlaggedOverflight
+    from opensky.models import FlaggedAirport, FlaggedOverflight
 
     ra = RiskAssessment(
         risk_level=RiskLevel.HIGH_RISK,

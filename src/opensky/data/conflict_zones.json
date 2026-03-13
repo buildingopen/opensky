@@ -1,0 +1,203 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "updated": "2026-03-01",
+    "sources": [
+      "EASA Conflict Zone Information Bulletins (CZIB)",
+      "safeairspace.net",
+      "FAA NOTAM database"
+    ]
+  },
+  "zones": [
+    {
+      "id": "ukraine",
+      "name": "Ukraine",
+      "risk_level": "do_not_fly",
+      "countries": ["UA"],
+      "airports": [],
+      "source": "EASA CZIB 2022-01 R16",
+      "details": "Active conflict zone. All Ukrainian airspace closed to civil aviation.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "iran",
+      "name": "Iran",
+      "risk_level": "do_not_fly",
+      "countries": ["IR"],
+      "airports": [],
+      "source": "EASA CZIB 2026-002",
+      "details": "Military strikes Feb 2026. FIRs OIIX, OIBB closed to overflights.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "iraq",
+      "name": "Iraq",
+      "risk_level": "do_not_fly",
+      "countries": ["IQ"],
+      "airports": [],
+      "source": "EASA CZIB 2026-002",
+      "details": "Airspace restrictions due to regional conflict.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "syria",
+      "name": "Syria",
+      "risk_level": "do_not_fly",
+      "countries": ["SY"],
+      "airports": [],
+      "source": "EASA CZIB 2024-003",
+      "details": "Ongoing conflict. Damascus FIR closed to overflights.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "israel",
+      "name": "Israel",
+      "risk_level": "do_not_fly",
+      "countries": ["IL"],
+      "airports": [],
+      "source": "EASA CZIB 2024-005",
+      "details": "Active conflict zone. Intermittent airspace closures.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "lebanon",
+      "name": "Lebanon",
+      "risk_level": "do_not_fly",
+      "countries": ["LB"],
+      "airports": [],
+      "source": "EASA CZIB 2024-006",
+      "details": "Beirut FIR affected by regional conflict.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "yemen",
+      "name": "Yemen",
+      "risk_level": "do_not_fly",
+      "countries": ["YE"],
+      "airports": [],
+      "source": "EASA CZIB 2024-007",
+      "details": "Ongoing conflict and Houthi activity affecting airspace.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "libya",
+      "name": "Libya",
+      "risk_level": "do_not_fly",
+      "countries": ["LY"],
+      "airports": [],
+      "source": "EASA CZIB 2023-001",
+      "details": "Unstable security situation.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "somalia",
+      "name": "Somalia",
+      "risk_level": "do_not_fly",
+      "countries": ["SO"],
+      "airports": [],
+      "source": "EASA CZIB 2023-002",
+      "details": "Ongoing conflict. Limited ATC capability.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "afghanistan",
+      "name": "Afghanistan",
+      "risk_level": "do_not_fly",
+      "countries": ["AF"],
+      "airports": [],
+      "source": "EASA CZIB 2022-002",
+      "details": "No functioning civil aviation authority.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "north_korea",
+      "name": "North Korea",
+      "risk_level": "do_not_fly",
+      "countries": ["KP"],
+      "airports": [],
+      "source": "FAA NOTAM",
+      "details": "Prohibited airspace. Missile launch risk.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "sudan",
+      "name": "Sudan",
+      "risk_level": "do_not_fly",
+      "countries": ["SD"],
+      "airports": [],
+      "source": "EASA CZIB 2023-003",
+      "details": "Civil war. Khartoum FIR dangerous.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "gulf_states",
+      "name": "Gulf States (Proximity Advisory)",
+      "risk_level": "caution",
+      "countries": [],
+      "airports": ["DXB", "AUH", "SHJ", "RKT", "DOH", "BAH", "KWI", "MCT"],
+      "source": "safeairspace.net",
+      "details": "Major transit hubs adjacent to Iran/Iraq conflict zones. Airports themselves operate normally. Overflights may route around restricted FIRs.",
+      "updated": "2026-03-11"
+    },
+    {
+      "id": "eritrea",
+      "name": "Eritrea",
+      "risk_level": "high_risk",
+      "countries": ["ER"],
+      "airports": [],
+      "source": "EASA CZIB 2023-004",
+      "details": "Military activity near borders.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "ethiopia_partial",
+      "name": "Ethiopia (Northern Regions)",
+      "risk_level": "high_risk",
+      "countries": [],
+      "airports": ["MQX", "AXU", "GDQ", "SHC"],
+      "source": "EASA CZIB 2023-005",
+      "details": "Tigray region conflict aftermath. Northern airports affected.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "mali",
+      "name": "Mali",
+      "risk_level": "high_risk",
+      "countries": ["ML"],
+      "airports": [],
+      "source": "EASA CZIB 2023-006",
+      "details": "Armed groups active. Limited ATC in northern regions.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "niger",
+      "name": "Niger",
+      "risk_level": "high_risk",
+      "countries": ["NE"],
+      "airports": [],
+      "source": "EASA CZIB 2023-007",
+      "details": "Post-coup instability.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "pakistan_partial",
+      "name": "Pakistan (Border Regions)",
+      "risk_level": "caution",
+      "countries": [],
+      "airports": ["PEW", "UET", "TUK"],
+      "source": "safeairspace.net",
+      "details": "Western border areas near Afghanistan/Iran. Major airports (ISB, LHE, KHI) unaffected.",
+      "updated": "2026-02-28"
+    },
+    {
+      "id": "russia_partial",
+      "name": "Russia (Southern/Western Border)",
+      "risk_level": "caution",
+      "countries": [],
+      "airports": ["ROV", "KRR", "VOZ", "BEL"],
+      "source": "EASA CZIB 2022-01",
+      "details": "Southern Russian airports near Ukraine conflict. Moscow/St. Petersburg unaffected.",
+      "updated": "2026-02-28"
+    }
+  ]
+}

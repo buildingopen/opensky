@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from skyroute.config import EXAMPLE_CONFIG, DateRange, ScanConfig, load_config
+from opensky.config import EXAMPLE_CONFIG, DateRange, ScanConfig, load_config
 
 
 def test_date_range():

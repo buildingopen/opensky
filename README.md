@@ -1,6 +1,6 @@
 # opensky
 
-`skyroute` is an open-source flight search CLI that aggregates Google Flights, Duffel, and Amadeus results, then flags itineraries that transit through risky airports, land in risky countries, or appear to overfly whole-country conflict zones on regional segments.
+`opensky` is an open-source flight search CLI that aggregates Google Flights, Duffel, and Amadeus results, then flags itineraries that transit through risky airports, land in risky countries, or appear to overfly whole-country conflict zones on regional segments.
 
 ## What The Engine Evaluates Today
 
@@ -17,7 +17,13 @@ It does not ingest filed routings, live FIR closures, or airline-specific detour
 
 Requires Python 3.11+.
 
-Install directly from GitHub:
+Install from PyPI:
+
+```bash
+pip install opensky-cli
+```
+
+GitHub install still works:
 
 ```bash
 pip install "git+https://github.com/buildingopen/opensky.git"
@@ -34,33 +40,35 @@ pip install -e .
 
 Copy `.env.example` to `.env` and fill in any API keys you have. Google Flights works without any keys.
 
+`skyroute` remains available as a compatibility command for now, but `opensky` is the canonical CLI.
+
 ## Quick Demo
 
 See the full output without any API keys or network calls:
 
 ```bash
-skyroute demo
-skyroute demo --show-risky
+opensky demo
+opensky demo --show-risky
 ```
 
-![skyroute demo](demo.gif)
+![opensky demo](demo.gif)
 
 ## Providers
 
-`skyroute` supports three providers. Google Flights is always available. Duffel and Amadeus activate automatically when their env vars are set.
+`opensky` supports three providers. Google Flights is always available. Duffel and Amadeus activate automatically when their env vars are set.
 
 | Provider | Env vars | Notes |
 |----------|----------|-------|
 | Google Flights | none (default) | Scrapes Google Flights. Needs a residential IP. |
-| [Duffel](https://duffel.com) | `SKYROUTE_DUFFEL_TOKEN` | API-based search. |
-| [Amadeus](https://developers.amadeus.com) | `SKYROUTE_AMADEUS_KEY` + `SKYROUTE_AMADEUS_SECRET` | API-based search. |
+| [Duffel](https://duffel.com) | `OPENSKY_DUFFEL_TOKEN` | Fallback: `SKYROUTE_DUFFEL_TOKEN`. |
+| [Amadeus](https://developers.amadeus.com) | `OPENSKY_AMADEUS_KEY` + `OPENSKY_AMADEUS_SECRET` | Fallback: legacy `SKYROUTE_AMADEUS_KEY` + `SKYROUTE_AMADEUS_SECRET`. |
 
 When multiple providers are configured, results are aggregated and deduplicated. If one provider fails, the CLI reports partial results. If every provider fails, the command exits non-zero.
 
 Use `--provider` / `-p` to limit to a single provider:
 
 ```bash
-skyroute search BLR HAM 2026-04-10 --provider duffel
+opensky search BLR HAM 2026-04-10 --provider duffel
 ```
 
 ## Usage
@@ -68,10 +76,10 @@ skyroute search BLR HAM 2026-04-10 --provider duffel
 ### Single route search
 
 ```bash
-skyroute search BLR HAM 2026-04-10
-skyroute search BLR HAM 2026-04-10 --currency EUR --show-risky
-skyroute search BLR HAM 2026-04-10 --json
-skyroute search BLR HAM 2026-04-10 --provider duffel
+opensky search BLR HAM 2026-04-10
+opensky search BLR HAM 2026-04-10 --currency EUR --show-risky
+opensky search BLR HAM 2026-04-10 --json
+opensky search BLR HAM 2026-04-10 --provider duffel
 ```
 
 ### Multi-route scan
@@ -79,14 +87,14 @@ skyroute search BLR HAM 2026-04-10 --provider duffel
 Generate a config file:
 
 ```bash
-skyroute config init
+opensky config init
 ```
 
 Edit `scan.toml` with your origins, destinations, and dates, then:
 
 ```bash
-skyroute scan --config scan.toml
-skyroute scan --config scan.toml --workers 5 --json -o results.json
+opensky scan --config scan.toml
+opensky scan --config scan.toml --workers 5 --json -o results.json
 ```
 
 Scans are cached. If interrupted, rerun the same command to reuse cached provider results.
@@ -94,15 +102,15 @@ Scans are cached. If interrupted, rerun the same command to reuse cached provide
 ### Conflict zones
 
 ```bash
-skyroute zones
-skyroute zones --update
+opensky zones
+opensky zones --update
 ```
 
 ### Cache management
 
 ```bash
-skyroute cache stats
-skyroute cache clear
+opensky cache stats
+opensky cache clear
 ```
 
 ## Scan Config
@@ -140,7 +148,7 @@ CPH = 5
 
 ## Safety Data
 
-`skyroute` ships with a bundled conflict-zone database based on:
+`opensky` ships with a bundled conflict-zone database based on:
 
 - [EASA Conflict Zone Information Bulletins (CZIB)](https://www.easa.europa.eu/en/domains/air-operations/czibs)
 - [Safe Airspace](https://safeairspace.net)
@@ -149,7 +157,7 @@ CPH = 5
 
 The dataset maps countries and specific airports to `SAFE`, `CAUTION`, `HIGH_RISK`, and `DO_NOT_FLY`. Whole-country zones also use bundled country geometry for regional overflight screening.
 
-Run `skyroute zones --update` to fetch the latest dataset from GitHub.
+Run `opensky zones --update` to fetch the latest dataset from GitHub.
 
 This is informational only. Always check official NOTAMs and airline advisories before booking.
 

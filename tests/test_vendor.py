@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from skyroute._vendor.google_flights import (
+from opensky._vendor.google_flights import (
     FlightLeg,
     FlightResult,
     FlightSearchFilters,

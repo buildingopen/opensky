@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from skyroute.cli import app
-from skyroute.models import FlightLeg, FlightResult
+from opensky.cli import app
+from opensky.models import FlightLeg, FlightResult
 from tests.utils import future_date, future_datetime
 
 runner = CliRunner()
@@ -97,14 +97,14 @@ def test_duffel_missing_env_var():
     with patch.dict(os.environ, {}, clear=True):
         result = runner.invoke(app, ["search", "BLR", "HAM", DATE, "--provider", "duffel"])
     assert result.exit_code == 1
-    assert "SKYROUTE_DUFFEL_TOKEN" in result.output
+    assert "OPENSKY_DUFFEL_TOKEN" in result.output
 
 
 def test_amadeus_missing_env_vars():
     with patch.dict(os.environ, {}, clear=True):
         result = runner.invoke(app, ["search", "BLR", "HAM", DATE, "--provider", "amadeus"])
     assert result.exit_code == 1
-    assert "SKYROUTE_AMADEUS_KEY" in result.output
+    assert "OPENSKY_AMADEUS_KEY" in result.output
 
 
 def test_past_date_rejected():
@@ -120,7 +120,7 @@ def test_invalid_date_rejected():
 
 
 def test_search_reports_total_provider_failure():
-    with patch("skyroute.search.configured_providers", return_value=[BadProvider("google", "Consent wall")]):
+    with patch("opensky.search.configured_providers", return_value=[BadProvider("google", "Consent wall")]):
         result = runner.invoke(app, ["search", "BLR", "HAM", DATE, "--json", "--no-cache"])
     assert result.exit_code == 1
     assert "Search failed: google (Consent wall)" in result.output
@@ -128,7 +128,7 @@ def test_search_reports_total_provider_failure():
 
 def test_search_warns_on_partial_results():
     providers = [GoodProvider(), BadProvider("duffel", "API down")]
-    with patch("skyroute.search.configured_providers", return_value=providers):
+    with patch("opensky.search.configured_providers", return_value=providers):
         result = runner.invoke(app, ["search", "BLR", "HAM", DATE, "--json", "--no-cache"])
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
@@ -141,7 +141,7 @@ def test_search_warns_on_partial_results():
 def test_scan_reports_total_provider_failure():
     config_path = _write_scan_config()
     try:
-        with patch("skyroute.search.configured_providers", return_value=[BadProvider("google", "Consent wall")]):
+        with patch("opensky.search.configured_providers", return_value=[BadProvider("google", "Consent wall")]):
             result = runner.invoke(
                 app,
                 ["scan", "--config", config_path, "--json", "--workers", "1", "--delay", "0", "--no-cache"],
@@ -162,7 +162,7 @@ def test_scan_missing_provider_creds_keeps_stdout_clean_in_json_mode():
             )
         assert result.exit_code == 1
         assert result.stdout == ""
-        assert "SKYROUTE_DUFFEL_TOKEN" in result.stderr
+        assert "OPENSKY_DUFFEL_TOKEN" in result.stderr
     finally:
         Path(config_path).unlink(missing_ok=True)
 
@@ -171,7 +171,7 @@ def test_scan_warns_on_partial_results():
     config_path = _write_scan_config()
     try:
         providers = [GoodProvider(), BadProvider("duffel", "API down")]
-        with patch("skyroute.search.configured_providers", return_value=providers):
+        with patch("opensky.search.configured_providers", return_value=providers):
             result = runner.invoke(
                 app,
                 ["scan", "--config", config_path, "--json", "--workers", "1", "--delay", "0", "--no-cache"],

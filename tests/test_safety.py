@@ -1,5 +1,5 @@
-from skyroute.models import RiskLevel
-from skyroute.safety import airport_country, check_route, load_zones
+from opensky.models import RiskLevel
+from opensky.safety import airport_country, check_route, load_zones
 
 
 def test_load_zones():

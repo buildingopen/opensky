@@ -62,8 +62,9 @@ jobs:
 
       - name: Run CLI smoke checks
         run: |
-          skyroute --version | grep -q "skyroute "
-          skyroute demo --json > /tmp/demo.json
+          opensky --version | grep -q "opensky "
+          skyroute --version | grep -q "opensky "
+          opensky demo --json > /tmp/demo.json
           python - <<'PY'
           import json
           from pathlib import Path
@@ -71,7 +72,7 @@ jobs:
           data = json.loads(Path("/tmp/demo.json").read_text())
           assert data, "demo output is empty"
           PY
-          skyroute zones > /tmp/zones.txt
+          opensky zones > /tmp/zones.txt
           grep -q "Active Conflict Zones" /tmp/zones.txt
 
       - name: Upload build artifacts

@@ -2,7 +2,7 @@ import io
 
 from rich.console import Console
 
-from skyroute.display import (
+from opensky.display import (
     _best_per_destination,
     _date_matrix,
     _scan_stats,
@@ -12,7 +12,7 @@ from skyroute.display import (
     format_price,
     scan_summary,
 )
-from skyroute.models import (
+from opensky.models import (
     FlaggedOverflight,
     FlightLeg,
     FlightResult,
@@ -80,7 +80,7 @@ def _make_scored_flight(
 
 def _capture(func, *args, **kwargs) -> str:
     buf = io.StringIO()
-    import skyroute.display as display_mod
+    import opensky.display as display_mod
 
     original = display_mod.console
     display_mod.console = Console(file=buf, width=120, no_color=True)

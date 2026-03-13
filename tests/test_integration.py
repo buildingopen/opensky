@@ -4,11 +4,11 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from skyroute._vendor.google_flights import SearchFlights
-from skyroute.models import FlightLeg, FlightResult, RiskLevel
-from skyroute.providers.google import _convert_result
-from skyroute.config import ScanConfig
-from skyroute.search import SearchEngine
+from opensky._vendor.google_flights import SearchFlights
+from opensky.models import FlightLeg, FlightResult, RiskLevel
+from opensky.providers.google import _convert_result
+from opensky.config import ScanConfig
+from opensky.search import SearchEngine
 from tests.utils import future_date, future_datetime
 
 FIXTURE = Path(__file__).parent / "fixture_flights_blr_ham.json"

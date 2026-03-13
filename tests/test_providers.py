@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from skyroute.providers import parse_iso_duration
-from skyroute.providers.duffel import _convert_offer as duffel_convert
-from skyroute.providers.amadeus import _convert_offer as amadeus_convert
+from opensky.providers import parse_iso_duration
+from opensky.providers.duffel import _convert_offer as duffel_convert
+from opensky.providers.amadeus import _convert_offer as amadeus_convert
 
 
 # ---- ISO duration parsing (shared) ----
@@ -126,7 +126,7 @@ def test_amadeus_convert_offer():
 # ---- configured_providers ----
 
 def test_configured_providers_google_always_present():
-    from skyroute.providers import configured_providers
+    from opensky.providers import configured_providers
 
     with patch.dict(os.environ, {}, clear=True):
         providers = configured_providers()
@@ -135,9 +135,19 @@ def test_configured_providers_google_always_present():
 
 
 def test_configured_providers_duffel_with_token():
-    from skyroute.providers import configured_providers
+    from opensky.providers import configured_providers
 
-    with patch.dict(os.environ, {"SKYROUTE_DUFFEL_TOKEN": "test_token"}, clear=True):
+    with patch.dict(os.environ, {"OPENSKY_DUFFEL_TOKEN": "test_token"}, clear=True):
+        providers = configured_providers()
+    names = [p.name for p in providers]
+    assert "google" in names
+    assert "duffel" in names
+
+
+def test_configured_providers_duffel_with_legacy_token():
+    from opensky.providers import configured_providers
+
+    with patch.dict(os.environ, {"SKYROUTE_DUFFEL_TOKEN": "legacy_token"}, clear=True):
         providers = configured_providers()
     names = [p.name for p in providers]
     assert "google" in names
@@ -145,18 +155,18 @@ def test_configured_providers_duffel_with_token():
 
 
 def test_configured_providers_only_filter():
-    from skyroute.providers import configured_providers
+    from opensky.providers import configured_providers
 
-    with patch.dict(os.environ, {"SKYROUTE_DUFFEL_TOKEN": "test_token"}, clear=True):
+    with patch.dict(os.environ, {"OPENSKY_DUFFEL_TOKEN": "test_token"}, clear=True):
         providers = configured_providers(only="duffel")
     assert len(providers) == 1
     assert providers[0].name == "duffel"
 
 
 def test_configured_providers_amadeus_with_both_keys():
-    from skyroute.providers import configured_providers
+    from opensky.providers import configured_providers
 
-    env = {"SKYROUTE_AMADEUS_KEY": "test_key", "SKYROUTE_AMADEUS_SECRET": "test_secret"}
+    env = {"OPENSKY_AMADEUS_KEY": "test_key", "OPENSKY_AMADEUS_SECRET": "test_secret"}
     with patch.dict(os.environ, env, clear=True):
         providers = configured_providers()
     names = [p.name for p in providers]
@@ -165,9 +175,9 @@ def test_configured_providers_amadeus_with_both_keys():
 
 
 def test_configured_providers_amadeus_missing_secret():
-    from skyroute.providers import configured_providers
+    from opensky.providers import configured_providers
 
-    with patch.dict(os.environ, {"SKYROUTE_AMADEUS_KEY": "test_key"}, clear=True):
+    with patch.dict(os.environ, {"OPENSKY_AMADEUS_KEY": "test_key"}, clear=True):
         # Only key set, no secret: amadeus not auto-enabled
         providers = configured_providers()
     names = [p.name for p in providers]
@@ -175,23 +185,23 @@ def test_configured_providers_amadeus_missing_secret():
 
 
 def test_configured_providers_only_amadeus_missing_creds():
-    from skyroute.providers import configured_providers
+    from opensky.providers import configured_providers
 
     with patch.dict(os.environ, {}, clear=True):
-        with pytest.raises(ValueError, match="SKYROUTE_AMADEUS_KEY"):
+        with pytest.raises(ValueError, match="OPENSKY_AMADEUS_KEY"):
             configured_providers(only="amadeus")
 
 
 def test_configured_providers_only_duffel_missing_token():
-    from skyroute.providers import configured_providers
+    from opensky.providers import configured_providers
 
     with patch.dict(os.environ, {}, clear=True):
-        with pytest.raises(ValueError, match="SKYROUTE_DUFFEL_TOKEN"):
+        with pytest.raises(ValueError, match="OPENSKY_DUFFEL_TOKEN"):
             configured_providers(only="duffel")
 
 
 def test_configured_providers_unknown_provider():
-    from skyroute.providers import configured_providers
+    from opensky.providers import configured_providers
 
     with patch.dict(os.environ, {}, clear=True):
         with pytest.raises(ValueError, match="Unknown provider"):
@@ -199,12 +209,12 @@ def test_configured_providers_unknown_provider():
 
 
 def test_configured_providers_all_three():
-    from skyroute.providers import configured_providers
+    from opensky.providers import configured_providers
 
     env = {
-        "SKYROUTE_DUFFEL_TOKEN": "tok",
-        "SKYROUTE_AMADEUS_KEY": "key",
-        "SKYROUTE_AMADEUS_SECRET": "sec",
+        "OPENSKY_DUFFEL_TOKEN": "tok",
+        "OPENSKY_AMADEUS_KEY": "key",
+        "OPENSKY_AMADEUS_SECRET": "sec",
     }
     with patch.dict(os.environ, env, clear=True):
         providers = configured_providers()
@@ -215,7 +225,7 @@ def test_configured_providers_all_three():
 # ---- Amadeus auth token caching ----
 
 def test_amadeus_auth_caches_token():
-    from skyroute.providers.amadeus import AmadeusProvider
+    from opensky.providers.amadeus import AmadeusProvider
 
     provider = AmadeusProvider(key="k", secret="s")
     mock_client = MagicMock()
@@ -236,7 +246,7 @@ def test_amadeus_auth_caches_token():
 
 
 def test_amadeus_auth_refreshes_expired_token():
-    from skyroute.providers.amadeus import AmadeusProvider
+    from opensky.providers.amadeus import AmadeusProvider
 
     provider = AmadeusProvider(key="k", secret="s")
     mock_client = MagicMock()
@@ -257,7 +267,7 @@ def test_amadeus_auth_refreshes_expired_token():
 # ---- Duffel mock HTTP search ----
 
 def test_duffel_search_parses_response():
-    from skyroute.providers.duffel import DuffelProvider
+    from opensky.providers.duffel import DuffelProvider
 
     provider = DuffelProvider(token="test_tok")
     mock_client = MagicMock()
@@ -280,7 +290,7 @@ def test_duffel_search_parses_response():
 # ---- Amadeus mock HTTP search ----
 
 def test_amadeus_search_parses_response():
-    from skyroute.providers.amadeus import AmadeusProvider
+    from opensky.providers.amadeus import AmadeusProvider
 
     provider = AmadeusProvider(key="k", secret="s")
     # Pre-set a valid token to skip auth

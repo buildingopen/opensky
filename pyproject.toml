@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "skyroute"
-version = "0.1.0"
-description = "Flight search CLI with itinerary conflict-zone flagging"
+name = "opensky-cli"
+version = "0.1.1"
+description = "OpenSky flight search CLI with itinerary and overflight conflict-zone flagging"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
@@ -32,7 +32,8 @@ dependencies = [
 ]
 
 [project.scripts]
-skyroute = "skyroute.cli:app"
+opensky = "opensky.cli:app"
+skyroute = "opensky.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/buildingopen/opensky"
@@ -48,7 +49,7 @@ exclude = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/skyroute"]
+packages = ["src/opensky", "src/skyroute"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

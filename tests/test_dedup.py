@@ -1,7 +1,7 @@
 """Unit tests for flight deduplication logic."""
 
-from skyroute.models import FlightLeg, FlightResult
-from skyroute.search import _deduplicate
+from opensky.models import FlightLeg, FlightResult
+from opensky.search import _deduplicate
 
 
 def _make_flight(
