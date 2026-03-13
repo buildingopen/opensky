@@ -51,6 +51,16 @@ interface FlightOut {
   date: string;
 }
 
+interface RoundTripOut {
+  outbound: FlightOut;
+  inbound: FlightOut;
+  total_price: number;
+  currency: string;
+  risk_level: string;
+  risk_details: { airport: string; country: string; zone: string; risk: string }[];
+  score: number;
+}
+
 interface ScanSummaryData {
   best_destinations: FlightOut[];
   price_matrix: {
@@ -334,6 +344,109 @@ function FlightCard({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// RoundTripCard
+// ---------------------------------------------------------------------------
+function RoundTripCard({
+  result,
+  airportNames,
+  attributionParams,
+  onOutboundClick,
+}: {
+  result: RoundTripOut;
+  airportNames: Record<string, string>;
+  attributionParams: AttributionParams;
+  onOutboundClick: (provider: "booking" | "google", f: FlightOut) => void;
+}) {
+  const { outbound, inbound, total_price, currency, risk_level } = result;
+
+  const FlightRow = ({ flight, label }: { flight: FlightOut; label: string }) => {
+    const firstLeg = flight.legs[0];
+    const lastLeg = flight.legs[flight.legs.length - 1];
+    const airlines = flight.legs.length > 0
+      ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
+      : "";
+    const bookingUrl = appendAttribution(flight.booking_url, attributionParams);
+    const googleUrl = appendAttribution(
+      googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency),
+      attributionParams
+    );
+
+    return (
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">{label}</span>
+          </div>
+          <div className="text-sm font-medium text-[var(--color-text)]">
+            {consumerRouteLabel(flight.route, airportNames)}
+          </div>
+          {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{formatAirlines(airlines)}</div>}
+          <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-[var(--color-text-muted)]">
+            <span>{formatDate(flightDisplayDate(flight))}</span>
+            {firstLeg && lastLeg && (
+              <span className="text-[var(--color-text)]">
+                {formatTime(firstLeg.departs)} &ndash; {formatTime(lastLeg.arrives)}
+              </span>
+            )}
+            <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
+            <span>{formatDuration(flight.duration_minutes)}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {bookingUrl ? (
+            <a
+              href={bookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onOutboundClick("booking", flight)}
+              title={flight.booking_exact
+                ? "Direct booking link — takes you straight to checkout"
+                : "Opens a Skyscanner search — you'll need to find this exact flight again"}
+              className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
+            >
+              {flight.booking_exact ? "Book" : "Skyscanner"}
+            </a>
+          ) : null}
+          <a
+            href={googleUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => onOutboundClick("google", flight)}
+            title="Search on Google Flights"
+            className="px-3 py-1.5 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
+          >
+            Google
+          </a>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 divide-y divide-[var(--color-border)]">
+          <FlightRow flight={outbound} label="Outbound" />
+          <FlightRow flight={inbound} label="Return" />
+        </div>
+        <div className="flex flex-col items-end gap-1 pt-2 shrink-0">
+          {total_price > 0 && (
+            <div className="text-right">
+              <div className="text-lg font-semibold text-[var(--color-text)]">
+                {currencySymbol(currency)}{Math.round(total_price)}
+              </div>
+              <div className="text-[10px] text-[var(--color-text-muted)]">total</div>
+            </div>
+          )}
+          {risk_level !== "safe" && <RiskBadge level={risk_level} />}
+          <div className="text-[10px] text-[var(--color-text-muted)] mt-1">Two bookings required</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -631,6 +744,7 @@ function HomePage() {
   const [progress, setProgress] = useState<ProgressInfo | null>(null);
   const [flights, setFlights] = useState<FlightOut[]>([]);
   const [returnFlights, setReturnFlights] = useState<FlightOut[] | null>(null);
+  const [roundTripResults, setRoundTripResults] = useState<RoundTripOut[] | null>(null);
   const [zonesWarning, setZonesWarning] = useState<string | null>(null);
   const [summary, setSummary] = useState<ScanSummaryData | null>(null);
   const [showCompare, setShowCompare] = useState(false);
@@ -715,6 +829,7 @@ function HomePage() {
     setProgress(null);
     setFlights([]);
     setReturnFlights(null);
+    setRoundTripResults(null);
     setZonesWarning(null);
     setSummary(null);
     setShowCompare(false);
@@ -771,12 +886,13 @@ function HomePage() {
             } else if (msg.type === "results") {
               setFlights(msg.flights || []);
               setReturnFlights(msg.return_flights || null);
+              setRoundTripResults(msg.round_trip_results || null);
               setZonesWarning(msg.zones_warning || null);
               setSummary(msg.summary || null);
               setNoResultsReason(msg.no_results_reason || null);
               setSearchWarning(msg.warning || null);
               setPhase("done");
-              trackEvent("search_results_received", { count: (msg.flights || []).length, has_return: Boolean(msg.return_flights?.length) });
+              trackEvent("search_results_received", { count: (msg.flights || []).length, has_round_trip: Boolean(msg.round_trip_results?.length), has_return: Boolean(msg.return_flights?.length) });
             } else if (msg.type === "error") {
               setError(msg.detail);
               trackEvent("search_error", { stage: "stream", detail: String(msg.detail || "") });
@@ -872,15 +988,17 @@ function HomePage() {
     }
   }
 
-  // Round-trip best pair
+  // Round-trip best pair total
   const roundTripTotal =
-    returnFlights && returnFlights.length > 0 && flights.length > 0
-      ? (() => {
-          const cheapOut = flights.filter((f) => f.price > 0).reduce((m, f) => (f.price < m ? f.price : m), Infinity);
-          const cheapRet = returnFlights.filter((f) => f.price > 0).reduce((m, f) => (f.price < m ? f.price : m), Infinity);
-          return cheapOut < Infinity && cheapRet < Infinity ? cheapOut + cheapRet : null;
-        })()
-      : null;
+    roundTripResults && roundTripResults.length > 0
+      ? (roundTripResults.find((r) => r.total_price > 0)?.total_price ?? null)
+      : returnFlights && returnFlights.length > 0 && flights.length > 0
+        ? (() => {
+            const cheapOut = flights.filter((f) => f.price > 0).reduce((m, f) => (f.price < m ? f.price : m), Infinity);
+            const cheapRet = returnFlights.filter((f) => f.price > 0).reduce((m, f) => (f.price < m ? f.price : m), Infinity);
+            return cheapOut < Infinity && cheapRet < Infinity ? cheapOut + cheapRet : null;
+          })()
+        : null;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -1122,7 +1240,7 @@ function HomePage() {
               </div>
             )}
 
-            {flights.length === 0 && (!returnFlights || returnFlights.length === 0) ? (
+            {flights.length === 0 && (!returnFlights || returnFlights.length === 0) && (!roundTripResults || roundTripResults.length === 0) ? (
               <div className="mt-6 text-center py-12">
                 {noResultsReason === "provider_error" ? (
                   <>
@@ -1171,8 +1289,29 @@ function HomePage() {
                   ))}
                 </div>
 
-                {/* Return flights */}
-                {returnFlights && returnFlights.length > 0 && (
+                {/* Round-trip paired results */}
+                {roundTripResults && roundTripResults.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-sm font-semibold text-[var(--color-text)] uppercase tracking-wider mb-3">Round-trip options</h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mb-4">
+                      Each option shows outbound + return. Prices are combined — you'll complete two separate bookings.
+                    </p>
+                    <div className="space-y-4">
+                      {roundTripResults.slice(0, 10).map((rt, i) => (
+                        <RoundTripCard
+                          key={i}
+                          result={rt}
+                          airportNames={airportNames}
+                          attributionParams={attributionParams}
+                          onOutboundClick={handleOutboundClick}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Fallback: separate return flights (legacy, when round_trip_results absent) */}
+                {!roundTripResults && returnFlights && returnFlights.length > 0 && (
                   <div className="mt-8">
                     <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Return options</h3>
                     <div className="space-y-3">
@@ -1243,6 +1382,7 @@ function HomePage() {
                 setPrompt("");
                 setFlights([]);
                 setReturnFlights(null);
+                setRoundTripResults(null);
                 setParsed(null);
                 setSummary(null);
                 setForm({ from: "", to: "", depart: "", returnDate: "", roundTrip: false, maxPrice: "", directOnly: false });

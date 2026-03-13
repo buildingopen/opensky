@@ -21,7 +21,7 @@ jobs:
 
       - name: Install backend dependencies
         run: |
-          pip install "git+https://github.com/buildingopen/opensky.git@eb315fb6498404db84aa85ed1757bd79f05a9f62"
+          pip install "git+https://github.com/buildingopen/opensky.git@d717cd8778dfba02efbffdee14613f335df7033d"
           pip install -r requirements.txt
 
       - name: Run backend tests

@@ -26,8 +26,8 @@ from redis.exceptions import RedisError
 
 import airportsdata
 
-from skyroute.models import ConflictZone, RiskLevel, ScoredFlight
-from skyroute.safety import load_zones, zones_age_warning
+from skyroute.models import ConflictZone, RiskLevel, RoundTripResult, ScoredFlight
+from skyroute.safety import check_route, load_zones, zones_age_warning
 from skyroute.search import SearchEngine
 
 logging.basicConfig(level=logging.INFO)
@@ -532,6 +532,16 @@ class FlightOut(BaseModel):
     date: str
 
 
+class RoundTripOut(BaseModel):
+    outbound: dict
+    inbound: dict
+    total_price: float
+    currency: str
+    risk_level: str
+    risk_details: list[dict]
+    score: float
+
+
 class SearchResponse(BaseModel):
     parsed: ParsedSearch
     flights: list[FlightOut]
@@ -728,6 +738,163 @@ def _run_scan(parsed: dict, progress_cb: callable = None, cancel: threading.Even
         engine.close()
 
 
+def _legs_airports(legs: list) -> list[str]:
+    seen: dict[str, None] = {}
+    for leg in legs:
+        seen[leg.departure_airport] = None
+        seen[leg.arrival_airport] = None
+    return list(seen)
+
+
+def _flight_result_to_dict(fr, origin: str, dest: str, dt: str, url: str, label: str, exact: bool) -> dict:
+    return {
+        "price": fr.price,
+        "currency": fr.currency,
+        "duration_minutes": fr.duration_minutes,
+        "stops": fr.stops,
+        "route": f"{origin} -> {dest}",
+        "legs": [
+            {
+                "airline": leg.airline,
+                "flight_number": leg.flight_number,
+                "from": leg.departure_airport,
+                "to": leg.arrival_airport,
+                "departs": leg.departure_time,
+                "arrives": leg.arrival_time,
+                "duration_minutes": leg.duration_minutes,
+            }
+            for leg in fr.legs
+        ],
+        "provider": fr.provider,
+        "booking_url": url,
+        "booking_label": label,
+        "booking_exact": exact,
+        "origin": origin,
+        "destination": dest,
+        "date": dt,
+    }
+
+
+def _round_trip_to_out(
+    rt: RoundTripResult,
+    origin: str,
+    dest: str,
+    outbound_date: str,
+    return_date: str,
+    cabin: str,
+    price_weight: float = 1.0,
+    duration_weight: float = 0.5,
+) -> dict | None:
+    all_airports = _legs_airports(rt.outbound.legs) + _legs_airports(rt.inbound.legs)
+    risk = check_route(list(dict.fromkeys(all_airports)))
+
+    if risk.risk_level >= RiskLevel.HIGH_RISK:
+        return None
+
+    risk_penalty = {RiskLevel.SAFE: 0, RiskLevel.CAUTION: 200}.get(risk.risk_level, 500)
+    total_hours = (rt.outbound.duration_minutes + rt.inbound.duration_minutes) / 60
+    effective_price = rt.total_price if rt.total_price > 0 else 99999
+    score = (price_weight * effective_price) + (duration_weight * total_hours) + risk_penalty
+
+    out_url, out_label, out_exact = _booking_link(
+        getattr(rt.outbound, "booking_url", ""), origin, dest, outbound_date, rt.currency, cabin, ""
+    )
+    in_url, in_label, in_exact = _booking_link(
+        getattr(rt.inbound, "booking_url", ""), dest, origin, return_date, rt.currency, cabin, ""
+    )
+
+    outbound_dict = _flight_result_to_dict(rt.outbound, origin, dest, outbound_date, out_url, out_label, out_exact)
+    inbound_dict = _flight_result_to_dict(rt.inbound, dest, origin, return_date, in_url, in_label, in_exact)
+
+    return {
+        "outbound": outbound_dict,
+        "inbound": inbound_dict,
+        "total_price": rt.total_price,
+        "currency": rt.currency,
+        "risk_level": risk.risk_level.value,
+        "risk_details": [
+            {"airport": fa.code, "country": fa.country, "zone": fa.zone_name, "risk": fa.risk_level.value}
+            for fa in risk.flagged_airports
+        ],
+        "score": round(score, 2),
+    }
+
+
+def _run_round_trip_scan(
+    parsed: dict,
+    progress_cb=None,
+    cancel: threading.Event | None = None,
+    error_counter: list | None = None,
+) -> list[dict]:
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    engine = SearchEngine(
+        currency=parsed.get("currency", "EUR"),
+        use_cache=True,
+        seat=parsed.get("cabin", "economy"),
+        stops=parsed.get("stops", "any"),
+        proxy=PROXY,
+    )
+    try:
+        results: list[dict] = []
+        cabin = parsed.get("cabin", "economy")
+        outbound_dates = parsed["dates"]
+        return_dates_list = parsed["return_dates"]
+
+        combos = [
+            (o.upper(), d.upper(), od, rd)
+            for o in parsed["origins"]
+            for d in parsed["destinations"]
+            for od in outbound_dates
+            for rd in return_dates_list
+        ]
+        total = len(combos)
+        completed = 0
+
+        def _search_one(combo):
+            origin, dest, od, rd = combo
+            try:
+                rt_results = engine.search_round_trip(
+                    origin, dest, od, rd,
+                    max_price=parsed.get("max_price", 0),
+                )
+                out = []
+                for rt in rt_results:
+                    converted = _round_trip_to_out(rt, origin, dest, od, rd, cabin)
+                    if converted is not None:
+                        out.append(converted)
+                return out
+            except Exception as e:
+                log.warning("RT search failed %s->%s %s/%s: %s", origin, dest, od, rd, e)
+                if error_counter is not None:
+                    error_counter.append(1)
+                return []
+
+        workers = min(3, total)
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            i = 0
+            while i < total:
+                if cancel and cancel.is_set():
+                    break
+                batch = combos[i:i + workers]
+                futures = {executor.submit(_search_one, c): c for c in batch}
+                for future in as_completed(futures):
+                    rs = future.result()
+                    results.extend(rs)
+                    completed += 1
+                    combo = futures[future]
+                    if progress_cb:
+                        progress_cb(completed, total, combo[0], combo[1], combo[2])
+                i += len(batch)
+                if i < total:
+                    time.sleep(0.5)
+
+        results.sort(key=lambda x: x["score"])
+        return results
+    finally:
+        engine.close()
+
+
 def _build_summary(flights: list[dict], currency: str) -> dict:
     """Build scan summary: best per destination + date/destination price matrix."""
     if not flights:
@@ -888,13 +1055,22 @@ async def search_flights(req: PromptRequest, request: Request):
         error_holder: list = []
         outbound_errors: list = []  # Fix 7: track per-combo errors for zero-results reason
 
-        def run():
-            try:
-                result_holder.append(_run_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors))
-            except Exception as e:
-                error_holder.append(str(e))
-            finally:
-                progress_q.put(None)  # sentinel
+        if is_round_trip:
+            def run():
+                try:
+                    result_holder.append(_run_round_trip_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors))
+                except Exception as e:
+                    error_holder.append(str(e))
+                finally:
+                    progress_q.put(None)
+        else:
+            def run():
+                try:
+                    result_holder.append(_run_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors))
+                except Exception as e:
+                    error_holder.append(str(e))
+                finally:
+                    progress_q.put(None)  # sentinel
 
         thread = threading.Thread(target=run, daemon=True)
         thread.start()
@@ -925,123 +1101,59 @@ async def search_flights(req: PromptRequest, request: Request):
             yield f"data: {json.dumps({'type': 'error', 'detail': f'Search failed. Reference: {error_id}'})}\n\n"
             return
 
-        scored = result_holder[0] if result_holder else []
         cabin = parsed.get("cabin", "economy")
-
-        def _process_flights(scored_list, direction="outbound"):
-            rd = return_dates[0] if return_dates and direction == "outbound" else ""
-            flights = [_scored_to_out(sf, cabin=cabin, return_date=rd).model_dump() for sf in scored_list]
-            priced = [f for f in flights if f["price"] > 0]
-            flights = priced if priced else flights
-            flights = _filter_price_anomalies(flights)
-            seen: dict[tuple, dict] = {}
-            for f in flights:
-                key = (f["route"], f["date"], f["stops"])
-                if key not in seen or f["price"] < seen[key]["price"]:
-                    seen[key] = f
-            return sorted(seen.values(), key=lambda x: x["score"])
-
-        flights = _process_flights(scored)
-        total_count = len(flights)
         warning = zones_age_warning()
-        summary = _build_summary(flights, parsed.get("currency", "EUR"))
-        top_flights = flights[:20]
-
-        # Fix 7: classify zero-results reason
         outbound_error_count = len(outbound_errors)
         no_results_reason: str | None = None
-        if not flights:
-            if outbound_error_count > 0:
-                no_results_reason = "provider_error"
-            else:
-                no_results_reason = "no_routes"
 
-        # Fix 6: skip return search if outbound is empty
-        return_flights_out = None
-        if is_round_trip and not flights:
-            log.info("No outbound flights found — skipping return search")
+        if is_round_trip:
+            # Round-trip: results are already paired by _run_round_trip_scan
+            rt_results: list[dict] = result_holder[0] if result_holder else []
+            round_trip_results = rt_results[:20]
+            # Derive outbound flights for summary purposes
+            flights = [r["outbound"] for r in rt_results[:10]]
+            total_count = len(round_trip_results)
+            summary = None  # summary not applicable for paired round trips
+            if not round_trip_results:
+                no_results_reason = "provider_error" if outbound_error_count > 0 else "no_routes"
             result_data: dict = {
                 "type": "results",
-                "flights": [],
-                "count": 0,
+                "flights": flights,
+                "round_trip_results": round_trip_results,
+                "count": total_count,
                 "remaining_searches": remaining,
                 "zones_warning": warning,
-                "summary": None,
-                "return_flights": [],
+                "summary": summary,
             }
-            if no_results_reason:
-                result_data["no_results_reason"] = no_results_reason
-            if return_date_warning:
-                result_data["warning"] = return_date_warning
-            yield f"data: {json.dumps(result_data)}\n\n"
-            return
+        else:
+            scored = result_holder[0] if result_holder else []
 
-        # Round-trip: run return searches
-        if is_round_trip:
-            return_parsed = {
-                **parsed,
-                "origins": parsed["destinations"],
-                "destinations": parsed["origins"],
-                "dates": return_dates,
+            def _process_flights(scored_list):
+                fl = [_scored_to_out(sf, cabin=cabin).model_dump() for sf in scored_list]
+                priced = [f for f in fl if f["price"] > 0]
+                fl = priced if priced else fl
+                fl = _filter_price_anomalies(fl)
+                seen: dict[tuple, dict] = {}
+                for f in fl:
+                    key = (f["route"], f["date"], f["stops"])
+                    if key not in seen or f["price"] < seen[key]["price"]:
+                        seen[key] = f
+                return sorted(seen.values(), key=lambda x: x["score"])
+
+            flights = _process_flights(scored)
+            total_count = len(flights)
+            summary = _build_summary(flights, parsed.get("currency", "EUR"))
+            if not flights:
+                no_results_reason = "provider_error" if outbound_error_count > 0 else "no_routes"
+            result_data = {
+                "type": "results",
+                "flights": flights[:20],
+                "count": total_count,
+                "remaining_searches": remaining,
+                "zones_warning": warning,
+                "summary": summary,
             }
 
-            return_progress_offset = total
-            return_q: queue.Queue = queue.Queue()
-
-            def on_return_progress(done, total_r, origin, dest, dt):
-                return_q.put({
-                    "type": "progress",
-                    "done": return_progress_offset + done,
-                    "total": combined_total,
-                    "route": f"{origin} -> {dest}",
-                    "date": dt,
-                })
-
-            return_result_holder: list = []
-
-            def run_return():
-                try:
-                    return_result_holder.append(_run_scan(return_parsed, progress_cb=on_return_progress, cancel=cancel))
-                except Exception as e:
-                    log.warning("Return search failed: %s", e)
-                    return_result_holder.append([])
-                finally:
-                    return_q.put(None)
-
-            return_thread = threading.Thread(target=run_return, daemon=True)
-            return_thread.start()
-
-            # Stream return progress
-            while True:
-                if time.time() - scan_start > 120:
-                    cancel.set()
-                    yield f"data: {json.dumps({'type': 'error', 'detail': 'Search timed out. Try a narrower search.'})}\n\n"
-                    return_thread.join(timeout=5)
-                    return
-                try:
-                    msg = return_q.get(timeout=2.0)
-                except queue.Empty:
-                    yield ": keepalive\n\n"
-                    continue
-                if msg is None:
-                    break
-                yield f"data: {json.dumps(msg)}\n\n"
-
-            return_thread.join(timeout=10)
-            return_scored = return_result_holder[0] if return_result_holder else []
-            return_flights = _process_flights(return_scored, "return")
-            return_flights_out = return_flights[:20] if return_flights else []
-
-        result_data = {
-            "type": "results",
-            "flights": top_flights,
-            "count": total_count,
-            "remaining_searches": remaining,
-            "zones_warning": warning,
-            "summary": summary,
-        }
-        if return_flights_out is not None:
-            result_data["return_flights"] = return_flights_out
         if no_results_reason:
             result_data["no_results_reason"] = no_results_reason
         if return_date_warning:
