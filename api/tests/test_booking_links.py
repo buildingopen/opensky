@@ -1,4 +1,4 @@
-from api.main import _booking_link
+from main import _booking_link
 
 
 def test_booking_link_marks_safe_provider_url_as_exact_booking() -> None:
