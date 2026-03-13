@@ -273,7 +273,10 @@ Examples:
 - "Bangkok to Hamburg next week under 400 euros" -> {{"origins":["BKK"],"destinations":["HAM"],"dates":["2026-03-16","2026-03-17",...],"return_dates":[],"max_price":400,"currency":"EUR","cabin":"economy","stops":"any"}}
 - "BLR, DEL, BKK to FRA, HAM, BER March 15-20 economy max 1 stop" -> {{"origins":["BLR","DEL","BKK"],"destinations":["FRA","HAM","BER"],"dates":["2026-03-15",...,"2026-03-20"],"return_dates":[],"max_price":0,"currency":"EUR","cabin":"economy","stops":"one_stop_or_fewer"}}
 - "JFK to London round trip April 10 returning April 17 under $800" -> {{"origins":["JFK"],"destinations":["LHR"],"dates":["2026-04-10"],"return_dates":["2026-04-17"],"max_price":800,"currency":"USD","cabin":"economy","stops":"any"}}
-- "Barcelona to anywhere in Europe, cheapest week in July" -> {{"origins":["BCN"],"destinations":["LHR","CDG","FCO","BER","AMS","LIS","ATH","VIE"],"dates":["2026-07-01","2026-07-04","2026-07-07","2026-07-10","2026-07-13","2026-07-16","2026-07-19","2026-07-22","2026-07-25","2026-07-28"],"return_dates":[],"max_price":0,"currency":"EUR","cabin":"economy","stops":"any"}}
+- "Barcelona to anywhere in Europe, cheapest week in July" -> {{"origins":["BCN"],"destinations":["LHR","CDG","FCO","BER","AMS","LIS","ATH","VIE","WAW","PRG","BUD","MAD","ZRH","CPH","OSL","HEL","DUB","BRU","MUC","ARN"],"dates":["2026-07-01","2026-07-08","2026-07-15","2026-07-22","2026-07-29"],"return_dates":[],"max_price":0,"currency":"EUR","cabin":"economy","stops":"any"}}
+- "anywhere in Asia" -> pick 10-15 relevant airports: NRT, HND, ICN, PVG, HKG, BKK, SIN, KUL, MNL, CGK, DEL, BOM, CMB, KTM, DAD
+- "anywhere in Americas" -> pick 10-15 relevant airports: JFK, LAX, ORD, MIA, GRU, MEX, BOG, LIM, SCL, EZE, YYZ, YVR, SFO, ATL, DFW
+- When user says "anywhere" or "any destination", pick 10-15 relevant airports that match trip context (not always the same list)
 - "cheapest week to fly JFK to CDG" -> one date per week for next 4 weeks from today ({today})"""
 
 
@@ -610,8 +613,8 @@ def _filter_price_anomalies(flights: list[dict]) -> list[dict]:
 def _booking_link(raw: str, origin: str, dest: str, dt: str, currency: str, cabin: str, return_date: str) -> tuple[str, str, bool]:
     """Return a booking/search URL plus UI metadata that matches the link semantics."""
     if raw and raw.startswith(("https://", "http://")):
-        return raw, "Book", True
-    return _skyscanner_url(origin, dest, dt, currency, cabin, return_date=return_date), "Compare on Skyscanner", False
+        return raw, "Book direct", True
+    return _skyscanner_url(origin, dest, dt, currency, cabin, return_date=return_date), "Search on Skyscanner", False
 
 
 def _scored_to_out(sf: ScoredFlight, cabin: str = "economy", return_date: str = "") -> FlightOut:
@@ -664,7 +667,7 @@ def _get_client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def _run_scan(parsed: dict, progress_cb: callable = None, cancel: threading.Event | None = None) -> list[ScoredFlight]:
+def _run_scan(parsed: dict, progress_cb: callable = None, cancel: threading.Event | None = None, error_counter: list | None = None) -> list[ScoredFlight]:
     """Run multi-origin x multi-dest x multi-date search with parallel workers."""
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -696,6 +699,8 @@ def _run_scan(parsed: dict, progress_cb: callable = None, cancel: threading.Even
                 )
             except Exception as e:
                 log.warning("Search failed %s->%s %s: %s", origin, dest, dt, e)
+                if error_counter is not None:
+                    error_counter.append(1)
                 return []
 
         workers = min(3, total)
@@ -819,6 +824,18 @@ async def search_flights(req: PromptRequest, request: Request):
     total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"])
 
     return_dates = parsed.get("return_dates", [])
+    # Fix 5: Return dates must be after the last departure date
+    return_date_warning: str | None = None
+    if return_dates and parsed.get("dates"):
+        last_departure = max(parsed["dates"])
+        filtered_return = [d for d in return_dates if d > last_departure]
+        if not filtered_return:
+            return_date_warning = "Return date is before or same as departure — searching one-way only."
+            return_dates = []
+            parsed["return_dates"] = []
+        elif len(filtered_return) < len(return_dates):
+            return_dates = filtered_return
+            parsed["return_dates"] = filtered_return
     is_round_trip = len(return_dates) > 0
     # For round trips, total includes outbound + return combos
     return_total = len(parsed["destinations"]) * len(parsed["origins"]) * len(return_dates) if is_round_trip else 0
@@ -855,7 +872,10 @@ async def search_flights(req: PromptRequest, request: Request):
         except Exception:
             yield f"data: {json.dumps({'type': 'error', 'detail': 'Internal error preparing search.'})}\n\n"
             return
-        yield f"data: {json.dumps({'type': 'parsed', 'parsed': parsed_data})}\n\n"
+        parsed_event: dict = {"type": "parsed", "parsed": parsed_data}
+        if return_date_warning:
+            parsed_event["warning"] = return_date_warning
+        yield f"data: {json.dumps(parsed_event)}\n\n"
 
         cancel = threading.Event()
         progress_q: queue.Queue = queue.Queue()
@@ -866,10 +886,11 @@ async def search_flights(req: PromptRequest, request: Request):
         # Run scan in thread
         result_holder: list = []
         error_holder: list = []
+        outbound_errors: list = []  # Fix 7: track per-combo errors for zero-results reason
 
         def run():
             try:
-                result_holder.append(_run_scan(parsed, progress_cb=on_progress, cancel=cancel))
+                result_holder.append(_run_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors))
             except Exception as e:
                 error_holder.append(str(e))
             finally:
@@ -926,8 +947,36 @@ async def search_flights(req: PromptRequest, request: Request):
         summary = _build_summary(flights, parsed.get("currency", "EUR"))
         top_flights = flights[:20]
 
-        # Round-trip: run return searches
+        # Fix 7: classify zero-results reason
+        outbound_error_count = len(outbound_errors)
+        no_results_reason: str | None = None
+        if not flights:
+            if outbound_error_count > 0:
+                no_results_reason = "provider_error"
+            else:
+                no_results_reason = "no_routes"
+
+        # Fix 6: skip return search if outbound is empty
         return_flights_out = None
+        if is_round_trip and not flights:
+            log.info("No outbound flights found — skipping return search")
+            result_data: dict = {
+                "type": "results",
+                "flights": [],
+                "count": 0,
+                "remaining_searches": remaining,
+                "zones_warning": warning,
+                "summary": None,
+                "return_flights": [],
+            }
+            if no_results_reason:
+                result_data["no_results_reason"] = no_results_reason
+            if return_date_warning:
+                result_data["warning"] = return_date_warning
+            yield f"data: {json.dumps(result_data)}\n\n"
+            return
+
+        # Round-trip: run return searches
         if is_round_trip:
             return_parsed = {
                 **parsed,
@@ -993,6 +1042,10 @@ async def search_flights(req: PromptRequest, request: Request):
         }
         if return_flights_out is not None:
             result_data["return_flights"] = return_flights_out
+        if no_results_reason:
+            result_data["no_results_reason"] = no_results_reason
+        if return_date_warning:
+            result_data["warning"] = return_date_warning
         yield f"data: {json.dumps(result_data)}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

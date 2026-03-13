@@ -98,6 +98,12 @@ function formatDate(iso: string): string {
 function currencySymbol(c: string): string {
   return c === "EUR" ? "\u20AC" : c === "USD" ? "$" : c === "GBP" ? "\u00A3" : c;
 }
+// Fix 1: Extract display date from flight legs (actual departure date, not search date)
+function flightDisplayDate(flight: FlightOut): string {
+  const departs = flight.legs?.[0]?.departs;
+  if (departs) return departs.slice(0, 10);
+  return flight.date;
+}
 function safeUrl(url: string): string | null {
   if (!url) return null;
   try {
@@ -238,7 +244,7 @@ function FlightCard({
           <div className="text-sm font-medium text-[var(--color-text)]">{routeLabel}</div>
           {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{formatAirlines(airlines)}</div>}
           <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-[var(--color-text-muted)]">
-            <span>{formatDate(flight.date)}</span>
+            <span>{formatDate(flightDisplayDate(flight))}</span>
             {firstLeg && lastLeg && (
               <span className="text-[var(--color-text)]">
                 {formatTime(firstLeg.departs)} \u2013 {formatTime(lastLeg.arrives)}
@@ -265,10 +271,13 @@ function FlightCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => onOutboundClick("booking", flight)}
-                aria-label={`Book with ${flight.provider || "provider"}`}
+                aria-label={flight.booking_exact ? "Book direct" : "Search on Skyscanner"}
+                title={flight.booking_exact
+                  ? "Direct booking link — takes you straight to checkout"
+                  : "Opens a Skyscanner search — you\u2019ll need to find this exact flight again"}
                 className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
               >
-                Book
+                {flight.booking_exact ? "Book direct" : "Skyscanner"}
               </a>
             ) : (
               <span className="px-4 py-2 bg-[var(--color-accent)]/40 text-black/70 text-sm rounded-lg cursor-not-allowed">
@@ -280,10 +289,11 @@ function FlightCard({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => onOutboundClick("google", flight)}
-              aria-label="Compare on Google Flights"
+              aria-label="Search on Google Flights"
+              title="Search this route on Google Flights"
               className="px-4 py-2 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
             >
-              Compare
+              Google
             </a>
           </div>
         </div>
@@ -481,6 +491,63 @@ function ScanSummaryExpanded({
 }
 
 // ---------------------------------------------------------------------------
+// Fix 2: Parsed Config chips
+// ---------------------------------------------------------------------------
+function ParsedConfig({ parsed }: { parsed: ParsedSearch }) {
+  const { origins, destinations, dates, return_dates, max_price, currency, cabin, stops } = parsed;
+  const sym = currencySymbol(currency);
+  const isRoundTrip = return_dates && return_dates.length > 0;
+
+  const formatDatesChip = (ds: string[]) => {
+    if (ds.length === 0) return null;
+    if (ds.length <= 3) return ds.map(formatDate).join(", ");
+    return `${formatDate(ds[0])} +${ds.length - 1} more`;
+  };
+
+  const chipClass = "px-2 py-0.5 rounded bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] font-mono text-xs";
+  const labelClass = "px-2 py-0.5 rounded text-xs";
+
+  return (
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {origins.map((o) => (
+          <span key={o} className={chipClass}>{o}</span>
+        ))}
+        <span className="text-[var(--color-text-muted)] text-xs mx-0.5">\u2192</span>
+        {destinations.map((d) => (
+          <span key={d} className={chipClass}>{d}</span>
+        ))}
+        <span className="text-[var(--color-border)] mx-1">|</span>
+        <span className="text-[var(--color-text-muted)] text-xs">{formatDatesChip(dates)}</span>
+        {isRoundTrip && (
+          <>
+            <span className={`${labelClass} bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium`}>
+              Round trip
+            </span>
+            <span className="text-[var(--color-text-muted)] text-xs">\u2192 {formatDatesChip(return_dates)}</span>
+          </>
+        )}
+        {cabin && cabin !== "economy" && (
+          <span className={`${labelClass} bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)] capitalize`}>
+            {cabin.replace(/_/g, " ")}
+          </span>
+        )}
+        {stops && stops !== "any" && (
+          <span className={`${labelClass} bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)]`}>
+            {stops === "non_stop" ? "Direct only" : stops === "one_stop_or_fewer" ? "\u22641 stop" : "\u22642 stops"}
+          </span>
+        )}
+        {max_price > 0 && (
+          <span className={`${labelClass} bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)]`}>
+            Max {sym}{Math.round(max_price)}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Error Boundary
 // ---------------------------------------------------------------------------
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
@@ -569,6 +636,9 @@ function HomePage() {
   const [showCompare, setShowCompare] = useState(false);
   const [attributionParams, setAttributionParams] = useState<AttributionParams>({ ref: "organic" });
   const [showCopyLink, setShowCopyLink] = useState(false);
+  const [noResultsReason, setNoResultsReason] = useState<string | null>(null);
+  const [searchWarning, setSearchWarning] = useState<string | null>(null);
+  const [autoSearchQuery, setAutoSearchQuery] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -589,6 +659,13 @@ function HomePage() {
       ref: p.get("ref") || "organic",
     });
     setShowCopyLink(!navigator.share);
+    // Fix 12: auto-populate and search from share URL
+    const q = p.get("q");
+    if (q) {
+      setPrompt(q);
+      setSearchMode("natural");
+      setAutoSearchQuery(q);
+    }
   }, []);
 
   useEffect(() => {
@@ -601,6 +678,15 @@ function HomePage() {
   useEffect(() => {
     if (phase === "done" && resultsRef.current) resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [phase]);
+
+  // Fix 12: auto-search when ?q= param present on page load
+  useEffect(() => {
+    if (autoSearchQuery) {
+      const q = autoSearchQuery;
+      setAutoSearchQuery(null);
+      search(q);
+    }
+  }, [autoSearchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getSearchPrompt = (): string => {
     if (searchMode === "natural") return prompt.trim();
@@ -632,6 +718,8 @@ function HomePage() {
     setZonesWarning(null);
     setSummary(null);
     setShowCompare(false);
+    setNoResultsReason(null);
+    setSearchWarning(null);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90_000);
@@ -676,6 +764,7 @@ function HomePage() {
             const msg = JSON.parse(line.slice(6));
             if (msg.type === "parsed") {
               setParsed(msg.parsed);
+              if (msg.warning) setSearchWarning(msg.warning);
               setPhase("searching");
             } else if (msg.type === "progress") {
               setProgress(msg);
@@ -684,6 +773,8 @@ function HomePage() {
               setReturnFlights(msg.return_flights || null);
               setZonesWarning(msg.zones_warning || null);
               setSummary(msg.summary || null);
+              setNoResultsReason(msg.no_results_reason || null);
+              setSearchWarning(msg.warning || null);
               setPhase("done");
               trackEvent("search_results_received", { count: (msg.flights || []).length, has_return: Boolean(msg.return_flights?.length) });
             } else if (msg.type === "error") {
@@ -719,15 +810,13 @@ function HomePage() {
   };
 
   const getShareUrl = (): string | null => {
-    if (!parsed) return null;
-    const best = sortFlights(flights, "score")[0];
+    const currentPrompt = getSearchPrompt();
+    if (!currentPrompt) return null;
     const url = new URL(window.location.href);
-    url.searchParams.set("from", parsed.origins.join(","));
-    url.searchParams.set("to", parsed.destinations.join(","));
-    url.searchParams.set("date", parsed.dates[0] || "");
+    url.search = "";
+    url.searchParams.set("q", currentPrompt);
     url.searchParams.set("ref", "share");
     url.searchParams.set("utm_source", "share");
-    if (best?.price) url.searchParams.set("price", String(Math.round(best.price)));
     return url.toString();
   };
 
@@ -757,11 +846,13 @@ function HomePage() {
 
   const isLoading = phase === "parsing" || phase === "searching";
 
-  // Recommendation stack
-  const recommended = sortFlights(flights, "score")[0];
-  const cheapest = sortFlights(flights, "price")[0];
-  const fastest = sortFlights(flights, "duration")[0];
-  const lowestStress = [...flights].sort((a, b) => {
+  // Fix 11: Use only priced flights for recommendations (unpriced can appear in list but not labeled)
+  const pricedFlights = flights.filter((f) => f.price > 0);
+  const recEligible = pricedFlights.length > 0 ? pricedFlights : flights;
+  const recommended = sortFlights(recEligible, "score")[0];
+  const cheapest = sortFlights(recEligible, "price")[0];
+  const fastest = sortFlights(recEligible, "duration")[0];
+  const lowestStress = [...recEligible].sort((a, b) => {
     const stressA = a.stops * 100 + (a.risk_level !== "safe" ? 50 : 0);
     const stressB = b.stops * 100 + (b.risk_level !== "safe" ? 50 : 0);
     return stressA - stressB || a.price - b.price;
@@ -1014,13 +1105,15 @@ function HomePage() {
 
         {phase === "done" && parsed && (
           <>
-            {/* Parsed summary - compact */}
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-sm text-[var(--color-text-muted)]">
-              {parsed.origins.join(", ")} \u2192 {parsed.destinations.join(", ")}
-              {parsed.dates[0] && ` \u2022 ${formatDate(parsed.dates[0])}`}
-              {parsed.return_dates?.[0] && ` / return ${formatDate(parsed.return_dates[0])}`}
-              {parsed.max_price > 0 && ` \u2022 Max ${currencySymbol(parsed.currency)}${parsed.max_price}`}
-            </div>
+            {/* Fix 2: Parsed config chips */}
+            <ParsedConfig parsed={parsed} />
+
+            {/* Fix 5: Show warning if return date was before departure */}
+            {searchWarning && (
+              <div className="mt-2 text-xs text-[var(--color-caution)] bg-[var(--color-caution)]/10 border border-[var(--color-caution)]/20 rounded-lg px-3 py-2">
+                {searchWarning}
+              </div>
+            )}
 
             {/* Round-trip total */}
             {roundTripTotal != null && (
@@ -1031,10 +1124,28 @@ function HomePage() {
 
             {flights.length === 0 && (!returnFlights || returnFlights.length === 0) ? (
               <div className="mt-6 text-center py-12">
-                <p className="text-[var(--color-text-muted)]">No safe flights found.</p>
-                <p className="text-sm text-[var(--color-text-muted)] mt-2">
-                  All routes pass through conflict zones or no flights match. Try different dates, nearby airports, or a higher budget.
-                </p>
+                {noResultsReason === "provider_error" ? (
+                  <>
+                    <p className="text-[var(--color-text-muted)]">Flight data unavailable right now.</p>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-2">
+                      The flight data providers returned an error. Try again in a moment.
+                    </p>
+                  </>
+                ) : noResultsReason === "safety_filtered" ? (
+                  <>
+                    <p className="text-[var(--color-text-muted)]">All routes pass through conflict zones.</p>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-2">
+                      Try different routing, nearby airports, or a different date range.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[var(--color-text-muted)]">No flights found.</p>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-2">
+                      No flights match this route and date. Try nearby airports or different dates.
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
               <>
