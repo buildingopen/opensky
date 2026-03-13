@@ -10,8 +10,9 @@ from opensky._vendor.google_flights import (
     SeatType,
     SearchFlights,
     SortBy,
+    TripType,
 )
-from opensky.models import FlightLeg, FlightResult
+from opensky.models import FlightLeg, FlightResult, RoundTripResult
 
 SEAT_MAP: dict[str, SeatType] = {
     "economy": SeatType.ECONOMY,
@@ -103,6 +104,55 @@ class GoogleProvider:
         if not raw_results:
             return []
         return [_convert_result(r, currency) for r in raw_results]
+
+    def search_round_trip(
+        self,
+        origin: str,
+        dest: str,
+        outbound_date: str,
+        return_date: str,
+        cabin: str,
+        currency: str,
+        max_stops: int | None,
+    ) -> list[RoundTripResult]:
+        seat = SEAT_MAP.get(cabin, SeatType.ECONOMY)
+        stops = STOPS_MAP.get(max_stops, MaxStops.ANY)
+        filters = FlightSearchFilters(
+            trip_type=TripType.ROUND_TRIP,
+            flight_segments=[
+                FlightSegment(
+                    departure_airport=[[origin, 0]],
+                    arrival_airport=[[dest, 0]],
+                    travel_date=outbound_date,
+                ),
+                FlightSegment(
+                    departure_airport=[[dest, 0]],
+                    arrival_airport=[[origin, 0]],
+                    travel_date=return_date,
+                ),
+            ],
+            passenger_info=PassengerInfo(adults=1),
+            seat_type=seat,
+            stops=stops,
+            sort_by=SortBy.CHEAPEST,
+        )
+        api = self._get_api()
+        raw: list[tuple] = api.search(filters) or []  # type: ignore[assignment]
+        results: list[RoundTripResult] = []
+        for pair in raw:
+            if not isinstance(pair, tuple) or len(pair) != 2:
+                continue
+            out_raw, in_raw = pair
+            outbound = _convert_result(out_raw, currency)
+            inbound = _convert_result(in_raw, currency)
+            total_price = outbound.price + inbound.price
+            results.append(RoundTripResult(
+                outbound=outbound,
+                inbound=inbound,
+                total_price=total_price,
+                currency=currency,
+            ))
+        return results
 
     def close(self) -> None:
         if self._api:

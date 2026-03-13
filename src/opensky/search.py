@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 
 from opensky import cache
 from opensky.config import ScanConfig, VALID_CABINS, VALID_STOPS
-from opensky.models import FlightLeg, FlightResult, RiskLevel, ScoredFlight
+from opensky.models import FlightLeg, FlightResult, RiskLevel, RoundTripResult, ScoredFlight
 from opensky.providers import FlightProvider, configured_providers
 from opensky.safety import check_route
 
@@ -283,6 +283,54 @@ class SearchEngine:
             successful_providers=search_report.successful_providers,
             failed_providers=search_report.failed_providers,
         )
+
+    def search_round_trip(
+        self,
+        origin: str,
+        dest: str,
+        outbound_date: str,
+        return_date: str,
+        max_price: float = 0,
+    ) -> list[RoundTripResult]:
+        all_results: list[RoundTripResult] = []
+
+        for provider in self._providers:
+            if not hasattr(provider, "search_round_trip"):
+                continue
+            ck = cache.cache_key(
+                f"rt:{origin}", dest, f"{outbound_date}:{return_date}",
+                seat=self.seat, currency=self.currency,
+                stops=self.max_stops, provider=provider.name,
+            )
+            if self.use_cache:
+                cached = cache.get(ck)
+                if cached is not None:
+                    all_results.extend(cached)
+                    continue
+
+            try:
+                results = provider.search_round_trip(
+                    origin, dest, outbound_date, return_date,
+                    cabin=self.seat,
+                    currency=self.currency,
+                    max_stops=self.max_stops,
+                )
+            except Exception as exc:
+                log.warning(
+                    "Provider %s round-trip failed for %s->%s %s/%s: %s",
+                    provider.name, origin, dest, outbound_date, return_date, exc,
+                )
+                continue
+
+            if self.use_cache:
+                cache.put(ck, results)
+            all_results.extend(results)
+
+        if max_price > 0:
+            all_results = [r for r in all_results if r.total_price <= max_price]
+
+        all_results.sort(key=lambda r: r.total_price)
+        return all_results
 
     def scan(
         self,

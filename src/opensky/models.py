@@ -77,6 +77,13 @@ class FlightResult(BaseModel):
     booking_url: str = ""
 
 
+class RoundTripResult(BaseModel):
+    outbound: FlightResult
+    inbound: FlightResult
+    total_price: float
+    currency: str
+
+
 class ScoredFlight(BaseModel):
     flight: FlightResult
     origin: str

@@ -5,7 +5,7 @@ import logging
 import httpx
 from ratelimit import limits, sleep_and_retry
 
-from opensky.models import FlightLeg, FlightResult
+from opensky.models import FlightLeg, FlightResult, RoundTripResult
 from opensky.providers import parse_iso_duration
 
 log = logging.getLogger(__name__)
@@ -18,6 +18,47 @@ CABIN_MAP: dict[str, str] = {
     "business": "business",
     "first": "first",
 }
+
+
+def _convert_offer_slice(offer: dict, slice_index: int, currency: str) -> FlightResult:
+    """Extract a single slice from a Duffel offer as a FlightResult (price=0, use offer total)."""
+    offer_currency = offer.get("total_currency", currency)
+    slices = offer.get("slices", [])
+    if slice_index >= len(slices):
+        return FlightResult(price=0, currency=offer_currency, duration_minutes=0, stops=0, legs=[], provider="duffel")
+
+    slc = slices[slice_index]
+    legs: list[FlightLeg] = []
+    total_duration = 0
+
+    for seg in slc.get("segments", []):
+        dep = seg.get("departing_at", "")
+        arr = seg.get("arriving_at", "")
+        dur = parse_iso_duration(seg.get("duration", ""))
+        total_duration += dur
+
+        carrier = seg.get("operating_carrier", {})
+        airline = carrier.get("iata_code", seg.get("marketing_carrier", {}).get("iata_code", ""))
+        flight_num = seg.get("operating_carrier_flight_number") or seg.get("marketing_carrier_flight_number") or ""
+
+        legs.append(FlightLeg(
+            airline=airline,
+            flight_number=flight_num,
+            departure_airport=seg.get("origin", {}).get("iata_code", ""),
+            arrival_airport=seg.get("destination", {}).get("iata_code", ""),
+            departure_time=dep,
+            arrival_time=arr,
+            duration_minutes=dur,
+        ))
+
+    return FlightResult(
+        price=0,
+        currency=offer_currency,
+        duration_minutes=total_duration,
+        stops=max(len(legs) - 1, 0),
+        legs=legs,
+        provider="duffel",
+    )
 
 
 def _convert_offer(offer: dict, currency: str) -> FlightResult:
@@ -115,6 +156,56 @@ class DuffelProvider:
         # Client-side stops filter (Duffel max_connections is 0-2)
         if max_stops is not None:
             results = [r for r in results if r.stops <= max_stops]
+
+        return results
+
+    @sleep_and_retry
+    @limits(calls=10, period=1)
+    def search_round_trip(
+        self,
+        origin: str,
+        dest: str,
+        outbound_date: str,
+        return_date: str,
+        cabin: str,
+        currency: str,
+        max_stops: int | None,
+    ) -> list[RoundTripResult]:
+        cabin_class = CABIN_MAP.get(cabin, "economy")
+
+        payload = {
+            "data": {
+                "slices": [
+                    {"origin": origin, "destination": dest, "departure_date": outbound_date},
+                    {"origin": dest, "destination": origin, "departure_date": return_date},
+                ],
+                "passengers": [{"type": "adult"}],
+                "cabin_class": cabin_class,
+                "currency": currency,
+                "return_offers": True,
+                "max_connections": max_stops if max_stops is not None else 2,
+            }
+        }
+
+        resp = self._client.post("/air/offer_requests", json=payload)
+        resp.raise_for_status()
+        data = resp.json().get("data", {})
+        offers = data.get("offers", [])
+
+        results: list[RoundTripResult] = []
+        for offer in offers:
+            total_price = float(offer.get("total_amount", 0))
+            offer_currency = offer.get("total_currency", currency)
+            outbound = _convert_offer_slice(offer, 0, offer_currency)
+            inbound = _convert_offer_slice(offer, 1, offer_currency)
+            if max_stops is not None and (outbound.stops > max_stops or inbound.stops > max_stops):
+                continue
+            results.append(RoundTripResult(
+                outbound=outbound,
+                inbound=inbound,
+                total_price=total_price,
+                currency=offer_currency,
+            ))
 
         return results
 
