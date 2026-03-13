@@ -320,6 +320,8 @@ class FlightOut(BaseModel):
     legs: list[dict]
     provider: str
     booking_url: str
+    booking_label: str
+    booking_exact: bool
     origin: str
     destination: str
     date: str
@@ -403,14 +405,18 @@ def _filter_price_anomalies(flights: list[dict]) -> list[dict]:
     return filtered
 
 
-def _safe_booking_url(raw: str, origin: str, dest: str, dt: str, currency: str, cabin: str, return_date: str) -> str:
-    """Return raw URL only if it has a safe scheme, otherwise generate a Skyscanner link."""
+def _booking_link(raw: str, origin: str, dest: str, dt: str, currency: str, cabin: str, return_date: str) -> tuple[str, str, bool]:
+    """Return a booking/search URL plus UI metadata that matches the link semantics."""
     if raw and raw.startswith(("https://", "http://")):
-        return raw
-    return _skyscanner_url(origin, dest, dt, currency, cabin, return_date=return_date)
+        return raw, "Book", True
+    return _skyscanner_url(origin, dest, dt, currency, cabin, return_date=return_date), "Compare on Skyscanner", False
 
 
 def _scored_to_out(sf: ScoredFlight, cabin: str = "economy", return_date: str = "") -> FlightOut:
+    booking_url, booking_label, booking_exact = _booking_link(
+        getattr(sf.flight, 'booking_url', ''),
+        sf.origin, sf.destination, sf.date, sf.flight.currency, cabin, return_date,
+    )
     return FlightOut(
         price=sf.flight.price,
         currency=sf.flight.currency,
@@ -436,10 +442,9 @@ def _scored_to_out(sf: ScoredFlight, cabin: str = "economy", return_date: str = 
             for leg in sf.flight.legs
         ],
         provider=sf.flight.provider,
-        booking_url=_safe_booking_url(
-            getattr(sf.flight, 'booking_url', ''),
-            sf.origin, sf.destination, sf.date, sf.flight.currency, cabin, return_date,
-        ),
+        booking_url=booking_url,
+        booking_label=booking_label,
+        booking_exact=booking_exact,
         origin=sf.origin,
         destination=sf.destination,
         date=sf.date,

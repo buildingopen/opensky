@@ -42,6 +42,8 @@ interface FlightOut {
   legs: FlightLeg[];
   provider: string;
   booking_url: string;
+  booking_label: string;
+  booking_exact: boolean;
   origin: string;
   destination: string;
   date: string;
@@ -150,6 +152,24 @@ function googleFlightsUrl(origin: string, dest: string, date: string, currency: 
   url.searchParams.set("curr", (currency || "EUR").toUpperCase().slice(0, 3));
   url.searchParams.set("hl", "en");
   return url.toString();
+}
+
+function primaryBookingLabel(flight: FlightOut): string {
+  return flight.booking_label || "Compare on Skyscanner";
+}
+
+function bookingIsExact(flight: FlightOut): boolean {
+  return Boolean(flight.booking_exact);
+}
+
+function bookingAriaLabel(flight: FlightOut): string {
+  return bookingIsExact(flight) ? "Book this flight in a new tab" : "Compare this route on Skyscanner in a new tab";
+}
+
+function bookingLinkTone(flight: FlightOut): string {
+  return bookingIsExact(flight)
+    ? "shrink-0 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+    : "shrink-0 px-4 py-2 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors";
 }
 
 
@@ -263,17 +283,17 @@ function ScanSummary({ summary, currency, airportNames }: { summary: ScanSummary
                   <a
                     href={safeUrl(f.booking_url)}
                     target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Open Skyscanner in a new tab"
-                    className="text-[var(--color-accent)] hover:underline"
-                  >
-                    Skyscanner
+                  rel="noopener noreferrer"
+                  aria-label={bookingAriaLabel(f)}
+                  className="text-[var(--color-accent)] hover:underline"
+                >
+                    {primaryBookingLabel(f)}
                   </a>
                   <a
                     href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency))}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="Open Google Flights in a new tab"
+                    aria-label="Compare this route on Google Flights in a new tab"
                     className="text-[var(--color-accent)] hover:underline"
                   >
                     Google Flights
@@ -391,16 +411,16 @@ function FlightCard({ flight }: { flight: FlightOut }) {
                   href={safeUrl(flight.booking_url)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Open Skyscanner in a new tab"
-                  className="shrink-0 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                  aria-label={bookingAriaLabel(flight)}
+                  className={bookingLinkTone(flight)}
                 >
-                  Skyscanner
+                  {primaryBookingLabel(flight)}
                 </a>
                 <a
                   href={safeUrl(googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency))}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Open Google Flights in a new tab"
+                  aria-label="Compare this route on Google Flights in a new tab"
                   className="shrink-0 px-4 py-2 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
                 >
                   Google Flights
@@ -413,16 +433,16 @@ function FlightCard({ flight }: { flight: FlightOut }) {
                 href={safeUrl(flight.booking_url)}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Open Skyscanner in a new tab"
-                className="shrink-0 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                aria-label={bookingAriaLabel(flight)}
+                className={bookingLinkTone(flight)}
               >
-                Skyscanner
+                {primaryBookingLabel(flight)}
               </a>
               <a
                 href={safeUrl(googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency))}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Open Google Flights in a new tab"
+                aria-label="Compare this route on Google Flights in a new tab"
                 className="shrink-0 px-4 py-2 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
               >
                 Google Flights
