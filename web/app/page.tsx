@@ -559,6 +559,7 @@ function HomePage() {
   const [prompt, setPrompt] = useState("");
   const [phase, setPhase] = useState<"idle" | "parsing" | "searching" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[] | null>(null);
   const [parsed, setParsed] = useState<ParsedSearch | null>(null);
   const [progress, setProgress] = useState<ProgressInfo | null>(null);
   const [flights, setFlights] = useState<FlightOut[]>([]);
@@ -623,6 +624,7 @@ function HomePage() {
 
     setPhase("parsing");
     setError(null);
+    setSuggestions(null);
     setParsed(null);
     setProgress(null);
     setFlights([]);
@@ -651,6 +653,7 @@ function HomePage() {
       if (!resp.ok) {
         const body = await resp.json().catch(() => null);
         setError(body?.detail || `Search failed (${resp.status})`);
+        if (body?.suggestions?.length) setSuggestions(body.suggestions);
         trackEvent("search_error", { status_code: resp.status, stage: "http" });
         setPhase("idle");
         return;
@@ -984,8 +987,26 @@ function HomePage() {
       {/* Results */}
       <section id="main-content" ref={resultsRef} aria-live="polite" className="max-w-3xl mx-auto px-4 py-4 w-full flex-1">
         {error && (
-          <div role="alert" className="bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/30 rounded-lg px-4 py-3 text-sm text-[var(--color-danger)] mb-4">
-            {error}
+          <div role="alert" className="mb-4">
+            <div className="bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/30 rounded-lg px-4 py-3 text-sm text-[var(--color-danger)]">
+              {error}
+            </div>
+            {suggestions && suggestions.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs text-[var(--color-text-muted)] mb-2">Try one of these instead:</p>
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { setSearchMode("natural"); setPrompt(s); search(s); }}
+                      className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-accent)]/40 text-[var(--color-text)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

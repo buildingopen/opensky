@@ -19,7 +19,7 @@ from uuid import uuid4
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from redis import asyncio as redis
 from redis.exceptions import RedisError
@@ -405,6 +405,46 @@ async def parse_prompt(prompt: str) -> dict:
     return parsed
 
 
+SUGGEST_SYSTEM = """You are a flight search assistant. A user's search was too broad (too many route combinations).
+Given the original prompt and what was parsed, suggest 3 specific, narrowed search queries the user can try instead.
+Each suggestion must be a complete natural language search query (not instructions), ready to be searched directly.
+Focus on making the search more specific: fewer destinations, a specific date or short range, or a single origin.
+Return ONLY a JSON array of 3 strings. No explanation.
+Example: ["Berlin to Paris next Friday", "Berlin to Amsterdam or Rome in April, cheapest day", "BER to LHR March 20 direct under €200"]"""
+
+async def suggest_narrowing(prompt: str, parsed: dict, combined_total: int) -> list[str]:
+    """Ask Gemini to suggest 3 narrowed alternatives when a search is too broad."""
+    if not GEMINI_KEY:
+        return []
+    context = (
+        f"Original prompt: {prompt}\n"
+        f"Parsed: {len(parsed['origins'])} origin(s), {len(parsed['destinations'])} destination(s), "
+        f"{len(parsed['dates'])} date(s) = {combined_total} combinations (limit is 100).\n"
+        f"Origins: {', '.join(parsed['origins'])}\n"
+        f"Destinations: {', '.join(parsed['destinations'][:10])}"
+        + (" (and more)" if len(parsed["destinations"]) > 10 else "")
+    )
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                GEMINI_URL,
+                params={"key": GEMINI_KEY},
+                json={
+                    "contents": [{"parts": [{"text": context}]}],
+                    "systemInstruction": {"parts": [{"text": SUGGEST_SYSTEM}]},
+                    "generationConfig": {"temperature": 0.3, "responseMimeType": "application/json"},
+                },
+            )
+        if resp.status_code == 200:
+            text = _extract_gemini_text(resp.json())
+            suggestions = json.loads(text)
+            if isinstance(suggestions, list):
+                return [str(s) for s in suggestions[:3] if s]
+    except Exception as exc:
+        log.warning("suggest_narrowing failed: %s", exc)
+    return []
+
+
 # ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
@@ -785,9 +825,13 @@ async def search_flights(req: PromptRequest, request: Request):
     combined_total = total + return_total
 
     if combined_total > 100:
-        raise HTTPException(
+        suggestions = await suggest_narrowing(req.prompt, parsed, combined_total)
+        return JSONResponse(
             status_code=400,
-            detail=f"Search too broad: {combined_total} route combinations. Narrow your origins, destinations, or date range.",
+            content={
+                "detail": f"Search too broad: {combined_total} route combinations.",
+                "suggestions": suggestions,
+            },
         )
 
     names = _airport_names(parsed["origins"] + parsed["destinations"])
