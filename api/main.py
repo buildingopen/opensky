@@ -260,7 +260,15 @@ Rules:
 - If the user says "direct" or "nonstop", set stops to "non_stop".
 - Always return valid IATA airport codes (3-letter), NOT city codes. For cities with multiple airports, use the main one (e.g. London=LHR, New York=JFK, Paris=CDG, Tokyo=NRT, Moscow=SVO, Milan=MXP, Chicago=ORD, Washington=IAD, Stockholm=ARN, Sao Paulo=GRU).
 - Never return city codes like LON, NYC, PAR, TYO, MOW, MIL, CHI, WAS, STO, SAO. Always use specific airport codes.
-- STRICT: When the user names a SPECIFIC city (e.g. "San Francisco", "London", "Tokyo"), return ONLY that city's airport. Do NOT add nearby cities or alternative airports unless the user explicitly asks (e.g. "Bay Area", "California", "West Coast", "anywhere near SF"). "Hamburg to San Francisco" = HAM to SFO, nothing else.
+NEARBY AIRPORTS & GENEROUS EXPANSION:
+- When the user says "or nearby", "any airport around", "reachable by train", "flexible on airport", or similar: be GENEROUS. Include all major airports within ~3h by train/car. Hidden gems come from unexpected departure airports.
+  - "Hamburg or nearby" → HAM, BRE, HAJ, BER, LBC (Berlin is 1.5h by ICE, a major hub, don't miss it!)
+  - "London or nearby" → LHR, LGW, STN, LTN, BRS, BHX, MAN
+  - "Paris or nearby" → CDG, ORY, BRU, LUX, LIL
+  - "Milan or nearby" → MXP, LIN, BGY, VRN, TRN
+- When the user names a SPECIFIC single city without "nearby" qualifiers, return only that city's main airport.
+- For destinations: if the user lists specific cities, use those. If they say "anywhere in [region]" or "West Coast" or "California", expand generously (5-8 airports).
+- For dates: when the user says "end of month / beginning of next", cover the FULL transition period. "end of March / beg of April" → Mar 28, 29, 30, 31, Apr 1, 2, 3, 4, 5 (not just the last day of March).
 
 FLEXIBLE / INSPIRATIONAL DATE SEARCHES:
 When the user does NOT specify exact dates but instead wants to explore a period (e.g. "cheapest in July", "flexible dates in April", "anytime in summer", "cheapest week", "best time to fly in June"), use SAMPLED dates instead of listing every single day. This keeps the search fast and under limits.
