@@ -1191,8 +1191,8 @@ function HomePage() {
       {/* Hero - outcome-focused */}
       <section className={`max-w-3xl mx-auto px-4 w-full text-center transition-all duration-300 ${hasResults ? "pt-6 pb-4" : "pt-16 sm:pt-24 pb-6"}`}>
         <h1 className={`font-bold tracking-tight transition-all duration-300 ${hasResults ? "text-2xl" : "text-4xl sm:text-5xl"}`}>
-          Find the safest practical{" "}
-          <span className="text-[var(--color-accent)]">flight.</span>
+          Where do you want to{" "}
+          <span className="text-[var(--color-accent)]">fly?</span>
         </h1>
         {!hasResults && (
           <p className="mt-4 text-[var(--color-text-muted)] text-base sm:text-lg max-w-lg mx-auto">
@@ -1291,7 +1291,7 @@ function HomePage() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), canSearch() && search())}
-                placeholder="Where do you want to fly? e.g. JFK to London next week under $500"
+                placeholder="e.g. JFK to London next week under $500, business class"
                 disabled={isLoading}
                 rows={2}
                 className="w-full bg-transparent border-none px-0 py-1 text-[15px] leading-relaxed text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/50 focus:outline-none resize-none"
