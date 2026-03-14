@@ -30,7 +30,7 @@ export default function MethodologyPage() {
         <div>
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">Data sources</h2>
           <p>
-            Flight options and prices come from Duffel and Google. Safety and conflict-zone data are maintained by Building Open and
+            Flight options and prices come from multiple providers including airline aggregators and Google Flights. Safety and conflict-zone data are maintained by Building Open and
             updated regularly. The &quot;Safety zones updated&quot; date in the footer shows when our risk data was last refreshed.
           </p>
         </div>

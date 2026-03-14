@@ -1204,7 +1204,7 @@ function HomePage() {
         {!hasResults && (
           <div className="mt-6 flex flex-wrap justify-center gap-6 text-xs text-[var(--color-text-muted)]">
             <span>No login required</span>
-            <span>Powered by Duffel + Google</span>
+            <span>500+ airlines compared</span>
             <span>Safety data updated {ZONES_UPDATED_AT}</span>
           </div>
         )}
@@ -1553,33 +1553,29 @@ function HomePage() {
                   </div>
                 )}
 
-                <div className="mt-6 space-y-2">
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    Share this recommendation, help a friend find a safer flight.
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
+                {/* Bottom bar: share + trust */}
+                <div className="mt-8 pt-5 border-t border-[var(--color-border)]/50 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={handleShareResults}
-                      className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                      className="px-3.5 py-1.5 bg-[var(--color-surface-2)] hover:bg-[var(--color-border)] text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
                     >
                       Share results
                     </button>
                     {showCopyLink && (
                       <button
                         onClick={handleCopyLink}
-                        className="px-4 py-2 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
+                        className="px-3.5 py-1.5 bg-[var(--color-surface-2)] hover:bg-[var(--color-border)] text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
                       >
                         Copy link
                       </button>
                     )}
-                    {zonesWarning && <span className="text-xs text-[var(--color-caution)]">{zonesWarning}</span>}
                   </div>
-                </div>
-
-                {/* Trust at decision time */}
-                <div className="mt-6 text-xs text-[var(--color-text-muted)]">
-                  You always book with the provider, not through us.{" "}
-                  <a href="/methodology" className="text-[var(--color-accent)] hover:underline">How we rank flights</a>
+                  <span className="text-xs text-[var(--color-text-muted)]">
+                    You book with the provider, not us.{" "}
+                    <a href="/methodology" className="text-[var(--color-accent)] hover:underline">How we rank</a>
+                  </span>
+                  {zonesWarning && <span className="text-xs text-[var(--color-caution)]">{zonesWarning}</span>}
                 </div>
               </>
             )}
@@ -1641,7 +1637,7 @@ function HomePage() {
             Built by <a href="https://buildingopen.org" className="text-[var(--color-text)] hover:text-[var(--color-accent)]">Building Open</a>
           </span>
           <div className="flex flex-col sm:items-end gap-2">
-            <span>Flights from Duffel + Google. Conflict zones updated {ZONES_UPDATED_AT}. Decision support, not official travel advice.</span>
+            <span>Conflict zones updated {ZONES_UPDATED_AT}. Decision support, not official travel advice.</span>
             <span className="flex flex-wrap justify-center gap-3">
               <a href="/privacy" className="hover:text-[var(--color-text)]">Privacy</a>
               <a href="/terms" className="hover:text-[var(--color-text)]">Terms</a>
