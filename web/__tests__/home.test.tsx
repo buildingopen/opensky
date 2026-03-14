@@ -10,7 +10,7 @@ describe("home page", () => {
 
   it("enables search in natural language mode after typing", () => {
     render(<Home />);
-    fireEvent.click(screen.getByText("Describe your trip instead"));
+    // Default mode is natural language — textarea is immediately available
     const input = screen.getByLabelText("Describe your trip in plain English");
     fireEvent.change(input, { target: { value: "JFK to LHR next week" } });
     expect(screen.getByRole("button", { name: /Search/ })).toBeEnabled();

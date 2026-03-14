@@ -245,6 +245,8 @@ Rules:
 - Convert city names to IATA codes. Use the main airport for each city.
 - For date ranges like "March 10-20", list every date in the range.
 - For relative dates like "next week" or "tomorrow", calculate from today ({today}).
+- "next [weekday]" means the SOONEST upcoming occurrence of that weekday. If today is Saturday and user says "next Friday", return the coming Friday (6 days away), NOT the Friday 13 days away. "Next" means next occurrence, not next week's occurrence.
+- "this weekend" means the upcoming Saturday and Sunday (within the current or immediately next 2 days).
 - If no dates specified, use next 7 days from today.
 - return_dates: list of return dates for round trips. Empty list [] for one-way trips.
   - If user says "round trip", "return", "returning on", "back on", parse the return date(s).
@@ -1024,6 +1026,15 @@ async def search_flights(req: PromptRequest, request: Request):
         combined_total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"]) * len(return_dates)
     else:
         combined_total = total
+
+    # Guard: same origin and destination
+    overlapping = set(parsed["origins"]) & set(parsed["destinations"])
+    if overlapping:
+        codes = ", ".join(sorted(overlapping))
+        return JSONResponse(
+            status_code=400,
+            content={"detail": f"Origin and destination are the same ({codes}). Please choose different airports."},
+        )
 
     if combined_total > 100:
         suggestions = await suggest_narrowing(req.prompt, parsed, combined_total)

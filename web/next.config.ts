@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
-const apiHost = API_URL ? new URL(API_URL).host : "";
+const apiOrigin = API_URL ? new URL(API_URL).origin : "";
 
 const nextConfig: NextConfig = {
   turbopack: {
@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline'",  // Next.js requires unsafe-inline for inline scripts
-              `connect-src 'self' ${apiHost ? `https://${apiHost}` : ""} https://generativelanguage.googleapis.com`,
+              `connect-src 'self' ${apiOrigin || ""} https://generativelanguage.googleapis.com`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data:",

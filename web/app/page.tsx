@@ -351,6 +351,81 @@ function FlightCard({
 // ---------------------------------------------------------------------------
 // RoundTripCard
 // ---------------------------------------------------------------------------
+function RoundTripFlightRow({
+  flight,
+  label,
+  airportNames,
+  attributionParams,
+  onOutboundClick,
+}: {
+  flight: FlightOut;
+  label: string;
+  airportNames: Record<string, string>;
+  attributionParams: AttributionParams;
+  onOutboundClick: (provider: "booking" | "google", f: FlightOut) => void;
+}) {
+  const firstLeg = flight.legs[0];
+  const lastLeg = flight.legs[flight.legs.length - 1];
+  const airlines = flight.legs.length > 0
+    ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
+    : "";
+  const bookingUrl = appendAttribution(flight.booking_url, attributionParams);
+  const googleUrl = appendAttribution(
+    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency),
+    attributionParams
+  );
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-3">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">{label}</span>
+        </div>
+        <div className="text-sm font-medium text-[var(--color-text)]">
+          {consumerRouteLabel(flight.route, airportNames)}
+        </div>
+        {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{formatAirlines(airlines)}</div>}
+        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-[var(--color-text-muted)]">
+          <span>{formatDate(flightDisplayDate(flight))}</span>
+          {firstLeg && lastLeg && (
+            <span className="text-[var(--color-text)]">
+              {formatTime(firstLeg.departs)} &ndash; {formatTime(lastLeg.arrives)}
+            </span>
+          )}
+          <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
+          <span>{formatDuration(flight.duration_minutes)}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {bookingUrl ? (
+          <a
+            href={bookingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => onOutboundClick("booking", flight)}
+            title={flight.booking_exact
+              ? "Direct booking link — takes you straight to checkout"
+              : "Opens a Skyscanner search — you&apos;ll need to find this exact flight again"}
+            className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
+          >
+            {flight.booking_exact ? "Book" : "Skyscanner"}
+          </a>
+        ) : null}
+        <a
+          href={googleUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => onOutboundClick("google", flight)}
+          title="Search on Google Flights"
+          className="px-3 py-1.5 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
+        >
+          Google
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function RoundTripCard({
   result,
   airportNames,
@@ -364,75 +439,12 @@ function RoundTripCard({
 }) {
   const { outbound, inbound, total_price, currency, risk_level } = result;
 
-  const FlightRow = ({ flight, label }: { flight: FlightOut; label: string }) => {
-    const firstLeg = flight.legs[0];
-    const lastLeg = flight.legs[flight.legs.length - 1];
-    const airlines = flight.legs.length > 0
-      ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
-      : "";
-    const bookingUrl = appendAttribution(flight.booking_url, attributionParams);
-    const googleUrl = appendAttribution(
-      googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency),
-      attributionParams
-    );
-
-    return (
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">{label}</span>
-          </div>
-          <div className="text-sm font-medium text-[var(--color-text)]">
-            {consumerRouteLabel(flight.route, airportNames)}
-          </div>
-          {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{formatAirlines(airlines)}</div>}
-          <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-[var(--color-text-muted)]">
-            <span>{formatDate(flightDisplayDate(flight))}</span>
-            {firstLeg && lastLeg && (
-              <span className="text-[var(--color-text)]">
-                {formatTime(firstLeg.departs)} &ndash; {formatTime(lastLeg.arrives)}
-              </span>
-            )}
-            <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
-            <span>{formatDuration(flight.duration_minutes)}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {bookingUrl ? (
-            <a
-              href={bookingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => onOutboundClick("booking", flight)}
-              title={flight.booking_exact
-                ? "Direct booking link — takes you straight to checkout"
-                : "Opens a Skyscanner search — you'll need to find this exact flight again"}
-              className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
-            >
-              {flight.booking_exact ? "Book" : "Skyscanner"}
-            </a>
-          ) : null}
-          <a
-            href={googleUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => onOutboundClick("google", flight)}
-            title="Search on Google Flights"
-            className="px-3 py-1.5 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
-          >
-            Google
-          </a>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 divide-y divide-[var(--color-border)]">
-          <FlightRow flight={outbound} label="Outbound" />
-          <FlightRow flight={inbound} label="Return" />
+          <RoundTripFlightRow flight={outbound} label="Outbound" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} />
+          <RoundTripFlightRow flight={inbound} label="Return" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} />
         </div>
         <div className="flex flex-col items-end gap-1 pt-2 shrink-0">
           {total_price > 0 && (
@@ -791,8 +803,8 @@ function HomePage() {
   }, [prompt]);
 
   useEffect(() => {
-    if (phase === "done" && resultsRef.current) resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [phase]);
+    if ((phase === "done" || error) && resultsRef.current) resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [phase, error]);
 
   // Fix 12: auto-search when ?q= param present on page load
   useEffect(() => {
@@ -965,10 +977,12 @@ function HomePage() {
 
   const isLoading = phase === "parsing" || phase === "searching";
 
-  // Fix 11: Use only priced flights for recommendations (unpriced can appear in list but not labeled)
+  // Use only priced flights for recommendations (unpriced can appear in list but not labeled)
   const pricedFlights = flights.filter((f) => f.price > 0);
   const recEligible = pricedFlights.length > 0 ? pricedFlights : flights;
-  const recommended = sortFlights(recEligible, "score")[0];
+  // "Recommended" only applies to safe routes — if no safe flights exist, suppress the label
+  const safeFlights = recEligible.filter((f) => f.risk_level === "safe");
+  const recommended = safeFlights.length > 0 ? sortFlights(safeFlights, "score")[0] : null;
   const cheapest = sortFlights(recEligible, "price")[0];
   const fastest = sortFlights(recEligible, "duration")[0];
   const lowestStress = [...recEligible].sort((a, b) => {
@@ -1259,6 +1273,13 @@ function HomePage() {
                       Try different routing, nearby airports, or a different date range.
                     </p>
                   </>
+                ) : noResultsReason === "no_routes" ? (
+                  <>
+                    <p className="text-[var(--color-text-muted)]">No flights found on this route.</p>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-2">
+                      This route may not have direct airline service. Try nearby airports or different dates.
+                    </p>
+                  </>
                 ) : (
                   <>
                     <p className="text-[var(--color-text-muted)]">No flights found.</p>
@@ -1310,7 +1331,7 @@ function HomePage() {
                   <div className="mt-8">
                     <h3 className="text-sm font-semibold text-[var(--color-text)] uppercase tracking-wider mb-3">Round-trip options</h3>
                     <p className="text-xs text-[var(--color-text-muted)] mb-4">
-                      Each option shows outbound + return. Prices are combined — you'll complete two separate bookings.
+                      Each option shows outbound + return. Prices are combined — you&apos;ll complete two separate bookings.
                     </p>
                     <div className="space-y-4">
                       {roundTripResults.slice(0, 10).map((rt, i) => (
