@@ -122,15 +122,33 @@ function safeUrl(url: string): string | null {
   } catch {}
   return null;
 }
-function googleFlightsUrl(origin: string, dest: string, date: string, currency: string, airline?: string, departureTime?: string): string {
-  const u = new URL("https://www.google.com/travel/flights");
-  const airlineName = airline && AIRLINE_NAMES[airline] ? AIRLINE_NAMES[airline] : airline || "";
-  const timePart = departureTime ? ` departing ${departureTime}` : "";
-  const airlinePart = airlineName ? ` ${airlineName}` : "";
-  u.searchParams.set("q", `Flights from ${origin} to ${dest} on ${date}${airlinePart}${timePart}`);
-  u.searchParams.set("curr", (currency || "EUR").toUpperCase().slice(0, 3));
-  u.searchParams.set("hl", "en");
-  return u.toString();
+// Google Flights protobuf-based ?tfs= URL builder
+const SEAT_PB: Record<string, number> = { economy: 1, premium_economy: 2, business: 3, first: 4 };
+function _pbVarint(n: number): number[] {
+  const out: number[] = [];
+  while (n > 0x7f) { out.push((n & 0x7f) | 0x80); n >>>= 7; }
+  out.push(n);
+  return out;
+}
+function _pbTag(field: number, wireType: number): number[] { return _pbVarint((field << 3) | wireType); }
+function _pbString(field: number, s: string): number[] {
+  const bytes = new TextEncoder().encode(s);
+  return [..._pbTag(field, 2), ...(_pbVarint(bytes.length)), ...bytes];
+}
+function _pbBytes(field: number, data: number[]): number[] { return [..._pbTag(field, 2), ...(_pbVarint(data.length)), ...data]; }
+function _pbFlightData(origin: string, dest: string, date: string): number[] {
+  const inner = [..._pbString(2, date), ..._pbBytes(13, _pbString(2, origin)), ..._pbBytes(14, _pbString(2, dest))];
+  return _pbBytes(3, inner);
+}
+function _pbTfs(origin: string, dest: string, date: string, seat: number): number[] {
+  return [..._pbFlightData(origin, dest, date), ..._pbBytes(8, [0x01]), ..._pbTag(9, 0), seat, ..._pbTag(19, 0), 2];
+}
+function googleFlightsUrl(origin: string, dest: string, date: string, currency: string, cabin?: string): string {
+  const cur = (currency || "EUR").toUpperCase().slice(0, 3);
+  const seat = SEAT_PB[cabin || ""] || 1;
+  const bytes = new Uint8Array(_pbTfs(origin, dest, date, seat));
+  const tfs = btoa(String.fromCharCode(...bytes));
+  return `https://www.google.com/travel/flights/search?tfs=${encodeURIComponent(tfs)}&hl=en&curr=${cur}`;
 }
 function appendAttribution(url: string, params: AttributionParams): string {
   const s = safeUrl(url);
@@ -180,38 +198,45 @@ function sortFlights(flights: FlightOut[], key: SortKey): FlightOut[] {
 type RecLabel = "Recommended" | "Cheapest" | "Fastest" | "Lowest stress";
 
 function getRecommendationReason(flight: FlightOut, all: FlightOut[], label: RecLabel): string {
-  const cheapest = sortFlights(all, "price")[0];
-  const fastest = sortFlights(all, "duration")[0];
+  const sym = currencySymbol(flight.currency);
+  const price = `${sym}${Math.round(flight.price)}`;
+  const dur = formatDuration(flight.duration_minutes);
+  const stopsLabel = flight.stops === 0 ? "direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`;
+  const safe = flight.risk_level === "safe";
+  const via = flight.stops > 0 && flight.route ? flight.route.split(" -> ").slice(1, -1).join(", ") : "";
+
   if (label === "Recommended") {
-    if (flight.stops === 0 && flight.risk_level === "safe")
-      return "Direct, safe route with a good balance of price and time.";
-    if (flight.risk_level === "safe")
-      return "Best balance of price, time, and safety for this route.";
-    return "Safest option among available routes.";
+    const parts = [price, dur, stopsLabel + (via ? ` via ${via}` : "")];
+    if (safe) parts.push("safe route");
+    return parts.join(", ") + ".";
   }
-  if (label === "Cheapest")
-    return cheapest?.price ? `Lowest price at ${currencySymbol(flight.currency)}${Math.round(flight.price)}.` : "Lowest price.";
+  if (label === "Cheapest") {
+    const avgPrice = all.length > 0 ? all.reduce((s, f) => s + f.price, 0) / all.length : 0;
+    const saving = avgPrice > flight.price ? Math.round(avgPrice - flight.price) : 0;
+    return saving > 0 ? `${price}, ${sym}${saving} below average.` : `${price}.`;
+  }
   if (label === "Fastest") {
-    const diff = fastest ? flight.duration_minutes - fastest.duration_minutes : 0;
-    return diff === 0 ? "Shortest travel time." : `${formatDuration(Math.abs(diff))} longer than fastest.`;
+    const slowest = all.length > 0 ? Math.max(...all.map((f) => f.duration_minutes)) : flight.duration_minutes;
+    const saved = slowest - flight.duration_minutes;
+    return saved > 60 ? `${dur} ${stopsLabel}, ${formatDuration(saved)} faster than slowest.` : `${dur} ${stopsLabel}.`;
   }
-  return "Fewest stops and lowest stress.";
+  return `${stopsLabel}, ${dur}, ${price}.`;
 }
 
 // ---------------------------------------------------------------------------
 // Risk Badge
 // ---------------------------------------------------------------------------
 function RiskBadge({ level }: { level: string }) {
-  const c: Record<string, { bg: string; text: string; label: string }> = {
-    safe: { bg: "bg-[var(--color-safe)]/15", text: "text-[var(--color-safe)]", label: "Safe" },
-    caution: { bg: "bg-[var(--color-caution)]/15", text: "text-[var(--color-caution)]", label: "Caution" },
-    high_risk: { bg: "bg-[var(--color-high-risk)]/15", text: "text-[var(--color-high-risk)]", label: "High Risk" },
-    do_not_fly: { bg: "bg-[var(--color-danger)]/15", text: "text-[var(--color-danger)]", label: "Do Not Fly" },
+  const c: Record<string, { bg: string; text: string; border: string; label: string; icon: string }> = {
+    safe: { bg: "bg-[var(--color-safe)]/15", text: "text-[var(--color-safe)]", border: "border-[var(--color-safe)]/25", label: "Safe route", icon: "\u2713" },
+    caution: { bg: "bg-[var(--color-caution)]/15", text: "text-[var(--color-caution)]", border: "border-[var(--color-caution)]/25", label: "Caution", icon: "\u26A0" },
+    high_risk: { bg: "bg-[var(--color-high-risk)]/15", text: "text-[var(--color-high-risk)]", border: "border-[var(--color-high-risk)]/25", label: "High Risk", icon: "\u26A0" },
+    do_not_fly: { bg: "bg-[var(--color-danger)]/15", text: "text-[var(--color-danger)]", border: "border-[var(--color-danger)]/25", label: "Do Not Fly", icon: "\u2717" },
   };
   const x = c[level] || c.safe;
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${x.bg} ${x.text}`}>
-      {x.label}
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${x.bg} ${x.text} ${x.border}`}>
+      <span className="text-[10px]">{x.icon}</span>{x.label}
     </span>
   );
 }
@@ -223,6 +248,7 @@ function FlightCard({
   airportNames,
   attributionParams,
   onOutboundClick,
+  cabin,
 }: {
   flight: FlightOut;
   label?: RecLabel;
@@ -230,6 +256,7 @@ function FlightCard({
   airportNames: Record<string, string>;
   attributionParams: AttributionParams;
   onOutboundClick: (provider: "booking" | "google", f: FlightOut) => void;
+  cabin?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const firstLeg = flight.legs[0];
@@ -238,10 +265,8 @@ function FlightCard({
     ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
     : "";
   const bookingUrl = appendAttribution(flight.booking_url, attributionParams);
-  const mainAirline = firstLeg?.airline && firstLeg.airline !== "ZZ" ? firstLeg.airline : undefined;
-  const depTime = firstLeg?.departs ? formatTime(firstLeg.departs) : undefined;
   const googleUrl = appendAttribution(
-    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, mainAirline, depTime),
+    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, cabin),
     attributionParams
   );
   const routeLabel = consumerRouteLabel(flight.route, airportNames);
@@ -271,13 +296,7 @@ function FlightCard({
             )}
             <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
             <span>{formatDuration(flight.duration_minutes)}</span>
-            {flight.risk_level === "safe" ? (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--color-safe)] bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 rounded px-1.5 py-0.5">
-                Safe route
-              </span>
-            ) : (
-              <RiskBadge level={flight.risk_level} />
-            )}
+            <RiskBadge level={flight.risk_level} />
           </div>
         </div>
         <div className="flex flex-col sm:items-end gap-2">
@@ -286,7 +305,6 @@ function FlightCard({
               <div className="text-2xl font-bold text-[var(--color-text)]">
                 {currencySymbol(flight.currency)}{Math.round(flight.price)}
               </div>
-              <div className="text-xs text-[var(--color-text-muted)] capitalize">{flight.provider}</div>
             </div>
           )}
           <div className="flex flex-col gap-1.5">
@@ -381,12 +399,14 @@ function RoundTripFlightRow({
   airportNames,
   attributionParams,
   onOutboundClick,
+  cabin,
 }: {
   flight: FlightOut;
   label: string;
   airportNames: Record<string, string>;
   attributionParams: AttributionParams;
   onOutboundClick: (provider: "booking" | "google", f: FlightOut) => void;
+  cabin?: string;
 }) {
   const firstLeg = flight.legs[0];
   const lastLeg = flight.legs[flight.legs.length - 1];
@@ -394,10 +414,8 @@ function RoundTripFlightRow({
     ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
     : "";
   const bookingUrl = appendAttribution(flight.booking_url, attributionParams);
-  const mainAirline = firstLeg?.airline && firstLeg.airline !== "ZZ" ? firstLeg.airline : undefined;
-  const depTime = firstLeg?.departs ? formatTime(firstLeg.departs) : undefined;
   const googleUrl = appendAttribution(
-    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, mainAirline, depTime),
+    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, cabin),
     attributionParams
   );
 
@@ -474,11 +492,13 @@ function RoundTripCard({
   airportNames,
   attributionParams,
   onOutboundClick,
+  cabin,
 }: {
   result: RoundTripOut;
   airportNames: Record<string, string>;
   attributionParams: AttributionParams;
   onOutboundClick: (provider: "booking" | "google", f: FlightOut) => void;
+  cabin?: string;
 }) {
   const { outbound, inbound, total_price, currency, risk_level } = result;
 
@@ -486,8 +506,8 @@ function RoundTripCard({
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 divide-y divide-[var(--color-border)]">
-          <RoundTripFlightRow flight={outbound} label="Outbound" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} />
-          <RoundTripFlightRow flight={inbound} label="Return" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} />
+          <RoundTripFlightRow flight={outbound} label="Outbound" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
+          <RoundTripFlightRow flight={inbound} label="Return" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
         </div>
         <div className="flex flex-col items-end gap-1 pt-2 shrink-0">
           {total_price > 0 && (
@@ -552,19 +572,19 @@ function CompactFlightRow({
   flight,
   sym,
   airportNames,
+  cabin,
 }: {
   flight: FlightOut;
   sym: string;
   airportNames: Record<string, string>;
+  cabin?: string;
 }) {
   const firstLeg = flight.legs[0];
   const lastLeg = flight.legs[flight.legs.length - 1];
   const airline = flight.legs.length > 0
     ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
     : "";
-  const mainAirline = firstLeg?.airline && firstLeg.airline !== "ZZ" ? firstLeg.airline : undefined;
-  const depTime = firstLeg?.departs ? formatTime(firstLeg.departs) : undefined;
-  const googleUrl = googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, mainAirline, depTime);
+  const googleUrl = googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, cabin);
   return (
     <div className="px-4 py-2.5 flex items-center justify-between gap-2 text-sm">
       <div className="flex-1 min-w-0">
@@ -632,12 +652,14 @@ function ScanSummaryExpanded({
   airportNames,
   flights,
   onCollapse,
+  cabin,
 }: {
   summary: ScanSummaryData;
   currency: string;
   airportNames: Record<string, string>;
   flights: FlightOut[];
   onCollapse: () => void;
+  cabin?: string;
 }) {
   const { best_destinations, price_matrix, stats } = summary;
   const sym = currencySymbol(currency);
@@ -661,7 +683,7 @@ function ScanSummaryExpanded({
           <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">All {flights.length} options</div>
           <div className="divide-y divide-[var(--color-border)]">
             {[...flights].sort((a, b) => a.score - b.score).map((f, i) => (
-              <CompactFlightRow key={i} flight={f} sym={sym} airportNames={airportNames} />
+              <CompactFlightRow key={i} flight={f} sym={sym} airportNames={airportNames} cabin={cabin} />
             ))}
           </div>
         </div>
@@ -679,7 +701,7 @@ function ScanSummaryExpanded({
                 <span className="text-[var(--color-text-muted)] text-xs">{formatDuration(f.duration_minutes)}</span>
                 <div className="ml-auto flex gap-2 text-xs">
                   {f.booking_url && <a href={safeUrl(f.booking_url) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Skyscanner ↗</a>}
-                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Google ↗</a>
+                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Google ↗</a>
                 </div>
               </div>
             ))}
@@ -1313,6 +1335,7 @@ function HomePage() {
                   setSearchMode("natural");
                   setPrompt(ex);
                   trackEvent("example_prompt_clicked", { prompt: ex });
+                  setTimeout(() => inputRef.current?.focus(), 0);
                 }}
                 className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-text)] transition-colors max-w-[180px] sm:max-w-none truncate"
               >
@@ -1451,6 +1474,7 @@ function HomePage() {
                       airportNames={airportNames}
                       attributionParams={attributionParams}
                       onOutboundClick={handleOutboundClick}
+                      cabin={parsed?.cabin}
                     />
                   ))}
                 </div>
@@ -1470,6 +1494,7 @@ function HomePage() {
                           airportNames={airportNames}
                           attributionParams={attributionParams}
                           onOutboundClick={handleOutboundClick}
+                          cabin={parsed?.cabin}
                         />
                       ))}
                     </div>
@@ -1488,6 +1513,7 @@ function HomePage() {
                           airportNames={airportNames}
                           attributionParams={attributionParams}
                           onOutboundClick={handleOutboundClick}
+                          cabin={parsed?.cabin}
                         />
                       ))}
                     </div>
@@ -1498,7 +1524,7 @@ function HomePage() {
                 {summary && summary.stats.total_flights > 0 && (
                   <div className="mt-8">
                     {showCompare ? (
-                      <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} />
+                      <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} cabin={parsed?.cabin} />
                     ) : (
                       <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} />
                     )}
