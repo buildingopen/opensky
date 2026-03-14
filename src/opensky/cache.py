@@ -93,6 +93,24 @@ def put(key: str, value: Any, ttl: int = _DEFAULT_TTL) -> None:
         tmp.replace(path)
 
 
+def age_seconds(key: str) -> int | None:
+    """Return seconds since this cache entry was written, or None if not cached/expired."""
+    path = _CACHE_DIR / f"{key}.json"
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text())
+        expires_at = data.get("expires_at")
+        if not expires_at:
+            return None
+        age = int(_DEFAULT_TTL - (expires_at - time.time()))
+        if age < 0:
+            return None  # entry expired
+        return age
+    except Exception:
+        return None
+
+
 def clear() -> None:
     _ensure_cache_dir()
     with _cache_lock:

@@ -40,6 +40,7 @@ class SearchReport:
     results: list[FlightResult]
     successful_providers: list[str] = field(default_factory=list)
     failed_providers: list[ProviderFailure] = field(default_factory=list)
+    cache_age_seconds: int | None = None
 
 
 @dataclass
@@ -47,6 +48,7 @@ class ScoredSearchReport:
     results: list[ScoredFlight]
     successful_providers: list[str] = field(default_factory=list)
     failed_providers: list[ProviderFailure] = field(default_factory=list)
+    cache_age_seconds: int | None = None
 
 
 @dataclass
@@ -162,6 +164,7 @@ class SearchEngine:
         all_results: list[FlightResult] = []
         successful_providers: list[str] = []
         failed_providers: list[ProviderFailure] = []
+        max_cache_age: int | None = None
 
         for provider in self._providers:
             ck = cache.cache_key(
@@ -175,6 +178,9 @@ class SearchEngine:
                 if cached is not None:
                     successful_providers.append(provider.name)
                     all_results.extend(cached)
+                    age = cache.age_seconds(ck)
+                    if age is not None:
+                        max_cache_age = max(max_cache_age or 0, age)
                     continue
 
             try:
@@ -210,6 +216,7 @@ class SearchEngine:
             results=all_results,
             successful_providers=successful_providers,
             failed_providers=failed_providers,
+            cache_age_seconds=max_cache_age,
         )
 
     def search_scored(
@@ -282,6 +289,7 @@ class SearchEngine:
             results=scored,
             successful_providers=search_report.successful_providers,
             failed_providers=search_report.failed_providers,
+            cache_age_seconds=search_report.cache_age_seconds,
         )
 
     def search_round_trip(
