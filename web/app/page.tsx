@@ -1191,8 +1191,8 @@ function HomePage() {
       {/* Hero - outcome-focused */}
       <section className={`max-w-3xl mx-auto px-4 w-full text-center transition-all duration-300 ${hasResults ? "pt-6 pb-4" : "pt-16 sm:pt-24 pb-6"}`}>
         <h1 className={`font-bold tracking-tight transition-all duration-300 ${hasResults ? "text-2xl" : "text-4xl sm:text-5xl"}`}>
-          Where do you want to{" "}
-          <span className="text-[var(--color-accent)]">fly?</span>
+          Describe your{" "}
+          <span className="text-[var(--color-accent)]">trip.</span>
         </h1>
         {!hasResults && (
           <p className="mt-4 text-[var(--color-text-muted)] text-base sm:text-lg max-w-lg mx-auto">
