@@ -10,7 +10,7 @@ export default function ContactPage() {
           Email: <a className="text-[var(--color-accent)] hover:underline" href="mailto:hello@buildingopen.org">hello@buildingopen.org</a>
         </p>
         <p>
-          GitHub issues: <a className="text-[var(--color-accent)] hover:underline" href="https://github.com/buildingopen/opensky/issues" target="_blank" rel="noopener noreferrer">buildingopen/opensky</a>
+          GitHub issues: <a className="text-[var(--color-accent)] hover:underline" href="https://github.com/buildingopen/opensky-app/issues" target="_blank" rel="noopener noreferrer">buildingopen/opensky-app</a>
         </p>
       </div>
     </main>

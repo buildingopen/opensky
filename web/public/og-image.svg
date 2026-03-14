@@ -1,21 +1,20 @@
 <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="1200" height="630" fill="#0A0F1A"/>
   <rect x="60" y="60" width="1080" height="510" rx="24" fill="#111827" stroke="#1E293B" stroke-width="2"/>
-  <circle cx="190" cy="164" r="10" fill="#22C55E"/>
-  <text x="220" y="175" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">
-    OpenSky
-  </text>
-  <text x="120" y="255" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="58" font-weight="700">
-    Prompt to fly, safely.
-  </text>
-  <text x="120" y="315" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="30">
-    Search routes that avoid conflict zones.
-  </text>
-  <text x="120" y="365" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="30">
-    Compare providers. Book with confidence.
-  </text>
-  <rect x="120" y="420" width="320" height="62" rx="14" fill="#22C55E"/>
-  <text x="162" y="460" fill="#0A0F1A" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">
-    opensky.buildingopen.org
-  </text>
+  <!-- Airplane icon -->
+  <g transform="translate(120, 140) scale(2.2)" fill="#22C55E">
+    <path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 2.59 4.49L21 11.49c.81-.23 1.28-1.05 1.07-1.85z"/>
+  </g>
+  <!-- Brand name -->
+  <text x="176" y="175" fill="#22C55E" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">fly</text>
+  <text x="240" y="175" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">fast</text>
+  <!-- Tagline -->
+  <text x="120" y="270" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="62" font-weight="700">Find the safest flight.</text>
+  <text x="120" y="340" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="30">Type your trip in plain English.</text>
+  <text x="120" y="385" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="30">We filter conflict zones. You book with confidence.</text>
+  <!-- CTA pill -->
+  <rect x="120" y="430" width="240" height="62" rx="14" fill="#22C55E"/>
+  <text x="157" y="470" fill="#0A0F1A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">flyfast.app</text>
+  <!-- Trust signals -->
+  <text x="390" y="470" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="22">Free · No login · Open source</text>
 </svg>

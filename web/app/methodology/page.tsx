@@ -5,7 +5,7 @@ export default function MethodologyPage() {
     <main className="max-w-3xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-[var(--color-text)]">How We Rank Flights</h1>
       <p className="mt-4 text-[var(--color-text-muted)]">
-        OpenSky helps you choose the safest practical flight by combining real route data with conflict-zone intelligence.
+        FlyFast helps you choose the safest practical flight by combining real route data with conflict-zone intelligence.
       </p>
 
       <section className="mt-8 space-y-6 text-sm text-[var(--color-text-muted)]">
@@ -47,7 +47,7 @@ export default function MethodologyPage() {
         <div>
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">Limitations</h2>
           <p>
-            OpenSky is decision support, not legal or aviation safety advice. Always check official government travel advisories and
+            FlyFast is decision support, not legal or aviation safety advice. Always check official government travel advisories and
             your airline before booking. Prices and availability can change; you always book directly with the provider (e.g. Skyscanner,
             Google Flights), not through us.
           </p>

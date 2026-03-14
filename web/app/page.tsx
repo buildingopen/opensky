@@ -971,10 +971,10 @@ function HomePage() {
     if (!parsed) return;
     const shareUrl = getShareUrl();
     if (!shareUrl) return;
-    const shareText = `I found safer flight options on OpenSky: ${parsed.origins.join(",")} \u2192 ${parsed.destinations.join(",")}`;
+    const shareText = `I found safer flight options on FlyFast: ${parsed.origins.join(",")} \u2192 ${parsed.destinations.join(",")}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "OpenSky results", text: shareText, url: shareUrl });
+        await navigator.share({ title: "FlyFast results", text: shareText, url: shareUrl });
       } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
       }
@@ -1047,7 +1047,7 @@ function HomePage() {
               <path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 2.59 4.49L21 11.49c.81-.23 1.28-1.05 1.07-1.85z" />
             </svg>
             <span className="text-lg font-semibold">
-              <span className="text-[var(--color-accent)]">open</span>sky
+              <span className="text-[var(--color-accent)]">fly</span>fast
             </span>
           </div>
           <nav className="flex items-center gap-4 text-sm">
@@ -1057,7 +1057,7 @@ function HomePage() {
             <a href="/contact" className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
               Contact
             </a>
-            <a href="https://github.com/buildingopen/opensky" target="_blank" rel="noopener noreferrer" className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
+            <a href="https://github.com/buildingopen/opensky-app" target="_blank" rel="noopener noreferrer" className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
               GitHub
             </a>
           </nav>

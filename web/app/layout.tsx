@@ -15,38 +15,39 @@ const jetbrains = JetBrains_Mono({
   variable: "--font-mono",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://opensky.buildingopen.org";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "OpenSky - Find flights that avoid conflict zones",
+  title: "FlyFast - Find the safest flight",
   description:
-    "Search flights across multiple providers. Automatically filters routes through conflict zones, flags risky airspace, and finds the safest path to your destination.",
+    "Type your trip in plain English. FlyFast searches flights across multiple providers, filters conflict zones, flags risky airspace, and finds the safest route to your destination.",
+  keywords: ["flights", "flight search", "safe flights", "conflict zones", "flight safety", "cheap flights"],
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "OpenSky - Find flights that avoid conflict zones",
+    title: "FlyFast - Find the safest flight",
     description:
-      "Search flights that automatically avoid conflict zones and risky airspace. Free, open source.",
+      "Search flights that automatically avoid conflict zones and risky airspace. Free, no login required.",
     type: "website",
-    siteName: "OpenSky",
+    siteName: "FlyFast",
     url: "/",
     images: [
       {
-        url: "/og-image.svg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "OpenSky flight safety search",
+        alt: "FlyFast — find the safest flight",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "OpenSky - Find flights that avoid conflict zones",
+    title: "FlyFast - Find the safest flight",
     description:
       "Search flights that automatically avoid conflict zones and risky airspace.",
-    images: ["/og-image.svg"],
+    images: ["/og-image.png"],
   },
 };
 
@@ -58,10 +59,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link
-          rel="icon"
-          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'><path d='M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 2.59 4.49L21 11.49c.81-.23 1.28-1.05 1.07-1.85z'/></svg>"
-        />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="alternate icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={`${inter.variable} ${jetbrains.variable} antialiased`}>
         <AnalyticsProvider />

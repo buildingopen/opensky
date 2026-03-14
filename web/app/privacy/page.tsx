@@ -3,7 +3,7 @@ export default function PrivacyPage() {
     <main className="max-w-3xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-[var(--color-text)]">Privacy Policy</h1>
       <p className="mt-4 text-[var(--color-text-muted)]">
-        OpenSky stores only the data needed to operate the service, prevent abuse, and improve reliability.
+        FlyFast stores only the data needed to operate the service, prevent abuse, and improve reliability.
       </p>
       <div className="mt-8 space-y-4 text-sm text-[var(--color-text-muted)]">
         <p>
