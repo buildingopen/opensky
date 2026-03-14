@@ -346,7 +346,7 @@ function FlightCard({
               </span>
               <span className="text-[var(--color-text-muted)]">{leg.from}</span>
               <span className="text-xs">{formatTime(leg.departs)}</span>
-              <span className="text-[var(--color-text-muted)]">\u2192</span>
+              <span className="text-[var(--color-text-muted)]">→</span>
               <span className="text-[var(--color-text-muted)]">{leg.to}</span>
               <span className="text-xs">{formatTime(leg.arrives)}</span>
               <span className="text-xs text-[var(--color-text-muted)] ml-auto">{formatDuration(leg.duration_minutes)}</span>
@@ -736,7 +736,7 @@ function ParsedConfig({ parsed }: { parsed: ParsedSearch }) {
         {origins.map((o) => (
           <span key={o} className={chipClass} title={airport_names?.[o] || o}>{o}</span>
         ))}
-        <span className="text-[var(--color-text-muted)] text-xs mx-0.5">\u2192</span>
+        <span className="text-[var(--color-text-muted)] text-xs mx-0.5">→</span>
         {destinations.map((d) => (
           <span key={d} className={chipClass} title={airport_names?.[d] || d}>{d}</span>
         ))}
@@ -747,7 +747,7 @@ function ParsedConfig({ parsed }: { parsed: ParsedSearch }) {
             <span className={`${labelClass} bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium`}>
               Round trip
             </span>
-            <span className="text-[var(--color-text-muted)] text-xs">\u2192 {formatDatesChip(return_dates)}</span>
+            <span className="text-[var(--color-text-muted)] text-xs">→ {formatDatesChip(return_dates)}</span>
           </>
         )}
         {cabin && (
