@@ -677,8 +677,16 @@ def _get_client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def _run_scan(parsed: dict, progress_cb: callable = None, cancel: threading.Event | None = None, error_counter: list | None = None) -> list[ScoredFlight]:
-    """Run multi-origin x multi-dest x multi-date search with parallel workers."""
+def _run_scan(
+    parsed: dict,
+    progress_cb: callable = None,
+    cancel: threading.Event | None = None,
+    error_counter: list | None = None,
+) -> tuple[list[ScoredFlight], int | None]:
+    """Run multi-origin x multi-dest x multi-date search with parallel workers.
+
+    Returns (scored_flights, max_cache_age_seconds).
+    """
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     engine = SearchEngine(
@@ -690,6 +698,7 @@ def _run_scan(parsed: dict, progress_cb: callable = None, cancel: threading.Even
     )
     try:
         all_scored: list[ScoredFlight] = []
+        cache_ages: list[int] = []
         combos = [
             (o.upper(), d.upper(), dt)
             for o in parsed["origins"]
@@ -702,16 +711,17 @@ def _run_scan(parsed: dict, progress_cb: callable = None, cancel: threading.Even
         def _search_one(combo):
             origin, dest, dt = combo
             try:
-                return engine.search_scored(
+                report = engine.search_scored_report(
                     origin=origin, dest=dest, date=dt,
                     risk_threshold=RiskLevel.HIGH_RISK,
                     max_price=parsed.get("max_price", 0),
                 )
+                return report.results, report.cache_age_seconds
             except Exception as e:
                 log.warning("Search failed %s->%s %s: %s", origin, dest, dt, e)
                 if error_counter is not None:
                     error_counter.append(1)
-                return []
+                return [], None
 
         workers = min(3, total)
         with ThreadPoolExecutor(max_workers=workers) as executor:
@@ -722,8 +732,10 @@ def _run_scan(parsed: dict, progress_cb: callable = None, cancel: threading.Even
                 batch = combos[i:i + workers]
                 futures = {executor.submit(_search_one, c): c for c in batch}
                 for future in as_completed(futures):
-                    results = future.result()
+                    results, age = future.result()
                     all_scored.extend(results)
+                    if age is not None:
+                        cache_ages.append(age)
                     completed += 1
                     combo = futures[future]
                     if progress_cb:
@@ -733,7 +745,8 @@ def _run_scan(parsed: dict, progress_cb: callable = None, cancel: threading.Even
                     time.sleep(0.5)
 
         all_scored.sort(key=lambda x: x.score)
-        return all_scored
+        max_age = max(cache_ages) if cache_ages else None
+        return all_scored, max_age
     finally:
         engine.close()
 
@@ -825,7 +838,7 @@ def _run_round_trip_scan(
     progress_cb=None,
     cancel: threading.Event | None = None,
     error_counter: list | None = None,
-) -> list[dict]:
+) -> tuple[list[dict], int | None]:
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     engine = SearchEngine(
@@ -890,7 +903,7 @@ def _run_round_trip_scan(
                     time.sleep(0.5)
 
         results.sort(key=lambda x: x["score"])
-        return results
+        return results, None  # Round-trip cache age tracking not yet exposed
     finally:
         engine.close()
 
@@ -1004,9 +1017,11 @@ async def search_flights(req: PromptRequest, request: Request):
             return_dates = filtered_return
             parsed["return_dates"] = filtered_return
     is_round_trip = len(return_dates) > 0
-    # For round trips, total includes outbound + return combos
-    return_total = len(parsed["destinations"]) * len(parsed["origins"]) * len(return_dates) if is_round_trip else 0
-    combined_total = total + return_total
+    # For round trips: each (origin, dest, outbound_date, return_date) is one combo
+    if is_round_trip:
+        combined_total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"]) * len(return_dates)
+    else:
+        combined_total = total
 
     if combined_total > 100:
         suggestions = await suggest_narrowing(req.prompt, parsed, combined_total)
@@ -1105,10 +1120,13 @@ async def search_flights(req: PromptRequest, request: Request):
         warning = zones_age_warning()
         outbound_error_count = len(outbound_errors)
         no_results_reason: str | None = None
+        cache_age_seconds: int | None = None
 
         if is_round_trip:
             # Round-trip: results are already paired by _run_round_trip_scan
-            rt_results: list[dict] = result_holder[0] if result_holder else []
+            rt_raw, rt_cache_age = result_holder[0] if result_holder else ([], None)
+            cache_age_seconds = rt_cache_age
+            rt_results: list[dict] = rt_raw
             round_trip_results = rt_results[:20]
             # Derive outbound flights for summary purposes
             flights = [r["outbound"] for r in rt_results[:10]]
@@ -1126,7 +1144,9 @@ async def search_flights(req: PromptRequest, request: Request):
                 "summary": summary,
             }
         else:
-            scored = result_holder[0] if result_holder else []
+            scored_raw, scan_cache_age = result_holder[0] if result_holder else ([], None)
+            cache_age_seconds = scan_cache_age
+            scored = scored_raw
 
             def _process_flights(scored_list):
                 fl = [_scored_to_out(sf, cabin=cabin).model_dump() for sf in scored_list]
@@ -1158,6 +1178,8 @@ async def search_flights(req: PromptRequest, request: Request):
             result_data["no_results_reason"] = no_results_reason
         if return_date_warning:
             result_data["warning"] = return_date_warning
+        if cache_age_seconds is not None:
+            result_data["cache_age_seconds"] = cache_age_seconds
         yield f"data: {json.dumps(result_data)}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

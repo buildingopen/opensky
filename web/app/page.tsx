@@ -753,6 +753,7 @@ function HomePage() {
   const [noResultsReason, setNoResultsReason] = useState<string | null>(null);
   const [searchWarning, setSearchWarning] = useState<string | null>(null);
   const [autoSearchQuery, setAutoSearchQuery] = useState<string | null>(null);
+  const [cacheAgeSeconds, setCacheAgeSeconds] = useState<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -835,6 +836,7 @@ function HomePage() {
     setShowCompare(false);
     setNoResultsReason(null);
     setSearchWarning(null);
+    setCacheAgeSeconds(null);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90_000);
@@ -891,6 +893,7 @@ function HomePage() {
               setSummary(msg.summary || null);
               setNoResultsReason(msg.no_results_reason || null);
               setSearchWarning(msg.warning || null);
+              setCacheAgeSeconds(msg.cache_age_seconds ?? null);
               setPhase("done");
               trackEvent("search_results_received", { count: (msg.flights || []).length, has_round_trip: Boolean(msg.round_trip_results?.length), has_return: Boolean(msg.return_flights?.length) });
             } else if (msg.type === "error") {
@@ -1270,6 +1273,19 @@ function HomePage() {
                 {flights.every((f) => f.price === 0) && (
                   <div className="mt-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-sm text-[var(--color-text-muted)]">
                     Routes found but live prices unavailable. Use the links to check current prices.
+                  </div>
+                )}
+
+                {/* Fix 10: Price staleness warning */}
+                {cacheAgeSeconds !== null && cacheAgeSeconds > 1800 && (
+                  <div className="mt-4 text-xs text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-2">
+                    Prices from ~{Math.round(cacheAgeSeconds / 60)} min ago — may have changed.{" "}
+                    <button
+                      onClick={() => search()}
+                      className="underline hover:text-[var(--color-text)] transition-colors"
+                    >
+                      Refresh
+                    </button>
                   </div>
                 )}
 
