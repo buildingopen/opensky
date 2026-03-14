@@ -136,19 +136,40 @@ function _pbString(field: number, s: string): number[] {
   return [..._pbTag(field, 2), ...(_pbVarint(bytes.length)), ...bytes];
 }
 function _pbBytes(field: number, data: number[]): number[] { return [..._pbTag(field, 2), ...(_pbVarint(data.length)), ...data]; }
-function _pbFlightData(origin: string, dest: string, date: string): number[] {
+function _pbLeg(origin: string, dest: string, date: string, airline: string, flightNum: string): number[] {
+  // Field 1: origin, Field 2: date, Field 3: dest, Field 5: airline, Field 6: flight number
+  return [..._pbString(1, origin), ..._pbString(2, date), ..._pbString(3, dest), ..._pbString(5, airline), ..._pbString(6, flightNum)];
+}
+function _pbSlice(date: string, origin: string, dest: string, legs: { from: string; to: string; date: string; airline: string; flight_number: string }[]): number[] {
+  // Field 2: departure date, Field 4 (repeated): individual flight legs, Field 13/14: origin/dest airports
+  const inner = [
+    ..._pbString(2, date),
+    ...legs.flatMap((l) => _pbBytes(4, _pbLeg(l.from, l.to, l.date, l.airline, l.flight_number))),
+    ..._pbBytes(13, _pbString(2, origin)),
+    ..._pbBytes(14, _pbString(2, dest)),
+  ];
+  return _pbBytes(3, inner);
+}
+function _pbRouteOnly(origin: string, dest: string, date: string): number[] {
+  // Fallback: simple route search (no specific flight)
   const inner = [..._pbString(2, date), ..._pbBytes(13, _pbString(2, origin)), ..._pbBytes(14, _pbString(2, dest))];
   return _pbBytes(3, inner);
 }
-function _pbTfs(origin: string, dest: string, date: string, seat: number): number[] {
-  return [..._pbFlightData(origin, dest, date), ..._pbBytes(8, [0x01]), ..._pbTag(9, 0), seat, ..._pbTag(19, 0), 2];
-}
-function googleFlightsUrl(origin: string, dest: string, date: string, currency: string, cabin?: string): string {
+function googleFlightsUrl(origin: string, dest: string, date: string, currency: string, cabin?: string, legs?: FlightLeg[]): string {
   const cur = (currency || "EUR").toUpperCase().slice(0, 3);
   const seat = SEAT_PB[cabin || ""] || 1;
-  const bytes = new Uint8Array(_pbTfs(origin, dest, date, seat));
-  const tfs = btoa(String.fromCharCode(...bytes));
-  return `https://www.google.com/travel/flights/search?tfs=${encodeURIComponent(tfs)}&hl=en&curr=${cur}`;
+  const hasLegs = legs && legs.length > 0 && legs.every((l) => l.airline && l.airline !== "ZZ" && l.flight_number);
+  let slice: number[];
+  if (hasLegs) {
+    const legData = legs!.map((l) => ({ from: l.from, to: l.to, date: l.departs.slice(0, 10), airline: l.airline, flight_number: l.flight_number }));
+    slice = _pbSlice(date, origin, dest, legData);
+  } else {
+    slice = _pbRouteOnly(origin, dest, date);
+  }
+  const tfs = [...slice, ..._pbBytes(8, [0x01]), ..._pbTag(9, 0), seat, ..._pbTag(19, 0), 2];
+  const bytes = new Uint8Array(tfs);
+  const b64 = btoa(String.fromCharCode(...bytes));
+  return `https://www.google.com/travel/flights/search?tfs=${encodeURIComponent(b64)}&hl=en&curr=${cur}`;
 }
 function appendAttribution(url: string, params: AttributionParams): string {
   const s = safeUrl(url);
@@ -266,7 +287,7 @@ function FlightCard({
     : "";
   const bookingUrl = appendAttribution(flight.booking_url, attributionParams);
   const googleUrl = appendAttribution(
-    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, cabin),
+    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, cabin, flight.legs),
     attributionParams
   );
   const routeLabel = consumerRouteLabel(flight.route, airportNames);
@@ -415,7 +436,7 @@ function RoundTripFlightRow({
     : "";
   const bookingUrl = appendAttribution(flight.booking_url, attributionParams);
   const googleUrl = appendAttribution(
-    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, cabin),
+    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, cabin, flight.legs),
     attributionParams
   );
 
@@ -584,7 +605,7 @@ function CompactFlightRow({
   const airline = flight.legs.length > 0
     ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
     : "";
-  const googleUrl = googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, cabin);
+  const googleUrl = googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, cabin, flight.legs);
   return (
     <div className="px-4 py-2.5 flex items-center justify-between gap-2 text-sm">
       <div className="flex-1 min-w-0">
@@ -701,7 +722,7 @@ function ScanSummaryExpanded({
                 <span className="text-[var(--color-text-muted)] text-xs">{formatDuration(f.duration_minutes)}</span>
                 <div className="ml-auto flex gap-2 text-xs">
                   {f.booking_url && <a href={safeUrl(f.booking_url) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Skyscanner ↗</a>}
-                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Google ↗</a>
+                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin, f.legs)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Google ↗</a>
                 </div>
               </div>
             ))}

@@ -564,9 +564,13 @@ class ZonesResponse(BaseModel):
 # ---------------------------------------------------------------------------
 _SEAT_PB = {"economy": 1, "premium_economy": 2, "business": 3, "first": 4}
 
-def _google_flights_url(origin: str, dest: str, date: str, currency: str = "EUR", cabin: str = "economy") -> str:
-    """Generate a Google Flights deep link using protobuf-encoded ?tfs= parameter."""
-    import base64, struct
+def _google_flights_url(origin: str, dest: str, date: str, currency: str = "EUR", cabin: str = "economy", legs: list[dict] | None = None) -> str:
+    """Generate a Google Flights deep link using protobuf-encoded ?tfs= parameter.
+
+    When legs are provided with airline/flight_number, encodes a specific itinerary.
+    Otherwise falls back to a route search (origin/dest/date only).
+    """
+    import base64
     cur = (currency or "EUR").upper()[:3]
     seat = _SEAT_PB.get(cabin, 1)
 
@@ -588,7 +592,18 @@ def _google_flights_url(origin: str, dest: str, date: str, currency: str = "EUR"
     def _pb_bytes(field: int, data: bytes) -> bytes:
         return _tag(field, 2) + _varint(len(data)) + data
 
-    flight_inner = _pb_str(2, date) + _pb_bytes(13, _pb_str(2, origin)) + _pb_bytes(14, _pb_str(2, dest))
+    has_legs = legs and all(l.get("airline") and l["airline"] != "ZZ" and l.get("flight_number") for l in legs)
+    if has_legs:
+        def _pb_leg(orig: str, dst: str, dt: str, airline: str, fnum: str) -> bytes:
+            return _pb_str(1, orig) + _pb_str(2, dt) + _pb_str(3, dst) + _pb_str(5, airline) + _pb_str(6, fnum)
+        leg_bytes = b"".join(
+            _pb_bytes(4, _pb_leg(l["from"], l["to"], l["departs"][:10], l["airline"], l["flight_number"]))
+            for l in legs
+        )
+        flight_inner = _pb_str(2, date) + leg_bytes + _pb_bytes(13, _pb_str(2, origin)) + _pb_bytes(14, _pb_str(2, dest))
+    else:
+        flight_inner = _pb_str(2, date) + _pb_bytes(13, _pb_str(2, origin)) + _pb_bytes(14, _pb_str(2, dest))
+
     tfs_bytes = _pb_bytes(3, flight_inner) + _pb_bytes(8, b"\x01") + _tag(9, 0) + bytes([seat]) + _tag(19, 0) + b"\x02"
     tfs = base64.b64encode(tfs_bytes).decode()
     return f"https://www.google.com/travel/flights/search?tfs={urllib.parse.quote(tfs)}&hl=en&curr={cur}"
