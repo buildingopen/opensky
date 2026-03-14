@@ -619,7 +619,7 @@ function ScanSummaryExpanded({
 // Fix 2: Parsed Config chips
 // ---------------------------------------------------------------------------
 function ParsedConfig({ parsed }: { parsed: ParsedSearch }) {
-  const { origins, destinations, dates, return_dates, max_price, currency, cabin, stops } = parsed;
+  const { origins, destinations, dates, return_dates, max_price, currency, cabin, stops, airport_names } = parsed;
   const sym = currencySymbol(currency);
   const isRoundTrip = return_dates && return_dates.length > 0;
 
@@ -636,11 +636,11 @@ function ParsedConfig({ parsed }: { parsed: ParsedSearch }) {
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3">
       <div className="flex flex-wrap items-center gap-1.5">
         {origins.map((o) => (
-          <span key={o} className={chipClass}>{o}</span>
+          <span key={o} className={chipClass} title={airport_names?.[o] || o}>{o}</span>
         ))}
         <span className="text-[var(--color-text-muted)] text-xs mx-0.5">\u2192</span>
         {destinations.map((d) => (
-          <span key={d} className={chipClass}>{d}</span>
+          <span key={d} className={chipClass} title={airport_names?.[d] || d}>{d}</span>
         ))}
         <span className="text-[var(--color-border)] mx-1">|</span>
         <span className="text-[var(--color-text-muted)] text-xs">{formatDatesChip(dates)}</span>
@@ -652,7 +652,7 @@ function ParsedConfig({ parsed }: { parsed: ParsedSearch }) {
             <span className="text-[var(--color-text-muted)] text-xs">\u2192 {formatDatesChip(return_dates)}</span>
           </>
         )}
-        {cabin && cabin !== "economy" && (
+        {cabin && (
           <span className={`${labelClass} bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)] capitalize`}>
             {cabin.replace(/_/g, " ")}
           </span>
@@ -1307,6 +1307,13 @@ function HomePage() {
                     >
                       Refresh
                     </button>
+                  </div>
+                )}
+
+                {/* Round-trip degradation warning */}
+                {parsed && parsed.return_dates.length > 0 && roundTripResults !== null && roundTripResults.length === 0 && flights.length > 0 && (
+                  <div className="mt-4 bg-[var(--color-caution)]/10 border border-[var(--color-caution)]/30 rounded-lg px-4 py-3 text-sm text-[var(--color-caution)]">
+                    No paired round-trip options found for these dates. Showing outbound flights only — search separately for return flights.
                   </div>
                 )}
 
