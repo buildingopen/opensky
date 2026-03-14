@@ -113,9 +113,12 @@ def _check_rate_limit_memory(ip: str) -> int:
 
     _request_log[ip] = [t for t in _request_log[ip] if now - t < window]
     if len(_request_log[ip]) >= RATE_LIMIT:
+        oldest = min(_request_log[ip])
+        retry_after = int(oldest + window - now)
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit exceeded. Max {RATE_LIMIT} searches per hour.",
+            headers={"Retry-After": str(max(1, retry_after))},
         )
     _request_log[ip].append(now)
     return RATE_LIMIT - len(_request_log[ip])
@@ -138,9 +141,15 @@ async def _check_rate_limit_redis(ip: str) -> int:
         return _check_rate_limit_memory(ip)
 
     if count > RATE_LIMIT:
+        try:
+            remaining_ttl = await redis_client.ttl(key)
+            retry_after = max(1, remaining_ttl) if remaining_ttl and remaining_ttl > 0 else 3600
+        except RedisError:
+            retry_after = 3600
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit exceeded. Max {RATE_LIMIT} searches per hour.",
+            headers={"Retry-After": str(retry_after)},
         )
     return RATE_LIMIT - count
 
@@ -178,9 +187,12 @@ def _check_rate_limit_api_key_memory(key_hash: str) -> int:
             del _api_key_log[k]
     _api_key_log[key_hash] = [t for t in _api_key_log[key_hash] if now - t < window]
     if len(_api_key_log[key_hash]) >= API_KEY_QUOTA:
+        oldest = min(_api_key_log[key_hash])
+        retry_after = int(oldest + window - now)
         raise HTTPException(
             status_code=429,
             detail=f"API key rate limit exceeded. Max {API_KEY_QUOTA} searches per hour.",
+            headers={"Retry-After": str(max(1, retry_after))},
         )
     _api_key_log[key_hash].append(now)
     return API_KEY_QUOTA - len(_api_key_log[key_hash])
@@ -200,9 +212,15 @@ async def _check_rate_limit_api_key_redis(key_hash: str) -> int:
         log.warning("Redis API-key rate-limit failed, falling back to memory: %s", exc)
         return _check_rate_limit_api_key_memory(key_hash)
     if count > API_KEY_QUOTA:
+        try:
+            remaining_ttl = await redis_client.ttl(key)
+            retry_after = max(1, remaining_ttl) if remaining_ttl and remaining_ttl > 0 else 3600
+        except RedisError:
+            retry_after = 3600
         raise HTTPException(
             status_code=429,
             detail=f"API key rate limit exceeded. Max {API_KEY_QUOTA} searches per hour.",
+            headers={"Retry-After": str(retry_after)},
         )
     return API_KEY_QUOTA - count
 
@@ -1123,8 +1141,10 @@ async def search_flights(req: PromptRequest, request: Request):
         cancel = threading.Event()
         progress_q: queue.Queue = queue.Queue()
 
+        filtered_counter: list[int] = [0]
+
         def on_progress(done: int, total: int, origin: str, dest: str, dt: str):
-            progress_q.put({"type": "progress", "done": done, "total": total, "route": f"{origin} -> {dest}", "date": dt})
+            progress_q.put({"type": "progress", "done": done, "total": total, "route": f"{origin} -> {dest}", "date": dt, "filtered": filtered_counter[0]})
 
         # Run scan in thread
         result_holder: list = []
@@ -1222,6 +1242,7 @@ async def search_flights(req: PromptRequest, request: Request):
                 return sorted(seen.values(), key=lambda x: x["score"])
 
             flights = _process_flights(scored)
+            safety_filtered_count = sum(1 for f in flights if f.get("risk_level") in ("high_risk", "do_not_fly"))
             # C8: when every result is high_risk, suppress them and emit safety_filtered
             if flights and all(f.get("risk_level") == "high_risk" for f in flights):
                 no_results_reason = "safety_filtered"
@@ -1237,6 +1258,7 @@ async def search_flights(req: PromptRequest, request: Request):
                 "remaining_searches": remaining,
                 "zones_warning": warning,
                 "summary": summary,
+                "safety_filtered_count": safety_filtered_count,
             }
 
         if no_results_reason:
