@@ -274,37 +274,44 @@ function FlightCard({
               <div className="text-[10px] text-[var(--color-text-muted)] capitalize">{flight.provider}</div>
             </div>
           )}
-          <div className="flex gap-2">
-            {bookingUrl ? (
+          <div className="flex flex-col gap-1">
+            <div className="flex gap-2">
+              {bookingUrl ? (
+                <a
+                  href={bookingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => onOutboundClick("booking", flight)}
+                  aria-label={flight.booking_exact ? "Book direct" : "Search on Skyscanner"}
+                  title={flight.booking_exact
+                    ? "Direct booking link — takes you straight to checkout"
+                    : "Opens a Skyscanner search — you\u2019ll need to find this exact flight again"}
+                  className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                >
+                  {flight.booking_exact ? "Book direct" : "Skyscanner"}
+                </a>
+              ) : (
+                <span className="px-4 py-2 bg-[var(--color-accent)]/40 text-black/70 text-sm rounded-lg cursor-not-allowed">
+                  Unavailable
+                </span>
+              )}
               <a
-                href={bookingUrl}
+                href={googleUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => onOutboundClick("booking", flight)}
-                aria-label={flight.booking_exact ? "Book direct" : "Search on Skyscanner"}
-                title={flight.booking_exact
-                  ? "Direct booking link — takes you straight to checkout"
-                  : "Opens a Skyscanner search — you\u2019ll need to find this exact flight again"}
-                className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                onClick={() => onOutboundClick("google", flight)}
+                aria-label="Search on Google Flights"
+                title="Search this route on Google Flights"
+                className="px-4 py-2 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
               >
-                {flight.booking_exact ? "Book direct" : "Skyscanner"}
+                Google
               </a>
-            ) : (
-              <span className="px-4 py-2 bg-[var(--color-accent)]/40 text-black/70 text-sm rounded-lg cursor-not-allowed">
-                Unavailable
-              </span>
+            </div>
+            {bookingUrl && !flight.booking_exact && (
+              <p className="text-[10px] text-[var(--color-text-muted)] leading-tight">
+                Opens a search — you&apos;ll need to find this flight again on Skyscanner
+              </p>
             )}
-            <a
-              href={googleUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => onOutboundClick("google", flight)}
-              aria-label="Search on Google Flights"
-              title="Search this route on Google Flights"
-              className="px-4 py-2 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
-            >
-              Google
-            </a>
           </div>
         </div>
       </div>
@@ -849,6 +856,15 @@ function HomePage() {
     setNoResultsReason(null);
     setSearchWarning(null);
     setCacheAgeSeconds(null);
+
+    // Update browser URL so refresh/back restores the search (C6)
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("q", text.trim());
+      url.searchParams.delete("ref");
+      url.searchParams.delete("utm_source");
+      window.history.pushState({}, "", url.toString());
+    }
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90_000);

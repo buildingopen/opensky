@@ -1176,10 +1176,14 @@ async def search_flights(req: PromptRequest, request: Request):
                 return sorted(seen.values(), key=lambda x: x["score"])
 
             flights = _process_flights(scored)
+            # C8: when every result is high_risk, suppress them and emit safety_filtered
+            if flights and all(f.get("risk_level") == "high_risk" for f in flights):
+                no_results_reason = "safety_filtered"
+                flights = []
+            elif not flights:
+                no_results_reason = "provider_error" if outbound_error_count > 0 else "no_routes"
             total_count = len(flights)
             summary = _build_summary(flights, parsed.get("currency", "EUR"))
-            if not flights:
-                no_results_reason = "provider_error" if outbound_error_count > 0 else "no_routes"
             result_data = {
                 "type": "results",
                 "flights": flights[:20],
