@@ -512,17 +512,26 @@ function RoundTripCard({
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 divide-y divide-[var(--color-border)]">
-          <RoundTripFlightRow flight={outbound} label="Outbound" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
-          <RoundTripFlightRow flight={inbound} label="Return" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
+        <div className="flex-1">
+          <div className="flex gap-3">
+            <div className="flex flex-col items-center pt-4 shrink-0">
+              <div className="w-5 h-5 rounded-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-accent)]">1</div>
+              <div className="w-px flex-1 bg-[var(--color-border)] my-1" />
+              <div className="w-5 h-5 rounded-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-accent)]">2</div>
+            </div>
+            <div className="flex-1 divide-y divide-[var(--color-border)]">
+              <RoundTripFlightRow flight={outbound} label="Step 1: Book outbound" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
+              <RoundTripFlightRow flight={inbound} label="Step 2: Book return" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
+            </div>
+          </div>
         </div>
         <div className="flex flex-col items-end gap-1 pt-2 shrink-0">
           {total_price > 0 && (
             <div className="text-right">
-              <div className="text-lg font-semibold text-[var(--color-text)]">
+              <div className="text-2xl font-bold text-[var(--color-accent)]">
                 {currencySymbol(currency)}{Math.round(total_price)}
               </div>
-              <div className="text-[10px] text-[var(--color-text-muted)]">total</div>
+              <div className="text-[10px] text-[var(--color-text-muted)]">combined total</div>
             </div>
           )}
           {risk_level !== "safe" && <RiskBadge level={risk_level} />}
@@ -723,7 +732,7 @@ function ScanSummaryExpanded({
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[var(--color-border)]">
-                <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)]">Dest</th>
+                <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)] sticky left-0 z-10 bg-[var(--color-surface)]">Dest</th>
                 {price_matrix.dates.map((d) => (
                   <th key={d} className="px-2 py-2 text-right font-mono text-[var(--color-text-muted)]">{d.slice(5)}</th>
                 ))}
@@ -732,7 +741,7 @@ function ScanSummaryExpanded({
             <tbody className="divide-y divide-[var(--color-border)]">
               {price_matrix.destinations.map((dest) => (
                 <tr key={dest}>
-                  <td className="px-3 py-2 font-mono font-medium">{dest} <span className="font-sans text-[var(--color-text-muted)] hidden sm:inline">{airportNames[dest] || ""}</span></td>
+                  <td className="px-3 py-2 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">{dest} <span className="font-sans text-[var(--color-text-muted)] hidden sm:inline">{airportNames[dest] || ""}</span></td>
                   {price_matrix.dates.map((dt) => {
                     const price = price_matrix.prices[`${dest}|${dt}`];
                     const isCheapest = price != null && price === price_matrix.cheapest_per_dest[dest];
@@ -1509,6 +1518,23 @@ function HomePage() {
           <>
             {/* Fix 2: Parsed config chips */}
             <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} />
+
+            {/* Safety value prop badge */}
+            {flights.length > 0 && (() => {
+              const safeCount = flights.filter((f) => f.risk_level === "safe").length;
+              const total = flights.length;
+              const allSafe = safeCount === total;
+              return (
+                <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border ${
+                  allSafe
+                    ? "bg-[var(--color-safe)]/10 border-[var(--color-safe)]/20 text-[var(--color-safe)]"
+                    : "bg-[var(--color-caution)]/10 border-[var(--color-caution)]/20 text-[var(--color-caution)]"
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${allSafe ? "bg-[var(--color-safe)]" : "bg-[var(--color-caution)]"}`} />
+                  {allSafe ? `All ${total} routes verified safe` : `${safeCount} of ${total} routes are safe`}
+                </div>
+              );
+            })()}
 
             {/* Fix 5: Show warning if return date was before departure */}
             {searchWarning && (
