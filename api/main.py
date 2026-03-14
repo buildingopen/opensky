@@ -260,6 +260,7 @@ Rules:
 - If the user says "direct" or "nonstop", set stops to "non_stop".
 - Always return valid IATA airport codes (3-letter), NOT city codes. For cities with multiple airports, use the main one (e.g. London=LHR, New York=JFK, Paris=CDG, Tokyo=NRT, Moscow=SVO, Milan=MXP, Chicago=ORD, Washington=IAD, Stockholm=ARN, Sao Paulo=GRU).
 - Never return city codes like LON, NYC, PAR, TYO, MOW, MIL, CHI, WAS, STO, SAO. Always use specific airport codes.
+- STRICT: When the user names a SPECIFIC city (e.g. "San Francisco", "London", "Tokyo"), return ONLY that city's airport. Do NOT add nearby cities or alternative airports unless the user explicitly asks (e.g. "Bay Area", "California", "West Coast", "anywhere near SF"). "Hamburg to San Francisco" = HAM to SFO, nothing else.
 
 FLEXIBLE / INSPIRATIONAL DATE SEARCHES:
 When the user does NOT specify exact dates but instead wants to explore a period (e.g. "cheapest in July", "flexible dates in April", "anytime in summer", "cheapest week", "best time to fly in June"), use SAMPLED dates instead of listing every single day. This keeps the search fast and under limits.

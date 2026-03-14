@@ -55,6 +55,15 @@ body {
   margin-right: 8px;
 }
 
+/* Search surface */
+.search-surface {
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.3);
+}
+.search-surface:focus-within {
+  border-color: rgba(34, 197, 94, 0.25);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(34, 197, 94, 0.08);
+}
+
 /* Pulse animation for loading */
 @keyframes pulse-bar {
   0%, 100% { opacity: 0.3; }

@@ -1210,7 +1210,7 @@ function HomePage() {
         )}
 
         {/* Search surface */}
-        <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 focus-within:border-[var(--color-accent)] focus-within:ring-1 focus-within:ring-[var(--color-accent)]/30 transition-colors`}>
+        <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 search-surface transition-all duration-200`}>
           {searchMode === "structured" ? (
             <div className="space-y-3">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1223,7 +1223,7 @@ function HomePage() {
                     value={form.from}
                     onChange={(e) => setForm((f) => ({ ...f, from: e.target.value }))}
                     disabled={isLoading}
-                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]/60"
                   />
                 </div>
                 <div>
@@ -1235,7 +1235,7 @@ function HomePage() {
                     value={form.to}
                     onChange={(e) => setForm((f) => ({ ...f, to: e.target.value }))}
                     disabled={isLoading}
-                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]/60"
                   />
                 </div>
                 <div>
@@ -1246,7 +1246,7 @@ function HomePage() {
                     value={form.depart}
                     onChange={(e) => setForm((f) => ({ ...f, depart: e.target.value }))}
                     disabled={isLoading}
-                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]"
+                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/60"
                   />
                 </div>
                 <div>
@@ -1257,7 +1257,7 @@ function HomePage() {
                     value={form.returnDate}
                     onChange={(e) => setForm((f) => ({ ...f, returnDate: e.target.value }))}
                     disabled={isLoading || !form.roundTrip}
-                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)] disabled:opacity-50"
+                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/60 disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -1279,50 +1279,53 @@ function HomePage() {
                     value={form.maxPrice}
                     onChange={(e) => setForm((f) => ({ ...f, maxPrice: e.target.value }))}
                     disabled={isLoading}
-                    className="w-24 bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]"
+                    className="w-24 bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/60"
                   />
                 </div>
               </div>
             </div>
           ) : (
-            <div className="flex items-start gap-2">
+            <div>
               <textarea
                 ref={inputRef}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), canSearch() && search())}
-                placeholder="e.g. JFK to London next week under $500"
+                placeholder="Where do you want to fly? e.g. JFK to London next week under $500"
                 disabled={isLoading}
                 rows={2}
-                className="flex-1 bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] resize-none"
+                className="w-full bg-transparent border-none px-0 py-1 text-[15px] leading-relaxed text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/50 focus:outline-none resize-none"
                 aria-label="Describe your trip in plain English"
               />
             </div>
           )}
 
-          <div className="mt-3 flex items-center justify-between">
+          <div className={`${searchMode === "structured" ? "mt-3" : "mt-3 pt-3 border-t border-[var(--color-border)]/50"} flex items-center justify-between`}>
             <button
               type="button"
               onClick={() => setSearchMode((m) => (m === "structured" ? "natural" : "structured"))}
-              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+              className="text-xs text-[var(--color-text-muted)]/60 hover:text-[var(--color-text-muted)] transition-colors"
             >
               {searchMode === "structured" ? "Describe your trip instead" : "Use search form instead"}
             </button>
-            <button
-              onClick={() => search()}
-              disabled={isLoading || !canSearch()}
-              aria-label={isLoading ? "Searching" : "Search flights"}
-              aria-busy={isLoading}
-              className="px-5 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-colors"
-            >
-              {isLoading ? "Searching..." : "Search"}
-            </button>
+            <div className="flex items-center gap-3">
+              {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/30 hidden sm:inline">Enter to search</span>}
+              <button
+                onClick={() => search()}
+                disabled={isLoading || !canSearch()}
+                aria-label={isLoading ? "Searching" : "Search flights"}
+                aria-busy={isLoading}
+                className="px-5 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-30 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-all duration-150 hover:shadow-[0_0_20px_rgba(34,197,94,0.15)]"
+              >
+                {isLoading ? "Searching..." : "Search"}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Example prompts */}
         {phase === "idle" && flights.length === 0 && (
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
             {EXAMPLES.map((ex, i) => (
               <button
                 key={i}
@@ -1332,7 +1335,7 @@ function HomePage() {
                   trackEvent("example_prompt_clicked", { prompt: ex });
                   setTimeout(() => inputRef.current?.focus(), 0);
                 }}
-                className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-text)] transition-colors max-w-[180px] sm:max-w-none truncate"
+                className="text-[13px] px-3.5 py-1.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)] transition-all duration-150 max-w-[200px] sm:max-w-none truncate"
               >
                 {ex}
               </button>
@@ -1473,6 +1476,30 @@ function HomePage() {
                     />
                   ))}
                 </div>
+
+                {/* More flights */}
+                {(() => {
+                  const recKeys = new Set(recs.map((r) => `${r.flight.route}|${r.flight.date}|${r.flight.provider}`));
+                  const moreFlights = sortFlights(pricedFlights.length > 0 ? pricedFlights : flights, "score").filter(
+                    (f) => !recKeys.has(`${f.route}|${f.date}|${f.provider}`)
+                  );
+                  if (moreFlights.length === 0) return null;
+                  return (
+                    <div className="mt-8 space-y-3">
+                      <h3 className="text-sm font-semibold text-[var(--color-text-muted)]">More flights</h3>
+                      {moreFlights.slice(0, 6).map((f, i) => (
+                        <FlightCard
+                          key={`more-${i}`}
+                          flight={f}
+                          airportNames={airportNames}
+                          attributionParams={attributionParams}
+                          onOutboundClick={handleOutboundClick}
+                          cabin={parsed?.cabin}
+                        />
+                      ))}
+                    </div>
+                  );
+                })()}
 
                 {/* Round-trip paired results */}
                 {roundTripResults && roundTripResults.length > 0 && (

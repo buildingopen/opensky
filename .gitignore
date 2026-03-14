@@ -22,3 +22,4 @@ demo.tape
 web/node_modules/
 web/.next/
 web/.env.local
+.vercel
