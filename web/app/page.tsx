@@ -290,7 +290,6 @@ function FlightCard({
             </div>
           )}
           <div className="flex flex-col gap-1.5">
-            <p className="text-[11px] text-[var(--color-text-muted)]">Find &amp; book on:</p>
             <div className="flex gap-2">
               {flight.booking_exact && bookingUrl ? (
                 <a
@@ -616,7 +615,7 @@ function ScanSummaryCollapsed({
         onClick={onExpand}
         className="text-sm text-[var(--color-accent)] hover:underline"
       >
-        Compare all options ({stats.total_flights} flights, {stats.destinations} destinations)
+        Compare all options ({stats.total_flights} flight{stats.total_flights !== 1 ? "s" : ""}, {stats.destinations} destination{stats.destinations !== 1 ? "s" : ""})
       </button>
       {stats.min_price > 0 && (
         <span className="ml-2 text-xs text-[var(--color-text-muted)]">
@@ -725,7 +724,7 @@ function ScanSummaryExpanded({
 // ---------------------------------------------------------------------------
 // Fix 2: Parsed Config chips
 // ---------------------------------------------------------------------------
-function ParsedConfig({ parsed }: { parsed: ParsedSearch }) {
+function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void }) {
   const { origins, destinations, dates, return_dates, max_price, currency, cabin, stops, airport_names } = parsed;
   const sym = currencySymbol(currency);
   const isRoundTrip = return_dates && return_dates.length > 0;
@@ -765,6 +764,14 @@ function ParsedConfig({ parsed }: { parsed: ParsedSearch }) {
           <span>{stops === "non_stop" ? "Direct only" : stops === "one_stop_or_fewer" ? "1 stop max" : "2 stops max"}</span>
         )}
         {max_price > 0 && <span>Max {sym}{Math.round(max_price)}</span>}
+        {cacheAgeSeconds !== null && cacheAgeSeconds > 1800 && (
+          <>
+            <span className="text-[var(--color-text-muted)]">·</span>
+            <span>Prices from ~{Math.round(cacheAgeSeconds / 60)} min ago.{" "}
+              <button onClick={onRefresh} className="underline hover:text-[var(--color-text)] transition-colors">Refresh</button>
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
@@ -1368,7 +1375,7 @@ function HomePage() {
         {phase === "done" && parsed && (
           <>
             {/* Fix 2: Parsed config chips */}
-            <ParsedConfig parsed={parsed} />
+            <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} />
 
             {/* Fix 5: Show warning if return date was before departure */}
             {searchWarning && (
@@ -1424,29 +1431,17 @@ function HomePage() {
                   </div>
                 )}
 
-                {/* Fix 10: Price staleness warning */}
-                {cacheAgeSeconds !== null && cacheAgeSeconds > 1800 && (
-                  <div className="mt-4 text-xs text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-2">
-                    Prices from ~{Math.round(cacheAgeSeconds / 60)} min ago — may have changed.{" "}
-                    <button
-                      onClick={() => search()}
-                      className="underline hover:text-[var(--color-text)] transition-colors"
-                    >
-                      Refresh
-                    </button>
-                  </div>
-                )}
 
                 {/* Round-trip degradation warning */}
                 {parsed && parsed.return_dates.length > 0 && roundTripResults !== null && roundTripResults.length === 0 && flights.length > 0 && (
                   <div className="mt-4 bg-[var(--color-caution)]/10 border border-[var(--color-caution)]/30 rounded-lg px-4 py-3 text-sm text-[var(--color-caution)]">
-                    No paired round-trip options found for these dates. Showing outbound flights only — search separately for return flights.
+                    No paired round-trip options found for these dates. Showing outbound flights only; search separately for return flights.
                   </div>
                 )}
 
                 {/* Recommendation stack */}
                 <div className="mt-6 space-y-4">
-                  <h2 className="text-sm font-semibold text-[var(--color-text)] uppercase tracking-wider">Our recommendations</h2>
+                  <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
                   {recs.slice(0, 4).map(({ label, flight }, i) => (
                     <FlightCard
                       key={i}
@@ -1465,7 +1460,7 @@ function HomePage() {
                   <div className="mt-8">
                     <h3 className="text-sm font-semibold text-[var(--color-text)] uppercase tracking-wider mb-3">Round-trip options</h3>
                     <p className="text-xs text-[var(--color-text-muted)] mb-4">
-                      Each option shows outbound + return. Prices are combined — you&apos;ll complete two separate bookings.
+                      Each option shows outbound + return. Prices are combined; you&apos;ll complete two separate bookings.
                     </p>
                     <div className="space-y-4">
                       {roundTripResults.slice(0, 10).map((rt, i) => (
@@ -1512,7 +1507,7 @@ function HomePage() {
 
                 <div className="mt-6 space-y-2">
                   <p className="text-sm text-[var(--color-text-muted)]">
-                    Share this recommendation — help a friend find a safer flight.
+                    Share this recommendation, help a friend find a safer flight.
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
                     <button
@@ -1535,7 +1530,7 @@ function HomePage() {
 
                 {/* Trust at decision time */}
                 <div className="mt-6 text-xs text-[var(--color-text-muted)]">
-                  Safety zones updated {ZONES_UPDATED_AT}. You always book with the provider, not through us.{" "}
+                  You always book with the provider, not through us.{" "}
                   <a href="/methodology" className="text-[var(--color-accent)] hover:underline">How we rank flights</a>
                 </div>
               </>
@@ -1545,7 +1540,7 @@ function HomePage() {
 
         {/* New search */}
         {phase === "done" && flights.length > 0 && (
-          <div className="text-center mt-8 mb-4">
+          <div className="text-center mt-6 mb-4">
             <button
               onClick={() => {
                 trackEvent("new_search_clicked", { previous_results: flights.length });
@@ -1559,7 +1554,7 @@ function HomePage() {
                 setForm({ from: "", to: "", depart: "", returnDate: "", roundTrip: false, maxPrice: "", directOnly: false });
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="px-5 py-2 text-sm border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-text)] transition-colors"
+              className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
             >
               New search
             </button>
