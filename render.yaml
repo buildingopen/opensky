@@ -3,7 +3,7 @@ services:
     name: opensky-api
     runtime: python
     plan: starter
-    buildCommand: pip install "git+https://github.com/buildingopen/opensky.git@eb315fb6498404db84aa85ed1757bd79f05a9f62" && pip install -r api/requirements.txt
+    buildCommand: pip install "git+https://github.com/buildingopen/opensky.git@b315cba4eab4f572427fa2fdf3c5c0b8d39d4ed5" && pip install -r api/requirements.txt
     startCommand: cd api && uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/readyz
     envVars:
