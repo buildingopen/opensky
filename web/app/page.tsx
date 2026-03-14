@@ -242,7 +242,11 @@ function FlightCard({
   const routeLabel = consumerRouteLabel(flight.route, airportNames);
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors">
+    <div className={`bg-[var(--color-surface)] border rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors ${
+      label === "Recommended"
+        ? "border-[var(--color-accent)]/40 ring-1 ring-[var(--color-accent)]/20"
+        : "border-[var(--color-border)]"
+    }`}>
       {label && (
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wider">{label}</span>
@@ -262,16 +266,22 @@ function FlightCard({
             )}
             <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
             <span>{formatDuration(flight.duration_minutes)}</span>
-            {flight.risk_level !== "safe" && <RiskBadge level={flight.risk_level} />}
+            {flight.risk_level === "safe" ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--color-safe)] bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 rounded px-1.5 py-0.5">
+                Safe route
+              </span>
+            ) : (
+              <RiskBadge level={flight.risk_level} />
+            )}
           </div>
         </div>
         <div className="flex flex-col sm:items-end gap-2">
           {flight.price > 0 && (
             <div className="text-right">
-              <div className="text-lg font-semibold text-[var(--color-text)]">
+              <div className="text-2xl font-bold text-[var(--color-text)]">
                 {currencySymbol(flight.currency)}{Math.round(flight.price)}
               </div>
-              <div className="text-[10px] text-[var(--color-text-muted)] capitalize">{flight.provider}</div>
+              <div className="text-xs text-[var(--color-text-muted)] capitalize">{flight.provider}</div>
             </div>
           )}
           <div className="flex flex-col gap-1.5">
@@ -404,6 +414,13 @@ function RoundTripFlightRow({
           )}
           <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
           <span>{formatDuration(flight.duration_minutes)}</span>
+          {flight.risk_level === "safe" ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--color-safe)] bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 rounded px-1.5 py-0.5">
+              Safe route
+            </span>
+          ) : (
+            <RiskBadge level={flight.risk_level} />
+          )}
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -508,6 +525,7 @@ function SearchingState({ parsed, progress }: { parsed: ParsedSearch | null; pro
           <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
             <div className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
           </div>
+          <p className="text-[11px] text-[var(--color-text-muted)] mt-1">Filtering conflict zones and ranking by safety...</p>
         </>
       ) : parsed ? (
         <>
@@ -517,6 +535,54 @@ function SearchingState({ parsed, progress }: { parsed: ParsedSearch | null; pro
       ) : (
         <p className="text-[var(--color-text-muted)]">Understanding your trip...</p>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Compact flight row for compare-all list
+// ---------------------------------------------------------------------------
+function CompactFlightRow({
+  flight,
+  sym,
+  airportNames,
+}: {
+  flight: FlightOut;
+  sym: string;
+  airportNames: Record<string, string>;
+}) {
+  const firstLeg = flight.legs[0];
+  const lastLeg = flight.legs[flight.legs.length - 1];
+  const airline = flight.legs.length > 0
+    ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
+    : "";
+  const googleUrl = googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency);
+  return (
+    <div className="px-4 py-2.5 flex items-center gap-3 text-sm">
+      <div className="flex-1 min-w-0">
+        <span className="font-medium text-[var(--color-text)] truncate">{consumerRouteLabel(flight.route, airportNames)}</span>
+        {airline && <span className="ml-2 text-xs text-[var(--color-text-muted)]">{formatAirlines(airline)}</span>}
+      </div>
+      <span className="text-xs text-[var(--color-text-muted)] shrink-0">{formatDate(flightDisplayDate(flight))}</span>
+      {firstLeg && lastLeg && (
+        <span className="text-xs text-[var(--color-text-muted)] shrink-0 hidden sm:inline">
+          {formatTime(firstLeg.departs)} – {formatTime(lastLeg.arrives)}
+        </span>
+      )}
+      <span className="text-xs text-[var(--color-text-muted)] shrink-0">
+        {flight.stops === 0 ? "Direct" : `${flight.stops}s`}
+      </span>
+      <span className="text-xs font-semibold text-[var(--color-accent)] shrink-0 w-14 text-right">
+        {flight.price > 0 ? `${sym}${Math.round(flight.price)}` : "-"}
+      </span>
+      <a
+        href={safeUrl(googleUrl) || "#"}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-[var(--color-accent)] hover:underline shrink-0"
+      >
+        Google ↗
+      </a>
     </div>
   );
 }
@@ -556,11 +622,13 @@ function ScanSummaryExpanded({
   summary,
   currency,
   airportNames,
+  flights,
   onCollapse,
 }: {
   summary: ScanSummaryData;
   currency: string;
   airportNames: Record<string, string>;
+  flights: FlightOut[];
   onCollapse: () => void;
 }) {
   const { best_destinations, price_matrix, stats } = summary;
@@ -580,6 +648,16 @@ function ScanSummaryExpanded({
           <span>{sym}{Math.round(stats.min_price)} – {sym}{Math.round(stats.max_price)}</span>
         )}
       </div>
+      {!isMultiDest && flights.length > 0 && (
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">All {flights.length} options</div>
+          <div className="divide-y divide-[var(--color-border)]">
+            {[...flights].sort((a, b) => a.score - b.score).map((f, i) => (
+              <CompactFlightRow key={i} flight={f} sym={sym} airportNames={airportNames} />
+            ))}
+          </div>
+        </div>
+      )}
       {isMultiDest && (
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
           <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">Best per destination</div>
@@ -1230,7 +1308,7 @@ function HomePage() {
                   trackEvent("example_prompt_clicked", { prompt: ex });
                   search(ex);
                 }}
-                className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-text)] transition-colors"
+                className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-text)] transition-colors max-w-[180px] sm:max-w-none truncate"
               >
                 {ex}
               </button>
@@ -1265,7 +1343,28 @@ function HomePage() {
           </div>
         )}
 
-        {isLoading && <SearchingState parsed={parsed} progress={progress} />}
+        {isLoading && (
+          <>
+            <SearchingState parsed={parsed} progress={progress} />
+            <div className="mt-6 space-y-4 animate-pulse">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5">
+                  <div className="flex justify-between gap-4">
+                    <div className="flex-1 space-y-2.5">
+                      <div className="h-4 bg-[var(--color-border)] rounded w-3/4" />
+                      <div className="h-3 bg-[var(--color-border)] rounded w-1/3" />
+                      <div className="h-3 bg-[var(--color-border)] rounded w-1/2 mt-2" />
+                    </div>
+                    <div className="space-y-2 w-24">
+                      <div className="h-7 bg-[var(--color-border)] rounded" />
+                      <div className="h-9 bg-[var(--color-border)] rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {phase === "done" && parsed && (
           <>
@@ -1405,7 +1504,7 @@ function HomePage() {
                 {summary && summary.stats.total_flights > 0 && (
                   <div className="mt-8">
                     {showCompare ? (
-                      <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} onCollapse={() => setShowCompare(false)} />
+                      <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} />
                     ) : (
                       <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} />
                     )}
