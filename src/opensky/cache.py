@@ -42,23 +42,32 @@ def cache_key(origin: str, dest: str, date: str, **params: Any) -> str:
 
 def _serialize(value: Any) -> Any:
     try:
-        from opensky.models import FlightResult
+        from opensky.models import FlightResult, RoundTripResult
     except Exception:
         return value
 
-    if isinstance(value, list) and all(isinstance(v, FlightResult) for v in value):
-        return {"__type__": "FlightResultList", "items": [v.model_dump() for v in value]}
+    if isinstance(value, list) and value:
+        if all(isinstance(v, FlightResult) for v in value):
+            return {"__type__": "FlightResultList", "items": [v.model_dump() for v in value]}
+        if all(isinstance(v, RoundTripResult) for v in value):
+            return {"__type__": "RoundTripResultList", "items": [v.model_dump() for v in value]}
     return value
 
 
 def _deserialize(value: Any) -> Any:
-    if isinstance(value, dict) and value.get("__type__") == "FlightResultList":
-        try:
-            from opensky.models import FlightResult
-        except Exception:
-            return value
-        items = value.get("items", [])
-        return [FlightResult.model_validate(v) for v in items]
+    if isinstance(value, dict):
+        if value.get("__type__") == "FlightResultList":
+            try:
+                from opensky.models import FlightResult
+            except Exception:
+                return value
+            return [FlightResult.model_validate(v) for v in value.get("items", [])]
+        if value.get("__type__") == "RoundTripResultList":
+            try:
+                from opensky.models import RoundTripResult
+            except Exception:
+                return value
+            return [RoundTripResult.model_validate(v) for v in value.get("items", [])]
     return value
 
 
