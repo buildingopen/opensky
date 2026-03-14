@@ -122,9 +122,12 @@ function safeUrl(url: string): string | null {
   } catch {}
   return null;
 }
-function googleFlightsUrl(origin: string, dest: string, date: string, currency: string): string {
+function googleFlightsUrl(origin: string, dest: string, date: string, currency: string, airline?: string, departureTime?: string): string {
   const u = new URL("https://www.google.com/travel/flights");
-  u.searchParams.set("q", `Flights from ${origin} to ${dest} on ${date}`);
+  const airlineName = airline && AIRLINE_NAMES[airline] ? AIRLINE_NAMES[airline] : airline || "";
+  const timePart = departureTime ? ` departing ${departureTime}` : "";
+  const airlinePart = airlineName ? ` ${airlineName}` : "";
+  u.searchParams.set("q", `Flights from ${origin} to ${dest} on ${date}${airlinePart}${timePart}`);
   u.searchParams.set("curr", (currency || "EUR").toUpperCase().slice(0, 3));
   u.searchParams.set("hl", "en");
   return u.toString();
@@ -235,8 +238,10 @@ function FlightCard({
     ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
     : "";
   const bookingUrl = appendAttribution(flight.booking_url, attributionParams);
+  const mainAirline = firstLeg?.airline && firstLeg.airline !== "ZZ" ? firstLeg.airline : undefined;
+  const depTime = firstLeg?.departs ? formatTime(firstLeg.departs) : undefined;
   const googleUrl = appendAttribution(
-    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency),
+    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, mainAirline, depTime),
     attributionParams
   );
   const routeLabel = consumerRouteLabel(flight.route, airportNames);
@@ -390,8 +395,10 @@ function RoundTripFlightRow({
     ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
     : "";
   const bookingUrl = appendAttribution(flight.booking_url, attributionParams);
+  const mainAirline = firstLeg?.airline && firstLeg.airline !== "ZZ" ? firstLeg.airline : undefined;
+  const depTime = firstLeg?.departs ? formatTime(firstLeg.departs) : undefined;
   const googleUrl = appendAttribution(
-    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency),
+    googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, mainAirline, depTime),
     attributionParams
   );
 
@@ -556,7 +563,9 @@ function CompactFlightRow({
   const airline = flight.legs.length > 0
     ? [...new Set(flight.legs.map((l) => l.airline).filter((a) => a && a !== "ZZ"))].join(", ")
     : "";
-  const googleUrl = googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency);
+  const mainAirline = firstLeg?.airline && firstLeg.airline !== "ZZ" ? firstLeg.airline : undefined;
+  const depTime = firstLeg?.departs ? formatTime(firstLeg.departs) : undefined;
+  const googleUrl = googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, mainAirline, depTime);
   return (
     <div className="px-4 py-2.5 flex items-center justify-between gap-2 text-sm">
       <div className="flex-1 min-w-0">
@@ -720,51 +729,42 @@ function ParsedConfig({ parsed }: { parsed: ParsedSearch }) {
   const { origins, destinations, dates, return_dates, max_price, currency, cabin, stops, airport_names } = parsed;
   const sym = currencySymbol(currency);
   const isRoundTrip = return_dates && return_dates.length > 0;
+  const [datesExpanded, setDatesExpanded] = useState(false);
 
-  const formatDatesChip = (ds: string[]) => {
-    if (ds.length === 0) return null;
-    if (ds.length <= 3) return ds.map(formatDate).join(", ");
-    return `${formatDate(ds[0])} +${ds.length - 1} more`;
-  };
+  const originLabel = origins.map((o) => airport_names?.[o] ? `${airport_names[o]} (${o})` : o).join(", ");
+  const destLabel = destinations.map((d) => airport_names?.[d] ? `${airport_names[d]} (${d})` : d).join(", ");
 
-  const chipClass = "px-2 py-0.5 rounded bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] font-mono text-xs";
-  const labelClass = "px-2 py-0.5 rounded text-xs";
+  const collapsedDates = dates.length <= 2 ? dates.map(formatDate).join(", ") : `${formatDate(dates[0])} + ${dates.length - 1} more dates`;
+  const canExpandDates = dates.length > 2;
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {origins.map((o) => (
-          <span key={o} className={chipClass} title={airport_names?.[o] || o}>{o}</span>
-        ))}
-        <span className="text-[var(--color-text-muted)] text-xs mx-0.5">→</span>
-        {destinations.map((d) => (
-          <span key={d} className={chipClass} title={airport_names?.[d] || d}>{d}</span>
-        ))}
-        <span className="text-[var(--color-border)] mx-1">|</span>
-        <span className="text-[var(--color-text-muted)] text-xs">{formatDatesChip(dates)}</span>
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 space-y-2">
+      <div className="flex items-center gap-2 text-sm">
+        <span className="font-medium text-[var(--color-text)]">{originLabel}</span>
+        <span className="text-[var(--color-text-muted)]">→</span>
+        <span className="font-medium text-[var(--color-text)]">{destLabel}</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
+        {canExpandDates ? (
+          <button
+            onClick={() => setDatesExpanded(!datesExpanded)}
+            className="hover:text-[var(--color-text)] transition-colors underline decoration-dotted underline-offset-2"
+          >
+            {datesExpanded ? dates.map(formatDate).join(", ") : collapsedDates}
+          </button>
+        ) : (
+          <span>{collapsedDates}</span>
+        )}
         {isRoundTrip && (
-          <>
-            <span className={`${labelClass} bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium`}>
-              Round trip
-            </span>
-            <span className="text-[var(--color-text-muted)] text-xs">→ {formatDatesChip(return_dates)}</span>
-          </>
-        )}
-        {cabin && (
-          <span className={`${labelClass} bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)] capitalize`}>
-            {cabin.replace(/_/g, " ")}
+          <span className="px-1.5 py-0.5 rounded bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium">
+            Round trip → {return_dates.length <= 2 ? return_dates.map(formatDate).join(", ") : `${formatDate(return_dates[0])} + ${return_dates.length - 1} more`}
           </span>
         )}
+        {cabin && <span className="capitalize">{cabin.replace(/_/g, " ")}</span>}
         {stops && stops !== "any" && (
-          <span className={`${labelClass} bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)]`}>
-            {stops === "non_stop" ? "Direct only" : stops === "one_stop_or_fewer" ? "\u22641 stop" : "\u22642 stops"}
-          </span>
+          <span>{stops === "non_stop" ? "Direct only" : stops === "one_stop_or_fewer" ? "1 stop max" : "2 stops max"}</span>
         )}
-        {max_price > 0 && (
-          <span className={`${labelClass} bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)]`}>
-            Max {sym}{Math.round(max_price)}
-          </span>
-        )}
+        {max_price > 0 && <span>Max {sym}{Math.round(max_price)}</span>}
       </div>
     </div>
   );
