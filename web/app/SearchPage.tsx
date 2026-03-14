@@ -2,6 +2,9 @@
 
 import React, { Component, useEffect, useRef, useState } from "react";
 import { trackEvent } from "../lib/analytics";
+import { AirportAutocomplete } from "../components/AirportAutocomplete";
+import { useSavedSearches, SavedSearchesList } from "../components/SavedSearches";
+import { useAirlineFilter, AirlineFilterChips } from "../components/AirlineFilter";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const ZONES_UPDATED_AT = process.env.NEXT_PUBLIC_ZONES_UPDATED_AT || "March 2026";
@@ -852,6 +855,7 @@ interface SearchFormState {
   depart: string;
   returnDate: string;
   roundTrip: boolean;
+  flexibleDates: boolean;
   maxPrice: string;
   directOnly: boolean;
   cabin: string;
@@ -866,6 +870,7 @@ function buildPromptFromForm(f: SearchFormState): string {
   } else {
     parts.push(f.depart);
   }
+  if (f.flexibleDates) parts.push("flexible +/- 3 days");
   if (f.cabin && f.cabin !== "economy") parts.push(f.cabin.replace("_", " "));
   if (f.maxPrice && parseInt(f.maxPrice, 10) > 0) parts.push(`under $${f.maxPrice}`);
   if (f.directOnly) parts.push("direct only");
@@ -894,6 +899,7 @@ function HomePage() {
     depart: "",
     returnDate: "",
     roundTrip: false,
+    flexibleDates: false,
     maxPrice: "",
     directOnly: false,
     cabin: "economy",
@@ -922,6 +928,7 @@ function HomePage() {
   const [gitHubStars, setGitHubStars] = useState<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const savedSearches = useSavedSearches();
 
   const hasResults = phase === "done" || phase === "searching" || phase === "parsing";
   const airportNames = parsed?.airport_names || {};
@@ -1099,6 +1106,7 @@ function HomePage() {
               setCacheAgeSeconds(msg.cache_age_seconds ?? null);
               if (msg.safety_filtered_count > 0) setSafetyFilteredCount(msg.safety_filtered_count);
               setPhase("done");
+              savedSearches.save(text);
               trackEvent("search_results_received", { count: (msg.flights || []).length, has_round_trip: Boolean(msg.round_trip_results?.length), has_return: Boolean(msg.return_flights?.length) });
             } else if (msg.type === "error") {
               setError(msg.detail);
@@ -1197,8 +1205,12 @@ function HomePage() {
 
   const isLoading = phase === "parsing" || phase === "searching";
 
+  // Airline filter (post-results)
+  const airlineFilter = useAirlineFilter(flights);
+  const displayFlights = airlineFilter.filtered;
+
   // Use only priced flights for recommendations (unpriced can appear in list but not labeled)
-  const pricedFlights = flights.filter((f) => f.price > 0);
+  const pricedFlights = displayFlights.filter((f) => f.price > 0);
   const recEligible = pricedFlights.length > 0 ? pricedFlights : flights;
   // "Recommended" only applies to safe routes — if no safe flights exist, suppress the label
   const safeFlights = recEligible.filter((f) => f.risk_level === "safe");
@@ -1310,30 +1322,22 @@ function HomePage() {
           {searchMode === "structured" ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div>
-                  <label htmlFor="from" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">From</label>
-                  <input
-                    id="from"
-                    type="text"
-                    placeholder="JFK, London..."
-                    value={form.from}
-                    onChange={(e) => setForm((f) => ({ ...f, from: e.target.value }))}
-                    disabled={isLoading}
-                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="to" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">To</label>
-                  <input
-                    id="to"
-                    type="text"
-                    placeholder="LHR, Paris..."
-                    value={form.to}
-                    onChange={(e) => setForm((f) => ({ ...f, to: e.target.value }))}
-                    disabled={isLoading}
-                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors"
-                  />
-                </div>
+                <AirportAutocomplete
+                  id="from"
+                  label="From"
+                  placeholder="JFK, London..."
+                  value={form.from}
+                  onChange={(v) => setForm((f) => ({ ...f, from: v }))}
+                  disabled={isLoading}
+                />
+                <AirportAutocomplete
+                  id="to"
+                  label="To"
+                  placeholder="LHR, Paris..."
+                  value={form.to}
+                  onChange={(v) => setForm((f) => ({ ...f, to: v }))}
+                  disabled={isLoading}
+                />
                 <div>
                   <label htmlFor="depart" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">Depart</label>
                   <input
@@ -1344,6 +1348,10 @@ function HomePage() {
                     disabled={isLoading}
                     className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors"
                   />
+                  <label className="flex items-center gap-1.5 mt-1.5 text-[11px] text-[var(--color-text-muted)] cursor-pointer select-none">
+                    <input type="checkbox" checked={form.flexibleDates} onChange={(e) => setForm((f) => ({ ...f, flexibleDates: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" aria-label="Search flexible dates" />
+                    +/- 3 days
+                  </label>
                 </div>
                 <div>
                   <label htmlFor="return" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">Return</label>
@@ -1457,6 +1465,15 @@ function HomePage() {
               </button>
             ))}
           </div>
+        )}
+
+        {/* Recent searches */}
+        {phase === "idle" && flights.length === 0 && savedSearches.searches.length > 0 && (
+          <SavedSearchesList
+            searches={savedSearches.searches}
+            onSelect={(q) => { setSearchMode("natural"); setPrompt(q); search(q); }}
+            onClear={savedSearches.clear}
+          />
         )}
       </section>
 
@@ -1597,6 +1614,16 @@ function HomePage() {
                     No paired round-trip options found for these dates. Showing outbound flights only; search separately for return flights.
                   </div>
                 )}
+
+                {/* Airline filter */}
+                <AirlineFilterChips
+                  airlines={airlineFilter.airlines}
+                  selected={airlineFilter.selected}
+                  toggle={airlineFilter.toggle}
+                  clearFilter={airlineFilter.clearFilter}
+                  totalCount={flights.length}
+                  filteredCount={displayFlights.length}
+                />
 
                 {/* Recommendation stack */}
                 <div className="mt-6 space-y-4">
@@ -1755,7 +1782,7 @@ function HomePage() {
                 setRoundTripResults(null);
                 setParsed(null);
                 setSummary(null);
-                setForm({ from: "", to: "", depart: "", returnDate: "", roundTrip: false, maxPrice: "", directOnly: false, cabin: "economy", safeOnly: true });
+                setForm({ from: "", to: "", depart: "", returnDate: "", roundTrip: false, flexibleDates: false, maxPrice: "", directOnly: false, cabin: "economy", safeOnly: true });
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
