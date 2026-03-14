@@ -343,24 +343,12 @@ function FlightCard({
                 </a>
               ) : (
                 <>
-                  {bookingUrl && (
-                    <a
-                      href={bookingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => onOutboundClick("booking", flight)}
-                      aria-label="Search on Skyscanner"
-                      className="px-3 py-2 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
-                    >
-                      Skyscanner ↗
-                    </a>
-                  )}
                   <a
                     href={googleUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => onOutboundClick("google", flight)}
-                    aria-label="Search on Google Flights"
+                    aria-label="View on Google Flights"
                     className="px-3 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
                   >
                     Google Flights ↗
@@ -480,28 +468,15 @@ function RoundTripFlightRow({
             Book ↗
           </a>
         ) : (
-          <>
-            {bookingUrl && (
-              <a
-                href={bookingUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => onOutboundClick("booking", flight)}
-                className="px-3 py-1.5 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
-              >
-                Skyscanner ↗
-              </a>
-            )}
-            <a
-              href={googleUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => onOutboundClick("google", flight)}
-              className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
-            >
-              Google ↗
-            </a>
-          </>
+          <a
+            href={googleUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => onOutboundClick("google", flight)}
+            className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
+          >
+            Google Flights ↗
+          </a>
         )}
       </div>
     </div>
@@ -720,9 +695,8 @@ function ScanSummaryExpanded({
                 <span className="text-[var(--color-accent)] font-semibold w-16 text-right">{f.price > 0 ? `${sym}${Math.round(f.price)}` : "-"}</span>
                 <span className="text-[var(--color-text-muted)] text-xs">{formatDate(f.date)}</span>
                 <span className="text-[var(--color-text-muted)] text-xs">{formatDuration(f.duration_minutes)}</span>
-                <div className="ml-auto flex gap-2 text-xs">
-                  {f.booking_url && <a href={safeUrl(f.booking_url) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Skyscanner ↗</a>}
-                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin, f.legs)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Google ↗</a>
+                <div className="ml-auto text-xs">
+                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin, f.legs)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Google Flights ↗</a>
                 </div>
               </div>
             ))}
