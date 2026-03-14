@@ -245,8 +245,8 @@ Rules:
 - Convert city names to IATA codes. Use the main airport for each city.
 - For date ranges like "March 10-20", list every date in the range.
 - For relative dates like "next week" or "tomorrow", calculate from today ({today}).
-- "next [weekday]" means the SOONEST upcoming occurrence of that weekday. If today is Saturday and user says "next Friday", return the coming Friday (6 days away), NOT the Friday 13 days away. "Next" means next occurrence, not next week's occurrence.
-- "this weekend" means the upcoming Saturday and Sunday (within the current or immediately next 2 days).
+- "next [weekday]": count forward day by day from today until you reach that weekday. Example: today=Saturday 2026-03-14, "next Friday" → count 1(Sun Mar15), 2(Mon), 3(Tue), 4(Wed), 5(Thu), 6(Fri Mar20) → return 2026-03-20. NEVER jump to the following week's occurrence.
+- "this weekend": if today IS Saturday → return today + tomorrow (Sunday). If today IS Sunday → return today only. If today is Mon–Fri → return the nearest upcoming Saturday + Sunday.
 - If no dates specified, use next 7 days from today.
 - return_dates: list of return dates for round trips. Empty list [] for one-way trips.
   - If user says "round trip", "return", "returning on", "back on", parse the return date(s).
@@ -279,6 +279,8 @@ Examples:
 - "anywhere in Asia" -> pick 10-15 relevant airports: NRT, HND, ICN, PVG, HKG, BKK, SIN, KUL, MNL, CGK, DEL, BOM, CMB, KTM, DAD
 - "anywhere in Americas" -> pick 10-15 relevant airports: JFK, LAX, ORD, MIA, GRU, MEX, BOG, LIM, SCL, EZE, YYZ, YVR, SFO, ATL, DFW
 - When user says "anywhere" or "any destination", pick 10-15 relevant airports that match trip context (not always the same list)
+- IMPORTANT: For "anywhere warm", "beach", "sunny", or similar open-ended destination searches, use at most 5-6 destinations to avoid search timeout. More than 6 destinations × multiple dates = too many routes.
+- "fly somewhere warm from [European city]" → prefer NEARBY warm airports (shorter = cheaper, more likely under budget): AGP (Malaga), PMI (Palma), ATH (Athens), TFS (Tenerife), RAK (Marrakech), HRG (Hurghada), LPA (Gran Canaria), FNC (Madeira). Only add long-haul (MIA, BKK, SIN, CUN) if the user has NO price constraint or budget > €500.
 - "cheapest week to fly JFK to CDG" -> one date per week for next 4 weeks from today ({today})"""
 
 
