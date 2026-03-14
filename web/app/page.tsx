@@ -257,7 +257,7 @@ function FlightCard({
             <span>{formatDate(flightDisplayDate(flight))}</span>
             {firstLeg && lastLeg && (
               <span className="text-[var(--color-text)]">
-                {formatTime(firstLeg.departs)} \u2013 {formatTime(lastLeg.arrives)}
+                {formatTime(firstLeg.departs)} – {formatTime(lastLeg.arrives)}
               </span>
             )}
             <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
@@ -274,44 +274,47 @@ function FlightCard({
               <div className="text-[10px] text-[var(--color-text-muted)] capitalize">{flight.provider}</div>
             </div>
           )}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
+            <p className="text-[11px] text-[var(--color-text-muted)]">Find &amp; book on:</p>
             <div className="flex gap-2">
-              {bookingUrl ? (
+              {flight.booking_exact && bookingUrl ? (
                 <a
                   href={bookingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => onOutboundClick("booking", flight)}
-                  aria-label={flight.booking_exact ? "Book direct" : "Search on Skyscanner"}
-                  title={flight.booking_exact
-                    ? "Direct booking link — takes you straight to checkout"
-                    : "Opens a Skyscanner search — you\u2019ll need to find this exact flight again"}
+                  aria-label="Book direct"
                   className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
                 >
-                  {flight.booking_exact ? "Book direct" : "Skyscanner"}
+                  Book direct
                 </a>
               ) : (
-                <span className="px-4 py-2 bg-[var(--color-accent)]/40 text-black/70 text-sm rounded-lg cursor-not-allowed">
-                  Unavailable
-                </span>
+                <>
+                  {bookingUrl && (
+                    <a
+                      href={bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => onOutboundClick("booking", flight)}
+                      aria-label="Search on Skyscanner"
+                      className="px-3 py-2 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
+                    >
+                      Skyscanner ↗
+                    </a>
+                  )}
+                  <a
+                    href={googleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => onOutboundClick("google", flight)}
+                    aria-label="Search on Google Flights"
+                    className="px-3 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Google Flights ↗
+                  </a>
+                </>
               )}
-              <a
-                href={googleUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => onOutboundClick("google", flight)}
-                aria-label="Search on Google Flights"
-                title="Search this route on Google Flights"
-                className="px-4 py-2 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
-              >
-                Google
-              </a>
             </div>
-            {bookingUrl && !flight.booking_exact && (
-              <p className="text-[10px] text-[var(--color-text-muted)] leading-tight">
-                Opens a search — you&apos;ll need to find this flight again on Skyscanner
-              </p>
-            )}
           </div>
         </div>
       </div>
@@ -344,7 +347,7 @@ function FlightCard({
               <p className="text-xs text-[var(--color-text-muted)] mb-1">Risk factors:</p>
               {flight.risk_details.map((rd, i) => (
                 <div key={i} className="text-xs text-[var(--color-caution)]">
-                  {rd.airport} ({rd.country}) \u2013 {rd.zone}
+                  {rd.airport} ({rd.country}) – {rd.zone}
                 </div>
               ))}
             </div>
@@ -404,30 +407,40 @@ function RoundTripFlightRow({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {bookingUrl ? (
+        {flight.booking_exact && bookingUrl ? (
           <a
             href={bookingUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onOutboundClick("booking", flight)}
-            title={flight.booking_exact
-              ? "Direct booking link — takes you straight to checkout"
-              : "Opens a Skyscanner search — you&apos;ll need to find this exact flight again"}
             className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
           >
-            {flight.booking_exact ? "Book" : "Skyscanner"}
+            Book ↗
           </a>
-        ) : null}
-        <a
-          href={googleUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => onOutboundClick("google", flight)}
-          title="Search on Google Flights"
-          className="px-3 py-1.5 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
-        >
-          Google
-        </a>
+        ) : (
+          <>
+            {bookingUrl && (
+              <a
+                href={bookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => onOutboundClick("booking", flight)}
+                className="px-3 py-1.5 border border-[var(--color-border)] hover:border-[var(--color-accent)] text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
+              >
+                Skyscanner ↗
+              </a>
+            )}
+            <a
+              href={googleUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onOutboundClick("google", flight)}
+              className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
+            >
+              Google ↗
+            </a>
+          </>
+        )}
       </div>
     </div>
   );
@@ -532,7 +545,7 @@ function ScanSummaryCollapsed({
       </button>
       {stats.min_price > 0 && (
         <span className="ml-2 text-xs text-[var(--color-text-muted)]">
-          {sym}{Math.round(stats.min_price)} \u2013 {sym}{Math.round(stats.max_price)}
+          {sym}{Math.round(stats.min_price)} – {sym}{Math.round(stats.max_price)}
         </span>
       )}
     </div>
@@ -564,7 +577,7 @@ function ScanSummaryExpanded({
         <span><span className="text-[var(--color-text)] font-semibold">{stats.total_flights}</span> flights</span>
         <span><span className="text-[var(--color-text)] font-semibold">{stats.destinations}</span> destinations</span>
         {stats.min_price > 0 && (
-          <span>{sym}{Math.round(stats.min_price)} \u2013 {sym}{Math.round(stats.max_price)}</span>
+          <span>{sym}{Math.round(stats.min_price)} – {sym}{Math.round(stats.max_price)}</span>
         )}
       </div>
       {isMultiDest && (
@@ -579,8 +592,8 @@ function ScanSummaryExpanded({
                 <span className="text-[var(--color-text-muted)] text-xs">{formatDate(f.date)}</span>
                 <span className="text-[var(--color-text-muted)] text-xs">{formatDuration(f.duration_minutes)}</span>
                 <div className="ml-auto flex gap-2 text-xs">
-                  <a href={safeUrl(f.booking_url) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Book</a>
-                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Compare</a>
+                  {f.booking_url && <a href={safeUrl(f.booking_url) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Skyscanner ↗</a>}
+                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Google ↗</a>
                 </div>
               </div>
             ))}
