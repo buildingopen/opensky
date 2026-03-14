@@ -558,31 +558,31 @@ function CompactFlightRow({
     : "";
   const googleUrl = googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency);
   return (
-    <div className="px-4 py-2.5 flex items-center gap-3 text-sm">
+    <div className="px-4 py-2.5 flex items-center justify-between gap-2 text-sm">
       <div className="flex-1 min-w-0">
-        <span className="font-medium text-[var(--color-text)] truncate">{consumerRouteLabel(flight.route, airportNames)}</span>
-        {airline && <span className="ml-2 text-xs text-[var(--color-text-muted)]">{formatAirlines(airline)}</span>}
+        <div className="font-medium text-[var(--color-text)] truncate">{consumerRouteLabel(flight.route, airportNames)}</div>
+        <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5">
+          {airline && <span>{formatAirlines(airline)}</span>}
+          <span>{formatDate(flightDisplayDate(flight))}</span>
+          {firstLeg && lastLeg && (
+            <span className="hidden sm:inline">{formatTime(firstLeg.departs)} – {formatTime(lastLeg.arrives)}</span>
+          )}
+          <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
+        </div>
       </div>
-      <span className="text-xs text-[var(--color-text-muted)] shrink-0">{formatDate(flightDisplayDate(flight))}</span>
-      {firstLeg && lastLeg && (
-        <span className="text-xs text-[var(--color-text-muted)] shrink-0 hidden sm:inline">
-          {formatTime(firstLeg.departs)} – {formatTime(lastLeg.arrives)}
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="text-sm font-semibold text-[var(--color-accent)]">
+          {flight.price > 0 ? `${sym}${Math.round(flight.price)}` : "-"}
         </span>
-      )}
-      <span className="text-xs text-[var(--color-text-muted)] shrink-0">
-        {flight.stops === 0 ? "Direct" : `${flight.stops}s`}
-      </span>
-      <span className="text-xs font-semibold text-[var(--color-accent)] shrink-0 w-14 text-right">
-        {flight.price > 0 ? `${sym}${Math.round(flight.price)}` : "-"}
-      </span>
-      <a
-        href={safeUrl(googleUrl) || "#"}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-[var(--color-accent)] hover:underline shrink-0"
-      >
-        Google ↗
-      </a>
+        <a
+          href={safeUrl(googleUrl) || "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-[var(--color-accent)] hover:underline"
+        >
+          Google ↗
+        </a>
+      </div>
     </div>
   );
 }
