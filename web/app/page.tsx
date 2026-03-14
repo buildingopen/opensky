@@ -1306,7 +1306,6 @@ function HomePage() {
                   setSearchMode("natural");
                   setPrompt(ex);
                   trackEvent("example_prompt_clicked", { prompt: ex });
-                  search(ex);
                 }}
                 className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-text)] transition-colors max-w-[180px] sm:max-w-none truncate"
               >
