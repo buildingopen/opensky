@@ -695,6 +695,7 @@ def _run_scan(
         seat=parsed.get("cabin", "economy"),
         stops=parsed.get("stops", "any"),
         proxy=PROXY,
+        provider="google",
     )
     try:
         all_scored: list[ScoredFlight] = []
@@ -847,6 +848,7 @@ def _run_round_trip_scan(
         seat=parsed.get("cabin", "economy"),
         stops=parsed.get("stops", "any"),
         proxy=PROXY,
+        provider="google",
     )
     try:
         results: list[dict] = []
