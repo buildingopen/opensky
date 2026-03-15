@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import Home from "../app/page";
+import Home from "../app/SearchPage";
 
 describe("home page", () => {
   it("renders key product messaging", () => {
     render(<Home />);
-    expect(screen.getByText(/Find the safest practical/)).toBeInTheDocument();
+    expect(screen.getByText(/Describe your/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Search/ })).toBeInTheDocument();
   });
 
