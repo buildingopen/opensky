@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
               Describe your trip.
             </div>
             <div style={{ fontSize: "28px", color: "#94a3b8", display: "flex" }}>
-              Compare 500+ airlines, avoid conflict zones, find the safest route.
+              Compare 500+ airlines, find the best route. Conflict zones filtered.
             </div>
           </div>
         )}

@@ -558,7 +558,7 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
           <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
             <div className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
           </div>
-          <p className="text-[11px] text-[var(--color-text-muted)] mt-1">Filtering conflict zones and ranking by safety...</p>
+          <p className="text-[11px] text-[var(--color-text-muted)] mt-1">Comparing prices and filtering routes...</p>
           {filteredCount > 0 && (
             <p className="text-[11px] text-[var(--color-caution)] mt-1">{filteredCount} route{filteredCount !== 1 ? "s" : ""} filtered for safety</p>
           )}
@@ -566,7 +566,7 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
       ) : parsed ? (
         <>
           <p className="text-[var(--color-text)]">Scanning {parsed.total_routes} routes...</p>
-          <p className="text-sm text-[var(--color-text-muted)] mt-2">Filtering out conflict zones.</p>
+          <p className="text-sm text-[var(--color-text-muted)] mt-2">Comparing prices across airlines...</p>
         </>
       ) : (
         <p className="text-[var(--color-text-muted)]">Understanding your trip...</p>
@@ -1278,7 +1278,7 @@ function HomePage() {
       {attributionParams.ref === "share" && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
           <p className="text-sm text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2">
-            You were shared a recommendation. Search below to see safer flight options for your trip.
+            Someone shared a flight with you. Search below to compare options.
           </p>
         </div>
       )}
@@ -1291,7 +1291,7 @@ function HomePage() {
         </h1>
         {!hasResults && (
           <p className="mt-4 text-[var(--color-text-muted)] text-base sm:text-lg max-w-xl mx-auto">
-            Compare 500+ airlines, avoid conflict zones, find the safest route. Free, no login, AI-powered.
+            Compare 500+ airlines, find the best route. Conflict zones filtered automatically. Free, no login, AI-powered.
           </p>
         )}
 
@@ -1711,7 +1711,7 @@ function HomePage() {
                   <div ref={shareRef} className="relative">
                     <button
                       onClick={() => setShareOpen((v) => !v)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--color-surface-2)] hover:bg-[var(--color-border)] text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
+                      className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
                     >
                       <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><path d="M13.5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM15 3a3 3 0 0 1-5.133 2.107L5.4 7.4a3.014 3.014 0 0 1 0 1.2l4.467 2.293A3 3 0 1 1 8.8 12.4L4.333 10.107a3 3 0 1 1 0-4.214L8.8 3.6A3.015 3.015 0 0 1 9 3a3 3 0 0 1 6 0zM4.5 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM13.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
                       Share

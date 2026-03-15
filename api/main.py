@@ -792,26 +792,20 @@ def _run_scan(
                     error_counter.append(1)
                 return [], None
 
-        workers = min(3, total)
+        workers = min(8, total)
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            i = 0
-            while i < total:
+            futures = {executor.submit(_search_one, c): c for c in combos}
+            for future in as_completed(futures):
                 if cancel and cancel.is_set():
                     break
-                batch = combos[i:i + workers]
-                futures = {executor.submit(_search_one, c): c for c in batch}
-                for future in as_completed(futures):
-                    results, age = future.result()
-                    all_scored.extend(results)
-                    if age is not None:
-                        cache_ages.append(age)
-                    completed += 1
-                    combo = futures[future]
-                    if progress_cb:
-                        progress_cb(completed, total, combo[0], combo[1], combo[2])
-                i += len(batch)
-                if i < total:
-                    time.sleep(0.5)
+                results, age = future.result()
+                all_scored.extend(results)
+                if age is not None:
+                    cache_ages.append(age)
+                completed += 1
+                combo = futures[future]
+                if progress_cb:
+                    progress_cb(completed, total, combo[0], combo[1], combo[2])
 
         all_scored.sort(key=lambda x: x.score)
         max_age = max(cache_ages) if cache_ages else None
@@ -953,24 +947,18 @@ def _run_round_trip_scan(
                     error_counter.append(1)
                 return []
 
-        workers = min(3, total)
+        workers = min(8, total)
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            i = 0
-            while i < total:
+            futures = {executor.submit(_search_one, c): c for c in combos}
+            for future in as_completed(futures):
                 if cancel and cancel.is_set():
                     break
-                batch = combos[i:i + workers]
-                futures = {executor.submit(_search_one, c): c for c in batch}
-                for future in as_completed(futures):
-                    rs = future.result()
-                    results.extend(rs)
-                    completed += 1
-                    combo = futures[future]
-                    if progress_cb:
-                        progress_cb(completed, total, combo[0], combo[1], combo[2])
-                i += len(batch)
-                if i < total:
-                    time.sleep(0.5)
+                rs = future.result()
+                results.extend(rs)
+                completed += 1
+                combo = futures[future]
+                if progress_cb:
+                    progress_cb(completed, total, combo[0], combo[1], combo[2])
 
         results.sort(key=lambda x: x["score"])
         return results, None  # Round-trip cache age tracking not yet exposed
