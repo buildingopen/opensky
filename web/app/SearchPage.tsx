@@ -4,7 +4,7 @@ import React, { Component, useEffect, useRef, useState } from "react";
 import { trackEvent } from "../lib/analytics";
 import { AirportAutocomplete } from "../components/AirportAutocomplete";
 import { useSavedSearches, SavedSearchesList } from "../components/SavedSearches";
-import { useAirlineFilter, AirlineFilterChips } from "../components/AirlineFilter";
+import { useAirlineFilter, AirlineFilterChips, AIRLINE_NAMES, airlineName } from "../components/AirlineFilter";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const ZONES_UPDATED_AT = process.env.NEXT_PUBLIC_ZONES_UPDATED_AT || "March 2026";
@@ -182,19 +182,7 @@ function appendAttribution(url: string, params: AttributionParams): string {
   return u.toString();
 }
 
-const AIRLINE_NAMES: Record<string, string> = {
-  "5F": "Fly One", "6E": "IndiGo", "9W": "Jet Airways", A3: "Aegean", AA: "American", AC: "Air Canada",
-  AF: "Air France", AI: "Air India", AK: "AirAsia", AS: "Alaska", AY: "Finnair", AZ: "ITA Airways",
-  B6: "JetBlue", BA: "British Airways", BR: "EVA Air", CX: "Cathay Pacific", DL: "Delta", DY: "Norwegian",
-  EK: "Emirates", ET: "Ethiopian", EW: "Eurowings", EY: "Etihad", FI: "Icelandair", FR: "Ryanair",
-  IB: "Iberia", JL: "JAL", KE: "Korean Air", KL: "KLM", LH: "Lufthansa", LO: "LOT", LX: "SWISS",
-  NH: "ANA", NZ: "Air New Zealand", OS: "Austrian", QF: "Qantas", QR: "Qatar Airways", SQ: "Singapore Airlines",
-  TK: "Turkish Airlines", TP: "TAP Portugal", U2: "easyJet", UA: "United", VS: "Virgin Atlantic",
-  VY: "Vueling", W6: "Wizz Air", WN: "Southwest",
-};
-function airlineName(code: string): string {
-  return AIRLINE_NAMES[code] || code;
-}
+
 function formatAirlines(codes: string): string {
   if (!codes) return "";
   return codes.split(", ").map((c) => airlineName(c.trim())).join(", ");

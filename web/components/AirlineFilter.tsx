@@ -6,7 +6,7 @@ interface HasLegs {
   legs: { airline: string }[];
 }
 
-const AIRLINE_NAMES: Record<string, string> = {
+export const AIRLINE_NAMES: Record<string, string> = {
   "5F": "Fly One", "6E": "IndiGo", "9W": "Jet Airways", A3: "Aegean", AA: "American", AC: "Air Canada",
   AF: "Air France", AI: "Air India", AK: "AirAsia", AS: "Alaska", AY: "Finnair", AZ: "ITA Airways",
   B6: "JetBlue", BA: "British Airways", BR: "EVA Air", CX: "Cathay Pacific", DL: "Delta", DY: "Norwegian",
@@ -17,7 +17,7 @@ const AIRLINE_NAMES: Record<string, string> = {
   VY: "Vueling", W6: "Wizz Air", WN: "Southwest",
 };
 
-function airlineName(code: string): string {
+export function airlineName(code: string): string {
   return AIRLINE_NAMES[code] || code;
 }
 
