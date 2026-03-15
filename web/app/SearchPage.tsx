@@ -1020,6 +1020,7 @@ function HomePage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const savedSearches = useSavedSearches();
+  const [minutesSaved, setMinutesSaved] = useState(0);
 
   const hasResults = phase === "done" || phase === "searching" || phase === "parsing";
   const airportNames = parsed?.airport_names || {};
@@ -1027,6 +1028,10 @@ function HomePage() {
   useEffect(() => {
     if (searchMode === "natural") inputRef.current?.focus();
   }, [searchMode]);
+
+  useEffect(() => {
+    try { setMinutesSaved(parseInt(localStorage.getItem("flyfast_minutes_saved") || "0", 10)); } catch {}
+  }, []);
 
   useEffect(() => {
     const restore = () => { if (!document.hidden) document.title = "FlyFast - The smartest flight search"; };
@@ -1223,6 +1228,17 @@ function HomePage() {
                 }
               }
               savedSearches.save(text);
+              // Accumulate time saved
+              const routes = parsed?.total_routes ?? 0;
+              if (routes > 0) {
+                const added = Math.ceil(routes * 2.5);
+                try {
+                  const prev = parseInt(localStorage.getItem("flyfast_minutes_saved") || "0", 10);
+                  const next = prev + added;
+                  localStorage.setItem("flyfast_minutes_saved", String(next));
+                  setMinutesSaved(next);
+                } catch {}
+              }
               trackEvent("search_results_received", { count: (msg.flights || []).length, has_round_trip: Boolean(msg.round_trip_results?.length), has_return: Boolean(msg.return_flights?.length) });
             } else if (msg.type === "error") {
               setError(msg.detail);
@@ -1555,6 +1571,13 @@ function HomePage() {
             onSelect={(q) => { setSearchMode("natural"); setPrompt(q); search(q); }}
             onClear={savedSearches.clear}
           />
+        )}
+
+        {/* Time saved */}
+        {phase === "idle" && flights.length === 0 && minutesSaved > 0 && (
+          <p className="text-[11px] text-[var(--color-text-muted)]/50 mt-3 text-center">
+            FlyFast saved you ~{minutesSaved >= 60 ? `${Math.floor(minutesSaved / 60)}h ${minutesSaved % 60}m` : `${minutesSaved} min`} of manual searching
+          </p>
         )}
       </section>
 
