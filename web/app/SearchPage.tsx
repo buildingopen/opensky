@@ -5,8 +5,15 @@ import { trackEvent } from "../lib/analytics";
 import { AirportAutocomplete } from "../components/AirportAutocomplete";
 import { useSavedSearches, SavedSearchesList } from "../components/SavedSearches";
 import { useAirlineFilter, AirlineFilterChips, AIRLINE_NAMES, airlineName } from "../components/AirlineFilter";
+import { AIRPORTS } from "../lib/airports";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+const AIRPORTS_BY_CODE = Object.fromEntries(AIRPORTS.map((a) => [a.iata, a]));
+function flagUrl(iata: string): string | null {
+  const a = AIRPORTS_BY_CODE[iata];
+  return a ? `https://flagcdn.com/w20/${a.country.toLowerCase()}.png` : null;
+}
 const ZONES_UPDATED_AT = process.env.NEXT_PUBLIC_ZONES_UPDATED_AT || "March 2026";
 
 // ---------------------------------------------------------------------------
@@ -188,11 +195,63 @@ function formatAirlines(codes: string): string {
   return codes.split(", ").map((c) => airlineName(c.trim())).join(", ");
 }
 
+function AirlineLogos({ codes }: { codes: string }) {
+  if (!codes) return null;
+  const list = codes.split(", ").map((c) => c.trim()).filter(Boolean);
+  return (
+    <span className="inline-flex items-center gap-1.5 flex-wrap">
+      {list.map((code) => (
+        <span key={code} className="inline-flex items-center gap-1">
+          <img
+            src={`https://images.kiwi.com/airlines/64/${code}.png`}
+            alt=""
+            width={16}
+            height={16}
+            loading="lazy"
+            className="w-4 h-4 rounded-sm object-contain"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+          <span>{airlineName(code)}</span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function consumerRouteLabel(route: string, names: Record<string, string>): string {
   return route.split(" -> ").map((code) => {
     const city = names[code.trim()];
     return city ? `${city} (${code.trim()})` : code.trim();
   }).join(" \u2192 ");
+}
+
+function RouteWithFlags({ route, names }: { route: string; names: Record<string, string> }) {
+  const segments = route.split(" -> ").map((c) => c.trim());
+  return (
+    <span className="inline-flex items-center gap-1 flex-wrap">
+      {segments.map((code, i) => {
+        const city = names[code];
+        const flag = flagUrl(code);
+        return (
+          <React.Fragment key={code + i}>
+            {i > 0 && <span className="text-[var(--color-text-muted)] mx-0.5">{"\u2192"}</span>}
+            {flag && (
+              <img
+                src={flag}
+                alt=""
+                width={16}
+                height={12}
+                loading="lazy"
+                className="w-4 h-3 rounded-[1px] object-cover inline-block"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            )}
+            <span>{city ? `${city} (${code})` : code}</span>
+          </React.Fragment>
+        );
+      })}
+    </span>
+  );
 }
 
 function sortFlights(flights: FlightOut[], key: SortKey): FlightOut[] {
@@ -292,8 +351,6 @@ function FlightCard({
     googleFlightsUrl(flight.origin, flight.destination, flight.date, flight.currency, cabin, flight.legs),
     attributionParams
   );
-  const routeLabel = consumerRouteLabel(flight.route, airportNames);
-
   return (
     <div className={`bg-[var(--color-surface)] border rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors ${
       label === "Recommended"
@@ -308,8 +365,8 @@ function FlightCard({
       )}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-[var(--color-text)]">{routeLabel}</div>
-          {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{formatAirlines(airlines)}</div>}
+          <div className="text-sm font-medium text-[var(--color-text)]"><RouteWithFlags route={flight.route} names={airportNames} /></div>
+          {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5"><AirlineLogos codes={airlines} /></div>}
           <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-[var(--color-text-muted)]">
             <span>{formatDate(flightDisplayDate(flight))}</span>
             {firstLeg && lastLeg && (
@@ -374,7 +431,18 @@ function FlightCard({
         <div className="mt-3 pt-3 border-t border-[var(--color-border)] space-y-2">
           {flight.legs.map((leg, i) => (
             <div key={i} className="flex items-center gap-3 text-sm">
-              <span className="font-mono text-xs text-[var(--color-accent)] w-14">
+              <span className="font-mono text-xs text-[var(--color-accent)] w-14 inline-flex items-center gap-1">
+                {leg.airline && leg.airline !== "ZZ" && (
+                  <img
+                    src={`https://images.kiwi.com/airlines/64/${leg.airline}.png`}
+                    alt=""
+                    width={16}
+                    height={16}
+                    loading="lazy"
+                    className="w-4 h-4 rounded-sm object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                )}
                 {leg.airline && leg.airline !== "ZZ" ? `${leg.airline}${leg.flight_number}` : leg.flight_number || "---"}
               </span>
               <span className="text-[var(--color-text-muted)]">{leg.from}</span>
@@ -437,9 +505,9 @@ function RoundTripFlightRow({
           <span className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">{label}</span>
         </div>
         <div className="text-sm font-medium text-[var(--color-text)]">
-          {consumerRouteLabel(flight.route, airportNames)}
+          <RouteWithFlags route={flight.route} names={airportNames} />
         </div>
-        {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5">{formatAirlines(airlines)}</div>}
+        {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5"><AirlineLogos codes={airlines} /></div>}
         <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-[var(--color-text-muted)]">
           <span>{formatDate(flightDisplayDate(flight))}</span>
           {firstLeg && lastLeg && (
@@ -544,6 +612,25 @@ interface ProgressInfo {
 }
 
 function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSearch | null; progress: ProgressInfo | null; filteredCount: number }) {
+  const totalRoutes = progress?.total ?? parsed?.total_routes ?? 0;
+  const workers = Math.min(8, totalRoutes);
+  const manualMinutes = Math.ceil(totalRoutes * 2.5); // ~2.5 min per manual Google Flights search (navigate, enter airports, pick date, wait, compare)
+  const manualLabel = manualMinutes >= 60
+    ? `${Math.floor(manualMinutes / 60)}h ${manualMinutes % 60}min`
+    : `${manualMinutes} min`;
+
+  const estimateSeconds = progress && progress.total > 0
+    ? Math.ceil((progress.total - progress.done) / 3)
+    : totalRoutes
+      ? Math.ceil(totalRoutes / 3)
+      : null;
+
+  const timeLabel = estimateSeconds != null
+    ? estimateSeconds < 5
+      ? "Almost done..."
+      : `~${estimateSeconds}s remaining`
+    : null;
+
   return (
     <div className="text-center py-12">
       <div className="inline-flex items-center gap-3 mb-4">
@@ -553,20 +640,35 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
       </div>
       {progress && parsed ? (
         <>
-          <p className="text-[var(--color-text)]">Scanning route {progress.done}/{progress.total}</p>
+          <p className="text-[var(--color-text)]">
+            {workers} agents checking {progress.total} combinations on Google Flights
+          </p>
           <p className="text-sm text-[var(--color-text-muted)] mt-1 font-mono">{progress.route} on {formatDate(progress.date)}</p>
           <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
             <div className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
           </div>
-          <p className="text-[11px] text-[var(--color-text-muted)] mt-1">Comparing prices and filtering routes...</p>
+          <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
+            {progress.done}/{progress.total} checked {timeLabel ? `· ${timeLabel}` : ""}
+          </p>
+          {manualMinutes >= 2 && (
+            <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
+              Saving you ~{manualLabel} of manual searching
+            </p>
+          )}
           {filteredCount > 0 && (
             <p className="text-[11px] text-[var(--color-caution)] mt-1">{filteredCount} route{filteredCount !== 1 ? "s" : ""} filtered for safety</p>
           )}
         </>
       ) : parsed ? (
         <>
-          <p className="text-[var(--color-text)]">Scanning {parsed.total_routes} routes...</p>
-          <p className="text-sm text-[var(--color-text-muted)] mt-2">Comparing prices across airlines...</p>
+          <p className="text-[var(--color-text)]">
+            {workers} agents checking {totalRoutes} combinations on Google Flights
+          </p>
+          <p className="text-sm text-[var(--color-text-muted)] mt-2">
+            {manualMinutes >= 2
+              ? `This would take ~${manualLabel} manually. We'll be done in seconds.`
+              : "Fetching live prices..."}
+          </p>
         </>
       ) : (
         <p className="text-[var(--color-text-muted)]">Understanding your trip...</p>
@@ -598,9 +700,9 @@ function CompactFlightRow({
   return (
     <div className="px-4 py-2.5 flex items-center justify-between gap-2 text-sm">
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-[var(--color-text)] truncate">{consumerRouteLabel(flight.route, airportNames)}</div>
+        <div className="font-medium text-[var(--color-text)] truncate"><RouteWithFlags route={flight.route} names={airportNames} /></div>
         <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5">
-          {airline && <span>{formatAirlines(airline)}</span>}
+          {airline && <span><AirlineLogos codes={airline} /></span>}
           <span>{formatDate(flightDisplayDate(flight))}</span>
           {firstLeg && lastLeg && (
             <span className="hidden sm:inline">{formatTime(firstLeg.departs)} – {formatTime(lastLeg.arrives)}</span>
@@ -911,9 +1013,10 @@ function HomePage() {
   const [safetyFilteredCount, setSafetyFilteredCount] = useState<number>(0);
   const [autoSearchQuery, setAutoSearchQuery] = useState<string | null>(null);
   const [cacheAgeSeconds, setCacheAgeSeconds] = useState<number | null>(null);
+  const [isPartial, setIsPartial] = useState(false);
+  const [previewFlights, setPreviewFlights] = useState<FlightOut[]>([]);
   const [rateLimitReset, setRateLimitReset] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
-  const [gitHubStars, setGitHubStars] = useState<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const savedSearches = useSavedSearches();
@@ -926,11 +1029,11 @@ function HomePage() {
   }, [searchMode]);
 
   useEffect(() => {
-    fetch("https://api.github.com/repos/buildingopen/opensky", { headers: { Accept: "application/vnd.github.v3+json" } })
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.stargazers_count != null) setGitHubStars(d.stargazers_count); })
-      .catch(() => {});
+    const restore = () => { if (!document.hidden) document.title = "FlyFast - The smartest flight search"; };
+    document.addEventListener("visibilitychange", restore);
+    return () => document.removeEventListener("visibilitychange", restore);
   }, []);
+
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1004,6 +1107,10 @@ function HomePage() {
       ref: attributionParams.ref || "organic",
       utm_source: attributionParams.utm_source || undefined,
     });
+    // Request notification permission for background tab alerts
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
 
     setPhase("parsing");
     setError(null);
@@ -1020,6 +1127,8 @@ function HomePage() {
     setSearchWarning(null);
     setSafetyFilteredCount(0);
     setCacheAgeSeconds(null);
+    setPreviewFlights([]);
+    setIsPartial(false);
 
     // Update browser URL so refresh/back restores the search (C6)
     if (typeof window !== "undefined") {
@@ -1028,6 +1137,7 @@ function HomePage() {
       url.searchParams.delete("ref");
       url.searchParams.delete("utm_source");
       window.history.pushState({}, "", url.toString());
+      setAttributionParams((prev) => ({ ...prev, ref: "organic", utm_source: undefined }));
     }
 
     const controller = new AbortController();
@@ -1083,6 +1193,16 @@ function HomePage() {
             } else if (msg.type === "progress") {
               setProgress(msg);
               if (msg.filtered > 0) setSafetyFilteredCount(msg.filtered);
+              if (msg.preview_flights?.length) {
+                // For round-trip previews, use combined price if available
+                const previews = msg.preview_flights.map((f: FlightOut & { _combined_price?: number }) => {
+                  if (f._combined_price && f._combined_price > 0) {
+                    return { ...f, price: f._combined_price, _isRoundTripPrice: true };
+                  }
+                  return f;
+                });
+                setPreviewFlights(previews);
+              }
             } else if (msg.type === "results") {
               setFlights(msg.flights || []);
               setReturnFlights(msg.return_flights || null);
@@ -1093,7 +1213,15 @@ function HomePage() {
               setSearchWarning(msg.warning || null);
               setCacheAgeSeconds(msg.cache_age_seconds ?? null);
               if (msg.safety_filtered_count > 0) setSafetyFilteredCount(msg.safety_filtered_count);
+              if (msg.partial) setIsPartial(true);
               setPhase("done");
+              // Notify user if tab is in background
+              if (document.hidden) {
+                document.title = `✓ Results ready - FlyFast`;
+                if ("Notification" in window && Notification.permission === "granted") {
+                  new Notification("FlyFast", { body: `Found ${(msg.flights || []).length} flights`, icon: "/favicon.ico" });
+                }
+              }
               savedSearches.save(text);
               trackEvent("search_results_received", { count: (msg.flights || []).length, has_round_trip: Boolean(msg.round_trip_results?.length), has_return: Boolean(msg.return_flights?.length) });
             } else if (msg.type === "error") {
@@ -1106,7 +1234,7 @@ function HomePage() {
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
-        setError("Search timed out. Try a narrower search.");
+        setError("Search timed out. Google Flights was slow to respond. Please try again.");
         trackEvent("search_error", { stage: "client", type: "abort" });
       } else {
         setError("Could not reach the search API. Please try again.");
@@ -1238,42 +1366,7 @@ function HomePage() {
         : null;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-1.5 focus:bg-[var(--color-accent)] focus:text-black focus:rounded focus:text-sm focus:font-medium">
-        Skip to main content
-      </a>
-
-      {/* Header - trust nav */}
-      <header className="border-b border-[var(--color-border)]">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 text-[var(--color-accent)]" fill="currentColor">
-              <path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 2.59 4.49L21 11.49c.81-.23 1.28-1.05 1.07-1.85z" />
-            </svg>
-            <span className="text-lg font-semibold">
-              <span className="text-[var(--color-accent)]">fly</span>fast
-            </span>
-          </div>
-          <nav className="flex items-center gap-3 sm:gap-4 text-sm">
-            <a href="/methodology" className="hidden sm:inline text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
-              How it works
-            </a>
-            <a href="/contact" className="hidden sm:inline text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
-              Contact
-            </a>
-            <a href="https://github.com/buildingopen/opensky" target="_blank" rel="noopener noreferrer" className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors inline-flex items-center gap-1.5">
-              GitHub
-              {gitHubStars !== null && (
-                <span className="inline-flex items-center gap-1 text-[11px] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-1.5 py-0.5 rounded-full tabular-nums text-[var(--color-text-muted)]">
-                  <svg viewBox="0 0 16 16" className="w-3 h-3 fill-[var(--color-caution)]"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25z"/></svg>
-                  {gitHubStars}
-                </span>
-              )}
-            </a>
-          </nav>
-        </div>
-      </header>
-
+    <div className="flex-1 flex flex-col">
       {/* Referred-visit message */}
       {attributionParams.ref === "share" && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
@@ -1291,7 +1384,7 @@ function HomePage() {
         </h1>
         {!hasResults && (
           <p className="mt-4 text-[var(--color-text-muted)] text-base sm:text-lg max-w-xl mx-auto">
-            Compare 500+ airlines, find the best route. Conflict zones filtered automatically. Free, no login, AI-powered.
+            Search every flight on Google Flights. AI-powered, conflict zones filtered. Free, no login.
           </p>
         )}
 
@@ -1299,7 +1392,7 @@ function HomePage() {
         {!hasResults && (
           <div className="mt-6 grid grid-cols-2 sm:flex sm:justify-center gap-x-6 gap-y-1.5 text-xs text-[var(--color-text-muted)] text-center">
             <span>Free, no login</span>
-            <span>500+ airlines</span>
+            <span>Every flight. Powered by Google.</span>
             <span>Conflict zones filtered</span>
             <span>AI-powered search</span>
           </div>
@@ -1499,22 +1592,44 @@ function HomePage() {
         {isLoading && (
           <>
             <SearchingState parsed={parsed} progress={progress} filteredCount={safetyFilteredCount} />
-            <div className="mt-6 space-y-4 animate-pulse">
-              {[1, 2].map((i) => (
-                <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5">
-                  <div className="flex justify-between gap-4">
-                    <div className="flex-1 space-y-2.5">
-                      <div className="h-4 bg-[var(--color-border)] rounded w-3/4" />
-                      <div className="h-3 bg-[var(--color-border)] rounded w-1/3" />
-                      <div className="h-3 bg-[var(--color-border)] rounded w-1/2 mt-2" />
+            <div className="mt-6 space-y-4">
+              {previewFlights.length > 0 ? (
+                <div className="animate-[fadeIn_0.3s_ease-in]">
+                  <p className="text-xs text-[var(--color-text-muted)] text-center mb-3">Best so far (updating as we search)</p>
+                  {previewFlights.map((f: FlightOut & { _isRoundTripPrice?: boolean }, i: number) => (
+                    <div key={`preview-${i}`} className="opacity-70 pointer-events-none mb-4 relative">
+                      <FlightCard
+                        flight={f}
+                        airportNames={airportNames}
+                        attributionParams={attributionParams}
+                        onOutboundClick={() => {}}
+                        cabin={parsed?.cabin}
+                      />
+                      {f._isRoundTripPrice && (
+                        <span className="absolute top-3 right-3 text-[10px] text-[var(--color-text-muted)]">round trip</span>
+                      )}
                     </div>
-                    <div className="space-y-2 w-24">
-                      <div className="h-7 bg-[var(--color-border)] rounded" />
-                      <div className="h-9 bg-[var(--color-border)] rounded" />
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="animate-pulse">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 mb-4">
+                      <div className="flex justify-between gap-4">
+                        <div className="flex-1 space-y-2.5">
+                          <div className="h-4 bg-[var(--color-border)] rounded w-3/4" />
+                          <div className="h-3 bg-[var(--color-border)] rounded w-1/3" />
+                          <div className="h-3 bg-[var(--color-border)] rounded w-1/2 mt-2" />
+                        </div>
+                        <div className="space-y-2 w-24">
+                          <div className="h-7 bg-[var(--color-border)] rounded" />
+                          <div className="h-9 bg-[var(--color-border)] rounded" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
@@ -1600,6 +1715,18 @@ function HomePage() {
                 {parsed && parsed.return_dates.length > 0 && roundTripResults !== null && roundTripResults.length === 0 && flights.length > 0 && (
                   <div className="mt-4 bg-[var(--color-caution)]/10 border border-[var(--color-caution)]/30 rounded-lg px-4 py-3 text-sm text-[var(--color-caution)]">
                     No paired round-trip options found for these dates. Showing outbound flights only; search separately for return flights.
+                  </div>
+                )}
+
+                {/* Partial results banner */}
+                {isPartial && flights.length > 0 && (
+                  <div className="mt-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg px-4 py-3 flex items-center justify-between">
+                    <p className="text-sm text-[var(--color-text-muted)]">
+                      Showing partial results. Google Flights was slow to respond.
+                    </p>
+                    <button onClick={() => search()} className="text-sm font-medium text-[var(--color-accent)] hover:underline whitespace-nowrap ml-4">
+                      Try again
+                    </button>
                   </div>
                 )}
 
@@ -1771,6 +1898,7 @@ function HomePage() {
                 setParsed(null);
                 setSummary(null);
                 setForm({ from: "", to: "", depart: "", returnDate: "", roundTrip: false, flexibleDates: false, maxPrice: "", directOnly: false, cabin: "economy", safeOnly: true });
+                setAttributionParams((prev) => ({ ...prev, ref: "organic", utm_source: undefined }));
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
@@ -1786,7 +1914,7 @@ function HomePage() {
             <div className="flex flex-wrap justify-center gap-6 text-xs text-[var(--color-text-muted)]">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-safe)]" />
-                500+ airlines
+                Every flight. Powered by Google.
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-safe)]" />
@@ -1805,23 +1933,6 @@ function HomePage() {
         )}
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[var(--color-border)] mt-auto">
-        <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-[var(--color-text-muted)]">
-          <span>
-            Built by <a href="https://buildingopen.org" className="text-[var(--color-text)] hover:text-[var(--color-accent)]">Building Open</a>
-          </span>
-          <div className="flex flex-col sm:items-end gap-2">
-            <span>Conflict zones updated {ZONES_UPDATED_AT}. Decision support, not official travel advice.</span>
-            <span className="flex flex-wrap justify-center gap-3">
-              <a href="/privacy" className="hover:text-[var(--color-text)]">Privacy</a>
-              <a href="/terms" className="hover:text-[var(--color-text)]">Terms</a>
-              <a href="/methodology" className="hover:text-[var(--color-text)]">Methodology</a>
-              <a href="/contact" className="hover:text-[var(--color-text)]">Contact</a>
-            </span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

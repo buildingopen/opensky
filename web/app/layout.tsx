@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { AnalyticsProvider } from "../components/AnalyticsProvider";
+import { SiteHeader } from "../components/SiteHeader";
+import { SiteFooter } from "../components/SiteFooter";
 import "./globals.css";
 
 const inter = Inter({
@@ -24,8 +26,8 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "Describe your trip in plain English. FlyFast compares 500+ airlines, filters conflict zones, and finds the best route. Free, no login, AI-powered.",
-  keywords: ["flights", "flight search", "safe flights", "conflict zones", "flight safety", "cheap flights", "AI flight search"],
+    "Describe your trip in plain English. FlyFast searches Google Flights, filters conflict zones, and finds the safest, cheapest route. Free, no login.",
+  keywords: ["flights", "flight search", "Google Flights search", "natural language flights", "conflict zones", "cheap flights", "AI flight search"],
   alternates: {
     canonical: "/",
   },
@@ -42,6 +44,8 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="alternate icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="theme-color" content="#22c55e" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -50,11 +54,22 @@ export default function RootLayout({
               "@type": "WebApplication",
               name: "FlyFast",
               url: siteUrl,
-              description: "Describe your trip in plain English. FlyFast compares 500+ airlines, filters conflict zones, and finds the best route.",
+              description: "Describe your trip in plain English. FlyFast searches Google Flights, filters conflict zones, and finds the safest, cheapest route. Free, no login.",
               applicationCategory: "TravelApplication",
               operatingSystem: "All",
+              browserRequirements: "Requires JavaScript",
               offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
               author: { "@type": "Organization", name: "Building Open", url: "https://buildingopen.org" },
+              featureList: [
+                "Natural language flight search",
+                "Conflict zone and restricted airspace filtering",
+                "Every airline on Google Flights",
+                "Safety risk scoring per route",
+                "Multi-city and flexible date search",
+                "Direct booking links to airlines",
+                "No login or account required",
+                "Open source",
+              ],
             }),
           }}
         />
@@ -68,26 +83,65 @@ export default function RootLayout({
                 {
                   "@type": "Question",
                   name: "How does FlyFast work?",
-                  acceptedAnswer: { "@type": "Answer", text: "Describe your trip in plain English. FlyFast uses AI to parse your query, searches 500+ airlines, filters conflict zones, and ranks results by safety and value." },
+                  acceptedAnswer: { "@type": "Answer", text: "Type your trip in plain English, like 'Mumbai to Hamburg next week under $300'. FlyFast searches every flight on Google Flights, filters conflict zones, and ranks by price, duration, and route safety. You book directly with the airline." },
                 },
                 {
                   "@type": "Question",
                   name: "Is FlyFast free?",
-                  acceptedAnswer: { "@type": "Answer", text: "Yes. FlyFast is free to use with no login required. You get 10 searches per hour." },
+                  acceptedAnswer: { "@type": "Answer", text: "Yes. FlyFast is completely free with no login required. You get 10 searches per hour. There are no ads and no premium tier." },
                 },
                 {
                   "@type": "Question",
                   name: "How does FlyFast filter conflict zones?",
-                  acceptedAnswer: { "@type": "Answer", text: "FlyFast maintains a database of active conflict zones and restricted airspace. Every flight route is checked against these zones, and risky routes are flagged or filtered." },
+                  acceptedAnswer: { "@type": "Answer", text: "FlyFast maintains a dataset of active conflict zones, restricted airspace, and regions with aviation advisories. Every flight route is checked against these zones. High-risk routes are removed from results. Caution-level routes are flagged so you can decide. The data is updated regularly." },
+                },
+                {
+                  "@type": "Question",
+                  name: "Is it safe to fly over conflict zones?",
+                  acceptedAnswer: { "@type": "Answer", text: "Some airspace over conflict zones is closed or restricted by aviation authorities (NOTAMs). Airlines reroute around these areas, which can add flight time and cost. FlyFast automatically checks which routes cross conflict airspace and filters or flags them. Always check official government travel advisories before booking." },
+                },
+                {
+                  "@type": "Question",
+                  name: "How do I find cheap flights that avoid conflict zones?",
+                  acceptedAnswer: { "@type": "Answer", text: "On FlyFast, type a natural language query like 'cheapest flight from London to Bangkok avoiding conflict zones'. FlyFast searches every flight on Google Flights, removes routes through high-risk airspace, and ranks the remaining options by price. You can also specify flexible dates to find the cheapest day to fly." },
+                },
+                {
+                  "@type": "Question",
+                  name: "What airlines does FlyFast search?",
+                  acceptedAnswer: { "@type": "Answer", text: "FlyFast searches every flight on Google Flights, covering all major carriers, low-cost airlines, and multi-airline itineraries worldwide." },
+                },
+                {
+                  "@type": "Question",
+                  name: "Can I search for multi-city or complex routes?",
+                  acceptedAnswer: { "@type": "Answer", text: "Yes. FlyFast handles multi-city searches, flexible dates, nearby airports, and budget constraints. For example: 'Mumbai to Hamburg or Berlin, any day next week, under 300 euros'. It will search all origin-destination-date combinations and rank the best options." },
                 },
               ],
             }),
           }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Building Open",
+              url: "https://buildingopen.org",
+              logo: `${siteUrl}/favicon.svg`,
+              contactPoint: { "@type": "ContactPoint", email: "hello@buildingopen.org", contactType: "customer support" },
+              sameAs: ["https://github.com/buildingopen"],
+            }),
+          }}
+        />
       </head>
-      <body className={`${inter.variable} ${jetbrains.variable} antialiased`}>
+      <body className={`${inter.variable} ${jetbrains.variable} antialiased min-h-screen flex flex-col`}>
         <AnalyticsProvider />
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-1.5 focus:bg-[var(--color-accent)] focus:text-black focus:rounded focus:text-sm focus:font-medium">
+          Skip to main content
+        </a>
+        <SiteHeader />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
