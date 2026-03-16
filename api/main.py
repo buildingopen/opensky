@@ -689,8 +689,16 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
+class FallbackParsed(BaseModel):
+    origins: list[str] = []          # IATA codes
+    destinations: list[str] = []     # IATA codes
+    dates: list[str] = []            # ISO date strings (YYYY-MM-DD)
+    return_dates: list[str] = []
+
+
 class PromptRequest(BaseModel):
     prompt: str = Field(..., min_length=3, max_length=500)
+    fallback_parsed: FallbackParsed | None = None
 
 
 class ParsedSearch(BaseModel):
@@ -1335,8 +1343,33 @@ async def search_flights(req: PromptRequest, request: Request):
         ip = _get_client_ip(request)
         remaining = await _check_rate_limit(ip)
 
-    # Step 1: Parse with Gemini
-    parsed = await parse_prompt(req.prompt)
+    # Step 1: Parse with Gemini (fallback to client-side parsed data if AI fails)
+    used_fallback = False
+    try:
+        parsed = await parse_prompt(req.prompt)
+    except HTTPException:
+        fb = req.fallback_parsed
+        if fb and fb.origins and fb.destinations and fb.dates:
+            log.info("Gemini failed, using client-side fallback: %s origins, %s dests, %s dates",
+                     len(fb.origins), len(fb.destinations), len(fb.dates))
+            valid_origins = [c.upper()[:3] for c in fb.origins if c.upper()[:3] in _VALID_IATA]
+            valid_dests = [c.upper()[:3] for c in fb.destinations if c.upper()[:3] in _VALID_IATA]
+            if not valid_origins or not valid_dests:
+                raise HTTPException(status_code=502, detail="Failed to parse search prompt")
+            parsed = {
+                "origins": valid_origins[:MAX_ORIGINS],
+                "destinations": valid_dests[:MAX_DESTINATIONS],
+                "dates": fb.dates[:30],
+                "return_dates": fb.return_dates[:30] if fb.return_dates else [],
+                "max_price": 0,
+                "currency": "EUR",
+                "cabin": "economy",
+                "stops": "any",
+                "safe_only": False,
+            }
+            used_fallback = True
+        else:
+            raise HTTPException(status_code=502, detail="Failed to parse search prompt")
     total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"])
 
     return_dates = parsed.get("return_dates", [])

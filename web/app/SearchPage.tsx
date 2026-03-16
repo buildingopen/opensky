@@ -178,7 +178,12 @@ function resolveDate(phrase: string): string | null {
   return null;
 }
 
-interface QueryPreview { origin: string; dest: string; date: string | null }
+interface LocInfo { display: string; count: number; codes: string[]; }
+interface QueryPreview {
+  origin: string; dest: string; date: string | null;
+  originCodes: string[]; destCodes: string[]; isoDates: string[];
+  originAirports: { iata: string; city: string }[]; destAirports: { iata: string; city: string }[];
+}
 
 // Pre-sorted arrays for prefix search (built once)
 const CITY_KEYS = Array.from(CITY_DISPLAY.keys()).sort();
@@ -197,45 +202,52 @@ function prefixMatch(keys: string[], prefix: string): string | null {
   return keys[lo];
 }
 
-function matchLocation(phrase: string, hasContext: boolean): { display: string; count: number } | null {
+function getAirportsForCountry(countryCode: string): { iata: string; city: string }[] {
+  return AIRPORTS.filter(a => a.country === countryCode).map(a => ({ iata: a.iata, city: a.city }));
+}
+function getAirportsForCity(cityLower: string): { iata: string; city: string }[] {
+  return AIRPORTS.filter(a => a.city.toLowerCase() === cityLower).map(a => ({ iata: a.iata, city: a.city }));
+}
+
+function matchLocation(phrase: string, hasContext: boolean): LocInfo | null {
   const p = phrase.toLowerCase().trim();
   if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
   // IATA code (3 uppercase letters)
   const upper = phrase.trim().toUpperCase();
   if (upper.length === 3 && IATA_SET.has(upper)) {
-    return { display: upper, count: 1 };
+    return { display: upper, count: 1, codes: [upper] };
   }
   // Country (exact)
   const country = COUNTRY_LOOKUP[p];
   if (country) {
-    const cnt = COUNTRY_AIRPORT_COUNT.get(country.code) || 0;
-    return { display: country.name, count: cnt };
+    const airports = getAirportsForCountry(country.code);
+    return { display: country.name, count: airports.length, codes: airports.map(a => a.iata) };
   }
   // City (exact)
   if (CITY_DISPLAY.has(p)) {
     if (AMBIGUOUS_CITIES.has(p) && !hasContext) return null;
-    const cnt = CITY_AIRPORT_COUNT.get(p) || 1;
-    return { display: CITY_DISPLAY.get(p)!, count: cnt };
+    const airports = getAirportsForCity(p);
+    return { display: CITY_DISPLAY.get(p)!, count: airports.length || 1, codes: airports.map(a => a.iata) };
   }
   // Prefix matching (only if >= 4 chars to avoid false positives)
   if (p.length >= 4) {
     const cityKey = prefixMatch(CITY_KEYS, p);
     if (cityKey) {
       if (AMBIGUOUS_CITIES.has(cityKey) && !hasContext) return null;
-      const cnt = CITY_AIRPORT_COUNT.get(cityKey) || 1;
-      return { display: CITY_DISPLAY.get(cityKey)!, count: cnt };
+      const airports = getAirportsForCity(cityKey);
+      return { display: CITY_DISPLAY.get(cityKey)!, count: airports.length || 1, codes: airports.map(a => a.iata) };
     }
     const countryKey = prefixMatch(COUNTRY_KEYS, p);
     if (countryKey) {
       const c = COUNTRY_LOOKUP[countryKey];
-      const cnt = COUNTRY_AIRPORT_COUNT.get(c.code) || 0;
-      return { display: c.name, count: cnt };
+      const airports = getAirportsForCountry(c.code);
+      return { display: c.name, count: airports.length, codes: airports.map(a => a.iata) };
     }
   }
   return null;
 }
 
-function formatLocationDisplay(loc: { display: string; count: number }): string {
+function formatLocationDisplay(loc: LocInfo): string {
   return loc.count > 1 ? `${loc.display} (${loc.count} airports)` : loc.display;
 }
 
@@ -274,6 +286,85 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
   return null;
 }
 
+/** Resolve a date phrase to an array of ISO date strings (YYYY-MM-DD) for the fallback parser. */
+function resolveIsoDates(phrase: string): string[] {
+  const now = new Date();
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  const p = phrase.toLowerCase().trim();
+
+  if (p === "today") return [fmt(now)];
+  if (p === "tomorrow") { const d = new Date(now); d.setDate(d.getDate() + 1); return [d.toISOString().slice(0, 10)]; }
+  if (p === "next week") {
+    const d = new Date(now);
+    const dayOfWeek = d.getDay();
+    const daysUntilMon = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    d.setDate(d.getDate() + daysUntilMon);
+    const dates: string[] = [];
+    for (let i = 0; i < 7; i++) { const dd = new Date(d); dd.setDate(dd.getDate() + i); dates.push(fmt(dd)); }
+    return dates;
+  }
+  if (p === "this weekend") {
+    const d = new Date(now);
+    const dayOfWeek = d.getDay();
+    const daysUntilSat = dayOfWeek === 6 ? 0 : (6 - dayOfWeek);
+    d.setDate(d.getDate() + daysUntilSat);
+    return [fmt(d), fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1))];
+  }
+  if (p === "next weekend") {
+    const d = new Date(now);
+    const dayOfWeek = d.getDay();
+    const daysUntilNextSat = dayOfWeek === 6 ? 7 : (6 - dayOfWeek + 7);
+    d.setDate(d.getDate() + daysUntilNextSat);
+    return [fmt(d), fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1))];
+  }
+  if (p === "next month") {
+    const m = (now.getMonth() + 1) % 12;
+    const y = m === 0 ? now.getFullYear() + 1 : (now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear());
+    // Sample 5 dates spread across the month
+    const dates: string[] = [];
+    for (const day of [1, 7, 14, 21, 28]) {
+      const dd = new Date(y, m, day);
+      if (dd.getMonth() === m) dates.push(fmt(dd));
+    }
+    return dates;
+  }
+  // Day names
+  const dayIdx = DAY_NAMES.indexOf(p);
+  if (dayIdx >= 0) {
+    const d = new Date(now);
+    let diff = dayIdx - d.getDay();
+    if (diff <= 0) diff += 7;
+    d.setDate(d.getDate() + diff);
+    return [fmt(d)];
+  }
+  // Month names: sample 5 dates
+  const monthIdx = MONTH_NAMES.indexOf(p);
+  if (monthIdx >= 0) {
+    const y = monthIdx < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
+    const dates: string[] = [];
+    for (const day of [1, 7, 14, 21, 28]) {
+      const dd = new Date(y, monthIdx, day);
+      if (dd.getMonth() === monthIdx) dates.push(fmt(dd));
+    }
+    return dates;
+  }
+  // "march 15" or "15 march"
+  for (let mi = 0; mi < MONTH_NAMES.length; mi++) {
+    const mn = MONTH_NAMES[mi];
+    const m1 = p.match(new RegExp(`^${mn}\\s+(\\d{1,2})$`));
+    if (m1) {
+      const y = mi < now.getMonth() || (mi === now.getMonth() && parseInt(m1[1]) < now.getDate()) ? now.getFullYear() + 1 : now.getFullYear();
+      return [fmt(new Date(y, mi, parseInt(m1[1])))];
+    }
+    const m2 = p.match(new RegExp(`^(\\d{1,2})\\s+${mn}$`));
+    if (m2) {
+      const y = mi < now.getMonth() || (mi === now.getMonth() && parseInt(m2[1]) < now.getDate()) ? now.getFullYear() + 1 : now.getFullYear();
+      return [fmt(new Date(y, mi, parseInt(m2[1])))];
+    }
+  }
+  return [];
+}
+
 function useQueryPreview(prompt: string): QueryPreview | null {
   return useMemo(() => {
     if (!prompt || prompt.length < 5) return null;
@@ -286,7 +377,7 @@ function useQueryPreview(prompt: string): QueryPreview | null {
 
     // Handle "X or Y to Z" pattern for multiple origins
     const orParts = originPhrase.split(/\s+or\s+/);
-    const origins: { display: string; count: number }[] = [];
+    const origins: LocInfo[] = [];
     for (const part of orParts) {
       const loc = matchLocation(part.trim(), orParts.length > 1 || !!destPhrase);
       if (loc) origins.push(loc);
@@ -299,8 +390,18 @@ function useQueryPreview(prompt: string): QueryPreview | null {
     const originStr = origins.map(formatLocationDisplay).join(", ");
     const destStr = formatLocationDisplay(dest);
 
+    // Collect IATA codes for fallback
+    const originCodes = origins.flatMap(o => o.codes);
+    const destCodes = dest.codes;
+    // Collect airport details for tooltip
+    const originAirports = origins.flatMap(o =>
+      o.codes.map(c => { const ap = AIRPORTS.find(a => a.iata === c); return { iata: c, city: ap?.city || c }; })
+    );
+    const destAirports = dest.codes.map(c => { const ap = AIRPORTS.find(a => a.iata === c); return { iata: c, city: ap?.city || c }; });
+
     // Date detection
     let date: string | null = null;
+    let isoDates: string[] = [];
     const datePatterns = [
       /\b(tomorrow|today)\b/i,
       /\b(next week)\b/i,
@@ -316,24 +417,45 @@ function useQueryPreview(prompt: string): QueryPreview | null {
     for (const pat of datePatterns) {
       const m = lower.match(pat);
       if (m) {
-        // For "in july" pattern, extract just the month
+        let datePhrase: string;
         if (pat.source.startsWith("\\bin\\s+")) {
-          date = resolveDate(m[1]);
+          datePhrase = m[1];
         } else if (m[2] && /^\d+$/.test(m[2])) {
-          // "march 15"
-          date = resolveDate(m[0]);
+          datePhrase = m[0];
         } else if (m[2] && MONTH_NAMES.includes(m[2].toLowerCase())) {
-          // "15 march"
-          date = resolveDate(m[0]);
+          datePhrase = m[0];
         } else {
-          date = resolveDate(m[1] || m[0]);
+          datePhrase = m[1] || m[0];
         }
+        date = resolveDate(datePhrase);
+        isoDates = resolveIsoDates(datePhrase);
         if (date) break;
       }
     }
 
-    return { origin: originStr, dest: destStr, date };
+    return { origin: originStr, dest: destStr, date, originCodes, destCodes, isoDates, originAirports, destAirports };
   }, [prompt]);
+}
+
+// Preview location with hover tooltip for multi-airport locations
+function PreviewLoc({ text, airports }: { text: string; airports: { iata: string; city: string }[] }) {
+  const [show, setShow] = useState(false);
+  if (airports.length <= 1) return <span>{text}</span>;
+  return (
+    <span className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+      <span className="cursor-help border-b border-dotted border-[var(--color-accent)]/30">{text}</span>
+      {show && (
+        <span className="absolute bottom-full left-0 mb-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg whitespace-nowrap animate-fade-in" style={{ maxHeight: 200, overflowY: "auto" }}>
+          {airports.map((a, i) => (
+            <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)]">
+              <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
+              <span className="text-[var(--color-text-muted)]">{a.city}</span>
+            </span>
+          ))}
+        </span>
+      )}
+    </span>
+  );
 }
 
 // Context for airport country codes (avoids prop drilling for flags)
@@ -1778,10 +1900,14 @@ function HomePage() {
     const timeout = setTimeout(() => controller.abort(), 150_000);
 
     try {
+      // Build fallback parsed data from client-side preview (used if Gemini fails)
+      const fallback = queryPreview && queryPreview.originCodes.length > 0 && queryPreview.destCodes.length > 0 && queryPreview.isoDates.length > 0
+        ? { origins: queryPreview.originCodes, destinations: queryPreview.destCodes, dates: queryPreview.isoDates }
+        : undefined;
       const resp = await fetch(`${API_URL}/api/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text }),
+        body: JSON.stringify({ prompt: text, fallback_parsed: fallback }),
         signal: controller.signal,
       });
 
@@ -2340,13 +2466,13 @@ function HomePage() {
                   >
                     {searchMode === "structured" ? "Describe your trip instead" : "Use search form instead"}
                   </button>
-                  {searchMode === "natural" && !isLoading && queryPreview && (
+                  {searchMode === "natural" && queryPreview && (
                     <>
                       <span className="text-[var(--color-border)] select-none">|</span>
-                      <p className="text-[11px] text-[var(--color-accent)]/80 truncate transition-opacity duration-300">
-                        {queryPreview.origin}
-                        {queryPreview.dest && <> <span className="opacity-80">{"\u2192"}</span> {queryPreview.dest}</>}
-                        {queryPreview.date && <> <span className="opacity-60">{"\u00B7"}</span> <span className="text-[var(--color-text-muted)]">{queryPreview.date}</span></>}
+                      <p className="text-[11px] text-[var(--color-accent)]/80 truncate transition-opacity duration-300 flex items-center gap-0">
+                        <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
+                        {queryPreview.dest && <><span className="opacity-80 mx-1">{"\u2192"}</span><PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
+                        {queryPreview.date && <> <span className="opacity-60 mx-1">{"\u00B7"}</span> <span className="text-[var(--color-text-muted)]">{queryPreview.date}</span></>}
                       </p>
                     </>
                   )}
