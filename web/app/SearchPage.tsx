@@ -124,6 +124,24 @@ function flightDisplayDate(flight: FlightOut): string {
   if (departs) return departs.slice(0, 10);
   return flight.date;
 }
+function priceToColor(price: number | null, min: number, max: number): string {
+  if (price == null || min === max) return "transparent";
+  const ratio = Math.min(1, Math.max(0, (price - min) / (max - min)));
+  // green -> amber -> red
+  if (ratio <= 0.5) {
+    const t = ratio * 2;
+    const r = Math.round(34 + t * (234 - 34));
+    const g = Math.round(197 + t * (179 - 197));
+    const b = Math.round(94 + t * (8 - 94));
+    return `rgb(${r},${g},${b})`;
+  }
+  const t = (ratio - 0.5) * 2;
+  const r = Math.round(234 + t * (239 - 234));
+  const g = Math.round(179 + t * (68 - 179));
+  const b = Math.round(8 + t * (68 - 8));
+  return `rgb(${r},${g},${b})`;
+}
+
 function safeUrl(url: string): string | null {
   if (!url) return null;
   try {
@@ -789,6 +807,17 @@ function ScanSummaryExpanded({
   const isMultiDest = best_destinations.length > 1;
   const showMatrix = isMultiDest && price_matrix.dates.length > 1 && Object.values(price_matrix.prices).some((v) => v != null);
 
+  // Compute global min/max for heatmap coloring
+  const allPrices = Object.values(price_matrix.prices).filter((v): v is number => v != null);
+  const globalMin = allPrices.length > 0 ? Math.min(...allPrices) : 0;
+  const globalMax = allPrices.length > 0 ? Math.max(...allPrices) : 0;
+
+  // Price bars: sorted cheapest first
+  const sortedDests = isMultiDest
+    ? [...best_destinations].filter((f) => f.price > 0).sort((a, b) => a.price - b.price)
+    : [];
+  const barMax = sortedDests.length > 0 ? sortedDests[sortedDests.length - 1].price : 1;
+
   return (
     <div className="mt-4 space-y-4">
       <button onClick={onCollapse} className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)]">
@@ -801,6 +830,38 @@ function ScanSummaryExpanded({
           <span>{sym}{Math.round(stats.min_price)} – {sym}{Math.round(stats.max_price)}</span>
         )}
       </div>
+
+      {/* Price bars per destination */}
+      {sortedDests.length > 1 && (
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">Best price per destination</div>
+          <div className="px-4 py-3 space-y-2">
+            {sortedDests.map((f, i) => {
+              const pct = Math.max(8, (f.price / barMax) * 100);
+              const barColor = priceToColor(f.price, sortedDests[0].price, barMax);
+              const gfUrl = safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin, f.legs));
+              return (
+                <div key={i} className="flex items-center gap-3 text-sm">
+                  <span className="font-mono font-medium w-10 shrink-0">{f.destination}</span>
+                  <span className="text-[var(--color-text-muted)] text-xs truncate hidden sm:inline w-24 shrink-0">{airportNames[f.destination] || ""}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="h-5 rounded" style={{ width: `${pct}%`, backgroundColor: barColor, minWidth: "2rem" }}>
+                      <span className="px-1.5 text-xs font-semibold text-white leading-5 whitespace-nowrap">{sym}{Math.round(f.price)}</span>
+                    </div>
+                  </div>
+                  <span className="text-[var(--color-text-muted)] text-xs shrink-0">{formatDate(f.date)}</span>
+                  {gfUrl && (
+                    <a href={gfUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-accent)] hover:underline shrink-0">
+                      Google <ExternalLinkIcon />
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {!isMultiDest && flights.length > 0 && (
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
           <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">All {flights.length} options</div>
@@ -811,54 +872,60 @@ function ScanSummaryExpanded({
           </div>
         </div>
       )}
-      {isMultiDest && (
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">Best per destination</div>
-          <div className="divide-y divide-[var(--color-border)]">
-            {best_destinations.map((f, i) => (
-              <div key={i} className="px-4 py-2.5 flex items-center gap-4 text-sm">
-                <span className="font-mono font-medium w-10">{f.destination}</span>
-                <span className="text-[var(--color-text-muted)] truncate hidden sm:inline w-32">{airportNames[f.destination] || ""}</span>
-                <span className="text-[var(--color-accent)] font-semibold w-16 text-right">{f.price > 0 ? `${sym}${Math.round(f.price)}` : "-"}</span>
-                <span className="text-[var(--color-text-muted)] text-xs">{formatDate(f.date)}</span>
-                <span className="text-[var(--color-text-muted)] text-xs">{formatDuration(f.duration_minutes)}</span>
-                <div className="ml-auto text-xs">
-                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin, f.legs)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Google Flights <ExternalLinkIcon /></a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
+      {/* Fare heatmap */}
       {showMatrix && (
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-x-auto">
-          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">Price by date</div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-[var(--color-border)]">
-                <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)] sticky left-0 z-10 bg-[var(--color-surface)]">Dest</th>
-                {price_matrix.dates.map((d) => (
-                  <th key={d} className="px-2 py-2 text-right font-mono text-[var(--color-text-muted)]">{d.slice(5)}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--color-border)]">
-              {price_matrix.destinations.map((dest) => (
-                <tr key={dest}>
-                  <td className="px-3 py-2 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">{dest} <span className="font-sans text-[var(--color-text-muted)] hidden sm:inline">{airportNames[dest] || ""}</span></td>
-                  {price_matrix.dates.map((dt) => {
-                    const price = price_matrix.prices[`${dest}|${dt}`];
-                    const isCheapest = price != null && price === price_matrix.cheapest_per_dest[dest];
-                    return (
-                      <td key={dt} className={`px-2 py-2 text-right font-mono ${price == null ? "text-[var(--color-text-muted)]" : isCheapest ? "text-[var(--color-accent)] font-semibold" : "text-[var(--color-text)]"}`}>
-                        {price != null ? `${sym}${Math.round(price)}` : "-"}
-                      </td>
-                    );
-                  })}
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">Fare heatmap</div>
+          <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-[var(--color-border)]">
+                  <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)] sticky left-0 z-10 bg-[var(--color-surface)]">Dest</th>
+                  {price_matrix.dates.map((d) => (
+                    <th key={d} className="px-2 py-2 text-center font-mono text-[var(--color-text-muted)] min-w-[60px]">{d.slice(5)}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {price_matrix.destinations.map((dest) => (
+                  <tr key={dest}>
+                    <td className="px-3 py-1.5 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
+                      {dest} <span className="font-sans text-[var(--color-text-muted)] hidden sm:inline">{airportNames[dest] || ""}</span>
+                    </td>
+                    {price_matrix.dates.map((dt) => {
+                      const price = price_matrix.prices[`${dest}|${dt}`];
+                      const bg = priceToColor(price, globalMin, globalMax);
+                      const gfLink = `https://www.google.com/travel/flights?q=flights+from+${best_destinations.find((d) => d.destination === dest)?.origin || ""}+to+${dest}+on+${dt}`;
+                      return (
+                        <td key={dt} className="px-1 py-1">
+                          {price != null ? (
+                            <a
+                              href={gfLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block px-2 py-1.5 text-center text-xs font-mono font-semibold rounded-md transition-opacity hover:opacity-80"
+                              style={{ backgroundColor: bg, color: "#fff" }}
+                            >
+                              {sym}{Math.round(price)}
+                            </a>
+                          ) : (
+                            <span className="block px-2 py-1.5 text-center text-xs font-mono text-[var(--color-text-muted)]">---</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Color legend */}
+          <div className="px-4 py-2.5 border-t border-[var(--color-border)] flex items-center gap-2">
+            <span className="text-xs text-[var(--color-text-muted)]">Cheapest</span>
+            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, #22c55e, #eab308, #ef4444)" }} />
+            <span className="text-xs text-[var(--color-text-muted)]">Most expensive</span>
+          </div>
         </div>
       )}
     </div>
@@ -1236,6 +1303,7 @@ function HomePage() {
               }
               setZonesWarning(msg.zones_warning || null);
               setSummary(msg.summary || null);
+              if (msg.summary?.best_destinations?.length > 1) setShowCompare(true);
               setNoResultsReason(msg.no_results_reason || null);
               setSearchWarning(msg.warning || null);
               setCacheAgeSeconds(msg.cache_age_seconds ?? null);
