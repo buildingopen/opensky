@@ -23,7 +23,7 @@ const clouds: Cloud[] = Array.from({ length: 18 }, (_, i) => ({
   y: Math.round(seeded(i * 5 + 2) * 10000) / 100,
   w: 80 + Math.round(seeded(i * 5 + 3) * 140),
   h: 10 + Math.round(seeded(i * 5 + 4) * 20),
-  opacity: 0.04 + seeded(i * 5 + 5) * 0.045,
+  opacity: 0.06 + seeded(i * 5 + 5) * 0.06,
   delay: Math.round(seeded(i * 5 + 6) * 300) / 10,
 }));
 
@@ -41,7 +41,7 @@ export function CloudsBackground() {
             height: `${c.h}px`,
             opacity: c.opacity,
             background: c.id % 5 === 0 ? "rgba(34, 197, 94, 0.3)" : "white",
-            filter: `blur(${c.h + 6}px)`,
+            filter: `blur(${c.h}px)`,
             animationDelay: `${c.delay}s`,
             animationDuration: `${20 + Math.round(seeded(c.id * 7) * 25)}s`,
             willChange: "transform",
