@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getZones, RISK_CONFIG, ZONE_FLAGS } from "./zones-data";
+import { getZones, RISK_CONFIG, ZONE_FLAGS, ZONE_COUNTRIES } from "./zones-data";
+import { ConflictMapLoader } from "./ConflictMapLoader";
 
 export const revalidate = 3600;
 
@@ -74,6 +75,21 @@ export default async function SafetyIndexPage() {
         aviation. FlyFast checks every flight against this data and filters
         unsafe routes automatically.
       </p>
+
+      {/* Conflict zone map */}
+      {(() => {
+        const countryRiskMap: Record<string, string> = {};
+        for (const zone of zones) {
+          const codes = ZONE_COUNTRIES[zone.id] || [];
+          for (const code of codes) {
+            const riskPriority: Record<string, number> = { do_not_fly: 3, high_risk: 2, caution: 1 };
+            if (!countryRiskMap[code] || (riskPriority[zone.risk_level] || 0) > (riskPriority[countryRiskMap[code]] || 0)) {
+              countryRiskMap[code] = zone.risk_level;
+            }
+          }
+        }
+        return <ConflictMapLoader countryRiskMap={countryRiskMap} />;
+      })()}
 
       {/* Jump nav */}
       <nav className="mt-6 flex gap-2">

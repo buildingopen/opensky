@@ -106,6 +106,29 @@ export const ZONE_FLAGS: Record<string, string[]> = {
   russia_partial: ["ru"],
 };
 
+/** ISO 3166-1 alpha-2 codes per zone (upper-case, for geo matching). */
+export const ZONE_COUNTRIES: Record<string, string[]> = {
+  ukraine: ["UA"],
+  iran: ["IR"],
+  iraq: ["IQ"],
+  syria: ["SY"],
+  israel: ["IL"],
+  lebanon: ["LB"],
+  yemen: ["YE"],
+  libya: ["LY"],
+  somalia: ["SO"],
+  afghanistan: ["AF"],
+  north_korea: ["KP"],
+  sudan: ["SD"],
+  eritrea: ["ER"],
+  ethiopia_partial: ["ET"],
+  mali: ["ML"],
+  niger: ["NE"],
+  gulf_states: ["AE", "QA", "BH", "KW", "OM"],
+  pakistan_partial: ["PK"],
+  russia_partial: ["RU"],
+};
+
 export const TRAVELER_ADVICE: Record<string, string> = {
   do_not_fly:
     "No commercial flights operate through this airspace. If your route would normally transit this zone, airlines automatically reroute around it. You do not need to take any action, but flights may be longer or more expensive due to detours. FlyFast filters out any routes that would pass through this zone.",
