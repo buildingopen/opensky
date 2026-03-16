@@ -70,19 +70,8 @@ export function SafetyPageClient({ zones, countryRiskMap, zoneMapData, countryTo
 
   return (
     <>
-      {/* Full-width map */}
-      <div className="mt-8">
-        <ConflictMapLoader
-          countryRiskMap={countryRiskMap}
-          zones={zoneMapData}
-          countryToZone={countryToZone}
-          activeFilter={activeFilter}
-          onCountryHover={handleCountryHover}
-        />
-      </div>
-
       {/* Filter pills */}
-      <nav className="flex gap-2 mt-6 mb-6">
+      <nav className="flex flex-wrap gap-2 mt-8 mb-4">
         {grouped.map((group) => {
           const isActive = activeFilter === group.level;
           return (
@@ -119,81 +108,97 @@ export function SafetyPageClient({ zones, countryRiskMap, zoneMapData, countryTo
         )}
       </nav>
 
-      {/* Zone list */}
-      <div className="space-y-10">
-        {grouped.map((group) => {
-          const isHidden = activeFilter && activeFilter !== group.level;
-          return (
-            <div
-              key={group.level}
-              id={group.level}
-              className="scroll-mt-6"
-              style={{ display: isHidden ? "none" : undefined }}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: group.color }}
-                />
-                <h2 className="text-lg font-semibold text-[var(--color-text)]">
-                  {group.label}
-                </h2>
-                <span className="text-xs text-[var(--color-text-muted)]">
-                  ({group.zones.length})
-                </span>
-              </div>
-              <div className="grid gap-2">
-                {group.zones.map((zone) => {
-                  const flags = zoneFlags[zone.id] || [];
-                  const isHovered = hoveredZoneId === zone.id;
-                  return (
-                    <Link
-                      key={zone.id}
-                      href={`/safety/${zone.id}`}
-                      className={`flex items-center justify-between rounded-lg border px-4 py-3 hover:bg-[var(--color-surface-2)] transition-all ${
-                        isHovered
-                          ? "border-[var(--color-accent)] bg-[var(--color-surface-2)] shadow-[0_0_0_1px_var(--color-accent)]"
-                          : "border-[var(--color-border)]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        {flags.length > 0 && (
-                          <div className="flex items-center gap-1 shrink-0">
-                            {flags.slice(0, 3).map((code) => (
-                              <FlagImg key={code} code={code} />
-                            ))}
-                            {flags.length > 3 && (
-                              <span className="text-[10px] text-[var(--color-text-muted)]">
-                                +{flags.length - 3}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <span className="text-sm font-medium text-[var(--color-text)]">
-                            {zone.name}
-                          </span>
-                          <p className="text-xs text-[var(--color-text-muted)] mt-0.5 line-clamp-1">
-                            {zone.details}
-                          </p>
-                        </div>
-                      </div>
-                      <span
-                        className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ml-4"
-                        style={{
-                          backgroundColor: `${group.color}20`,
-                          color: group.color,
-                        }}
+      {/* Desktop: side-by-side (list + sticky map). Mobile: stacked (map then list). */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-8">
+        {/* Map: on mobile shows first, on desktop shows right and sticky */}
+        <div className="order-1 lg:order-2 mb-6 lg:mb-0">
+          <div className="lg:sticky lg:top-4">
+            <ConflictMapLoader
+              countryRiskMap={countryRiskMap}
+              zones={zoneMapData}
+              countryToZone={countryToZone}
+              activeFilter={activeFilter}
+              onCountryHover={handleCountryHover}
+            />
+          </div>
+        </div>
+
+        {/* Zone list */}
+        <div className="order-2 lg:order-1 space-y-10">
+          {grouped.map((group) => {
+            const isHidden = activeFilter && activeFilter !== group.level;
+            return (
+              <div
+                key={group.level}
+                id={group.level}
+                className="scroll-mt-6"
+                style={{ display: isHidden ? "none" : undefined }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: group.color }}
+                  />
+                  <h2 className="text-lg font-semibold text-[var(--color-text)]">
+                    {group.label}
+                  </h2>
+                  <span className="text-xs text-[var(--color-text-muted)]">
+                    ({group.zones.length})
+                  </span>
+                </div>
+                <div className="grid gap-2">
+                  {group.zones.map((zone) => {
+                    const flags = zoneFlags[zone.id] || [];
+                    const isHovered = hoveredZoneId === zone.id;
+                    return (
+                      <Link
+                        key={zone.id}
+                        href={`/safety/${zone.id}`}
+                        className={`flex items-center justify-between rounded-lg border px-4 py-3 hover:bg-[var(--color-surface-2)] transition-all ${
+                          isHovered
+                            ? "border-[var(--color-accent)] bg-[var(--color-surface-2)] shadow-[0_0_0_1px_var(--color-accent)]"
+                            : "border-[var(--color-border)]"
+                        }`}
                       >
-                        {group.label}
-                      </span>
-                    </Link>
-                  );
-                })}
+                        <div className="flex items-center gap-3 min-w-0">
+                          {flags.length > 0 && (
+                            <div className="flex items-center gap-1 shrink-0">
+                              {flags.slice(0, 3).map((code) => (
+                                <FlagImg key={code} code={code} />
+                              ))}
+                              {flags.length > 3 && (
+                                <span className="text-[10px] text-[var(--color-text-muted)]">
+                                  +{flags.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <span className="text-sm font-medium text-[var(--color-text)]">
+                              {zone.name}
+                            </span>
+                            <p className="text-xs text-[var(--color-text-muted)] mt-0.5 line-clamp-1">
+                              {zone.details}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ml-4"
+                          style={{
+                            backgroundColor: `${group.color}20`,
+                            color: group.color,
+                          }}
+                        >
+                          {group.label}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* Zone alert subscription */}
