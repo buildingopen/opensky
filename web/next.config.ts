@@ -16,8 +16,8 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",  // Next.js requires unsafe-inline for inline scripts
-              `connect-src 'self' ${apiOrigin || ""} https://generativelanguage.googleapis.com`,
+              "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://eu-assets.i.posthog.com",
+              `connect-src 'self' ${apiOrigin || ""} https://generativelanguage.googleapis.com https://www.google-analytics.com https://eu.i.posthog.com`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https://images.kiwi.com https://flagcdn.com",
