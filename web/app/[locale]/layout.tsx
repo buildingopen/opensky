@@ -7,6 +7,7 @@ import { routing } from "../../i18n/routing";
 import { isRtl } from "../../i18n/config";
 import { AnalyticsProvider } from "../../components/AnalyticsProvider";
 import { CloudsBackground } from "../../components/CloudsBackground";
+import { CurrencyProvider } from "../../components/CurrencyProvider";
 import { SiteHeader } from "../../components/SiteHeader";
 import { SiteFooter } from "../../components/SiteFooter";
 import "../globals.css";
@@ -175,6 +176,7 @@ export default async function RootLayout({
       </head>
       <body className={`${inter.variable} ${jetbrains.variable} ${spaceGrotesk.variable} antialiased min-h-screen flex flex-col`}>
         <NextIntlClientProvider messages={messages}>
+          <CurrencyProvider>
           <AnalyticsProvider />
           <CloudsBackground />
           <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 focus:px-3 focus:py-1.5 focus:bg-[var(--color-accent)] focus:text-black focus:rounded focus:text-sm focus:font-medium">
@@ -183,6 +185,7 @@ export default async function RootLayout({
           <SiteHeader />
           {children}
           <SiteFooter />
+          </CurrencyProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -8,6 +8,7 @@ import { AirportAutocomplete } from "../../components/AirportAutocomplete";
 import { useSavedSearches, SavedSearchesList } from "../../components/SavedSearches";
 import { useAirlineFilter, AirlineFilterChips, AIRLINE_NAMES, airlineName } from "../../components/AirlineFilter";
 import { AIRPORTS } from "../../lib/airports";
+import { useCurrency } from "../../components/CurrencyProvider";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -1191,8 +1192,8 @@ function ScanSummaryExpanded({
         )}
       </div>
 
-      {/* Price bars per destination */}
-      {sortedDests.length > 1 && (
+      {/* Price bars per destination (hidden when fare heatmap is visible to avoid redundancy) */}
+      {sortedDests.length > 1 && !showMatrix && (
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
           <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">{isMultiOrigin ? t("compare.bestPricePerRoute") : t("compare.bestPricePerDest")}</div>
           <div className="px-4 py-3 space-y-2">
@@ -1576,6 +1577,7 @@ function HomePage() {
   const tc = useTranslations("common");
   const trec = useTranslations("search.recommendations");
   const locale = useLocale();
+  const { currency: userCurrency } = useCurrency();
   const [searchMode, setSearchMode] = useState<"structured" | "natural">("natural");
   const [form, setForm] = useState<SearchFormState>({
     from: "",
@@ -1805,7 +1807,7 @@ function HomePage() {
       const resp = await fetch(`${API_URL}/api/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text }),
+        body: JSON.stringify({ prompt: text, currency: userCurrency }),
         signal: controller.signal,
       });
 
@@ -2213,9 +2215,17 @@ function HomePage() {
       <section className={`max-w-3xl mx-auto px-4 w-full transition-all duration-300 ${hasResults ? "pt-6 pb-4 text-start" : "pt-16 sm:pt-24 pb-6 text-center"}`}>
         {hasResults && parsed && parsed.origins?.length > 0 && parsed.destinations?.length > 0 ? (
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-[family-name:var(--font-brand)]">
-            {parsed.origins.map((o: string) => parsed.airport_names?.[o] || o).join(", ")}
+            {(() => {
+              const oNames = parsed.origins.map((o: string) => parsed.airport_names?.[o] || o);
+              const shown = oNames.slice(0, 2).join(", ");
+              return oNames.length > 2 ? `${shown} +${oNames.length - 2}` : shown;
+            })()}
             <span className="text-[var(--color-text-muted)] mx-2">{"\u2192"}</span>
-            {parsed.destinations.map((d: string) => parsed.airport_names?.[d] || d).join(", ")}
+            {(() => {
+              const dNames = parsed.destinations.map((d: string) => parsed.airport_names?.[d] || d);
+              const shown = dNames.slice(0, 2).join(", ");
+              return dNames.length > 2 ? `${shown} +${dNames.length - 2}` : shown;
+            })()}
           </h2>
         ) : (
           <h1 className={`font-bold tracking-tighter leading-tight transition-all duration-300 ${hasResults ? "text-2xl" : "text-5xl sm:text-6xl"}`}>
@@ -2232,11 +2242,8 @@ function HomePage() {
         {/* Search surface */}
         <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-white/[0.06] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
           {hasResults ? (
-            /* Compact mode: single-line query display with action button */
-            <div className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-[var(--color-text)]/70 truncate">{prompt || [form.from, form.to, form.depart].filter(Boolean).join(" → ")}</p>
-              </div>
+            /* Compact mode: modify search action */
+            <div className="flex items-center justify-end gap-3">
               {isLoading ? (
                 <button
                   onClick={cancelSearch}
@@ -2373,7 +2380,7 @@ function HomePage() {
                     {searchMode === "structured" ? t("describeTrip") : t("useForm")}
                   </button>
                   {searchMode === "natural" && !isLoading && queryPreview && (
-                    <p className="text-[11px] text-[var(--color-text-muted)]/50 truncate transition-opacity duration-300 hidden sm:block">
+                    <p className="text-[12px] text-[var(--color-text-muted)]/70 truncate transition-opacity duration-300 hidden sm:block">
                       {queryPreview.origin}
                       {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> {queryPreview.dest}</>}
                       {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}

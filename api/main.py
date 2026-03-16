@@ -699,6 +699,7 @@ class FallbackParsed(BaseModel):
 class PromptRequest(BaseModel):
     prompt: str = Field(..., min_length=3, max_length=500)
     fallback_parsed: FallbackParsed | None = None
+    currency: str | None = None
 
 
 class ParsedSearch(BaseModel):
@@ -1370,6 +1371,13 @@ async def search_flights(req: PromptRequest, request: Request):
             used_fallback = True
         else:
             raise HTTPException(status_code=502, detail="Failed to parse search prompt")
+
+    # Apply user's currency preference if prompt didn't specify one
+    if req.currency and parsed.get("currency", "EUR") == "EUR":
+        user_cur = req.currency.upper()[:3]
+        if user_cur in VALID_CURRENCIES:
+            parsed["currency"] = user_cur
+
     total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"])
 
     return_dates = parsed.get("return_dates", [])

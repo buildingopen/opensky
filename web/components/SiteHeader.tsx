@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "../i18n/navigation";
 import { locales } from "../i18n/config";
+import { useCurrency, CURRENCIES } from "./CurrencyProvider";
 
 export function SiteHeader() {
   const t = useTranslations("header");
@@ -14,6 +15,9 @@ export function SiteHeader() {
   const [gitHubStars, setGitHubStars] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [localePickerOpen, setLocalePickerOpen] = useState(false);
+  const [currencyPickerOpen, setCurrencyPickerOpen] = useState(false);
+  const { currency, setCurrency } = useCurrency();
+  const currencyPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/github-stars")
@@ -44,6 +48,16 @@ export function SiteHeader() {
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [localePickerOpen]);
+
+  // Close currency picker on outside click
+  useEffect(() => {
+    if (!currencyPickerOpen) return;
+    const close = (e: MouseEvent) => {
+      if (currencyPickerRef.current && !currencyPickerRef.current.contains(e.target as Node)) setCurrencyPickerOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [currencyPickerOpen]);
 
   const switchLocale = (newLocale: string) => {
     router.replace(pathname, { locale: newLocale });
@@ -128,6 +142,34 @@ export function SiteHeader() {
               </div>
             )}
           </div>
+
+          {/* Currency picker */}
+          <div className="relative" ref={currencyPickerRef}>
+            <button
+              onClick={() => setCurrencyPickerOpen((v) => !v)}
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors text-xs font-medium px-1.5 py-1"
+              aria-label="Select currency"
+            >
+              {currency}
+            </button>
+            {currencyPickerOpen && (
+              <div className="absolute end-0 top-full mt-1 w-48 max-h-64 overflow-y-auto bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-xl z-50">
+                {CURRENCIES.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => { setCurrency(c); setCurrencyPickerOpen(false); }}
+                    className={`w-full text-start px-4 py-2 text-sm transition-colors ${
+                      c === currency
+                        ? "text-[var(--color-interactive)] bg-[var(--color-interactive)]/10 font-medium"
+                        : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)]"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Mobile hamburger button */}
@@ -161,6 +203,15 @@ export function SiteHeader() {
               </div>
             )}
           </div>
+
+          {/* Mobile currency picker */}
+          <button
+            onClick={() => setCurrencyPickerOpen((v) => !v)}
+            className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors text-xs font-medium"
+            aria-label="Select currency"
+          >
+            {currency}
+          </button>
 
           <button
             onClick={() => setMenuOpen(true)}

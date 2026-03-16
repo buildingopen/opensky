@@ -29,7 +29,7 @@ export default async function ImprintPage() {
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">{t("contactHeading")}</h2>
           <p>
             {t("emailLabel")}:{" "}
-            <a className="text-[var(--color-accent)] hover:underline" href={`mailto:${t("contactEmail")}`}>
+            <a className="text-[var(--color-interactive)] hover:underline" href={`mailto:${t("contactEmail")}`}>
               {t("contactEmail")}
             </a>
           </p>
@@ -57,7 +57,7 @@ export default async function ImprintPage() {
           <p>
             {t("disputeTextBefore")}{" "}
             <a
-              className="text-[var(--color-accent)] hover:underline"
+              className="text-[var(--color-interactive)] hover:underline"
               href={t("disputeUrl")}
               target="_blank"
               rel="noopener noreferrer"

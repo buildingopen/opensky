@@ -29,7 +29,7 @@ export default async function ContactPage() {
   ];
 
   const emailLink = (chunks: React.ReactNode) => (
-    <a className="text-[var(--color-accent)] hover:underline" href="mailto:hello@buildingopen.org">{chunks}</a>
+    <a className="text-[var(--color-interactive)] hover:underline" href="mailto:hello@buildingopen.org">{chunks}</a>
   );
 
   return (
@@ -38,7 +38,7 @@ export default async function ContactPage() {
       <h1 className="text-3xl font-bold text-[var(--color-text)]">{t("heading")}</h1>
       <p className="mt-4 text-[var(--color-text-muted)]">
         {t.rich("intro", {
-          link: (chunks) => <a className="text-[var(--color-accent)] hover:underline" href="https://buildingopen.org" target="_blank" rel="noopener noreferrer">{chunks}</a>
+          link: (chunks) => <a className="text-[var(--color-interactive)] hover:underline" href="https://buildingopen.org" target="_blank" rel="noopener noreferrer">{chunks}</a>
         })}
       </p>
 
@@ -59,7 +59,7 @@ export default async function ContactPage() {
                 <p className="text-[var(--color-text)] font-medium">{t("bugsTitle")}</p>
                 <p className="mt-1">
                   {t.rich("bugsBody", {
-                    github: (chunks) => <a className="text-[var(--color-accent)] hover:underline" href="https://github.com/buildingopen/opensky/issues" target="_blank" rel="noopener noreferrer">{chunks}</a>
+                    github: (chunks) => <a className="text-[var(--color-interactive)] hover:underline" href="https://github.com/buildingopen/opensky/issues" target="_blank" rel="noopener noreferrer">{chunks}</a>
                   })}
                 </p>
               </div>
@@ -77,7 +77,7 @@ export default async function ContactPage() {
             <h2 className="text-lg font-semibold text-[var(--color-text)] mb-3">{t("openSourceHeading")}</h2>
             <p>
               {t.rich("openSourceBody", {
-                repo: (chunks) => <a className="text-[var(--color-accent)] hover:underline" href="https://github.com/buildingopen/opensky" target="_blank" rel="noopener noreferrer">{chunks}</a>
+                repo: (chunks) => <a className="text-[var(--color-interactive)] hover:underline" href="https://github.com/buildingopen/opensky" target="_blank" rel="noopener noreferrer">{chunks}</a>
               })}
             </p>
           </div>

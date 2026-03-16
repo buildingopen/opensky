@@ -71,31 +71,12 @@ export const ZOOM_REGIONS: Record<string, { center: [number, number]; zoom: numb
 
 export const RISK_CONFIG: Record<
   string,
-  { label: string; color: string; description: string }
+  { label: string; color: string }
 > = {
-  do_not_fly: {
-    label: "Do Not Fly",
-    color: "#ef4444",
-    description:
-      "Airspace is closed or extremely dangerous. Airlines do not operate routes through this zone. All flights are rerouted.",
-  },
-  high_risk: {
-    label: "High Risk",
-    color: "#ff6b35",
-    description:
-      "Active security threats in this airspace. Most airlines avoid this zone. Flights transiting nearby may be rerouted.",
-  },
-  caution: {
-    label: "Caution",
-    color: "#f59e0b",
-    description:
-      "Advisory-level concern. Airports in this zone operate normally, but nearby conflict zones may affect some overflights. Airlines monitor the situation and reroute if needed.",
-  },
-  safe: {
-    label: "Safe",
-    color: "#22c55e",
-    description: "No known conflict zone restrictions.",
-  },
+  do_not_fly: { label: "Do Not Fly", color: "#ef4444" },
+  high_risk: { label: "High Risk", color: "#ff6b35" },
+  caution: { label: "Caution", color: "#f59e0b" },
+  safe: { label: "Safe", color: "#22c55e" },
 };
 
 /** Primary flag code per zone (for zones without countries, or multi-country zones). */
@@ -187,12 +168,4 @@ export const NUMERIC_TO_ALPHA2: Record<string, string> = {
   "862": "ve", "704": "vn", "887": "ye", "894": "zm", "716": "zw",
 };
 
-export const TRAVELER_ADVICE: Record<string, string> = {
-  do_not_fly:
-    "No commercial flights operate through this airspace. If your route would normally transit this zone, airlines automatically reroute around it. You do not need to take any action, but flights may be longer or more expensive due to detours. FlyFast filters out any routes that would pass through this zone.",
-  high_risk:
-    "Most airlines avoid this airspace. FlyFast flags any flights that transit nearby so you can choose safer alternatives. Check your airline's route policy if you are flying to a neighboring country.",
-  caution:
-    "Airports in or near this zone operate normally. You may see a Caution badge on flights transiting this area. This means the route passes near a conflict zone but is not directly affected. Monitor travel advisories from your government before booking.",
-  safe: "No restrictions. Fly normally.",
-};
+// Traveler advice and risk descriptions are in messages/*.json under safety.travelerAdvice and safety.riskDescriptions

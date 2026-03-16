@@ -16,7 +16,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
   const link = (href: string, opts?: { mailto?: boolean }) =>
     (chunks: React.ReactNode) => (
       <a
-        className="text-[var(--color-accent)] hover:underline"
+        className="text-[var(--color-interactive)] hover:underline"
         href={opts?.mailto ? `mailto:${href}` : href}
         target={opts?.mailto ? undefined : "_blank"}
         rel={opts?.mailto ? undefined : "noopener noreferrer"}

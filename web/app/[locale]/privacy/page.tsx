@@ -23,7 +23,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
       <p className="mt-2 text-xs text-[var(--color-text-muted)]">{t("lastUpdated", { date: localizedDate })}</p>
       <p className="mt-4 text-[var(--color-text-muted)]">
         {t.rich("intro", {
-          link: (chunks) => <a className="text-[var(--color-accent)] hover:underline" href="https://buildingopen.org" target="_blank" rel="noopener noreferrer">{chunks}</a>
+          link: (chunks) => <a className="text-[var(--color-interactive)] hover:underline" href="https://buildingopen.org" target="_blank" rel="noopener noreferrer">{chunks}</a>
         })}
       </p>
 
@@ -71,7 +71,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">{t("yourRightsHeading")}</h2>
           <p>
             {t.rich("yourRights", {
-              emailLink: (chunks) => <a className="text-[var(--color-accent)] hover:underline" href="mailto:hello@buildingopen.org">{chunks}</a>
+              emailLink: (chunks) => <a className="text-[var(--color-interactive)] hover:underline" href="mailto:hello@buildingopen.org">{chunks}</a>
             })}
           </p>
         </div>
@@ -80,7 +80,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">{t("openSourceHeading")}</h2>
           <p>
             {t.rich("openSource", {
-              repoLink: (chunks) => <a className="text-[var(--color-accent)] hover:underline" href="https://github.com/buildingopen/opensky" target="_blank" rel="noopener noreferrer">{chunks}</a>
+              repoLink: (chunks) => <a className="text-[var(--color-interactive)] hover:underline" href="https://github.com/buildingopen/opensky" target="_blank" rel="noopener noreferrer">{chunks}</a>
             })}
           </p>
         </div>

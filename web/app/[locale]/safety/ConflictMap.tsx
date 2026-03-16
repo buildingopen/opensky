@@ -5,6 +5,7 @@ import { memo, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { RISK_CONFIG, ZOOM_REGIONS, NUMERIC_TO_ALPHA2, type ConflictZone } from "./zones-data";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const GEO_URL = "/countries-110m.json";
 
@@ -43,6 +44,7 @@ interface TooltipData {
 
 function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, onCountryHover }: Props) {
   const router = useRouter();
+  const t = useTranslations("safety");
   const containerRef = useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const tooltipZoneRef = useRef<string | null>(null);
@@ -350,7 +352,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
                     color: RISK_CONFIG[tooltip.zone.risk_level]?.color || "#666",
                   }}
                 >
-                  {RISK_CONFIG[tooltip.zone.risk_level]?.label || tooltip.zone.risk_level}
+                  {t(`groupLabels.${tooltip.zone.risk_level}` as "groupLabels.do_not_fly")}
                 </span>
                 <p className="text-[11px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed">
                   {tooltip.zone.details}
@@ -382,7 +384,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
                     color: RISK_CONFIG.safe.color,
                   }}
                 >
-                  No restrictions
+                  {t("groupLabels.safe")}
                 </span>
               </>
             )}
@@ -398,7 +400,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
               className="w-2.5 h-2.5 rounded-full shrink-0"
               style={{ backgroundColor: RISK_CONFIG[level].color }}
             />
-            {RISK_CONFIG[level].label}
+            {t(`groupLabels.${level}` as "groupLabels.do_not_fly")}
           </span>
         ))}
       </div>
