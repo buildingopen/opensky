@@ -1815,16 +1815,6 @@ function HomePage() {
           </p>
         )}
 
-        {/* Trust microcopy */}
-        {!hasResults && (
-          <div className="mt-6 grid grid-cols-2 sm:flex sm:justify-center gap-x-6 gap-y-1.5 text-xs text-[var(--color-text-muted)] text-center">
-            <span>Free, no login</span>
-            <span>Every flight. Powered by Google.</span>
-            <span>Conflict zones filtered</span>
-            <span>AI-powered search</span>
-          </div>
-        )}
-
         {/* Search surface */}
         <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-white/[0.06] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
           {hasResults ? (
