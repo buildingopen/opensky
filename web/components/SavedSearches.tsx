@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 const STORAGE_KEY = "flyfast_history";
 const MAX_ITEMS = 10;
@@ -40,14 +41,16 @@ export function useSavedSearches() {
 }
 
 export function SavedSearchesList({ searches, onSelect, onClear }: { searches: SavedSearch[]; onSelect: (q: string) => void; onClear: () => void }) {
+  const t = useTranslations("savedSearches");
+
   if (searches.length === 0) return null;
 
   return (
     <div className="mt-4">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-[var(--color-text-muted)]">Recent searches</span>
-        <button onClick={onClear} className="text-[11px] text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)] transition-colors" aria-label="Clear search history">
-          Clear
+        <span className="text-xs text-[var(--color-text-muted)]">{t("recentSearches")}</span>
+        <button onClick={onClear} className="text-[11px] text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)] transition-colors" aria-label={t("clearHistory")}>
+          {t("clear")}
         </button>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -56,7 +59,7 @@ export function SavedSearchesList({ searches, onSelect, onClear }: { searches: S
             key={s.timestamp}
             onClick={() => onSelect(s.query)}
             title={s.query}
-            aria-label={`Search: ${s.query}`}
+            aria-label={t("searchLabel", { query: s.query })}
             className="text-[13px] px-3.5 py-1.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)] transition-all duration-150 whitespace-nowrap max-w-[min(200px,calc(100vw-4rem))] truncate"
           >
             {s.query}

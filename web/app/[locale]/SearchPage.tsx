@@ -1,11 +1,13 @@
 "use client";
 
 import React, { Component, createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { trackEvent } from "../lib/analytics";
-import { AirportAutocomplete } from "../components/AirportAutocomplete";
-import { useSavedSearches, SavedSearchesList } from "../components/SavedSearches";
-import { useAirlineFilter, AirlineFilterChips, AIRLINE_NAMES, airlineName } from "../components/AirlineFilter";
-import { AIRPORTS } from "../lib/airports";
+import { useTranslations, useLocale, useFormatter } from "next-intl";
+import { Link } from "../../i18n/navigation";
+import { trackEvent } from "../../lib/analytics";
+import { AirportAutocomplete } from "../../components/AirportAutocomplete";
+import { useSavedSearches, SavedSearchesList } from "../../components/SavedSearches";
+import { useAirlineFilter, AirlineFilterChips, AIRLINE_NAMES, airlineName } from "../../components/AirlineFilter";
+import { AIRPORTS } from "../../lib/airports";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -178,12 +180,7 @@ function resolveDate(phrase: string): string | null {
   return null;
 }
 
-interface LocInfo { display: string; count: number; codes: string[]; }
-interface QueryPreview {
-  origin: string; dest: string; date: string | null;
-  originCodes: string[]; destCodes: string[]; isoDates: string[];
-  originAirports: { iata: string; city: string }[]; destAirports: { iata: string; city: string }[];
-}
+interface QueryPreview { origin: string; dest: string; date: string | null }
 
 // Pre-sorted arrays for prefix search (built once)
 const CITY_KEYS = Array.from(CITY_DISPLAY.keys()).sort();
@@ -202,52 +199,45 @@ function prefixMatch(keys: string[], prefix: string): string | null {
   return keys[lo];
 }
 
-function getAirportsForCountry(countryCode: string): { iata: string; city: string }[] {
-  return AIRPORTS.filter(a => a.country === countryCode).map(a => ({ iata: a.iata, city: a.city }));
-}
-function getAirportsForCity(cityLower: string): { iata: string; city: string }[] {
-  return AIRPORTS.filter(a => a.city.toLowerCase() === cityLower).map(a => ({ iata: a.iata, city: a.city }));
-}
-
-function matchLocation(phrase: string, hasContext: boolean): LocInfo | null {
+function matchLocation(phrase: string, hasContext: boolean): { display: string; count: number } | null {
   const p = phrase.toLowerCase().trim();
   if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
   // IATA code (3 uppercase letters)
   const upper = phrase.trim().toUpperCase();
   if (upper.length === 3 && IATA_SET.has(upper)) {
-    return { display: upper, count: 1, codes: [upper] };
+    return { display: upper, count: 1 };
   }
   // Country (exact)
   const country = COUNTRY_LOOKUP[p];
   if (country) {
-    const airports = getAirportsForCountry(country.code);
-    return { display: country.name, count: airports.length, codes: airports.map(a => a.iata) };
+    const cnt = COUNTRY_AIRPORT_COUNT.get(country.code) || 0;
+    return { display: country.name, count: cnt };
   }
   // City (exact)
   if (CITY_DISPLAY.has(p)) {
     if (AMBIGUOUS_CITIES.has(p) && !hasContext) return null;
-    const airports = getAirportsForCity(p);
-    return { display: CITY_DISPLAY.get(p)!, count: airports.length || 1, codes: airports.map(a => a.iata) };
+    const cnt = CITY_AIRPORT_COUNT.get(p) || 1;
+    return { display: CITY_DISPLAY.get(p)!, count: cnt };
   }
   // Prefix matching (only if >= 4 chars to avoid false positives)
   if (p.length >= 4) {
     const cityKey = prefixMatch(CITY_KEYS, p);
     if (cityKey) {
       if (AMBIGUOUS_CITIES.has(cityKey) && !hasContext) return null;
-      const airports = getAirportsForCity(cityKey);
-      return { display: CITY_DISPLAY.get(cityKey)!, count: airports.length || 1, codes: airports.map(a => a.iata) };
+      const cnt = CITY_AIRPORT_COUNT.get(cityKey) || 1;
+      return { display: CITY_DISPLAY.get(cityKey)!, count: cnt };
     }
     const countryKey = prefixMatch(COUNTRY_KEYS, p);
     if (countryKey) {
       const c = COUNTRY_LOOKUP[countryKey];
-      const airports = getAirportsForCountry(c.code);
-      return { display: c.name, count: airports.length, codes: airports.map(a => a.iata) };
+      const cnt = COUNTRY_AIRPORT_COUNT.get(c.code) || 0;
+      return { display: c.name, count: cnt };
     }
   }
   return null;
 }
 
-function formatLocationDisplay(loc: LocInfo): string {
+function formatLocationDisplay(loc: { display: string; count: number }): string {
   return loc.count > 1 ? `${loc.display} (${loc.count} airports)` : loc.display;
 }
 
@@ -286,90 +276,10 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
   return null;
 }
 
-/** Resolve a date phrase to an array of ISO date strings (YYYY-MM-DD) for the fallback parser. */
-function resolveIsoDates(phrase: string): string[] {
-  const now = new Date();
-  const fmt = (d: Date) => d.toISOString().slice(0, 10);
-  const p = phrase.toLowerCase().trim();
-
-  if (p === "today") return [fmt(now)];
-  if (p === "tomorrow") { const d = new Date(now); d.setDate(d.getDate() + 1); return [d.toISOString().slice(0, 10)]; }
-  if (p === "next week") {
-    const d = new Date(now);
-    const dayOfWeek = d.getDay();
-    const daysUntilMon = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
-    d.setDate(d.getDate() + daysUntilMon);
-    const dates: string[] = [];
-    for (let i = 0; i < 7; i++) { const dd = new Date(d); dd.setDate(dd.getDate() + i); dates.push(fmt(dd)); }
-    return dates;
-  }
-  if (p === "this weekend") {
-    const d = new Date(now);
-    const dayOfWeek = d.getDay();
-    const daysUntilSat = dayOfWeek === 6 ? 0 : (6 - dayOfWeek);
-    d.setDate(d.getDate() + daysUntilSat);
-    return [fmt(d), fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1))];
-  }
-  if (p === "next weekend") {
-    const d = new Date(now);
-    const dayOfWeek = d.getDay();
-    const daysUntilNextSat = dayOfWeek === 6 ? 7 : (6 - dayOfWeek + 7);
-    d.setDate(d.getDate() + daysUntilNextSat);
-    return [fmt(d), fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1))];
-  }
-  if (p === "next month") {
-    const m = (now.getMonth() + 1) % 12;
-    const y = m === 0 ? now.getFullYear() + 1 : (now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear());
-    // Sample 5 dates spread across the month
-    const dates: string[] = [];
-    for (const day of [1, 7, 14, 21, 28]) {
-      const dd = new Date(y, m, day);
-      if (dd.getMonth() === m) dates.push(fmt(dd));
-    }
-    return dates;
-  }
-  // Day names
-  const dayIdx = DAY_NAMES.indexOf(p);
-  if (dayIdx >= 0) {
-    const d = new Date(now);
-    let diff = dayIdx - d.getDay();
-    if (diff <= 0) diff += 7;
-    d.setDate(d.getDate() + diff);
-    return [fmt(d)];
-  }
-  // Month names: sample 5 dates
-  const monthIdx = MONTH_NAMES.indexOf(p);
-  if (monthIdx >= 0) {
-    const y = monthIdx < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
-    const dates: string[] = [];
-    for (const day of [1, 7, 14, 21, 28]) {
-      const dd = new Date(y, monthIdx, day);
-      if (dd.getMonth() === monthIdx) dates.push(fmt(dd));
-    }
-    return dates;
-  }
-  // "march 15" or "15 march"
-  for (let mi = 0; mi < MONTH_NAMES.length; mi++) {
-    const mn = MONTH_NAMES[mi];
-    const m1 = p.match(new RegExp(`^${mn}\\s+(\\d{1,2})$`));
-    if (m1) {
-      const y = mi < now.getMonth() || (mi === now.getMonth() && parseInt(m1[1]) < now.getDate()) ? now.getFullYear() + 1 : now.getFullYear();
-      return [fmt(new Date(y, mi, parseInt(m1[1])))];
-    }
-    const m2 = p.match(new RegExp(`^(\\d{1,2})\\s+${mn}$`));
-    if (m2) {
-      const y = mi < now.getMonth() || (mi === now.getMonth() && parseInt(m2[1]) < now.getDate()) ? now.getFullYear() + 1 : now.getFullYear();
-      return [fmt(new Date(y, mi, parseInt(m2[1])))];
-    }
-  }
-  return [];
-}
-
 function useQueryPreview(prompt: string): QueryPreview | null {
   return useMemo(() => {
     if (!prompt || prompt.length < 5) return null;
-    // Normalize commas to spaces so "India to Germany, next week" parses correctly
-    const lower = prompt.toLowerCase().replace(/,/g, " ").replace(/\s{2,}/g, " ").trim();
+    const lower = prompt.toLowerCase();
 
     const extracted = extractOriginDest(lower);
     if (!extracted) return null;
@@ -377,7 +287,7 @@ function useQueryPreview(prompt: string): QueryPreview | null {
 
     // Handle "X or Y to Z" pattern for multiple origins
     const orParts = originPhrase.split(/\s+or\s+/);
-    const origins: LocInfo[] = [];
+    const origins: { display: string; count: number }[] = [];
     for (const part of orParts) {
       const loc = matchLocation(part.trim(), orParts.length > 1 || !!destPhrase);
       if (loc) origins.push(loc);
@@ -390,18 +300,8 @@ function useQueryPreview(prompt: string): QueryPreview | null {
     const originStr = origins.map(formatLocationDisplay).join(", ");
     const destStr = formatLocationDisplay(dest);
 
-    // Collect IATA codes for fallback
-    const originCodes = origins.flatMap(o => o.codes);
-    const destCodes = dest.codes;
-    // Collect airport details for tooltip
-    const originAirports = origins.flatMap(o =>
-      o.codes.map(c => { const ap = AIRPORTS.find(a => a.iata === c); return { iata: c, city: ap?.city || c }; })
-    );
-    const destAirports = dest.codes.map(c => { const ap = AIRPORTS.find(a => a.iata === c); return { iata: c, city: ap?.city || c }; });
-
     // Date detection
     let date: string | null = null;
-    let isoDates: string[] = [];
     const datePatterns = [
       /\b(tomorrow|today)\b/i,
       /\b(next week)\b/i,
@@ -417,45 +317,24 @@ function useQueryPreview(prompt: string): QueryPreview | null {
     for (const pat of datePatterns) {
       const m = lower.match(pat);
       if (m) {
-        let datePhrase: string;
+        // For "in july" pattern, extract just the month
         if (pat.source.startsWith("\\bin\\s+")) {
-          datePhrase = m[1];
+          date = resolveDate(m[1]);
         } else if (m[2] && /^\d+$/.test(m[2])) {
-          datePhrase = m[0];
+          // "march 15"
+          date = resolveDate(m[0]);
         } else if (m[2] && MONTH_NAMES.includes(m[2].toLowerCase())) {
-          datePhrase = m[0];
+          // "15 march"
+          date = resolveDate(m[0]);
         } else {
-          datePhrase = m[1] || m[0];
+          date = resolveDate(m[1] || m[0]);
         }
-        date = resolveDate(datePhrase);
-        isoDates = resolveIsoDates(datePhrase);
         if (date) break;
       }
     }
 
-    return { origin: originStr, dest: destStr, date, originCodes, destCodes, isoDates, originAirports, destAirports };
+    return { origin: originStr, dest: destStr, date };
   }, [prompt]);
-}
-
-// Preview location with hover tooltip for multi-airport locations
-function PreviewLoc({ text, airports }: { text: string; airports: { iata: string; city: string }[] }) {
-  const [show, setShow] = useState(false);
-  if (airports.length <= 1) return <span>{text}</span>;
-  return (
-    <span className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
-      <span className="cursor-help border-b border-dotted border-[var(--color-accent)]/30">{text}</span>
-      {show && (
-        <span className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
-          {airports.map((a) => (
-            <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap overflow-hidden text-ellipsis" style={{ maxWidth: 200 }}>
-              <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
-              <span className="text-[var(--color-text-muted)]">{a.city}</span>
-            </span>
-          ))}
-        </span>
-      )}
-    </span>
-  );
 }
 
 // Context for airport country codes (avoids prop drilling for flags)
@@ -547,17 +426,17 @@ function formatDuration(min: number): string {
   const m = min % 60;
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
-function formatTime(iso: string): string {
+function formatTime(iso: string, loc?: string): string {
   if (!iso) return "";
   try {
-    return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+    return new Date(iso).toLocaleTimeString(loc || "en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
   } catch {
     return iso.slice(11, 16);
   }
 }
-function formatDate(iso: string): string {
+function formatDate(iso: string, loc?: string): string {
   try {
-    return new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return new Date(iso + "T00:00:00").toLocaleDateString(loc || "en-US", { month: "short", day: "numeric" });
   } catch {
     return iso;
   }
@@ -644,7 +523,7 @@ function googleFlightsUrl(origin: string, dest: string, date: string, currency: 
   const tfs = [...slice, ..._pbBytes(8, [0x01]), ..._pbTag(9, 0), seat, ..._pbTag(19, 0), 2];
   const bytes = new Uint8Array(tfs);
   const b64 = btoa(String.fromCharCode(...bytes));
-  return `https://www.google.com/travel/flights/search?tfs=${encodeURIComponent(b64)}&hl=en&curr=${cur}`;
+  return `https://www.google.com/travel/flights/search?tfs=${encodeURIComponent(b64)}&hl=${typeof window !== "undefined" ? document.documentElement.lang || "en" : "en"}&curr=${cur}`;
 }
 function appendAttribution(url: string, params: AttributionParams): string {
   const s = safeUrl(url);
@@ -738,30 +617,30 @@ function sortFlights(flights: FlightOut[], key: SortKey): FlightOut[] {
 // ---------------------------------------------------------------------------
 // Recommendation logic
 // ---------------------------------------------------------------------------
-type RecLabel = "Recommended" | "Cheapest" | "Fastest" | "Lowest stress";
+type RecLabel = "recommended" | "cheapest" | "fastest" | "lowestStress";
 
-function getRecommendationReason(flight: FlightOut, all: FlightOut[], label: RecLabel): string {
+function getRecommendationReason(flight: FlightOut, all: FlightOut[], label: RecLabel, t: (key: string, values?: Record<string, string | number>) => string): string {
   const sym = currencySymbol(flight.currency);
   const price = `${sym}${Math.round(flight.price)}`;
   const dur = formatDuration(flight.duration_minutes);
-  const stopsLabel = flight.stops === 0 ? "direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`;
+  const stopsLabel = flight.stops === 0 ? t("direct") : t("stops", { count: flight.stops });
   const safe = flight.risk_level === "safe";
   const via = flight.stops > 0 && flight.route ? flight.route.split(" -> ").slice(1, -1).join(", ") : "";
 
-  if (label === "Recommended") {
-    const parts = [price, dur, stopsLabel + (via ? ` via ${via}` : "")];
-    if (safe) parts.push("safe route");
+  if (label === "recommended") {
+    const parts = [price, dur, stopsLabel + (via ? ` ${t("via", { cities: via })}` : "")];
+    if (safe) parts.push(t("safeRoute"));
     return parts.join(", ") + ".";
   }
-  if (label === "Cheapest") {
+  if (label === "cheapest") {
     const avgPrice = all.length > 0 ? all.reduce((s, f) => s + f.price, 0) / all.length : 0;
     const saving = avgPrice > flight.price ? Math.round(avgPrice - flight.price) : 0;
-    return saving > 0 ? `${price}, ${sym}${saving} below average.` : `${price}.`;
+    return saving > 0 ? t("belowAverage", { price, saving: `${sym}${saving}` }) : `${price}.`;
   }
-  if (label === "Fastest") {
+  if (label === "fastest") {
     const slowest = all.length > 0 ? Math.max(...all.map((f) => f.duration_minutes)) : flight.duration_minutes;
     const saved = slowest - flight.duration_minutes;
-    return saved > 60 ? `${dur} ${stopsLabel}, ${formatDuration(saved)} faster than slowest.` : `${dur} ${stopsLabel}.`;
+    return saved > 60 ? t("fasterThanSlowest", { duration: dur, stops: stopsLabel, saved: formatDuration(saved) }) : `${dur} ${stopsLabel}.`;
   }
   return `${stopsLabel}, ${dur}, ${price}.`;
 }
@@ -771,11 +650,12 @@ function getRecommendationReason(flight: FlightOut, all: FlightOut[], label: Rec
 // ---------------------------------------------------------------------------
 function RiskBadge({ level }: { level: string }) {
   const [showTip, setShowTip] = useState(false);
+  const tr = useTranslations("search.risk");
   const c: Record<string, { bg: string; text: string; border: string; label: string; icon: string; tooltip: string }> = {
-    safe: { bg: "bg-[var(--color-safe)]/15", text: "text-[var(--color-safe)]", border: "border-[var(--color-safe)]/25", label: "Safe route", icon: "\u2713", tooltip: "Route avoids all known conflict zones and restricted airspace." },
-    caution: { bg: "bg-[var(--color-caution)]/15", text: "text-[var(--color-caution)]", border: "border-[var(--color-caution)]/25", label: "Caution", icon: "\u26A0", tooltip: "Route passes near a lower-risk conflict area. Review details before booking." },
-    high_risk: { bg: "bg-[var(--color-high-risk)]/15", text: "text-[var(--color-high-risk)]", border: "border-[var(--color-high-risk)]/25", label: "High Risk", icon: "\u26A0", tooltip: "Route crosses high-risk airspace. Consider safer alternatives." },
-    do_not_fly: { bg: "bg-[var(--color-danger)]/15", text: "text-[var(--color-danger)]", border: "border-[var(--color-danger)]/25", label: "Do Not Fly", icon: "\u2717", tooltip: "Route crosses active conflict zone or restricted airspace. Strongly recommend avoiding." },
+    safe: { bg: "bg-[var(--color-safe)]/15", text: "text-[var(--color-safe)]", border: "border-[var(--color-safe)]/25", label: tr("safe"), icon: "\u2713", tooltip: tr("safeTooltip") },
+    caution: { bg: "bg-[var(--color-caution)]/15", text: "text-[var(--color-caution)]", border: "border-[var(--color-caution)]/25", label: tr("caution"), icon: "\u26A0", tooltip: tr("cautionTooltip") },
+    high_risk: { bg: "bg-[var(--color-high-risk)]/15", text: "text-[var(--color-high-risk)]", border: "border-[var(--color-high-risk)]/25", label: tr("highRisk"), icon: "\u26A0", tooltip: tr("highRiskTooltip") },
+    do_not_fly: { bg: "bg-[var(--color-danger)]/15", text: "text-[var(--color-danger)]", border: "border-[var(--color-danger)]/25", label: tr("doNotFly"), icon: "\u2717", tooltip: tr("doNotFlyTooltip") },
   };
   if (!level || !c[level]) return null;
   const x = c[level];
@@ -806,7 +686,7 @@ function FlightCard({
   cabin,
 }: {
   flight: FlightOut;
-  label?: RecLabel;
+  label?: string;
   reason?: string;
   airportNames: Record<string, string>;
   attributionParams: AttributionParams;
@@ -814,6 +694,9 @@ function FlightCard({
   cabin?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const t = useTranslations("search.results");
+  const trec = useTranslations("search.recommendations");
+  const locale = useLocale();
   const firstLeg = flight.legs[0];
   const lastLeg = flight.legs[flight.legs.length - 1];
   const airlines = flight.legs.length > 0
@@ -825,14 +708,14 @@ function FlightCard({
     attributionParams
   );
   return (
-    <div className={`bg-[var(--color-surface)] border rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors ${
-      label === "Recommended"
-        ? "border-[var(--color-accent)]/40 ring-1 ring-[var(--color-accent)]/20"
+    <div className={`bg-[var(--color-surface)] border rounded-2xl p-5 sm:p-6 hover:border-[var(--color-interactive)]/30 hover:-translate-y-0.5 transition-all duration-200 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.04)] ${
+      label === "recommended"
+        ? "border-[var(--color-interactive)]/40 ring-1 ring-[var(--color-interactive)]/20"
         : "border-[var(--color-border)]"
     }`}>
       {label && (
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wider">{label}</span>
+          <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wider">{trec(label as "recommended")}</span>
           {reason && <span className="text-xs text-[var(--color-text-muted)]">{reason}</span>}
         </div>
       )}
@@ -841,21 +724,21 @@ function FlightCard({
           <div className="text-sm font-medium text-[var(--color-text)]"><RouteWithFlags route={flight.route} names={airportNames} /></div>
           {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5"><AirlineLogos codes={airlines} /></div>}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-xs text-[var(--color-text-muted)] leading-relaxed">
-            <span>{formatDate(flightDisplayDate(flight))}</span>
+            <span>{formatDate(flightDisplayDate(flight), locale)}</span>
             {firstLeg && lastLeg && (
               <span className="text-[var(--color-text)]">
-                {formatTime(firstLeg.departs)} – {formatTime(lastLeg.arrives)}
+                {formatTime(firstLeg.departs, locale)} – {formatTime(lastLeg.arrives, locale)}
               </span>
             )}
-            <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
+            <span>{flight.stops === 0 ? t("direct") : t("stops", { count: flight.stops })}</span>
             <span>{formatDuration(flight.duration_minutes)}</span>
             <RiskBadge level={flight.risk_level} />
           </div>
         </div>
         <div className="flex flex-col sm:items-end gap-2">
           {flight.price > 0 && (
-            <div className="text-right">
-              <div className="text-2xl font-bold text-[var(--color-text)]">
+            <div className="text-end">
+              <div className="text-2xl font-bold tracking-tight text-[var(--color-text)] price-display">
                 {currencySymbol(flight.currency)}{Math.round(flight.price)}
               </div>
             </div>
@@ -868,10 +751,10 @@ function FlightCard({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => onOutboundClick("booking", flight)}
-                  aria-label="Book direct"
-                  className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                  aria-label={t("bookDirect")}
+                  className="px-4 py-2 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-white text-sm font-medium rounded-lg transition-colors"
                 >
-                  Book direct
+                  {t("bookDirect")}
                 </a>
               ) : (
                 <>
@@ -880,10 +763,10 @@ function FlightCard({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => onOutboundClick("google", flight)}
-                    aria-label="View on Google Flights"
-                    className="px-3 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                    aria-label={t("googleFlights")}
+                    className="px-3 py-2 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-white text-sm font-medium rounded-lg transition-colors"
                   >
-                    Google Flights <ExternalLinkIcon />
+                    {t("googleFlights")} <ExternalLinkIcon />
                   </a>
                 </>
               )}
@@ -894,17 +777,17 @@ function FlightCard({
       {flight.legs.length > 1 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+          className="mt-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-interactive)]"
           aria-expanded={expanded}
         >
-          {expanded ? "Hide details" : `Show ${flight.legs.length} segments`}
+          {expanded ? t("hideDetails") : t("showSegments", { count: flight.legs.length })}
         </button>
       )}
       {expanded && (
         <div className="mt-3 pt-3 border-t border-[var(--color-border)] space-y-2">
           {flight.legs.map((leg, i) => (
             <div key={i} className="flex items-center gap-3 text-sm">
-              <span className="font-mono text-xs text-[var(--color-accent)] w-14 inline-flex items-center gap-1">
+              <span className="font-mono text-xs text-[var(--color-interactive)] w-14 inline-flex items-center gap-1">
                 {leg.airline && leg.airline !== "ZZ" && (
                   <img
                     src={`https://images.kiwi.com/airlines/64/${leg.airline}.png`}
@@ -923,12 +806,12 @@ function FlightCard({
               <span className="text-[var(--color-text-muted)]">→</span>
               <span className="text-[var(--color-text-muted)]">{leg.to}</span>
               <span className="text-xs">{formatTime(leg.arrives)}</span>
-              <span className="text-xs text-[var(--color-text-muted)] ml-auto">{formatDuration(leg.duration_minutes)}</span>
+              <span className="text-xs text-[var(--color-text-muted)] ms-auto">{formatDuration(leg.duration_minutes)}</span>
             </div>
           ))}
           {flight.risk_details?.length > 0 && (
             <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
-              <p className="text-xs text-[var(--color-text-muted)] mb-1">Risk factors:</p>
+              <p className="text-xs text-[var(--color-text-muted)] mb-1">{t("riskFactors")}</p>
               {flight.risk_details.map((rd, i) => (
                 <div key={i} className="text-xs text-[var(--color-caution)]">
                   {rd.airport} ({rd.country}) – {rd.zone}
@@ -960,6 +843,8 @@ function RoundTripFlightRow({
   onOutboundClick: (provider: "booking" | "google", f: FlightOut) => void;
   cabin?: string;
 }) {
+  const t = useTranslations("search");
+  const locale = useLocale();
   const firstLeg = flight.legs[0];
   const lastLeg = flight.legs[flight.legs.length - 1];
   const airlines = flight.legs.length > 0
@@ -982,17 +867,17 @@ function RoundTripFlightRow({
         </div>
         {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5"><AirlineLogos codes={airlines} /></div>}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs text-[var(--color-text-muted)] leading-relaxed">
-          <span>{formatDate(flightDisplayDate(flight))}</span>
+          <span>{formatDate(flightDisplayDate(flight), locale)}</span>
           {firstLeg && lastLeg && (
             <span className="text-[var(--color-text)]">
-              {formatTime(firstLeg.departs)} &ndash; {formatTime(lastLeg.arrives)}
+              {formatTime(firstLeg.departs, locale)} &ndash; {formatTime(lastLeg.arrives, locale)}
             </span>
           )}
-          <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
+          <span>{flight.stops === 0 ? t("results.direct") : t("results.stops", { count: flight.stops })}</span>
           <span>{formatDuration(flight.duration_minutes)}</span>
           {flight.risk_level === "safe" ? (
             <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--color-safe)] bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 rounded px-1.5 py-0.5">
-              Safe route
+              {t("risk.safe")}
             </span>
           ) : (
             <RiskBadge level={flight.risk_level} />
@@ -1006,9 +891,9 @@ function RoundTripFlightRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onOutboundClick("booking", flight)}
-            className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
+            className="px-3 py-1.5 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-white text-xs font-medium rounded-lg transition-colors"
           >
-            Book <ExternalLinkIcon />
+            {t("results.book")} <ExternalLinkIcon />
           </a>
         ) : (
           <a
@@ -1016,9 +901,9 @@ function RoundTripFlightRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onOutboundClick("google", flight)}
-            className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
+            className="px-3 py-1.5 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-white text-xs font-medium rounded-lg transition-colors"
           >
-            Google Flights <ExternalLinkIcon />
+            {t("results.googleFlights")} <ExternalLinkIcon />
           </a>
         )}
       </div>
@@ -1039,35 +924,36 @@ function RoundTripCard({
   onOutboundClick: (provider: "booking" | "google", f: FlightOut) => void;
   cabin?: string;
 }) {
+  const t = useTranslations("search");
   const { outbound, inbound, total_price, currency, risk_level } = result;
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 hover:border-[var(--color-interactive)]/30 hover:-translate-y-0.5 transition-all duration-200 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <div className="flex gap-3">
             <div className="flex flex-col items-center pt-4 shrink-0">
-              <div className="w-5 h-5 rounded-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-accent)]">1</div>
+              <div className="w-5 h-5 rounded-full bg-[var(--color-interactive)]/20 border border-[var(--color-interactive)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-interactive)]">1</div>
               <div className="w-px flex-1 bg-[var(--color-border)] my-1" />
-              <div className="w-5 h-5 rounded-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-accent)]">2</div>
+              <div className="w-5 h-5 rounded-full bg-[var(--color-interactive)]/20 border border-[var(--color-interactive)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-interactive)]">2</div>
             </div>
             <div className="flex-1 divide-y divide-[var(--color-border)]">
-              <RoundTripFlightRow flight={outbound} label="Step 1: Book outbound" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
-              <RoundTripFlightRow flight={inbound} label="Step 2: Book return" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
+              <RoundTripFlightRow flight={outbound} label={t("results.step1")} airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
+              <RoundTripFlightRow flight={inbound} label={t("results.step2")} airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
             </div>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1 pt-2 shrink-0">
           {total_price > 0 && (
-            <div className="text-right">
-              <div className="text-2xl font-bold text-[var(--color-accent)]">
+            <div className="text-end">
+              <div className="text-2xl font-bold tracking-tight text-[var(--color-text)] price-display">
                 {currencySymbol(currency)}{Math.round(total_price)}
               </div>
-              <div className="text-[10px] text-[var(--color-text-muted)]">combined total</div>
+              <div className="text-[10px] text-[var(--color-text-muted)]">{t("results.combinedTotal")}</div>
             </div>
           )}
           {risk_level !== "safe" && <RiskBadge level={risk_level} />}
-          <div className="text-[10px] text-[var(--color-text-muted)] mt-1">Two bookings required</div>
+          <div className="text-[10px] text-[var(--color-text-muted)] mt-1">{t("results.twoBookings")}</div>
         </div>
       </div>
     </div>
@@ -1085,9 +971,11 @@ interface ProgressInfo {
 }
 
 function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSearch | null; progress: ProgressInfo | null; filteredCount: number }) {
+  const t = useTranslations("search");
+  const locale = useLocale();
   const totalRoutes = progress?.total ?? parsed?.total_routes ?? 0;
   const workers = Math.min(16, totalRoutes);
-  const manualMinutes = Math.ceil(totalRoutes * 2.5); // ~2.5 min per manual Google Flights search (navigate, enter airports, pick date, wait, compare)
+  const manualMinutes = Math.ceil(totalRoutes * 2.5);
   const manualLabel = manualMinutes >= 60
     ? `${Math.floor(manualMinutes / 60)}h ${manualMinutes % 60}min`
     : `${manualMinutes} min`;
@@ -1100,54 +988,54 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
 
   const timeLabel = estimateSeconds != null
     ? estimateSeconds < 5
-      ? "Almost done..."
-      : `~${estimateSeconds}s remaining`
+      ? t("loading.almostDone")
+      : t("loading.remaining", { seconds: estimateSeconds })
     : null;
 
   return (
     <div className="text-center py-12">
       <div className="inline-flex items-center gap-3 mb-4">
-        <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-pulse" />
-        <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-pulse" style={{ animationDelay: "0.3s" }} />
-        <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-pulse" style={{ animationDelay: "0.6s" }} />
+        <div className="w-2 h-2 rounded-full bg-[var(--color-interactive)] animate-pulse" />
+        <div className="w-2 h-2 rounded-full bg-[var(--color-interactive)] animate-pulse" style={{ animationDelay: "0.3s" }} />
+        <div className="w-2 h-2 rounded-full bg-[var(--color-interactive)] animate-pulse" style={{ animationDelay: "0.6s" }} />
       </div>
       {progress && parsed ? (
         <>
-          <p className="text-[var(--color-text)]">
-            {workers} agents checking {progress.total} combinations on Google Flights
+          <p className="text-base font-medium text-[var(--color-text)]">
+            {t("loading.agentsChecking", { workers, total: progress.total })}
           </p>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1 font-mono">{progress.route} on {formatDate(progress.date)}</p>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1 font-mono">{t("loading.checkingRoute", { route: progress.route, date: formatDate(progress.date, locale) })}</p>
           <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-            <div className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
+            <div className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-300" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
           </div>
           <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
-            {progress.done}/{progress.total} checked {timeLabel ? `· ${timeLabel}` : ""}
+            {t("loading.checked", { done: progress.done, total: progress.total })} {timeLabel ? `· ${timeLabel}` : ""}
           </p>
           {manualMinutes >= 2 && (
             <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
-              Saving you ~{manualLabel} of manual searching
+              {t("loading.savingYou", { time: manualLabel })}
             </p>
           )}
           {filteredCount > 0 && (
-            <p className="text-[11px] text-[var(--color-caution)] mt-1">{filteredCount} route{filteredCount !== 1 ? "s" : ""} filtered for safety</p>
+            <p className="text-[11px] text-[var(--color-caution)] mt-1">{t("loading.safetyFiltered", { count: filteredCount })}</p>
           )}
         </>
       ) : parsed ? (
         <>
-          <p className="text-[var(--color-text)]">
-            {workers} agents checking {totalRoutes} combinations on Google Flights
+          <p className="text-base font-medium text-[var(--color-text)]">
+            {t("loading.agentsChecking", { workers, total: totalRoutes })}
           </p>
           <p className="text-sm text-[var(--color-text-muted)] mt-2">
             {manualMinutes >= 2
-              ? `This would take ~${manualLabel} manually. We'll be done in seconds.`
-              : "Fetching live prices..."}
+              ? t("loading.wouldTake", { time: manualLabel })
+              : t("loading.fetchingPrices")}
           </p>
         </>
       ) : (
         <>
-          <p className="text-[var(--color-text-muted)]">Understanding your trip...</p>
+          <p className="text-[var(--color-text-muted)]">{t("loading.understanding")}</p>
           <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-            <div className="h-full bg-[var(--color-accent)] opacity-60 rounded-full shimmer-bar" />
+            <div className="h-full bg-[var(--color-interactive)] opacity-60 rounded-full shimmer-bar" />
           </div>
         </>
       )}
@@ -1169,6 +1057,8 @@ function CompactFlightRow({
   airportNames: Record<string, string>;
   cabin?: string;
 }) {
+  const t = useTranslations("search");
+  const locale = useLocale();
   const firstLeg = flight.legs[0];
   const lastLeg = flight.legs[flight.legs.length - 1];
   const airline = flight.legs.length > 0
@@ -1181,24 +1071,24 @@ function CompactFlightRow({
         <div className="font-medium text-[var(--color-text)] truncate"><RouteWithFlags route={flight.route} names={airportNames} /></div>
         <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5">
           {airline && <span><AirlineLogos codes={airline} /></span>}
-          <span>{formatDate(flightDisplayDate(flight))}</span>
+          <span>{formatDate(flightDisplayDate(flight), locale)}</span>
           {firstLeg && lastLeg && (
-            <span className="hidden sm:inline">{formatTime(firstLeg.departs)} – {formatTime(lastLeg.arrives)}</span>
+            <span className="hidden sm:inline">{formatTime(firstLeg.departs, locale)} – {formatTime(lastLeg.arrives, locale)}</span>
           )}
-          <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
+          <span>{flight.stops === 0 ? t("results.direct") : t("results.stops", { count: flight.stops })}</span>
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-sm font-semibold text-[var(--color-accent)]">
+        <span className="text-sm font-semibold text-[var(--color-interactive)]">
           {flight.price > 0 ? `${sym}${Math.round(flight.price)}` : "-"}
         </span>
         <a
           href={safeUrl(googleUrl) || "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-[var(--color-accent)] hover:underline"
+          className="text-xs text-[var(--color-interactive)] hover:underline"
         >
-          Google <ExternalLinkIcon />
+          {t("results.google")} <ExternalLinkIcon />
         </a>
       </div>
     </div>
@@ -1219,6 +1109,7 @@ function ScanSummaryCollapsed({
   onExpand: () => void;
   flights?: FlightOut[];
 }) {
+  const t = useTranslations("search");
   const { stats } = summary;
   const sym = currencySymbol(currency);
   // Use live flight count/prices if available (e.g. after expand merge)
@@ -1230,12 +1121,12 @@ function ScanSummaryCollapsed({
     <div className="mt-4">
       <button
         onClick={onExpand}
-        className="text-sm text-[var(--color-accent)] hover:underline"
+        className="text-sm text-[var(--color-interactive)] hover:underline"
       >
-        Compare all options ({totalFlights} flight{totalFlights !== 1 ? "s" : ""}, {destCount} destination{destCount !== 1 ? "s" : ""})
+        {t("compare.compareAll", { flights: totalFlights, destinations: destCount })}
       </button>
       {minPrice > 0 && (
-        <span className="ml-2 text-xs text-[var(--color-text-muted)]">
+        <span className="ms-2 text-xs text-[var(--color-text-muted)]">
           {sym}{Math.round(minPrice)} – {sym}{Math.round(maxPrice)}
         </span>
       )}
@@ -1258,6 +1149,8 @@ function ScanSummaryExpanded({
   onCollapse: () => void;
   cabin?: string;
 }) {
+  const t = useTranslations("search");
+  const locale = useLocale();
   const { best_destinations, price_matrix, stats } = summary;
   const sym = currencySymbol(currency);
   const isMultiDest = best_destinations.length > 1;
@@ -1287,12 +1180,12 @@ function ScanSummaryExpanded({
 
   return (
     <div className="mt-4 space-y-4">
-      <button onClick={onCollapse} className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)]">
-        Hide comparison
+      <button onClick={onCollapse} className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-interactive)]">
+        {t("compare.hideComparison")}
       </button>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
-        <span><span className="text-[var(--color-text)] font-semibold">{stats.total_flights}</span> flights</span>
-        <span><span className="text-[var(--color-text)] font-semibold">{stats.destinations}</span> destinations</span>
+        <span><span className="text-[var(--color-text)] font-semibold">{stats.total_flights}</span> {t("compare.flights")}</span>
+        <span><span className="text-[var(--color-text)] font-semibold">{stats.destinations}</span> {t("compare.destinations")}</span>
         {stats.min_price > 0 && (
           <span>{sym}{Math.round(stats.min_price)} – {sym}{Math.round(stats.max_price)}</span>
         )}
@@ -1301,7 +1194,7 @@ function ScanSummaryExpanded({
       {/* Price bars per destination */}
       {sortedDests.length > 1 && (
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">{isMultiOrigin ? "Best price per route" : "Best price per destination"}</div>
+          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">{isMultiOrigin ? t("compare.bestPricePerRoute") : t("compare.bestPricePerDest")}</div>
           <div className="px-4 py-3 space-y-2">
             {sortedDests.map((f, i) => {
               const pct = Math.max(8, (f.price / barMax) * 100);
@@ -1320,7 +1213,7 @@ function ScanSummaryExpanded({
                   </div>
                   <span className="text-[var(--color-text-muted)] text-xs shrink-0">{formatDate(f.date)}</span>
                   {gfUrl && (
-                    <a href={gfUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-accent)] hover:underline shrink-0">
+                    <a href={gfUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-interactive)] hover:underline shrink-0">
                       Google <ExternalLinkIcon />
                     </a>
                   )}
@@ -1333,7 +1226,7 @@ function ScanSummaryExpanded({
 
       {!isMultiDest && flights.length > 0 && (
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">All {flights.length} options</div>
+          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">{t("compare.allOptions", { count: flights.length })}</div>
           <div className="divide-y divide-[var(--color-border)]">
             {[...flights].sort((a, b) => a.score - b.score).map((f, i) => (
               <CompactFlightRow key={i} flight={f} sym={sym} airportNames={airportNames} cabin={cabin} />
@@ -1345,7 +1238,7 @@ function ScanSummaryExpanded({
       {/* Fare heatmap */}
       {showMatrix && (
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">Fare heatmap</div>
+          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">{t("compare.fareHeatmap")}</div>
           <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             {(() => {
               // When multi-origin, build route-level matrix from flights data
@@ -1366,7 +1259,7 @@ function ScanSummaryExpanded({
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-[var(--color-border)]">
-                      <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)] sticky left-0 z-10 bg-[var(--color-surface)]">{isMultiOrigin ? "Route" : "Dest"}</th>
+                      <th className="px-3 py-2 text-start font-medium text-[var(--color-text-muted)] sticky left-0 z-10 bg-[var(--color-surface)]">{isMultiOrigin ? t("compare.route") : t("compare.dest")}</th>
                       {price_matrix.dates.map((d) => (
                         <th key={d} className="px-2 py-2 text-center font-mono text-[var(--color-text-muted)] min-w-[60px]">{d.slice(5)}</th>
                       ))}
@@ -1427,9 +1320,9 @@ function ScanSummaryExpanded({
           </div>
           {/* Color legend */}
           <div className="px-4 py-2.5 border-t border-[var(--color-border)] flex items-center gap-2">
-            <span className="text-xs text-[var(--color-text-muted)]">Cheapest</span>
+            <span className="text-xs text-[var(--color-text-muted)]">{t("compare.cheapest")}</span>
             <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, var(--color-safe), var(--color-caution), var(--color-danger))" }} />
-            <span className="text-xs text-[var(--color-text-muted)]">Most expensive</span>
+            <span className="text-xs text-[var(--color-text-muted)]">{t("compare.mostExpensive")}</span>
           </div>
         </div>
       )}
@@ -1447,6 +1340,7 @@ function PriceAlertSection({
   parsed: ParsedSearch;
   cheapestPrice: number;
 }) {
+  const t = useTranslations("search");
   const [email, setEmail] = useState("");
   const [threshold, setThreshold] = useState(cheapestPrice > 0 ? String(Math.round(cheapestPrice)) : "");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -1490,8 +1384,8 @@ function PriceAlertSection({
     return (
       <div className="mt-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3">
         <p className="text-sm text-[var(--color-text)]">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block mr-1 text-[var(--color-safe)] -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-          Price alert created. Check your email to confirm.
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block me-1 text-[var(--color-safe)] -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+          {t("priceAlert.success")}
         </p>
       </div>
     );
@@ -1499,37 +1393,37 @@ function PriceAlertSection({
 
   return (
     <div className="mt-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 space-y-2">
-      <p className="text-sm font-medium text-[var(--color-text)]">Get notified when prices drop</p>
+      <p className="text-sm font-medium text-[var(--color-text)]">{t("priceAlert.getNotified")}</p>
       <div className="flex flex-wrap gap-2">
         <input
           type="email"
-          placeholder="your@email.com"
+          placeholder={t("priceAlert.emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 min-w-[180px] px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+          className="flex-1 min-w-[180px] px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-interactive)]"
         />
         <div className="flex items-center gap-1">
           <span className="text-sm text-[var(--color-text-muted)]">{sym}</span>
           <input
             type="number"
-            placeholder="Max price"
+            placeholder={t("priceAlert.maxPricePlaceholder")}
             value={threshold}
             onChange={(e) => setThreshold(e.target.value)}
-            className="w-24 px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+            className="w-24 px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-interactive)]"
           />
         </div>
         <button
           onClick={handleSubmit}
           disabled={status === "loading" || !email.trim()}
-          className="px-4 py-1.5 text-sm font-medium bg-[var(--color-accent)] text-black rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="px-4 py-1.5 text-sm font-medium bg-[var(--color-interactive)] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {status === "loading" ? "Setting..." : "Set alert"}
+          {status === "loading" ? t("priceAlert.setting") : t("priceAlert.setAlert")}
         </button>
       </div>
       {status === "error" && (
         <p className="text-xs text-[var(--color-danger)]">{message}</p>
       )}
-      <p className="text-xs text-[var(--color-text-muted)]">We&apos;ll send a confirmation email. Daily check, 90-day expiry, one-click unsubscribe.</p>
+      <p className="text-xs text-[var(--color-text-muted)]">{t("priceAlert.disclaimer")}</p>
     </div>
   );
 }
@@ -1538,6 +1432,9 @@ function PriceAlertSection({
 // Fix 2: Parsed Config chips
 // ---------------------------------------------------------------------------
 function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number }) {
+  const t = useTranslations("search");
+  const tc = useTranslations("common");
+  const locale = useLocale();
   const { origins, destinations, dates, return_dates, max_price, currency, cabin, stops, airport_names } = parsed;
   const sym = currencySymbol(currency);
   const isRoundTrip = return_dates && return_dates.length > 0;
@@ -1546,7 +1443,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
   const originLabel = origins.map((o) => airport_names?.[o] ? `${airport_names[o]} (${o})` : o).join(", ");
   const destLabel = destinations.map((d) => airport_names?.[d] ? `${airport_names[d]} (${d})` : d).join(", ");
 
-  const collapsedDates = dates.length <= 2 ? dates.map((d) => formatDate(d)).join(", ") : `${formatDate(dates[0])} + ${dates.length - 1} more dates`;
+  const collapsedDates = dates.length <= 2 ? dates.map((d) => formatDate(d, locale)).join(", ") : `${formatDate(dates[0], locale)} + ${t("parsed.moreDates", { count: dates.length - 1 })}`;
   const canExpandDates = dates.length > 2;
 
   return (
@@ -1562,23 +1459,23 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
             onClick={() => setDatesExpanded(!datesExpanded)}
             className="hover:text-[var(--color-text)] transition-colors underline decoration-dotted underline-offset-2"
           >
-            {datesExpanded ? dates.map((d) => formatDate(d)).join(", ") : collapsedDates}
+            {datesExpanded ? dates.map((d) => formatDate(d, locale)).join(", ") : collapsedDates}
           </button>
         ) : (
           <span>{collapsedDates}</span>
         )}
         {isRoundTrip && (
-          <span className="px-1.5 py-0.5 rounded bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium">
-            Round trip → {return_dates.length <= 2 ? return_dates.map((d) => formatDate(d)).join(", ") : `${formatDate(return_dates[0])} + ${return_dates.length - 1} more`}
+          <span className="px-1.5 py-0.5 rounded bg-[var(--color-interactive)]/10 border border-[var(--color-interactive)]/20 text-[var(--color-interactive)] font-medium">
+            {t("parsed.roundTripReturn")} → {return_dates.length <= 2 ? return_dates.map((d: string) => formatDate(d, locale)).join(", ") : `${formatDate(return_dates[0], locale)} + ${t("parsed.moreReturnDates", { count: return_dates.length - 1 })}`}
           </span>
         )}
         {cabin && <span className="capitalize">{cabin.replace(/_/g, " ")}</span>}
         {stops && stops !== "any" && (
-          <span>{stops === "non_stop" ? "Direct only" : stops === "one_stop_or_fewer" ? "1 stop max" : "2 stops max"}</span>
+          <span>{stops === "non_stop" ? t("parsed.directOnly") : stops === "one_stop_or_fewer" ? t("parsed.oneStopMax") : t("parsed.twoStopsMax")}</span>
         )}
-        {max_price > 0 && <span>Max {sym}{Math.round(max_price)}</span>}
+        {max_price > 0 && <span>{t("parsed.max", { price: `${sym}${Math.round(max_price)}` })}</span>}
         {parsed.safe_only && (
-          <span className="px-1.5 py-0.5 rounded bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 text-[var(--color-safe)] font-medium">Safe only</span>
+          <span className="px-1.5 py-0.5 rounded bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 text-[var(--color-safe)] font-medium">{t("parsed.safeOnly")}</span>
         )}
         {totalCount != null && totalCount > 0 && !parsed.safe_only && (
           <span className={`px-1.5 py-0.5 rounded font-medium ${
@@ -1586,14 +1483,14 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
               ? "bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 text-[var(--color-safe)]"
               : "bg-[var(--color-caution)]/10 border border-[var(--color-caution)]/20 text-[var(--color-caution)]"
           }`}>
-            {safeCount === totalCount ? "All safe" : `${safeCount}/${totalCount} safe`}
+            {safeCount === totalCount ? t("parsed.allSafe") : t("parsed.safeCount", { safe: safeCount ?? 0, total: totalCount ?? 0 })}
           </span>
         )}
         {cacheAgeSeconds !== null && (
           <>
             <span className="text-[var(--color-text-muted)]">·</span>
-            <span>Prices from ~{Math.round(cacheAgeSeconds / 60)} min ago.{" "}
-              <button onClick={onRefresh} className="underline hover:text-[var(--color-text)] transition-colors">Refresh</button>
+            <span>{t("parsed.pricesFrom", { minutes: Math.round(cacheAgeSeconds / 60) })}{" "}
+              <button onClick={onRefresh} className="underline hover:text-[var(--color-text)] transition-colors">{tc("refresh")}</button>
             </span>
           </>
         )}
@@ -1605,6 +1502,22 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
 // ---------------------------------------------------------------------------
 // Error Boundary
 // ---------------------------------------------------------------------------
+function ErrorFallback() {
+  const t = useTranslations("search.errors");
+  const tc = useTranslations("common");
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center max-w-md px-4">
+        <h2 className="text-xl font-semibold text-[var(--color-text)] mb-2">{t("somethingWentWrong")}</h2>
+        <p className="text-sm text-[var(--color-text-muted)] mb-4">{t("pleaseRefresh")}</p>
+        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[var(--color-interactive)] text-white text-sm font-medium rounded-lg">
+          {tc("refresh")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };
   static getDerivedStateFromError(error: Error) {
@@ -1612,17 +1525,7 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Er
   }
   render() {
     if (this.state.error) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center max-w-md px-4">
-            <h2 className="text-xl font-semibold text-[var(--color-text)] mb-2">Something went wrong</h2>
-            <p className="text-sm text-[var(--color-text-muted)] mb-4">Please refresh the page.</p>
-            <button onClick={() => { this.setState({ error: null }); window.location.reload(); }} className="px-4 py-2 bg-[var(--color-accent)] text-black text-sm font-medium rounded-lg">
-              Refresh
-            </button>
-          </div>
-        </div>
-      );
+      return <ErrorFallback />;
     }
     return this.props.children;
   }
@@ -1663,17 +1566,16 @@ function buildPromptFromForm(f: SearchFormState): string {
 // ---------------------------------------------------------------------------
 // Examples
 // ---------------------------------------------------------------------------
-const EXAMPLES = [
-  "India to Germany, next week, safe routes only",
-  "JFK to London, next week, under $500",
-  "New York to Tokyo, business class, under $3000",
-  "Berlin to anywhere in Europe, July, under 100",
-];
+// EXAMPLES are loaded from translations in HomePage component
 
 // ---------------------------------------------------------------------------
 // Main Page
 // ---------------------------------------------------------------------------
 function HomePage() {
+  const t = useTranslations("search");
+  const tc = useTranslations("common");
+  const trec = useTranslations("search.recommendations");
+  const locale = useLocale();
   const [searchMode, setSearchMode] = useState<"structured" | "natural">("natural");
   const [form, setForm] = useState<SearchFormState>({
     from: "",
@@ -1743,7 +1645,7 @@ function HomePage() {
   }, []);
 
   useEffect(() => {
-    const restore = () => { if (!document.hidden) document.title = "FlyFast - The smartest flight search"; };
+    const restore = () => { if (!document.hidden) document.title = "FlyFast"; };
     document.addEventListener("visibilitychange", restore);
     return () => document.removeEventListener("visibilitychange", restore);
   }, []);
@@ -1900,23 +1802,10 @@ function HomePage() {
     const timeout = setTimeout(() => controller.abort(), 150_000);
 
     try {
-      // Build fallback parsed data from client-side preview (used if Gemini fails)
-      // Cap to 100 combos: if origins × dests × dates > 100, reduce dates first, then dests
-      let fallback: { origins: string[]; destinations: string[]; dates: string[] } | undefined;
-      if (queryPreview && queryPreview.originCodes.length > 0 && queryPreview.destCodes.length > 0 && queryPreview.isoDates.length > 0) {
-        let fbOrigins = queryPreview.originCodes.slice(0, 10);
-        let fbDests = queryPreview.destCodes.slice(0, 20);
-        let fbDates = [...queryPreview.isoDates];
-        // Trim to fit under 100 combos
-        while (fbOrigins.length * fbDests.length * fbDates.length > 100 && fbDates.length > 1) fbDates.pop();
-        while (fbOrigins.length * fbDests.length * fbDates.length > 100 && fbDests.length > 1) fbDests.pop();
-        while (fbOrigins.length * fbDests.length * fbDates.length > 100 && fbOrigins.length > 1) fbOrigins.pop();
-        fallback = { origins: fbOrigins, destinations: fbDests, dates: fbDates };
-      }
       const resp = await fetch(`${API_URL}/api/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text, fallback_parsed: fallback }),
+        body: JSON.stringify({ prompt: text }),
         signal: controller.signal,
       });
 
@@ -1926,14 +1815,14 @@ function HomePage() {
           setRateLimitReset(Date.now() + retryAfter * 1000);
         }
         const mins = retryAfter > 0 ? Math.ceil(retryAfter / 60) : 60;
-        setError(`You've used all 10 free searches this hour. Next search available in ~${mins} minute${mins !== 1 ? "s" : ""}.`);
+        setError(t("rateLimit.limitReached", { mins }));
         trackEvent("rate_limit_hit", { ref: attributionParams.ref || "organic" });
         setPhase("idle");
         return;
       }
       if (!resp.ok) {
         const body = await resp.json().catch(() => null);
-        setError(body?.detail || `Search failed (${resp.status})`);
+        setError(body?.detail || t("errors.searchFailed", { status: String(resp.status) }));
         if (body?.suggestions?.length) setSuggestions(body.suggestions);
         trackEvent("search_error", { status_code: resp.status, stage: "http" });
         setPhase("idle");
@@ -1994,9 +1883,9 @@ function HomePage() {
               setPhase("done");
               // Notify user if tab is in background
               if (document.hidden) {
-                document.title = `✓ Results ready - FlyFast`;
+                document.title = `✓ ${t("resultsReady")}`;
                 if ("Notification" in window && Notification.permission === "granted") {
-                  new Notification("FlyFast", { body: `Found ${(msg.flights || []).length} flights`, icon: "/favicon.ico" });
+                  new Notification("FlyFast", { body: t("shareNotification", { count: (msg.flights || []).length }), icon: "/favicon.ico" });
                 }
               }
               savedSearches.save(text);
@@ -2036,7 +1925,7 @@ function HomePage() {
           return current;
         });
       } else {
-        setError("Could not reach the search API. Please try again.");
+        setError(t("errors.couldNotReach"));
         trackEvent("search_error", { stage: "client", type: "network" });
         setPhase("idle");
       }
@@ -2093,12 +1982,12 @@ function HomePage() {
         const retryAfter = parseInt(resp.headers.get("Retry-After") || "", 10);
         if (retryAfter > 0) setRateLimitReset(Date.now() + retryAfter * 1000);
         const mins = retryAfter > 0 ? Math.ceil(retryAfter / 60) : 60;
-        setExpandError(`Search limit reached. Try again in ~${mins}m.`);
+        setExpandError(t("expand.limitReached", { mins }));
         setExpandPhase("done");
         return;
       }
       if (!resp.ok) {
-        setExpandError("Expansion failed. Try again later.");
+        setExpandError(t("expand.failed"));
         setExpandPhase("done");
         return;
       }
@@ -2166,7 +2055,7 @@ function HomePage() {
         }
       }
     } catch {
-      setExpandError("Could not reach search API.");
+      setExpandError(t("expand.couldNotReach"));
       setExpandPhase("done");
     } finally {
       expandAbortRef.current = null;
@@ -2237,8 +2126,8 @@ function HomePage() {
     const sym = currencySymbol(best?.currency || parsed.currency);
     const codes = best?.route.split(" -> ").map((c) => c.trim()) || [];
     const cityRoute = codes.map((c) => airportNames[c] || c).join(" to ");
-    const shareTitle = best ? `${cityRoute} from ${sym}${Math.round(best.price)}` : "Flight search results";
-    const shareText = best ? `Found ${cityRoute} from ${sym}${Math.round(best.price)} on FlyFast` : "Check out these flights on FlyFast";
+    const shareTitle = best ? `${cityRoute} from ${sym}${Math.round(best.price)}` : t("shareFlightTitle");
+    const shareText = best ? t("shareText", { route: cityRoute, price: `${sym}${Math.round(best.price)}` }) : t("shareFlightText");
     try {
       await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
       trackEvent("results_shared", { method: "native" });
@@ -2270,10 +2159,10 @@ function HomePage() {
   const recs: { label: RecLabel; flight: FlightOut }[] = [];
   const seen = new Set<string>();
   for (const { label, flight } of [
-    { label: "Recommended" as RecLabel, flight: recommended },
-    { label: "Cheapest" as RecLabel, flight: cheapest },
-    { label: "Fastest" as RecLabel, flight: fastest },
-    { label: "Lowest stress" as RecLabel, flight: lowestStress },
+    { label: "recommended" as RecLabel, flight: recommended },
+    { label: "cheapest" as RecLabel, flight: cheapest },
+    { label: "fastest" as RecLabel, flight: fastest },
+    { label: "lowestStress" as RecLabel, flight: lowestStress },
   ]) {
     if (flight && !seen.has(`${flight.route}|${flight.date}|${flight.provider}`)) {
       seen.add(`${flight.route}|${flight.date}|${flight.provider}`);
@@ -2305,15 +2194,15 @@ function HomePage() {
         const sym = currencySymbol(sharedCurrency);
         return (
           <div className="max-w-3xl mx-auto px-4 pt-4">
-            <div className="text-sm bg-[var(--color-surface)] border border-[var(--color-accent)]/20 rounded-lg px-4 py-3 flex items-start gap-3">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-[var(--color-accent)] shrink-0 mt-0.5"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg>
+            <div className="text-sm bg-[var(--color-surface)] border border-[var(--color-interactive)]/20 rounded-lg px-4 py-3 flex items-start gap-3">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-[var(--color-interactive)] shrink-0 mt-0.5"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg>
               <div>
                 <p className="text-[var(--color-text)] font-medium">
                   {sharedRoute && sharedPrice
-                    ? `A friend found ${sharedRoute} from ${sym}${sharedPrice}`
-                    : "Someone shared a flight with you"}
+                    ? t("referredFriend", { route: sharedRoute, price: `${sym}${sharedPrice}` })
+                    : t("referredGeneric")}
                 </p>
-                <p className="text-[var(--color-text-muted)] mt-0.5">Search below to compare options and find your own deals.</p>
+                <p className="text-[var(--color-text-muted)] mt-0.5">{t("referredSubtext")}</p>
               </div>
             </div>
           </div>
@@ -2321,14 +2210,22 @@ function HomePage() {
       })()}
 
       {/* Hero - outcome-focused */}
-      <section className={`max-w-3xl mx-auto px-4 w-full transition-all duration-300 ${hasResults ? "pt-6 pb-4 text-left" : "pt-16 sm:pt-24 pb-6 text-center"}`}>
-        <h1 className={`font-bold tracking-tight transition-all duration-300 ${hasResults ? "text-2xl" : "text-4xl sm:text-5xl"}`}>
-          Describe your{" "}
-          <span className="text-[var(--color-accent)]">trip.</span>
-        </h1>
+      <section className={`max-w-3xl mx-auto px-4 w-full transition-all duration-300 ${hasResults ? "pt-6 pb-4 text-start" : "pt-16 sm:pt-24 pb-6 text-center"}`}>
+        {hasResults && parsed && parsed.origins?.length > 0 && parsed.destinations?.length > 0 ? (
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-[family-name:var(--font-brand)]">
+            {parsed.origins.map((o: string) => parsed.airport_names?.[o] || o).join(", ")}
+            <span className="text-[var(--color-text-muted)] mx-2">{"\u2192"}</span>
+            {parsed.destinations.map((d: string) => parsed.airport_names?.[d] || d).join(", ")}
+          </h2>
+        ) : (
+          <h1 className={`font-bold tracking-tighter leading-tight transition-all duration-300 ${hasResults ? "text-2xl" : "text-5xl sm:text-6xl"}`}>
+            {t("heroTitle")}{" "}
+            <span className="text-[var(--color-interactive)]">{t("heroTitleAccent")}</span>
+          </h1>
+        )}
         {!hasResults && (
           <p className="mt-4 text-[var(--color-text-muted)] text-base sm:text-lg max-w-xl mx-auto">
-            Search every flight on Google Flights. AI-powered, conflict zones filtered. Free, no login.
+            {t("heroSubtitle")}
           </p>
         )}
 
@@ -2339,29 +2236,22 @@ function HomePage() {
             <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-[var(--color-text)]/70 truncate">{prompt || [form.from, form.to, form.depart].filter(Boolean).join(" → ")}</p>
-                {queryPreview && (
-                  <p className="text-[11px] text-[var(--color-accent)]/60 truncate mt-0.5">
-                    {queryPreview.origin}
-                    {queryPreview.dest && <> <span className="opacity-80">{"\u2192"}</span> {queryPreview.dest}</>}
-                    {queryPreview.date && <> <span className="opacity-60">{"\u00B7"}</span> <span className="text-[var(--color-text-muted)]">{queryPreview.date}</span></>}
-                  </p>
-                )}
               </div>
               {isLoading ? (
                 <button
                   onClick={cancelSearch}
-                  aria-label="Cancel search"
+                  aria-label={tc("cancel")}
                   className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-white/[0.08] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-white/[0.15] transition-all duration-200"
                 >
-                  Cancel
+                  {tc("cancel")}
                 </button>
               ) : (
                 <button
                   onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setPrompt(""); setTimeout(() => inputRef.current?.focus(), 0); }}
-                  aria-label="New search"
+                  aria-label={tc("newSearch")}
                   className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-white/[0.08] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-white/[0.15] transition-all duration-200"
                 >
-                  New search
+                  {tc("newSearch")}
                 </button>
               )}
             </div>
@@ -2373,86 +2263,86 @@ function HomePage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <AirportAutocomplete
                       id="from"
-                      label="From"
-                      placeholder="JFK, London..."
+                      label={t("form.from")}
+                      placeholder={t("form.fromPlaceholder")}
                       value={form.from}
                       onChange={(v) => setForm((f) => ({ ...f, from: v }))}
                       disabled={isLoading}
                     />
                     <AirportAutocomplete
                       id="to"
-                      label="To"
-                      placeholder="LHR, Paris..."
+                      label={t("form.to")}
+                      placeholder={t("form.toPlaceholder")}
                       value={form.to}
                       onChange={(v) => setForm((f) => ({ ...f, to: v }))}
                       disabled={isLoading}
                     />
                     <div>
-                      <label htmlFor="depart" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">Depart</label>
+                      <label htmlFor="depart" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">{t("form.depart")}</label>
                       <input
                         id="depart"
                         type="date"
                         value={form.depart}
                         onChange={(e) => setForm((f) => ({ ...f, depart: e.target.value }))}
                         disabled={isLoading}
-                        className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors"
+                        className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-interactive)]/50 transition-colors"
                       />
                       <label className="flex items-center gap-1.5 mt-1.5 text-[11px] text-[var(--color-text-muted)] cursor-pointer select-none">
-                        <input type="checkbox" checked={form.flexibleDates} onChange={(e) => setForm((f) => ({ ...f, flexibleDates: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" aria-label="Search flexible dates" />
-                        +/- 3 days
+                        <input type="checkbox" checked={form.flexibleDates} onChange={(e) => setForm((f) => ({ ...f, flexibleDates: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-interactive)]" aria-label={t("form.flexibleDatesAria")} />
+                        {t("form.flexibleDates")}
                       </label>
                     </div>
                     <div>
-                      <label htmlFor="return" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">Return</label>
+                      <label htmlFor="return" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">{t("form.return")}</label>
                       <input
                         id="return"
                         type="date"
                         value={form.returnDate}
                         onChange={(e) => setForm((f) => ({ ...f, returnDate: e.target.value }))}
                         disabled={isLoading || !form.roundTrip}
-                        className={`w-full bg-[var(--color-background)] border rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors disabled:opacity-30 ${returnDateInvalid ? "border-[var(--color-danger)]" : "border-[var(--color-border)]"}`}
+                        className={`w-full bg-[var(--color-background)] border rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-interactive)]/50 transition-colors disabled:opacity-30 ${returnDateInvalid ? "border-[var(--color-danger)]" : "border-[var(--color-border)]"}`}
                       />
                       {returnDateInvalid && (
-                        <p className="mt-1 text-[11px] text-[var(--color-danger)]">Return must be after departure</p>
+                        <p className="mt-1 text-[11px] text-[var(--color-danger)]">{t("form.returnAfterDeparture")}</p>
                       )}
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5">
                     <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] cursor-pointer select-none">
-                      <input type="checkbox" checked={form.roundTrip} onChange={(e) => setForm((f) => ({ ...f, roundTrip: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
-                      Round trip
+                      <input type="checkbox" checked={form.roundTrip} onChange={(e) => setForm((f) => ({ ...f, roundTrip: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-interactive)]" />
+                      {t("form.roundTrip")}
                     </label>
                     <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] cursor-pointer select-none">
-                      <input type="checkbox" checked={form.directOnly} onChange={(e) => setForm((f) => ({ ...f, directOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
-                      Direct only
+                      <input type="checkbox" checked={form.directOnly} onChange={(e) => setForm((f) => ({ ...f, directOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-interactive)]" />
+                      {t("form.directOnly")}
                     </label>
-                    <label className="flex items-center gap-2 text-sm text-[var(--color-accent)] cursor-pointer select-none" title="Filter out routes through conflict zones">
+                    <label className="flex items-center gap-2 text-sm text-[var(--color-accent)] cursor-pointer select-none" title={t("risk.safeTooltip")}>
                       <input type="checkbox" checked={form.safeOnly} onChange={(e) => setForm((f) => ({ ...f, safeOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
-                      Safe routes only
+                      {t("form.safeRoutesOnly")}
                     </label>
                     <div className="flex items-center gap-2">
                       <select
                         value={form.cabin}
                         onChange={(e) => setForm((f) => ({ ...f, cabin: e.target.value }))}
                         disabled={isLoading}
-                        className="bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 cursor-pointer"
+                        className="bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-interactive)]/50 cursor-pointer"
                       >
-                        <option value="economy">Economy</option>
-                        <option value="premium_economy">Premium</option>
-                        <option value="business">Business</option>
-                        <option value="first">First</option>
+                        <option value="economy">{t("form.economy")}</option>
+                        <option value="premium_economy">{t("form.premiumEconomy")}</option>
+                        <option value="business">{t("form.business")}</option>
+                        <option value="first">{t("form.first")}</option>
                       </select>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <label htmlFor="maxPrice" className="text-sm text-[var(--color-text-muted)]">Max $</label>
+                      <label htmlFor="maxPrice" className="text-sm text-[var(--color-text-muted)]">{t("form.maxPrice")}</label>
                       <input
                         id="maxPrice"
                         type="number"
-                        placeholder="any"
+                        placeholder={t("form.maxPricePlaceholder")}
                         value={form.maxPrice}
                         onChange={(e) => setForm((f) => ({ ...f, maxPrice: e.target.value }))}
                         disabled={isLoading}
-                        className="w-20 bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none focus:border-[var(--color-accent)]/50"
+                        className="w-20 bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none focus:border-[var(--color-interactive)]/50"
                       />
                     </div>
                   </div>
@@ -2464,11 +2354,11 @@ function HomePage() {
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), canSearch() && search())}
-                    placeholder="e.g. JFK to London next week under $500, business class"
+                    placeholder={t("placeholder")}
                     disabled={isLoading}
                     rows={2}
                     className="w-full bg-transparent border-none px-1 py-2 text-base leading-relaxed text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none resize-none"
-                    aria-label="Describe your trip in plain English"
+                    aria-label={t("ariaLabel")}
                   />
                 </div>
               )}
@@ -2480,28 +2370,25 @@ function HomePage() {
                     onClick={() => setSearchMode((m) => (m === "structured" ? "natural" : "structured"))}
                     className="text-xs text-[var(--color-text-muted)]/60 hover:text-[var(--color-text-muted)] transition-colors duration-200 shrink-0"
                   >
-                    {searchMode === "structured" ? "Describe your trip instead" : "Use search form instead"}
+                    {searchMode === "structured" ? t("describeTrip") : t("useForm")}
                   </button>
-                  {searchMode === "natural" && queryPreview && (
-                    <div className="hidden sm:flex items-center gap-3 min-w-0">
-                      <span className="text-[var(--color-border)] select-none">|</span>
-                      <p className="text-[11px] text-[var(--color-accent)]/80 transition-opacity duration-300 flex items-center gap-0 min-w-0 overflow-visible">
-                        <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
-                        {queryPreview.dest && <><span className="opacity-80 mx-1">{"\u2192"}</span><PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
-                        {queryPreview.date && <> <span className="opacity-60 mx-1">{"\u00B7"}</span> <span className="text-[var(--color-text-muted)]">{queryPreview.date}</span></>}
-                      </p>
-                    </div>
+                  {searchMode === "natural" && !isLoading && queryPreview && (
+                    <p className="text-[11px] text-[var(--color-text-muted)]/50 truncate transition-opacity duration-300">
+                      {queryPreview.origin}
+                      {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> {queryPreview.dest}</>}
+                      {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/25 hidden sm:inline">Enter to search</span>}
+                  {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/25 hidden sm:inline">{t("enterToSearch")}</span>}
                   <button
                     onClick={() => search()}
                     disabled={!canSearch()}
-                    aria-label="Search flights"
-                    className="px-6 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-25 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-[0_0_28px_rgba(34,197,94,0.2)]"
+                    aria-label={tc("searchFlights")}
+                    className="px-6 py-2.5 btn-cta text-sm font-semibold rounded-xl disabled:opacity-25 disabled:cursor-not-allowed"
                   >
-                    Search
+                    {tc("search")}
                   </button>
                 </div>
               </div>
@@ -2512,7 +2399,7 @@ function HomePage() {
         {/* Example prompts */}
         {phase === "idle" && flights.length === 0 && (
           <div className="mt-5 flex flex-wrap justify-center gap-2">
-            {EXAMPLES.map((ex, i) => (
+            {(t.raw("examples") as string[]).map((ex, i) => (
               <button
                 key={i}
                 onClick={() => {
@@ -2541,7 +2428,7 @@ function HomePage() {
         {/* Time saved */}
         {phase === "idle" && flights.length === 0 && minutesSaved > 0 && (
           <p className="text-[11px] text-[var(--color-text-muted)]/50 mt-3 text-center">
-            FlyFast saved you ~{minutesSaved >= 60 ? `${Math.floor(minutesSaved / 60)}h ${minutesSaved % 60}m` : `${minutesSaved} min`} of manual searching
+            {t("timeSaved", { time: minutesSaved >= 60 ? `${Math.floor(minutesSaved / 60)}h ${minutesSaved % 60}m` : `${minutesSaved} min` })}
           </p>
         )}
       </section>
@@ -2554,19 +2441,19 @@ function HomePage() {
               {error}
               {rateLimitCountdown > 0 && (
                 <span className="block mt-1 text-xs font-mono">
-                  {Math.floor(rateLimitCountdown / 60)}:{String(rateLimitCountdown % 60).padStart(2, "0")} remaining
+                  {t("rateLimit.countdown", { minutes: Math.floor(rateLimitCountdown / 60), seconds: String(rateLimitCountdown % 60).padStart(2, "0") })}
                 </span>
               )}
             </div>
             {suggestions && suggestions.length > 0 && (
               <div className="mt-3">
-                <p className="text-xs text-[var(--color-text-muted)] mb-2">Try one of these instead:</p>
+                <p className="text-xs text-[var(--color-text-muted)] mb-2">{t("rateLimit.tryInstead")}</p>
                 <div className="flex flex-wrap gap-2">
                   {suggestions.map((s, i) => (
                     <button
                       key={i}
                       onClick={() => { setSearchMode("natural"); setPrompt(s); search(s); }}
-                      className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
+                      className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-interactive)] hover:text-[var(--color-interactive)] transition-colors"
                     >
                       {s}
                     </button>
@@ -2586,7 +2473,7 @@ function HomePage() {
             <div className="mt-6 space-y-4">
               {previewFlights.length > 0 ? (
                 <div className="animate-[fadeIn_0.3s_ease-in]">
-                  <p className="text-xs text-[var(--color-text-muted)] text-center mb-3">Best so far (updating as we search)</p>
+                  <p className="text-xs text-[var(--color-text-muted)] text-center mb-3">{t("loading.bestSoFar")}</p>
                   {previewFlights.map((f: FlightOut & { _isRoundTripPrice?: boolean }, i: number) => (
                     <div key={`preview-${i}`} className="opacity-70 pointer-events-none mb-4 relative">
                       <FlightCard
@@ -2597,24 +2484,24 @@ function HomePage() {
                         cabin={parsed?.cabin}
                       />
                       {f._isRoundTripPrice && (
-                        <span className="absolute top-3 right-3 text-[10px] text-[var(--color-text-muted)]">round trip</span>
+                        <span className="absolute top-3 end-3 text-[10px] text-[var(--color-text-muted)]">{t("loading.roundTrip")}</span>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="animate-pulse overflow-hidden">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 mb-4 overflow-hidden">
+                <div className="overflow-hidden space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 overflow-hidden">
                       <div className="flex justify-between gap-4">
-                        <div className="flex-1 space-y-2.5">
-                          <div className="h-4 bg-[var(--color-border)] rounded w-3/4" />
-                          <div className="h-3 bg-[var(--color-border)] rounded w-1/3" />
-                          <div className="h-3 bg-[var(--color-border)] rounded w-1/2 mt-2" />
+                        <div className="flex-1 space-y-3">
+                          <div className="h-4 skeleton-shimmer w-3/4" />
+                          <div className="h-3 skeleton-shimmer w-1/3" />
+                          <div className="h-3 skeleton-shimmer w-1/2" />
                         </div>
                         <div className="space-y-2 w-24">
-                          <div className="h-7 bg-[var(--color-border)] rounded" />
-                          <div className="h-9 bg-[var(--color-border)] rounded" />
+                          <div className="h-7 skeleton-shimmer" />
+                          <div className="h-9 skeleton-shimmer" />
                         </div>
                       </div>
                     </div>
@@ -2636,15 +2523,15 @@ function HomePage() {
 
             {/* Expand search progress (shown at top of results) */}
             {expandPhase === "expanding" && (
-              <div className="mt-3 w-full bg-[var(--color-surface)] border border-[var(--color-accent)]/30 rounded-lg px-4 py-3">
+              <div className="mt-3 w-full bg-[var(--color-surface)] border border-[var(--color-interactive)]/30 rounded-lg px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin shrink-0" />
+                  <div className="w-4 h-4 border-2 border-[var(--color-interactive)] border-t-transparent rounded-full animate-spin shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm text-[var(--color-text)]">Expanding search{expansionInfo ? `: ${expansionInfo}` : "..."}</span>
+                    <span className="text-sm text-[var(--color-text)]">{expansionInfo ? t("expand.expandingInfo", { info: expansionInfo }) : `${t("expand.expanding")}...`}</span>
                     {expandProgress && (
                       <div className="mt-1.5 h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300"
+                          className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-300"
                           style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
                         />
                       </div>
@@ -2664,7 +2551,7 @@ function HomePage() {
             {/* Round-trip total */}
             {roundTripTotal != null && (
               <div className="mt-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-lg px-4 py-3 text-sm">
-                <span className="text-[var(--color-accent)] font-semibold">Round trip from {currencySymbol(parsed.currency)}{Math.round(roundTripTotal)}</span>
+                <span className="text-[var(--color-accent)] font-semibold">{t("results.roundTripFrom", { price: `${currencySymbol(parsed.currency)}${Math.round(roundTripTotal)}` })}</span>
               </div>
             )}
 
@@ -2672,45 +2559,45 @@ function HomePage() {
               <div className="mt-6 text-center py-12 space-y-3">
                 {noResultsReason === "timeout" ? (
                   <>
-                    <p className="text-lg font-medium text-[var(--color-text)]">Search timed out</p>
+                    <p className="text-lg font-medium text-[var(--color-text)]">{t("noResults.timeout")}</p>
                     <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
-                      Google Flights was slow to respond. This usually works on a second try.
+                      {t("noResults.timeoutExplanation")}
                     </p>
                     <div className="flex flex-col items-center gap-2 mt-2">
-                      <button onClick={() => search()} className="px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-black rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors">
-                        Try again
+                      <button onClick={() => search()} className="px-4 py-2 text-sm font-medium bg-[var(--color-interactive)] text-white rounded-lg hover:bg-[var(--color-interactive-hover)] transition-colors">
+                        {tc("tryAgain")}
                       </button>
                       <p className="text-xs text-[var(--color-text-muted)]">
-                        Tip: try fewer dates, a single destination, or search at off-peak hours.
+                        {t("noResults.timeoutTip")}
                       </p>
                     </div>
                   </>
                 ) : noResultsReason === "provider_error" ? (
                   <>
-                    <p className="text-lg font-medium text-[var(--color-text)]">Providers are having a moment</p>
+                    <p className="text-lg font-medium text-[var(--color-text)]">{t("noResults.providerError")}</p>
                     <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
-                      Flight data sources returned an error. Give it a minute and try again.
+                      {t("noResults.providerErrorExplanation")}
                     </p>
                   </>
                 ) : noResultsReason === "safety_filtered" ? (
                   <>
-                    <p className="text-lg font-medium text-[var(--color-text)]">Every route crosses a conflict zone</p>
+                    <p className="text-lg font-medium text-[var(--color-text)]">{t("noResults.safetyFiltered")}</p>
                     <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
-                      We couldn&apos;t find a safe path. Try a nearby departure airport, different dates, or add a layover city to route around the zone.
+                      {t("noResults.safetyFilteredExplanation")}
                     </p>
                   </>
                 ) : noResultsReason === "no_routes" ? (
                   <>
-                    <p className="text-lg font-medium text-[var(--color-text)]">No airlines fly this route</p>
+                    <p className="text-lg font-medium text-[var(--color-text)]">{t("noResults.noRoutes")}</p>
                     <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
-                      This city pair doesn&apos;t have scheduled service. Try a nearby hub airport, flexible dates, or describe your trip in plain English and we&apos;ll suggest alternatives.
+                      {t("noResults.noRoutesExplanation")}
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="text-lg font-medium text-[var(--color-text)]">Nothing matched</p>
+                    <p className="text-lg font-medium text-[var(--color-text)]">{t("noResults.nothingMatched")}</p>
                     <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
-                      No flights for this route and date. Try nearby airports, shift the dates by a day or two, or relax your filters.
+                      {t("noResults.nothingMatchedExplanation")}
                     </p>
                   </>
                 )}
@@ -2719,7 +2606,7 @@ function HomePage() {
               <>
                 {flights.every((f) => f.price === 0) && (
                   <div className="mt-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-sm text-[var(--color-text-muted)]">
-                    These routes exist but live pricing isn&apos;t available right now. Click any flight to check current prices on the provider&apos;s site.
+                    {t("results.noPricing")}
                   </div>
                 )}
 
@@ -2727,18 +2614,18 @@ function HomePage() {
                 {/* Round-trip degradation warning */}
                 {parsed && parsed.return_dates.length > 0 && roundTripResults !== null && roundTripResults.length === 0 && flights.length > 0 && (
                   <div className="mt-4 bg-[var(--color-caution)]/10 border border-[var(--color-caution)]/30 rounded-lg px-4 py-3 text-sm text-[var(--color-caution)]">
-                    No paired round-trip options found for these dates. Showing outbound flights only; search separately for return flights.
+                    {t("results.roundTripDegraded")}
                   </div>
                 )}
 
                 {/* Partial results banner */}
                 {isPartial && flights.length > 0 && (
-                  <div className="mt-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg px-4 py-3 flex items-center justify-between">
+                  <div className="mt-4 bg-[var(--color-interactive)]/10 border border-[var(--color-interactive)]/30 rounded-lg px-4 py-3 flex items-center justify-between">
                     <p className="text-sm text-[var(--color-text-muted)]">
-                      We found {flights.length} flight{flights.length !== 1 ? "s" : ""} but couldn&apos;t check all dates. Some options may be missing.
+                      {t("results.partialResults", { count: flights.length })}
                     </p>
-                    <button onClick={() => search()} className="text-sm font-medium text-[var(--color-accent)] hover:underline whitespace-nowrap ml-4">
-                      Try again
+                    <button onClick={() => search()} className="text-sm font-medium text-[var(--color-interactive)] hover:underline whitespace-nowrap ms-4">
+                      {tc("tryAgain")}
                     </button>
                   </div>
                 )}
@@ -2750,21 +2637,21 @@ function HomePage() {
                       onClick={() => setTripTab("roundtrip")}
                       className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                         tripTab === "roundtrip"
-                          ? "bg-[var(--color-accent)] text-black font-medium"
+                          ? "bg-[var(--color-interactive)] text-white font-medium"
                           : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
                       }`}
                     >
-                      Round trips ({roundTripResults.length})
+                      {t("results.roundTrips", { count: roundTripResults.length })}
                     </button>
                     <button
                       onClick={() => setTripTab("oneway")}
                       className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                         tripTab === "oneway"
-                          ? "bg-[var(--color-accent)] text-black font-medium"
+                          ? "bg-[var(--color-interactive)] text-white font-medium"
                           : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
                       }`}
                     >
-                      One-way ({flights.length})
+                      {t("results.oneWay", { count: flights.length })}
                     </button>
                   </div>
                 )}
@@ -2791,17 +2678,17 @@ function HomePage() {
                           )}
                           <button
                             onClick={handleCopyLink}
-                            className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors ml-auto"
+                            className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors ms-auto"
                           >
                             {copyFeedback ? (
                               <>
-                                <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[var(--color-accent)]" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
-                                Copied!
+                                <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[var(--color-interactive)]" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
+                                {tc("copied")}
                               </>
                             ) : (
                               <>
                                 <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><path d="M13.5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM15 3a3 3 0 0 1-5.133 2.107L5.4 7.4a3.014 3.014 0 0 1 0 1.2l4.467 2.293A3 3 0 1 1 8.8 12.4L4.333 10.107a3 3 0 1 1 0-4.214L8.8 3.6A3.015 3.015 0 0 1 9 3a3 3 0 0 1 6 0zM4.5 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM13.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
-                                Share results
+                                {t("shareResults")}
                               </>
                             )}
                           </button>
@@ -2813,19 +2700,21 @@ function HomePage() {
                     )}
 
                     {/* Recommendation stack */}
-                    <div className="mt-6 space-y-4">
-                      <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
+                    <div className="mt-6 space-y-5">
+                      <h2 className="text-base font-semibold tracking-tight text-[var(--color-text)] mb-4">{t("results.ourRecommendations")}</h2>
                       {recs.slice(0, 4).map(({ label, flight }, i) => (
+                        <div key={i} className="animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
                         <FlightCard
                           key={i}
                           flight={flight}
                           label={label}
-                          reason={getRecommendationReason(flight, flights, label)}
+                          reason={getRecommendationReason(flight, flights, label, trec as (key: string, values?: Record<string, string | number>) => string)}
                           airportNames={airportNames}
                           attributionParams={attributionParams}
                           onOutboundClick={handleOutboundClick}
                           cabin={parsed?.cabin}
                         />
+                        </div>
                       ))}
                     </div>
 
@@ -2837,17 +2726,18 @@ function HomePage() {
                       );
                       if (moreFlights.length === 0) return null;
                       return (
-                        <div className="mt-8 space-y-3">
-                          <h3 className="text-sm font-semibold text-[var(--color-text-muted)]">More flights</h3>
+                        <div className="mt-10 space-y-4">
+                          <h3 className="text-base font-semibold text-[var(--color-text-muted)] mb-4">{t("results.moreFlights")}</h3>
                           {moreFlights.slice(0, 6).map((f, i) => (
+                            <div key={`more-${i}`} className="animate-fade-up" style={{ animationDelay: `${(i + 4) * 60}ms` }}>
                             <FlightCard
-                              key={`more-${i}`}
                               flight={f}
                               airportNames={airportNames}
                               attributionParams={attributionParams}
                               onOutboundClick={handleOutboundClick}
                               cabin={parsed?.cabin}
                             />
+                            </div>
                           ))}
                         </div>
                       );
@@ -2859,18 +2749,19 @@ function HomePage() {
                 {roundTripResults && roundTripResults.length > 0 && ((!flights.length) || tripTab === "roundtrip") && (
                   <div className="mt-6">
                     <p className="text-xs text-[var(--color-text-muted)] mb-4">
-                      Each option shows outbound + return. Prices are combined; you&apos;ll complete two separate bookings.
+                      {t("results.roundTripExplanation")}
                     </p>
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       {roundTripResults.slice(0, rtShowCount).map((rt, i) => (
+                        <div key={i} className="animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
                         <RoundTripCard
-                          key={i}
                           result={rt}
                           airportNames={airportNames}
                           attributionParams={attributionParams}
                           onOutboundClick={handleOutboundClick}
                           cabin={parsed?.cabin}
                         />
+                        </div>
                       ))}
                     </div>
                     {rtShowCount < roundTripResults.length && (
@@ -2878,7 +2769,7 @@ function HomePage() {
                         onClick={() => setRtShowCount((c) => c + 5)}
                         className="w-full py-3 mt-3 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
                       >
-                        Show {Math.min(5, roundTripResults.length - rtShowCount)} more round trips
+                        {t("results.showMoreRoundTrips", { count: Math.min(5, roundTripResults.length - rtShowCount) })}
                       </button>
                     )}
                   </div>
@@ -2887,7 +2778,7 @@ function HomePage() {
                 {/* Fallback: separate return flights (legacy, when round_trip_results absent) */}
                 {!roundTripResults && returnFlights && returnFlights.length > 0 && (
                   <div className="mt-8">
-                    <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Return options</h3>
+                    <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">{t("results.returnOptions")}</h3>
                     <div className="space-y-3">
                       {sortFlights(returnFlights, "score").slice(0, 5).map((f, i) => (
                         <FlightCard
@@ -2910,13 +2801,13 @@ function HomePage() {
                     {expandPhase === "idle" && (
                       <button
                         onClick={expandSearch}
-                        className="w-full flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 hover:border-[var(--color-accent)]/40 transition-colors group"
+                        className="w-full flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 hover:border-[var(--color-interactive)]/40 transition-colors group"
                       >
-                        <div className="text-left">
-                          <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-accent)] transition-colors">Expand search</span>
-                          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Find more options with nearby airports and flexible dates</p>
+                        <div className="text-start">
+                          <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-interactive)] transition-colors">{t("expand.expandSearch")}</span>
+                          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{t("expand.findMore")}</p>
                         </div>
-                        <svg viewBox="0 0 20 20" className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] transition-colors shrink-0" fill="currentColor">
+                        <svg viewBox="0 0 20 20" className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-interactive)] transition-colors shrink-0" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
                         </svg>
                       </button>
@@ -2928,7 +2819,7 @@ function HomePage() {
                     )}
                     {expandPhase === "done" && !expandError && expandCount > 0 && (
                       <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
-                        <span className="text-[var(--color-accent)]">+{expandCount} flight{expandCount !== 1 ? "s" : ""} added from nearby airports</span>
+                        <span className="text-[var(--color-accent)]">{t("expand.flightsAdded", { count: expandCount })}</span>
                       </div>
                     )}
                   </div>
@@ -2947,12 +2838,12 @@ function HomePage() {
                   return (
                     <div className="mt-4 flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5">
                       <p className="text-sm text-[var(--color-text-muted)]">
-                        {destName ? `Know someone flying to ${destName}?` : "Know someone who might want these flights?"}{" "}
-                        <button onClick={() => { handleCopyLink(); setShareCTADismissed(true); }} className="text-[var(--color-accent)] hover:underline font-medium">
-                          Share these results
+                        {destName ? t("shareCTA", { destination: destName }) : t("shareCTAGeneric")}{" "}
+                        <button onClick={() => { handleCopyLink(); setShareCTADismissed(true); }} className="text-[var(--color-interactive)] hover:underline font-medium">
+                          {t("shareTheseResults")}
                         </button>
                       </p>
-                      <button onClick={() => setShareCTADismissed(true)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] shrink-0" aria-label="Dismiss">
+                      <button onClick={() => setShareCTADismissed(true)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] shrink-0" aria-label={tc("dismiss")}>
                         <svg viewBox="0 0 16 16" className="w-4 h-4" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"/></svg>
                       </button>
                     </div>
@@ -2967,41 +2858,41 @@ function HomePage() {
                       className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
                     >
                       <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><path d="M13.5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM15 3a3 3 0 0 1-5.133 2.107L5.4 7.4a3.014 3.014 0 0 1 0 1.2l4.467 2.293A3 3 0 1 1 8.8 12.4L4.333 10.107a3 3 0 1 1 0-4.214L8.8 3.6A3.015 3.015 0 0 1 9 3a3 3 0 0 1 6 0zM4.5 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM13.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
-                      Share
+                      {tc("share")}
                     </button>
                     {shareOpen && (
                       <div className="absolute bottom-full left-0 mb-2 w-56 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-xl overflow-hidden z-50">
                         <button
                           onClick={handleCopyLink}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors text-left"
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors text-start"
                         >
                           {copyFeedback ? (
                             <>
-                              <svg viewBox="0 0 16 16" className="w-4 h-4 text-[var(--color-accent)] shrink-0" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
-                              <span className="text-[var(--color-accent)] font-medium">Copied!</span>
+                              <svg viewBox="0 0 16 16" className="w-4 h-4 text-[var(--color-interactive)] shrink-0" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
+                              <span className="text-[var(--color-interactive)] font-medium">{tc("copied")}</span>
                             </>
                           ) : (
                             <>
                               <svg viewBox="0 0 16 16" className="w-4 h-4 opacity-50 shrink-0" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg>
-                              Copy link
+                              {tc("copyLink")}
                             </>
                           )}
                         </button>
                         {typeof navigator !== "undefined" && "share" in navigator && (
                           <button
                             onClick={handleNativeShare}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors text-left border-t border-[var(--color-border)]/50"
+                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors text-start border-t border-[var(--color-border)]/50"
                           >
                             <svg viewBox="0 0 16 16" className="w-4 h-4 opacity-50 shrink-0" fill="currentColor"><path d="M3.5 5.75a.25.25 0 0 1 .25-.25h8.5a.25.25 0 0 1 .25.25v7.5a.25.25 0 0 1-.25.25h-8.5a.25.25 0 0 1-.25-.25v-7.5zm.25-1.75A1.75 1.75 0 0 0 2 5.75v7.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0 0 14 13.25v-7.5A1.75 1.75 0 0 0 12.25 4h-8.5zM8 1a.75.75 0 0 1 .75.75v5.19l1.72-1.72a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 1.06-1.06l1.72 1.72V1.75A.75.75 0 0 1 8 1z"/></svg>
-                            Share via...
+                            {tc("shareVia")}
                           </button>
                         )}
                       </div>
                     )}
                   </div>
                   <span className="text-xs text-[var(--color-text-muted)]">
-                    You book with the provider, not us.{" "}
-                    <a href="/methodology" className="text-[var(--color-accent)] hover:underline">How we rank</a>
+                    {t("trust.bookWithProvider")}{" "}
+                    <Link href="/methodology" className="text-[var(--color-interactive)] hover:underline">{t("trust.howWeRank")}</Link>
                   </span>
                   {/* zonesWarning is dev/CLI info, not user-facing */}
                 </div>
@@ -3027,9 +2918,9 @@ function HomePage() {
                 setAttributionParams((prev) => ({ ...prev, ref: "organic", utm_source: undefined }));
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+              className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-interactive)] transition-colors"
             >
-              New search
+              {tc("newSearch")}
             </button>
           </div>
         )}
@@ -3039,43 +2930,43 @@ function HomePage() {
 
       {/* Floating price alert popup */}
       {showAlertPopup && parsed && (
-        <div className="fixed bottom-4 right-4 z-50 w-80 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-2xl p-4 animate-fade-in">
+        <div className="fixed bottom-4 end-4 z-50 w-80 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-2xl p-4 animate-fade-in">
           <div className="flex items-start justify-between gap-2 mb-3">
             <div>
-              <p className="text-sm font-medium text-[var(--color-text)]">Price drop alert</p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Get emailed when fares drop</p>
+              <p className="text-sm font-medium text-[var(--color-text)]">{t("priceAlert.priceDropAlert")}</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{t("priceAlert.getEmailed")}</p>
             </div>
             <button
               onClick={() => { setShowAlertPopup(false); setAlertPopupDismissed(true); }}
               className="p-0.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors shrink-0"
-              aria-label="Dismiss"
+              aria-label={tc("dismiss")}
             >
               <svg viewBox="0 0 16 16" className="w-4 h-4" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"/></svg>
             </button>
           </div>
           {popupStatus === "success" ? (
             <p className="text-sm text-[var(--color-accent)]">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block mr-1 -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-              Alert set! We&apos;ll email you.
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block me-1 -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+              {t("priceAlert.alertSet")}
             </p>
           ) : (
             <div className="flex flex-col gap-2">
               <input
                 type="email"
-                placeholder="your@email.com"
+                placeholder={t("priceAlert.emailPlaceholder")}
                 value={popupEmail}
                 onChange={(e) => setPopupEmail(e.target.value)}
-                className="w-full px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                className="w-full px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-interactive)]"
               />
               <div className="flex gap-2">
                 <div className="flex items-center gap-1 flex-1">
                   <span className="text-sm text-[var(--color-text-muted)]">{currencySymbol(parsed.currency)}</span>
                   <input
                     type="number"
-                    placeholder={flights[0] ? String(Math.round(flights[0].price)) : "Max"}
+                    placeholder={flights[0] ? String(Math.round(flights[0].price)) : t("priceAlert.maxPricePlaceholder")}
                     value={popupThreshold}
                     onChange={(e) => setPopupThreshold(e.target.value)}
-                    className="w-full px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                    className="w-full px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-interactive)]"
                   />
                 </div>
                 <button
@@ -3106,9 +2997,9 @@ function HomePage() {
                       setPopupStatus("idle");
                     }
                   }}
-                  className="px-3 py-1.5 text-sm font-medium bg-[var(--color-accent)] text-black rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors disabled:opacity-50 whitespace-nowrap"
+                  className="px-3 py-1.5 text-sm font-medium bg-[var(--color-interactive)] text-white rounded-lg hover:bg-[var(--color-interactive-hover)] transition-colors disabled:opacity-50 whitespace-nowrap"
                 >
-                  {popupStatus === "loading" ? "..." : "Set alert"}
+                  {popupStatus === "loading" ? "..." : t("priceAlert.setAlert")}
                 </button>
               </div>
             </div>

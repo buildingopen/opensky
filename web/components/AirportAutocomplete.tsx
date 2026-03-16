@@ -89,7 +89,7 @@ export function AirportAutocomplete({ id, label, placeholder, value, onChange, d
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onKeyDown={handleKeyDown}
         disabled={disabled}
-        className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors"
+        className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none focus:border-[var(--color-interactive)]/50 transition-colors"
       />
       {showDropdown && (
         <ul
@@ -107,11 +107,11 @@ export function AirportAutocomplete({ id, label, placeholder, value, onChange, d
               onMouseDown={(e) => { e.preventDefault(); select(a); }}
               className={`px-3 py-2 text-sm cursor-pointer flex items-center gap-2 ${
                 i === activeIndex
-                  ? "bg-[var(--color-accent)]/10 text-[var(--color-text)]"
+                  ? "bg-[var(--color-interactive)]/10 text-[var(--color-text)]"
                   : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"
               }`}
             >
-              <span className="font-mono font-semibold text-[var(--color-accent)] w-10">{a.iata}</span>
+              <span className="font-mono font-semibold text-[var(--color-interactive)] w-10">{a.iata}</span>
               <img
                 src={`https://flagcdn.com/w20/${a.country.toLowerCase()}.png`}
                 alt=""

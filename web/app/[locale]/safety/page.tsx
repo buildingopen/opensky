@@ -1,15 +1,17 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "../../../i18n/navigation";
 import { getZones, ZONE_FLAGS, ZONE_COUNTRIES } from "./zones-data";
 import { SafetyPageClient } from "./SafetyPageClient";
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "Conflict Zone Airspace Map - FlyFast",
-  description:
-    "Live status of 19 conflict zones affecting commercial aviation. Updated daily with EASA, FAA, and safeairspace.net data.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const { setRequestLocale } = await import("next-intl/server");
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "safety" });
+  return { title: t("title"), description: t("description") };
+}
 
 const itemListSchema = (zoneIds: string[]) => ({
   "@context": "https://schema.org",
@@ -24,6 +26,7 @@ const itemListSchema = (zoneIds: string[]) => ({
 });
 
 export default async function SafetyIndexPage() {
+  const t = await getTranslations("safety");
   const zones = await getZones();
 
   // Build country -> risk level map (highest priority wins)
@@ -68,12 +71,10 @@ export default async function SafetyIndexPage() {
         }}
       />
       <h1 className="text-3xl font-bold text-[var(--color-text)]">
-        Conflict Zone Airspace Map
+        {t("heading")}
       </h1>
       <p className="mt-4 text-[var(--color-text-muted)] max-w-2xl">
-        Live status of {zones.length} conflict zones affecting commercial
-        aviation. FlyFast checks every flight against this data and filters
-        unsafe routes automatically.
+        {t("subtitle")}
       </p>
 
       <SafetyPageClient
@@ -85,13 +86,12 @@ export default async function SafetyIndexPage() {
       />
 
       <p className="mt-12 text-xs text-[var(--color-text-muted)]">
-        Data from EASA Conflict Zone Information Bulletins, FAA NOTAMs, and
-        safeairspace.net. Refreshed daily.{" "}
+        {t("dataSource")}{" "}
         <Link
           href="/methodology"
           className="text-[var(--color-accent)] hover:underline"
         >
-          Learn how FlyFast uses this data
+          {t("learnMore")}
         </Link>
         .
       </p>

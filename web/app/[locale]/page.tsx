@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import SearchPage from "./SearchPage";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app";
@@ -9,18 +10,22 @@ const currencySymbols: Record<string, string> = {
 };
 
 interface PageProps {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
-  const params = await searchParams;
-  const q = typeof params.q === "string" ? params.q : undefined;
-  const price = typeof params.price === "string" ? params.price : undefined;
-  const route = typeof params.route === "string" ? params.route : undefined; // "Mumbai to Frankfurt"
-  const codes = typeof params.codes === "string" ? params.codes : undefined; // "BOM-FRA"
-  const currency = typeof params.currency === "string" ? params.currency : "EUR";
-  const safety = typeof params.safety === "string" ? params.safety : "safe";
-  const stops = typeof params.stops === "string" ? params.stops : undefined;
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "metadata" });
+  const sp = await searchParams;
+  const q = typeof sp.q === "string" ? sp.q : undefined;
+  const price = typeof sp.price === "string" ? sp.price : undefined;
+  const route = typeof sp.route === "string" ? sp.route : undefined;
+  const codes = typeof sp.codes === "string" ? sp.codes : undefined;
+  const currency = typeof sp.currency === "string" ? sp.currency : "EUR";
+  const safety = typeof sp.safety === "string" ? sp.safety : "safe";
+  const stops = typeof sp.stops === "string" ? sp.stops : undefined;
 
   // Build dynamic OG image URL
   const ogUrl = new URL("/api/og", siteUrl);
@@ -37,11 +42,11 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const hasFlightData = route && price;
   const routeLabel = route || "";
   const title = hasFlightData
-    ? `${routeLabel} from ${sym}${price} - FlyFast`
-    : "FlyFast - The smartest flight search";
+    ? t("flightTitle", { route: routeLabel, price: `${sym}${price}` })
+    : t("title");
   const description = hasFlightData
-    ? `Found ${routeLabel} from ${sym}${price}. Conflict zones filtered. Search your own flights on FlyFast.`
-    : "Describe your trip in plain English. FlyFast searches Google Flights, filters conflict zones, and finds the safest, cheapest route. Free, no login.";
+    ? t("flightDescription", { route: routeLabel, price: `${sym}${price}` })
+    : t("description");
 
   return {
     title,
@@ -57,7 +62,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
           url: ogUrl.toString(),
           width: 1200,
           height: 630,
-          alt: hasFlightData ? `${routeLabel} from ${sym}${price}` : "FlyFast: describe your trip, we find the best flight",
+          alt: hasFlightData ? `${routeLabel} from ${sym}${price}` : t("ogAlt"),
         },
       ],
     },

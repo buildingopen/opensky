@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
-import { AnalyticsProvider } from "../components/AnalyticsProvider";
-import { CloudsBackground } from "../components/CloudsBackground";
-import { SiteHeader } from "../components/SiteHeader";
-import { SiteFooter } from "../components/SiteFooter";
-import "./globals.css";
+import { notFound } from "next/navigation";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import { routing } from "../../i18n/routing";
+import { isRtl } from "../../i18n/config";
+import { AnalyticsProvider } from "../../components/AnalyticsProvider";
+import { CloudsBackground } from "../../components/CloudsBackground";
+import { SiteHeader } from "../../components/SiteHeader";
+import { SiteFooter } from "../../components/SiteFooter";
+import "../globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,27 +31,54 @@ const spaceGrotesk = Space_Grotesk({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: {
-    default: "FlyFast - The smartest flight search",
-    template: "%s",
-  },
-  description:
-    "Describe your trip in plain English. FlyFast searches Google Flights, filters conflict zones, and finds the safest, cheapest route. Free, no login.",
-  keywords: ["flights", "flight search", "Google Flights search", "natural language flights", "conflict zones", "cheap flights", "AI flight search"],
-  alternates: {
-    canonical: "/",
-  },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "metadata" });
+  const languages: Record<string, string> = {};
+  for (const l of routing.locales) {
+    languages[l] = `${siteUrl}/${l}`;
+  }
+  languages["x-default"] = `${siteUrl}/en`;
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: t("title"),
+      template: "%s",
+    },
+    description: t("description"),
+    keywords: ["flights", "flight search", "Google Flights search", "natural language flights", "conflict zones", "cheap flights", "AI flight search"],
+    alternates: {
+      canonical: `${siteUrl}/${locale}`,
+      languages,
+    },
+  };
+}
 
-export default function RootLayout({
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }>) {
+  const { locale } = await params;
+
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+
+  setRequestLocale(locale);
+
+  const messages = await getMessages();
+  const dir = isRtl(locale) ? "rtl" : "ltr";
+
   return (
-    <html lang="en">
+    <html lang={locale} dir={dir}>
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="alternate icon" href="/favicon.ico" />
@@ -142,14 +174,16 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${jetbrains.variable} ${spaceGrotesk.variable} antialiased min-h-screen flex flex-col`}>
-        <AnalyticsProvider />
-        <CloudsBackground />
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-1.5 focus:bg-[var(--color-accent)] focus:text-black focus:rounded focus:text-sm focus:font-medium">
-          Skip to main content
-        </a>
-        <SiteHeader />
-        {children}
-        <SiteFooter />
+        <NextIntlClientProvider messages={messages}>
+          <AnalyticsProvider />
+          <CloudsBackground />
+          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 focus:px-3 focus:py-1.5 focus:bg-[var(--color-accent)] focus:text-black focus:rounded focus:text-sm focus:font-medium">
+            {(messages as any)?.common?.skipToContent || "Skip to main content"}
+          </a>
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -35,12 +35,12 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
         <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-3">
           On this page
         </p>
-        <ul className="space-y-1 border-l border-[var(--color-border)]">
+        <ul className="space-y-1 border-s border-[var(--color-border)]">
           {items.map((item) => (
             <li key={item.id}>
               <a
                 href={`#${item.id}`}
-                className={`block text-xs pl-3 py-1 -ml-px border-l-2 transition-colors ${
+                className={`block text-xs ps-3 py-1 -ms-px border-s-2 transition-colors ${
                   activeId === item.id
                     ? "border-[var(--color-accent)] text-[var(--color-text)]"
                     : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border)]"

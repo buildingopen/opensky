@@ -2,14 +2,15 @@
 
 ## OPEN
 
-### Logo needs professional redesign
-- **Status**: OPEN (agent iterating)
-- **Date**: 2026-03-16
-- **Description**: Current logomark is a simple arrow/bolt SVG that looks generic. Needs a distinctive, memorable mark that evokes speed + flight without being a literal airplane. Should feel like a brand studio designed it.
-- **Files**: SiteHeader.tsx (desktop + mobile), favicon.svg, not-found.tsx, og/route.tsx
-- **Note**: Background agent spawned to iterate on designs. Review output and pick best candidate.
+(none)
 
 ## FIXED
+
+### Logo redesigned with split-arrow mark
+- **Status**: FIXED
+- **Date**: 2026-03-16
+- **Description**: Replaced generic arrow/bolt with split-arrow logomark (two angular wing parallelograms with negative space gap). Updated header, favicon, 404 page, OG image.
+- **Commit**: 85e8741
 
 ### CSP blocks PostHog and Google Analytics
 - **Status**: FIXED

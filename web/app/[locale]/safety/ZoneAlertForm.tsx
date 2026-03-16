@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function ZoneAlertForm({ zones }: Props) {
+  const t = useTranslations("safety.alerts");
   const [email, setEmail] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -44,14 +46,14 @@ export function ZoneAlertForm({ zones }: Props) {
       const data = await res.json();
       if (!res.ok) {
         setStatus("error");
-        setMessage(data.detail || "Something went wrong.");
+        setMessage(data.detail || t("error"));
         return;
       }
       setStatus("success");
       setMessage(data.message);
     } catch {
       setStatus("error");
-      setMessage("Network error. Please try again.");
+      setMessage(t("networkError"));
     }
   };
 
@@ -73,17 +75,17 @@ export function ZoneAlertForm({ zones }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-[var(--color-text)]">
-            Get notified when risk levels change
+            {t("title")}
           </h3>
           <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-            Select zones to monitor. We&apos;ll email you when their status changes.
+            {t("subtitle")}
           </p>
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
           className="text-xs text-[var(--color-accent)] hover:underline shrink-0 ml-4"
         >
-          {expanded ? "Collapse" : "Subscribe"}
+          {expanded ? t("collapse") : t("subscribe")}
         </button>
       </div>
 
@@ -93,13 +95,13 @@ export function ZoneAlertForm({ zones }: Props) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-[var(--color-text-muted)]">
-                Zones ({selected.size}/{zones.length})
+                {t("zones", { selected: selected.size, total: zones.length })}
               </span>
               <button
                 onClick={selectAll}
                 className="text-xs text-[var(--color-accent)] hover:underline"
               >
-                {selected.size === zones.length ? "Deselect all" : "Select all"}
+                {selected.size === zones.length ? t("deselectAll") : t("selectAll")}
               </button>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -128,7 +130,7 @@ export function ZoneAlertForm({ zones }: Props) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
+              placeholder={t("emailPlaceholder")}
               className="flex-1 min-w-0 text-sm px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
             />
             <button
@@ -136,7 +138,7 @@ export function ZoneAlertForm({ zones }: Props) {
               disabled={!email || selected.size === 0 || status === "loading"}
               className="text-sm font-medium px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0"
             >
-              {status === "loading" ? "..." : "Subscribe"}
+              {status === "loading" ? t("loading") : t("subscribe")}
             </button>
           </div>
 

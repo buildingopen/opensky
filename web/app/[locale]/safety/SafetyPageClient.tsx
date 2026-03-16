@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "../../../i18n/navigation";
 import { ConflictMapLoader } from "./ConflictMapLoader";
 import { RISK_CONFIG, type ConflictZone } from "./zones-data";
 import { ZoneAlertForm } from "./ZoneAlertForm";
@@ -11,12 +12,6 @@ const GROUP_ORDER: Array<"do_not_fly" | "high_risk" | "caution"> = [
   "high_risk",
   "caution",
 ];
-
-const GROUP_LABELS: Record<string, string> = {
-  do_not_fly: "Do Not Fly",
-  high_risk: "High Risk",
-  caution: "Caution",
-};
 
 interface ZoneMapData {
   id: string;
@@ -50,6 +45,7 @@ interface Props {
 }
 
 export function SafetyPageClient({ zones, countryRiskMap, zoneMapData, countryToZone, zoneFlags }: Props) {
+  const t = useTranslations("safety");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [hoveredZoneId, setHoveredZoneId] = useState<string | null>(null);
 
@@ -63,7 +59,7 @@ export function SafetyPageClient({ zones, countryRiskMap, zoneMapData, countryTo
 
   const grouped = GROUP_ORDER.map((level) => ({
     level,
-    label: GROUP_LABELS[level],
+    label: t(`groupLabels.${level}` as "groupLabels.do_not_fly"),
     color: RISK_CONFIG[level].color,
     zones: zones.filter((z) => z.risk_level === level),
   }));
@@ -103,7 +99,7 @@ export function SafetyPageClient({ zones, countryRiskMap, zoneMapData, countryTo
             onClick={() => setActiveFilter(null)}
             className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-2 py-1.5 transition-colors"
           >
-            Clear
+            {t("clear")}
           </button>
         )}
       </nav>

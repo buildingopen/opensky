@@ -93,8 +93,8 @@ export function AirlineFilterChips({
               aria-pressed={selected.has(code)}
               className={`text-[12px] px-2.5 py-1 rounded-full border transition-colors inline-flex items-center gap-1.5 ${
                 selected.has(code)
-                  ? "bg-[var(--color-accent)]/15 border-[var(--color-accent)]/40 text-[var(--color-accent)]"
-                  : "bg-[var(--color-surface-2)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/30"
+                  ? "bg-[var(--color-interactive)]/15 border-[var(--color-interactive)]/40 text-[var(--color-interactive)]"
+                  : "bg-[var(--color-surface-2)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-interactive)]/30"
               }`}
             >
               <img
@@ -111,7 +111,7 @@ export function AirlineFilterChips({
           ))}
         </div>
         {selected.size > 0 && (
-          <button onClick={clearFilter} className="text-[11px] text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)] transition-colors ml-2 shrink-0">
+          <button onClick={clearFilter} className="text-[11px] text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)] transition-colors ms-2 shrink-0">
             Clear
           </button>
         )}
