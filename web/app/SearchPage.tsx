@@ -2315,7 +2315,7 @@ function HomePage() {
                   </div>
                 </div>
               ) : (
-                <div>
+                <div className="relative">
                   <textarea
                     ref={inputRef}
                     value={prompt}
@@ -2327,19 +2327,16 @@ function HomePage() {
                     className="w-full bg-transparent border-none px-1 py-2 text-base leading-relaxed text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none resize-none"
                     aria-label="Describe your trip in plain English"
                   />
+                  {/* Query preview: resolved locations + dates, directly below typed text */}
+                  <div className={`overflow-hidden transition-all duration-300 ease-out ${!isLoading && queryPreview ? "max-h-6 opacity-100" : "max-h-0 opacity-0"}`}>
+                    <p className="text-[11px] text-[var(--color-text-muted)]/50 truncate px-1 -mt-1 mb-1">
+                      {queryPreview?.origin}
+                      {queryPreview?.dest && <> <span className="opacity-50">{"\u2192"}</span> {queryPreview.dest}</>}
+                      {queryPreview?.date && <> <span className="opacity-30">{"\u00B7"}</span> {queryPreview.date}</>}
+                    </p>
+                  </div>
                 </div>
               )}
-
-              {/* Query preview: shows resolved locations + dates while typing */}
-              <div className={`overflow-hidden transition-all duration-300 ease-out ${searchMode === "natural" && !isLoading && queryPreview ? "max-h-6" : "max-h-0"}`}>
-                {queryPreview && (
-                  <p className="text-[11px] text-[var(--color-text-muted)]/40 truncate px-1 mt-0.5">
-                    {queryPreview.origin}
-                    {queryPreview.dest && <> <span className="opacity-50">{"\u2192"}</span> {queryPreview.dest}</>}
-                    {queryPreview.date && <> <span className="opacity-30">{"\u00B7"}</span> {queryPreview.date}</>}
-                  </p>
-                )}
-              </div>
 
               <div className={`${searchMode === "structured" ? "mt-3" : "mt-1 pt-3 border-t border-white/[0.04]"} flex items-center justify-between`}>
                 <button
