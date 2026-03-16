@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Describe your",
-    "heroTitleAccent": "trip.",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "Search every flight on Google Flights. AI-powered, conflict zones filtered. Free, no login.",
     "placeholder": "e.g. JFK to London next week under $500, business class",
     "ariaLabel": "Describe your trip in plain English",

@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Descrivi il tuo",
-    "heroTitleAccent": "viaggio.",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "Cerca ogni volo su Google Flights. Basato su IA, zone di conflitto filtrate. Gratis, senza registrazione.",
     "placeholder": "es. Roma a Londra la prossima settimana meno di 500€, business class",
     "ariaLabel": "Descrivi il tuo viaggio in italiano",

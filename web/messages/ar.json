@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "صِف",
-    "heroTitleAccent": "رحلتك.",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "ابحث في جميع الرحلات على Google Flights. مدعوم بالذكاء الاصطناعي، مع تصفية مناطق النزاع. مجاني، بدون تسجيل دخول.",
     "placeholder": "مثال: من دبي إلى لندن، الأسبوع القادم، أقل من 2000 ريال، درجة رجال الأعمال",
     "ariaLabel": "صِف رحلتك بالعربية",

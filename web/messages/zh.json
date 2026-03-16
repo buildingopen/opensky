@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "描述你的",
-    "heroTitleAccent": "行程。",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "搜索谷歌航班上的所有航班。AI驱动，自动过滤冲突区域。免费，无需登录。",
     "placeholder": "例如：北京到东京，下周，3000元以内，商务舱",
     "ariaLabel": "用自然语言描述你的行程",

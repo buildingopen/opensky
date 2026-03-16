@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "旅を",
-    "heroTitleAccent": "伝えてください。",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "Google Flightsの全フライトを検索。AI搭載、紛争地域フィルター付き。無料、ログイン不要。",
     "placeholder": "例: NRTからロンドン、来週、5万円以内、ビジネスクラス",
     "ariaLabel": "旅の内容を日本語で入力してください",

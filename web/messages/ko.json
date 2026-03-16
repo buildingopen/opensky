@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "여행을",
-    "heroTitleAccent": "설명하세요.",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "구글 플라이트의 모든 항공편을 검색합니다. AI 기반, 분쟁 지역 필터링. 무료, 로그인 불필요.",
     "placeholder": "예: 서울에서 도쿄, 다음 주, 50만원 이하, 비즈니스 클래스",
     "ariaLabel": "여행 계획을 자유롭게 입력하세요",

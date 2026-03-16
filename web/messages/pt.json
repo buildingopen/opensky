@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Descreva sua",
-    "heroTitleAccent": "viagem.",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "Pesquise todos os voos no Google Flights. Com IA, zonas de conflito filtradas. Grátis, sem cadastro.",
     "placeholder": "Ex: GRU para Lisboa semana que vem abaixo de R$3000, classe executiva",
     "ariaLabel": "Descreva sua viagem em português",

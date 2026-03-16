@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Describe tu",
-    "heroTitleAccent": "viaje.",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "Busca todos los vuelos en Google Flights. Con IA, filtrado de zonas de conflicto. Gratis, sin registro.",
     "placeholder": "p. ej. Madrid a Londres la proxima semana, menos de 500€, clase business",
     "ariaLabel": "Describe tu viaje con tus propias palabras",

@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Seyahatini",
-    "heroTitleAccent": "anlat.",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "Google Flights üzerinden tüm uçuşları arayın. Yapay zeka destekli, çatışma bölgeleri filtrelenmiş. Ücretsiz, giriş gerektirmez.",
     "placeholder": "ör. İstanbul'dan Londra'ya gelecek hafta 15000 TL altında, business class",
     "ariaLabel": "Seyahatinizi kendi cümlelerinizle anlatın",

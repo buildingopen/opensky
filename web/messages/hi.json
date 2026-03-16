@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "अपनी यात्रा",
-    "heroTitleAccent": "बताएं।",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "Google Flights पर हर फ़्लाइट खोजें। AI-संचालित, संघर्ष क्षेत्र फ़िल्टर। मुफ़्त, बिना लॉगिन।",
     "placeholder": "जैसे मुंबई से लंदन, अगले हफ़्ते, ₹40000 से कम, बिज़नेस क्लास",
     "ariaLabel": "अपनी यात्रा सरल हिंदी में बताएं",

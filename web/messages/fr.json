@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Décrivez votre",
-    "heroTitleAccent": "voyage.",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "Recherchez tous les vols sur Google Flights. Propulsé par l'IA, zones de conflit filtrées. Gratuit, sans inscription.",
     "placeholder": "ex. Paris à Londres la semaine prochaine moins de 500 €, classe affaires",
     "ariaLabel": "Décrivez votre voyage en quelques mots",

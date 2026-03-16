@@ -53,8 +53,8 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Beschreibe deine",
-    "heroTitleAccent": "Reise.",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
     "heroSubtitle": "Durchsuche jeden Flug auf Google Flights. KI-gestützt, Konfliktzonen gefiltert. Kostenlos, ohne Anmeldung.",
     "placeholder": "z.B. Berlin nach London nächste Woche unter 500€, Business Class",
     "ariaLabel": "Beschreibe deine Reise in natürlicher Sprache",
