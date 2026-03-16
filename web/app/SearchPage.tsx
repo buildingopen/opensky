@@ -1442,13 +1442,24 @@ function HomePage() {
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
-        setError("Search timed out. Google Flights was slow to respond. Please try again.");
-        trackEvent("search_error", { stage: "client", type: "abort" });
+        // Use callback form to read current flights without stale closure
+        setFlights((current) => {
+          if (current.length > 0) {
+            setIsPartial(true);
+            setPhase("done");
+            trackEvent("search_timeout_partial", { stage: "client", count: current.length });
+          } else {
+            setNoResultsReason("timeout");
+            setPhase("done");
+            trackEvent("search_error", { stage: "client", type: "abort_no_results" });
+          }
+          return current;
+        });
       } else {
         setError("Could not reach the search API. Please try again.");
         trackEvent("search_error", { stage: "client", type: "network" });
+        setPhase("idle");
       }
-      setPhase("idle");
     } finally {
       clearTimeout(timeout);
       abortRef.current = null;
@@ -1943,7 +1954,22 @@ function HomePage() {
 
             {flights.length === 0 && (!returnFlights || returnFlights.length === 0) && (!roundTripResults || roundTripResults.length === 0) ? (
               <div className="mt-6 text-center py-12 space-y-3">
-                {noResultsReason === "provider_error" ? (
+                {noResultsReason === "timeout" ? (
+                  <>
+                    <p className="text-lg font-medium text-[var(--color-text)]">Search timed out</p>
+                    <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
+                      Google Flights was slow to respond. This usually works on a second try.
+                    </p>
+                    <div className="flex flex-col items-center gap-2 mt-2">
+                      <button onClick={() => search()} className="px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-black rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors">
+                        Try again
+                      </button>
+                      <p className="text-xs text-[var(--color-text-muted)]">
+                        Tip: try fewer dates, a single destination, or search at off-peak hours.
+                      </p>
+                    </div>
+                  </>
+                ) : noResultsReason === "provider_error" ? (
                   <>
                     <p className="text-lg font-medium text-[var(--color-text)]">Providers are having a moment</p>
                     <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
@@ -1993,7 +2019,7 @@ function HomePage() {
                 {isPartial && flights.length > 0 && (
                   <div className="mt-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg px-4 py-3 flex items-center justify-between">
                     <p className="text-sm text-[var(--color-text-muted)]">
-                      Showing partial results. Google Flights was slow to respond.
+                      We found {flights.length} flight{flights.length !== 1 ? "s" : ""} but couldn&apos;t check all dates. Some options may be missing.
                     </p>
                     <button onClick={() => search()} className="text-sm font-medium text-[var(--color-accent)] hover:underline whitespace-nowrap ml-4">
                       Try again
