@@ -1620,10 +1620,10 @@ def _send_confirmation_email(
 
 class AlertCreate(BaseModel):
     email: str
-    query: str
+    query: str = Field(..., min_length=3, max_length=500)
     origins: list[str]
     destinations: list[str]
-    max_price: float = 0
+    max_price: float = Field(default=0, ge=0, le=100000)
     currency: str = "EUR"
     cabin: str = "economy"
     is_round_trip: bool = False
@@ -1638,6 +1638,19 @@ async def create_alert(body: AlertCreate):
         raise HTTPException(status_code=400, detail="Origins and destinations are required.")
     if len(body.origins) > MAX_ORIGINS or len(body.destinations) > MAX_DESTINATIONS:
         raise HTTPException(status_code=400, detail="Too many origins or destinations.")
+    # Validate IATA codes
+    body.origins = [c.upper()[:3] for c in body.origins]
+    body.destinations = [c.upper()[:3] for c in body.destinations]
+    bad_codes = _validate_iata_codes(body.origins, "origin") + _validate_iata_codes(body.destinations, "dest")
+    if bad_codes:
+        raise HTTPException(status_code=400, detail=f"Invalid airport code(s): {', '.join(bad_codes[:5])}")
+    # Sanitize currency and cabin
+    body.currency = body.currency.upper()[:3] if body.currency else "EUR"
+    if body.currency not in VALID_CURRENCIES:
+        body.currency = "EUR"
+    body.cabin = body.cabin.lower() if body.cabin else "economy"
+    if body.cabin not in VALID_CABINS:
+        body.cabin = "economy"
 
     conn = _alerts_db()
     try:
