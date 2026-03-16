@@ -15,7 +15,7 @@ export function CloudsBackground() {
           left: "-120px",
           background: "radial-gradient(ellipse, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 40%, transparent 70%)",
           filter: "blur(40px)",
-          animationDuration: "18s",
+          animationDuration: "10s",
         }}
       />
       {/* Upper right, green tint */}
@@ -28,8 +28,8 @@ export function CloudsBackground() {
           right: "-80px",
           background: "radial-gradient(ellipse, rgba(34,197,94,0.10) 0%, rgba(34,197,94,0.03) 40%, transparent 70%)",
           filter: "blur(50px)",
-          animationDelay: "-5s",
-          animationDuration: "22s",
+          animationDelay: "-3s",
+          animationDuration: "12s",
         }}
       />
       {/* Mid-left wisp, white */}
@@ -42,8 +42,8 @@ export function CloudsBackground() {
           left: "-60px",
           background: "radial-gradient(ellipse, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 45%, transparent 70%)",
           filter: "blur(35px)",
-          animationDelay: "-8s",
-          animationDuration: "25s",
+          animationDelay: "-5s",
+          animationDuration: "13s",
         }}
       />
       {/* Center-right, larger, subtle white */}
@@ -56,8 +56,8 @@ export function CloudsBackground() {
           right: "-180px",
           background: "radial-gradient(ellipse, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.025) 45%, transparent 65%)",
           filter: "blur(45px)",
-          animationDelay: "-12s",
-          animationDuration: "28s",
+          animationDelay: "-7s",
+          animationDuration: "15s",
         }}
       />
       {/* Lower left, green accent */}
@@ -70,8 +70,8 @@ export function CloudsBackground() {
           left: "8%",
           background: "radial-gradient(ellipse, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.025) 40%, transparent 70%)",
           filter: "blur(40px)",
-          animationDelay: "-15s",
-          animationDuration: "20s",
+          animationDelay: "-9s",
+          animationDuration: "11s",
         }}
       />
       {/* Bottom right, white */}
@@ -84,8 +84,8 @@ export function CloudsBackground() {
           right: "3%",
           background: "radial-gradient(ellipse, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.035) 40%, transparent 70%)",
           filter: "blur(45px)",
-          animationDelay: "-3s",
-          animationDuration: "24s",
+          animationDelay: "-2s",
+          animationDuration: "14s",
         }}
       />
     </div>
