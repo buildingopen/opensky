@@ -277,7 +277,8 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
 function useQueryPreview(prompt: string): QueryPreview | null {
   return useMemo(() => {
     if (!prompt || prompt.length < 5) return null;
-    const lower = prompt.toLowerCase();
+    // Normalize commas to spaces so "India to Germany, next week" parses correctly
+    const lower = prompt.toLowerCase().replace(/,/g, " ").replace(/\s{2,}/g, " ").trim();
 
     const extracted = extractOriginDest(lower);
     if (!extracted) return null;
