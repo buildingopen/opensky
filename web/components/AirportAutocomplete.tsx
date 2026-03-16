@@ -112,6 +112,15 @@ export function AirportAutocomplete({ id, label, placeholder, value, onChange, d
               }`}
             >
               <span className="font-mono font-semibold text-[var(--color-accent)] w-10">{a.iata}</span>
+              <img
+                src={`https://flagcdn.com/w20/${a.country.toLowerCase()}.png`}
+                alt=""
+                width={16}
+                height={12}
+                loading="lazy"
+                className="w-4 h-3 rounded-[1px] object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
               <span className="truncate">{a.city}, {a.country}</span>
               <span className="text-xs text-[var(--color-text-muted)] ml-auto truncate hidden sm:inline">{a.name}</span>
             </li>

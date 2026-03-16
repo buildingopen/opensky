@@ -56,7 +56,7 @@ export function SavedSearchesList({ searches, onSelect, onClear }: { searches: S
             key={s.timestamp}
             onClick={() => onSelect(s.query)}
             aria-label={`Search: ${s.query}`}
-            className="text-[13px] px-3.5 py-1.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)] transition-all duration-150 whitespace-nowrap max-w-[200px] truncate"
+            className="text-[13px] px-3.5 py-1.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)] transition-all duration-150 whitespace-nowrap max-w-[min(200px,calc(100vw-4rem))] truncate"
           >
             {s.query}
           </button>

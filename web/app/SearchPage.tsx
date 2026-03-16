@@ -254,6 +254,12 @@ function RouteWithFlags({ route, names }: { route: string; names: Record<string,
   );
 }
 
+const ExternalLinkIcon = () => (
+  <svg viewBox="0 0 12 12" className="w-3 h-3 inline" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M3.5 3.5h5v5M8.5 3.5L3.5 8.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 function sortFlights(flights: FlightOut[], key: SortKey): FlightOut[] {
   return [...flights].sort((a, b) => {
     if (key === "price") return (a.price || Infinity) - (b.price || Infinity);
@@ -367,7 +373,7 @@ function FlightCard({
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-[var(--color-text)]"><RouteWithFlags route={flight.route} names={airportNames} /></div>
           {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5"><AirlineLogos codes={airlines} /></div>}
-          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-[var(--color-text-muted)]">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-xs text-[var(--color-text-muted)] leading-relaxed">
             <span>{formatDate(flightDisplayDate(flight))}</span>
             {firstLeg && lastLeg && (
               <span className="text-[var(--color-text)]">
@@ -410,7 +416,7 @@ function FlightCard({
                     aria-label="View on Google Flights"
                     className="px-3 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
                   >
-                    Google Flights ↗
+                    Google Flights <ExternalLinkIcon />
                   </a>
                 </>
               )}
@@ -453,7 +459,7 @@ function FlightCard({
               <span className="text-xs text-[var(--color-text-muted)] ml-auto">{formatDuration(leg.duration_minutes)}</span>
             </div>
           ))}
-          {flight.risk_details.length > 0 && (
+          {flight.risk_details?.length > 0 && (
             <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
               <p className="text-xs text-[var(--color-text-muted)] mb-1">Risk factors:</p>
               {flight.risk_details.map((rd, i) => (
@@ -508,7 +514,7 @@ function RoundTripFlightRow({
           <RouteWithFlags route={flight.route} names={airportNames} />
         </div>
         {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5"><AirlineLogos codes={airlines} /></div>}
-        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-[var(--color-text-muted)]">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs text-[var(--color-text-muted)] leading-relaxed">
           <span>{formatDate(flightDisplayDate(flight))}</span>
           {firstLeg && lastLeg && (
             <span className="text-[var(--color-text)]">
@@ -535,7 +541,7 @@ function RoundTripFlightRow({
             onClick={() => onOutboundClick("booking", flight)}
             className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
           >
-            Book ↗
+            Book <ExternalLinkIcon />
           </a>
         ) : (
           <a
@@ -545,7 +551,7 @@ function RoundTripFlightRow({
             onClick={() => onOutboundClick("google", flight)}
             className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
           >
-            Google Flights ↗
+            Google Flights <ExternalLinkIcon />
           </a>
         )}
       </div>
@@ -613,7 +619,7 @@ interface ProgressInfo {
 
 function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSearch | null; progress: ProgressInfo | null; filteredCount: number }) {
   const totalRoutes = progress?.total ?? parsed?.total_routes ?? 0;
-  const workers = Math.min(8, totalRoutes);
+  const workers = Math.min(16, totalRoutes);
   const manualMinutes = Math.ceil(totalRoutes * 2.5); // ~2.5 min per manual Google Flights search (navigate, enter airports, pick date, wait, compare)
   const manualLabel = manualMinutes >= 60
     ? `${Math.floor(manualMinutes / 60)}h ${manualMinutes % 60}min`
@@ -671,7 +677,12 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
           </p>
         </>
       ) : (
-        <p className="text-[var(--color-text-muted)]">Understanding your trip...</p>
+        <>
+          <p className="text-[var(--color-text-muted)]">Understanding your trip...</p>
+          <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+            <div className="h-full bg-[var(--color-accent)] opacity-60 rounded-full shimmer-bar" />
+          </div>
+        </>
       )}
     </div>
   );
@@ -720,7 +731,7 @@ function CompactFlightRow({
           rel="noopener noreferrer"
           className="text-xs text-[var(--color-accent)] hover:underline"
         >
-          Google ↗
+          Google <ExternalLinkIcon />
         </a>
       </div>
     </div>
@@ -812,7 +823,7 @@ function ScanSummaryExpanded({
                 <span className="text-[var(--color-text-muted)] text-xs">{formatDate(f.date)}</span>
                 <span className="text-[var(--color-text-muted)] text-xs">{formatDuration(f.duration_minutes)}</span>
                 <div className="ml-auto text-xs">
-                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin, f.legs)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Google Flights ↗</a>
+                  <a href={safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin, f.legs)) || "#"} target="_blank" rel="noopener noreferrer" className="text-[var(--color-accent)] hover:underline">Google Flights <ExternalLinkIcon /></a>
                 </div>
               </div>
             ))}
@@ -973,9 +984,9 @@ function buildPromptFromForm(f: SearchFormState): string {
 // ---------------------------------------------------------------------------
 const EXAMPLES = [
   "JFK to London, next week, under $500",
-  "Barcelona to Paris, round trip April 10",
+  "Barcelona to Paris, round trip April 10-17",
   "New York to Tokyo, business class, under $3000",
-  "Berlin to anywhere in Europe, cheapest week in July",
+  "Berlin to anywhere in Europe, July, under 100",
 ];
 
 // ---------------------------------------------------------------------------
@@ -1015,10 +1026,13 @@ function HomePage() {
   const [cacheAgeSeconds, setCacheAgeSeconds] = useState<number | null>(null);
   const [isPartial, setIsPartial] = useState(false);
   const [previewFlights, setPreviewFlights] = useState<FlightOut[]>([]);
+  const [tripTab, setTripTab] = useState<"roundtrip" | "oneway">("roundtrip");
+  const [rtShowCount, setRtShowCount] = useState(5);
   const [rateLimitReset, setRateLimitReset] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const savedSearches = useSavedSearches();
   const [minutesSaved, setMinutesSaved] = useState(0);
 
@@ -1134,6 +1148,8 @@ function HomePage() {
     setCacheAgeSeconds(null);
     setPreviewFlights([]);
     setIsPartial(false);
+    setTripTab("roundtrip");
+    setRtShowCount(5);
 
     // Update browser URL so refresh/back restores the search (C6)
     if (typeof window !== "undefined") {
@@ -1146,7 +1162,8 @@ function HomePage() {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 90_000);
+    abortRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 150_000);
 
     try {
       const resp = await fetch(`${API_URL}/api/search`, {
@@ -1212,6 +1229,11 @@ function HomePage() {
               setFlights(msg.flights || []);
               setReturnFlights(msg.return_flights || null);
               setRoundTripResults(msg.round_trip_results || null);
+              if (msg.round_trip_results?.length) {
+                setTripTab("roundtrip");
+              } else {
+                setTripTab("oneway");
+              }
               setZonesWarning(msg.zones_warning || null);
               setSummary(msg.summary || null);
               setNoResultsReason(msg.no_results_reason || null);
@@ -1259,8 +1281,16 @@ function HomePage() {
       setPhase("idle");
     } finally {
       clearTimeout(timeout);
+      abortRef.current = null;
       setPhase((p) => (p === "parsing" || p === "searching" ? "idle" : p));
     }
+  };
+
+  const cancelSearch = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setPhase("idle");
+    setError(null);
   };
 
   const handleOutboundClick = (provider: "booking" | "google", flight: FlightOut) => {
@@ -1415,133 +1445,161 @@ function HomePage() {
         )}
 
         {/* Search surface */}
-        <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 search-surface transition-all duration-200`}>
-          {searchMode === "structured" ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <AirportAutocomplete
-                  id="from"
-                  label="From"
-                  placeholder="JFK, London..."
-                  value={form.from}
-                  onChange={(v) => setForm((f) => ({ ...f, from: v }))}
-                  disabled={isLoading}
-                />
-                <AirportAutocomplete
-                  id="to"
-                  label="To"
-                  placeholder="LHR, Paris..."
-                  value={form.to}
-                  onChange={(v) => setForm((f) => ({ ...f, to: v }))}
-                  disabled={isLoading}
-                />
-                <div>
-                  <label htmlFor="depart" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">Depart</label>
-                  <input
-                    id="depart"
-                    type="date"
-                    value={form.depart}
-                    onChange={(e) => setForm((f) => ({ ...f, depart: e.target.value }))}
-                    disabled={isLoading}
-                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors"
-                  />
-                  <label className="flex items-center gap-1.5 mt-1.5 text-[11px] text-[var(--color-text-muted)] cursor-pointer select-none">
-                    <input type="checkbox" checked={form.flexibleDates} onChange={(e) => setForm((f) => ({ ...f, flexibleDates: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" aria-label="Search flexible dates" />
-                    +/- 3 days
-                  </label>
-                </div>
-                <div>
-                  <label htmlFor="return" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">Return</label>
-                  <input
-                    id="return"
-                    type="date"
-                    value={form.returnDate}
-                    onChange={(e) => setForm((f) => ({ ...f, returnDate: e.target.value }))}
-                    disabled={isLoading || !form.roundTrip}
-                    className={`w-full bg-[var(--color-background)] border rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors disabled:opacity-30 ${returnDateInvalid ? "border-[var(--color-danger)]" : "border-[var(--color-border)]"}`}
-                  />
-                  {returnDateInvalid && (
-                    <p className="mt-1 text-[11px] text-[var(--color-danger)]">Return must be after departure</p>
-                  )}
-                </div>
+        <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-white/[0.06] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
+          {hasResults ? (
+            /* Compact mode: single-line query display with action button */
+            <div className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-[var(--color-text)]/70 truncate">{prompt || [form.from, form.to, form.depart].filter(Boolean).join(" → ")}</p>
               </div>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5">
-                <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] cursor-pointer select-none">
-                  <input type="checkbox" checked={form.roundTrip} onChange={(e) => setForm((f) => ({ ...f, roundTrip: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
-                  Round trip
-                </label>
-                <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] cursor-pointer select-none">
-                  <input type="checkbox" checked={form.directOnly} onChange={(e) => setForm((f) => ({ ...f, directOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
-                  Direct only
-                </label>
-                <label className="flex items-center gap-2 text-sm text-[var(--color-accent)] cursor-pointer select-none" title="Filter out routes through conflict zones">
-                  <input type="checkbox" checked={form.safeOnly} onChange={(e) => setForm((f) => ({ ...f, safeOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
-                  Safe routes only
-                </label>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={form.cabin}
-                    onChange={(e) => setForm((f) => ({ ...f, cabin: e.target.value }))}
-                    disabled={isLoading}
-                    className="bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 cursor-pointer"
-                  >
-                    <option value="economy">Economy</option>
-                    <option value="premium_economy">Premium</option>
-                    <option value="business">Business</option>
-                    <option value="first">First</option>
-                  </select>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <label htmlFor="maxPrice" className="text-sm text-[var(--color-text-muted)]">Max $</label>
-                  <input
-                    id="maxPrice"
-                    type="number"
-                    placeholder="any"
-                    value={form.maxPrice}
-                    onChange={(e) => setForm((f) => ({ ...f, maxPrice: e.target.value }))}
-                    disabled={isLoading}
-                    className="w-20 bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none focus:border-[var(--color-accent)]/50"
-                  />
-                </div>
-              </div>
+              {isLoading ? (
+                <button
+                  onClick={cancelSearch}
+                  aria-label="Cancel search"
+                  className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-white/[0.08] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-white/[0.15] transition-all duration-200"
+                >
+                  Cancel
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setPrompt(""); setTimeout(() => inputRef.current?.focus(), 0); }}
+                  aria-label="New search"
+                  className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-white/[0.08] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-white/[0.15] transition-all duration-200"
+                >
+                  New search
+                </button>
+              )}
             </div>
           ) : (
-            <div>
-              <textarea
-                ref={inputRef}
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), canSearch() && search())}
-                placeholder="e.g. JFK to London next week under $500, business class"
-                disabled={isLoading}
-                rows={2}
-                className="w-full bg-transparent border-none px-0 py-1 text-[15px] leading-relaxed text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/50 focus:outline-none resize-none"
-                aria-label="Describe your trip in plain English"
-              />
-            </div>
-          )}
+            /* Full mode: textarea + controls */
+            <>
+              {searchMode === "structured" ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <AirportAutocomplete
+                      id="from"
+                      label="From"
+                      placeholder="JFK, London..."
+                      value={form.from}
+                      onChange={(v) => setForm((f) => ({ ...f, from: v }))}
+                      disabled={isLoading}
+                    />
+                    <AirportAutocomplete
+                      id="to"
+                      label="To"
+                      placeholder="LHR, Paris..."
+                      value={form.to}
+                      onChange={(v) => setForm((f) => ({ ...f, to: v }))}
+                      disabled={isLoading}
+                    />
+                    <div>
+                      <label htmlFor="depart" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">Depart</label>
+                      <input
+                        id="depart"
+                        type="date"
+                        value={form.depart}
+                        onChange={(e) => setForm((f) => ({ ...f, depart: e.target.value }))}
+                        disabled={isLoading}
+                        className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors"
+                      />
+                      <label className="flex items-center gap-1.5 mt-1.5 text-[11px] text-[var(--color-text-muted)] cursor-pointer select-none">
+                        <input type="checkbox" checked={form.flexibleDates} onChange={(e) => setForm((f) => ({ ...f, flexibleDates: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" aria-label="Search flexible dates" />
+                        +/- 3 days
+                      </label>
+                    </div>
+                    <div>
+                      <label htmlFor="return" className="block text-[11px] font-medium text-[var(--color-text-muted)]/70 mb-1.5 uppercase tracking-wider">Return</label>
+                      <input
+                        id="return"
+                        type="date"
+                        value={form.returnDate}
+                        onChange={(e) => setForm((f) => ({ ...f, returnDate: e.target.value }))}
+                        disabled={isLoading || !form.roundTrip}
+                        className={`w-full bg-[var(--color-background)] border rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors disabled:opacity-30 ${returnDateInvalid ? "border-[var(--color-danger)]" : "border-[var(--color-border)]"}`}
+                      />
+                      {returnDateInvalid && (
+                        <p className="mt-1 text-[11px] text-[var(--color-danger)]">Return must be after departure</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5">
+                    <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] cursor-pointer select-none">
+                      <input type="checkbox" checked={form.roundTrip} onChange={(e) => setForm((f) => ({ ...f, roundTrip: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
+                      Round trip
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] cursor-pointer select-none">
+                      <input type="checkbox" checked={form.directOnly} onChange={(e) => setForm((f) => ({ ...f, directOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
+                      Direct only
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-[var(--color-accent)] cursor-pointer select-none" title="Filter out routes through conflict zones">
+                      <input type="checkbox" checked={form.safeOnly} onChange={(e) => setForm((f) => ({ ...f, safeOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
+                      Safe routes only
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={form.cabin}
+                        onChange={(e) => setForm((f) => ({ ...f, cabin: e.target.value }))}
+                        disabled={isLoading}
+                        className="bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 cursor-pointer"
+                      >
+                        <option value="economy">Economy</option>
+                        <option value="premium_economy">Premium</option>
+                        <option value="business">Business</option>
+                        <option value="first">First</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <label htmlFor="maxPrice" className="text-sm text-[var(--color-text-muted)]">Max $</label>
+                      <input
+                        id="maxPrice"
+                        type="number"
+                        placeholder="any"
+                        value={form.maxPrice}
+                        onChange={(e) => setForm((f) => ({ ...f, maxPrice: e.target.value }))}
+                        disabled={isLoading}
+                        className="w-20 bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none focus:border-[var(--color-accent)]/50"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <textarea
+                    ref={inputRef}
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), canSearch() && search())}
+                    placeholder="e.g. JFK to London next week under $500, business class"
+                    disabled={isLoading}
+                    rows={2}
+                    className="w-full bg-transparent border-none px-1 py-2 text-base leading-relaxed text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none resize-none"
+                    aria-label="Describe your trip in plain English"
+                  />
+                </div>
+              )}
 
-          <div className={`${searchMode === "structured" ? "mt-3" : "mt-3 pt-3 border-t border-[var(--color-border)]/50"} flex items-center justify-between`}>
-            <button
-              type="button"
-              onClick={() => setSearchMode((m) => (m === "structured" ? "natural" : "structured"))}
-              className="text-xs text-[var(--color-text-muted)]/60 hover:text-[var(--color-text-muted)] transition-colors"
-            >
-              {searchMode === "structured" ? "Describe your trip instead" : "Use search form instead"}
-            </button>
-            <div className="flex items-center gap-3">
-              {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/30 hidden sm:inline">Enter to search</span>}
-              <button
-                onClick={() => search()}
-                disabled={isLoading || !canSearch()}
-                aria-label={isLoading ? "Searching" : "Search flights"}
-                aria-busy={isLoading}
-                className="px-5 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-30 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-lg transition-all duration-150 hover:shadow-[0_0_20px_rgba(34,197,94,0.15)]"
-              >
-                {isLoading ? "Searching..." : "Search"}
-              </button>
-            </div>
-          </div>
+              <div className={`${searchMode === "structured" ? "mt-3" : "mt-1 pt-3 border-t border-white/[0.04]"} flex items-center justify-between`}>
+                <button
+                  type="button"
+                  onClick={() => setSearchMode((m) => (m === "structured" ? "natural" : "structured"))}
+                  className="text-xs text-[var(--color-text-muted)]/60 hover:text-[var(--color-text-muted)] transition-colors duration-200"
+                >
+                  {searchMode === "structured" ? "Describe your trip instead" : "Use search form instead"}
+                </button>
+                <div className="flex items-center gap-3">
+                  {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/25 hidden sm:inline">Enter to search</span>}
+                  <button
+                    onClick={() => search()}
+                    disabled={!canSearch()}
+                    aria-label="Search flights"
+                    className="px-6 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-25 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-[0_0_28px_rgba(34,197,94,0.2)]"
+                  >
+                    Search
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Example prompts */}
@@ -1556,7 +1614,7 @@ function HomePage() {
                   trackEvent("example_prompt_clicked", { prompt: ex });
                   setTimeout(() => inputRef.current?.focus(), 0);
                 }}
-                className={`text-[13px] px-3.5 py-1.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)] transition-all duration-150 whitespace-nowrap ${i >= 2 ? "hidden sm:inline-flex" : ""}`}
+                className="text-[13px] px-4 py-2 rounded-full border border-white/[0.05] bg-[var(--color-surface)] text-[var(--color-text-muted)]/80 hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] hover:border-white/[0.1] transition-all duration-200 whitespace-nowrap hover:-translate-y-px"
               >
                 {ex}
               </button>
@@ -1601,7 +1659,7 @@ function HomePage() {
                     <button
                       key={i}
                       onClick={() => { setSearchMode("natural"); setPrompt(s); search(s); }}
-                      className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-accent)]/40 text-[var(--color-text)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
+                      className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
                     >
                       {s}
                     </button>
@@ -1614,6 +1672,9 @@ function HomePage() {
 
         {isLoading && (
           <>
+            {parsed && (
+              <ParsedConfig parsed={parsed} cacheAgeSeconds={null} onRefresh={() => search()} />
+            )}
             <SearchingState parsed={parsed} progress={progress} filteredCount={safetyFilteredCount} />
             <div className="mt-6 space-y-4">
               {previewFlights.length > 0 ? (
@@ -1635,9 +1696,9 @@ function HomePage() {
                   ))}
                 </div>
               ) : (
-                <div className="animate-pulse">
+                <div className="animate-pulse overflow-hidden">
                   {[1, 2].map((i) => (
-                    <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 mb-4">
+                    <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 mb-4 overflow-hidden">
                       <div className="flex justify-between gap-4">
                         <div className="flex-1 space-y-2.5">
                           <div className="h-4 bg-[var(--color-border)] rounded w-3/4" />
@@ -1663,9 +1724,11 @@ function HomePage() {
             <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} />
 
             {/* Safety value prop badge */}
-            {flights.length > 0 && (() => {
-              const safeCount = flights.filter((f) => f.risk_level === "safe").length;
-              const total = flights.length;
+            {(() => {
+              const items = (tripTab === "roundtrip" && roundTripResults?.length) ? roundTripResults : flights;
+              if (!items.length) return null;
+              const safeCount = items.filter((f) => f.risk_level === "safe").length;
+              const total = items.length;
               const allSafe = safeCount === total;
               return (
                 <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border ${
@@ -1753,47 +1816,54 @@ function HomePage() {
                   </div>
                 )}
 
-                {/* Airline filter */}
-                <AirlineFilterChips
-                  airlines={airlineFilter.airlines}
-                  selected={airlineFilter.selected}
-                  toggle={airlineFilter.toggle}
-                  clearFilter={airlineFilter.clearFilter}
-                  totalCount={flights.length}
-                  filteredCount={displayFlights.length}
-                />
+                {/* Trip type tabs: show when both RT and one-way results exist */}
+                {roundTripResults && roundTripResults.length > 0 && flights.length > 0 && (
+                  <div className="flex gap-2 mt-4 mb-2">
+                    <button
+                      onClick={() => setTripTab("roundtrip")}
+                      className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                        tripTab === "roundtrip"
+                          ? "bg-[var(--color-accent)] text-black font-medium"
+                          : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
+                      }`}
+                    >
+                      Round trips ({roundTripResults.length})
+                    </button>
+                    <button
+                      onClick={() => setTripTab("oneway")}
+                      className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                        tripTab === "oneway"
+                          ? "bg-[var(--color-accent)] text-black font-medium"
+                          : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
+                      }`}
+                    >
+                      One-way ({flights.length})
+                    </button>
+                  </div>
+                )}
 
-                {/* Recommendation stack */}
-                <div className="mt-6 space-y-4">
-                  <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
-                  {recs.slice(0, 4).map(({ label, flight }, i) => (
-                    <FlightCard
-                      key={i}
-                      flight={flight}
-                      label={label}
-                      reason={getRecommendationReason(flight, flights, label)}
-                      airportNames={airportNames}
-                      attributionParams={attributionParams}
-                      onOutboundClick={handleOutboundClick}
-                      cabin={parsed?.cabin}
+                {/* One-way results: show when no RT exists, or when one-way tab active */}
+                {((!roundTripResults?.length) || tripTab === "oneway") && flights.length > 0 && (
+                  <>
+                    {/* Airline filter */}
+                    <AirlineFilterChips
+                      airlines={airlineFilter.airlines}
+                      selected={airlineFilter.selected}
+                      toggle={airlineFilter.toggle}
+                      clearFilter={airlineFilter.clearFilter}
+                      totalCount={flights.length}
+                      filteredCount={displayFlights.length}
                     />
-                  ))}
-                </div>
 
-                {/* More flights */}
-                {(() => {
-                  const recKeys = new Set(recs.map((r) => `${r.flight.route}|${r.flight.date}|${r.flight.provider}`));
-                  const moreFlights = sortFlights(pricedFlights.length > 0 ? pricedFlights : flights, "score").filter(
-                    (f) => !recKeys.has(`${f.route}|${f.date}|${f.provider}`)
-                  );
-                  if (moreFlights.length === 0) return null;
-                  return (
-                    <div className="mt-8 space-y-3">
-                      <h3 className="text-sm font-semibold text-[var(--color-text-muted)]">More flights</h3>
-                      {moreFlights.slice(0, 6).map((f, i) => (
+                    {/* Recommendation stack */}
+                    <div className="mt-6 space-y-4">
+                      <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
+                      {recs.slice(0, 4).map(({ label, flight }, i) => (
                         <FlightCard
-                          key={`more-${i}`}
-                          flight={f}
+                          key={i}
+                          flight={flight}
+                          label={label}
+                          reason={getRecommendationReason(flight, flights, label)}
                           airportNames={airportNames}
                           attributionParams={attributionParams}
                           onOutboundClick={handleOutboundClick}
@@ -1801,18 +1871,41 @@ function HomePage() {
                         />
                       ))}
                     </div>
-                  );
-                })()}
 
-                {/* Round-trip paired results */}
-                {roundTripResults && roundTripResults.length > 0 && (
-                  <div className="mt-8">
-                    <h3 className="text-sm font-semibold text-[var(--color-text)] uppercase tracking-wider mb-3">Round-trip options</h3>
+                    {/* More flights */}
+                    {(() => {
+                      const recKeys = new Set(recs.map((r) => `${r.flight.route}|${r.flight.date}|${r.flight.provider}`));
+                      const moreFlights = sortFlights(pricedFlights.length > 0 ? pricedFlights : flights, "score").filter(
+                        (f) => !recKeys.has(`${f.route}|${f.date}|${f.provider}`)
+                      );
+                      if (moreFlights.length === 0) return null;
+                      return (
+                        <div className="mt-8 space-y-3">
+                          <h3 className="text-sm font-semibold text-[var(--color-text-muted)]">More flights</h3>
+                          {moreFlights.slice(0, 6).map((f, i) => (
+                            <FlightCard
+                              key={`more-${i}`}
+                              flight={f}
+                              airportNames={airportNames}
+                              attributionParams={attributionParams}
+                              onOutboundClick={handleOutboundClick}
+                              cabin={parsed?.cabin}
+                            />
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </>
+                )}
+
+                {/* Round-trip paired results: show when no one-way exists, or RT tab active */}
+                {roundTripResults && roundTripResults.length > 0 && ((!flights.length) || tripTab === "roundtrip") && (
+                  <div className="mt-6">
                     <p className="text-xs text-[var(--color-text-muted)] mb-4">
                       Each option shows outbound + return. Prices are combined; you&apos;ll complete two separate bookings.
                     </p>
                     <div className="space-y-4">
-                      {roundTripResults.slice(0, 10).map((rt, i) => (
+                      {roundTripResults.slice(0, rtShowCount).map((rt, i) => (
                         <RoundTripCard
                           key={i}
                           result={rt}
@@ -1823,6 +1916,14 @@ function HomePage() {
                         />
                       ))}
                     </div>
+                    {rtShowCount < roundTripResults.length && (
+                      <button
+                        onClick={() => setRtShowCount((c) => c + 5)}
+                        className="w-full py-3 mt-3 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                      >
+                        Show {Math.min(5, roundTripResults.length - rtShowCount)} more round trips
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -1900,7 +2001,7 @@ function HomePage() {
                     You book with the provider, not us.{" "}
                     <a href="/methodology" className="text-[var(--color-accent)] hover:underline">How we rank</a>
                   </span>
-                  {zonesWarning && <span className="text-xs text-[var(--color-caution)]">{zonesWarning}</span>}
+                  {/* zonesWarning is dev/CLI info, not user-facing */}
                 </div>
               </>
             )}
@@ -1931,29 +2032,7 @@ function HomePage() {
           </div>
         )}
 
-        {/* Empty state - user benefits */}
-        {phase === "idle" && flights.length === 0 && !error && (
-          <div className="text-center py-8">
-            <div className="flex flex-wrap justify-center gap-6 text-xs text-[var(--color-text-muted)]">
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-safe)]" />
-                Every flight. Powered by Google.
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-safe)]" />
-                Conflict zones filtered
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-safe)]" />
-                AI-powered search
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-safe)]" />
-                Free, no account needed
-              </span>
-            </div>
-          </div>
-        )}
+        {/* Empty state spacer (trust microcopy is in hero section) */}
       </section>
 
     </div>

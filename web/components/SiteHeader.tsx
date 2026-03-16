@@ -17,7 +17,7 @@ export function SiteHeader() {
 
   return (
     <header className="border-b border-[var(--color-border)]">
-      <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="max-w-[min(64rem,92vw)] mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-[var(--color-accent)]" fill="currentColor">
             <path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 2.59 4.49L21 11.49c.81-.23 1.28-1.05 1.07-1.85z" />
@@ -26,16 +26,16 @@ export function SiteHeader() {
             <span className="text-[var(--color-accent)]">fly</span>fast
           </span>
         </Link>
-        <nav className="flex items-center gap-3 sm:gap-4 text-sm">
+        <nav className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm">
           <Link
             href="/methodology"
-            className="hidden sm:inline text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
           >
             How it works
           </Link>
           <Link
             href="/contact"
-            className="hidden sm:inline text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
           >
             Contact
           </Link>

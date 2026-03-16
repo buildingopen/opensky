@@ -267,10 +267,17 @@ Rules:
 - "this weekend": if today IS Saturday → return today + tomorrow (Sunday). If today IS Sunday → return today only. If today is Mon–Fri → return the nearest upcoming Saturday + Sunday.
 - If no dates specified, use next 7 days from today.
 - return_dates: list of return dates for round trips. Empty list [] for one-way trips.
-  - If user says "round trip", "return", "returning on", "back on", parse the return date(s).
+  - Set return_dates (non-empty) when the query contains ANY of these round trip indicators:
+    English: "round trip", "return", "returning on", "back on", "come back", "both ways"
+    German: "hin und zurück", "hin- und rückflug", "rückflug", "zurück", "retour", "rundflug"
+    Spanish: "ida y vuelta", "viaje redondo", "vuelo de regreso"
+    French: "aller-retour", "aller retour", "vol retour"
+    Italian: "andata e ritorno", "ritorno"
+    Portuguese: "ida e volta"
+    Also set true if the query implies needing to come back (e.g., "I need to be back by...", "flying home on...")
   - "JFK to London April 10 returning April 17" -> dates=["2026-04-10"], return_dates=["2026-04-17"]
   - "round trip March 10-12 returning March 20-22" -> dates=["2026-03-10","2026-03-11","2026-03-12"], return_dates=["2026-03-20","2026-03-21","2026-03-22"]
-  - If user says "round trip" but no specific return date, set return_dates to 7 days after each outbound date.
+  - If user indicates round trip but no specific return date, set return_dates to 7 days after each outbound date.
 - max_price 0 means no limit.
 - cabin: economy | premium_economy | business | first
 - stops: any | non_stop | one_stop_or_fewer | two_or_fewer_stops
@@ -306,9 +313,29 @@ Examples:
 - "anywhere in Asia" -> pick 10-15 relevant airports: NRT, HND, ICN, PVG, HKG, BKK, SIN, KUL, MNL, CGK, DEL, BOM, CMB, KTM, DAD
 - "anywhere in Americas" -> pick 10-15 relevant airports: JFK, LAX, ORD, MIA, GRU, MEX, BOG, LIM, SCL, EZE, YYZ, YVR, SFO, ATL, DFW
 - When user says "anywhere" or "any destination", pick 10-15 relevant airports that match trip context (not always the same list)
+- NEVER include origin airports in the destinations list. If the user flies FROM Berlin, BER must NOT appear in destinations. Same for all origins.
 - IMPORTANT: For "anywhere warm", "beach", "sunny", or similar open-ended destination searches, use at most 5-6 destinations to avoid search timeout. More than 6 destinations × multiple dates = too many routes.
 - "fly somewhere warm from [European city]" → prefer NEARBY warm airports (shorter = cheaper, more likely under budget): AGP (Malaga), PMI (Palma), ATH (Athens), TFS (Tenerife), RAK (Marrakech), HRG (Hurghada), LPA (Gran Canaria), FNC (Madeira). Only add long-haul (MIA, BKK, SIN, CUN) if the user has NO price constraint or budget > €500.
-- "cheapest week to fly JFK to CDG" -> one date per week for next 4 weeks from today ({today})"""
+- "cheapest week to fly JFK to CDG" -> one date per week for next 4 weeks from today ({today})
+- "HAM to anywhere beach next week roundtrip 5-7 days" -> {{"origins":["HAM"],"destinations":["AGP","PMI","ATH","TFS","HRG"],"dates":["2026-03-23","2026-03-24","2026-03-25","2026-03-27"],"return_dates":["2026-03-28","2026-03-29","2026-03-30","2026-04-01","2026-04-02"],...}} (1×5×4×5=100 combos, at limit)
+
+CRITICAL LIMIT — MANDATORY: Maximum 100 route combinations.
+Formula: total = len(origins) × len(destinations) × len(dates) × max(len(return_dates), 1)
+You MUST calculate this before outputting. If total > 100, REDUCE until it fits.
+
+Round trips multiply fast: 5 destinations × 7 dates × 7 return_dates = 245 (OVER LIMIT).
+For round trip + open-ended destinations: use 5 destinations × 4 outbound dates × 5 return dates = 100 (exactly at limit).
+For round trip + specific route (1 dest): you can use more dates, e.g. 1×7×7=49.
+AIM for 80-100 combinations to maximize coverage. Do NOT go far below 50.
+
+Reduction strategies (apply in order until total ≤ 100):
+1. Cut destinations to 3-5 (pick the best matches)
+2. Sample dates: every 2nd or 3rd day instead of consecutive
+3. Sample return_dates: pick 2-3 representative return dates (e.g. 5 days, 7 days after first outbound)
+4. Cut origins to 1-2
+
+Include "total_routes": <your calculated number> in the JSON.
+For broad queries (e.g. "any beach", "anywhere warm"), select only the top 3-5 best-matching destinations."""
 
 
 async def parse_prompt(prompt: str) -> dict:
@@ -445,6 +472,57 @@ Each suggestion must be a complete natural language search query (not instructio
 Focus on making the search more specific: fewer destinations, a specific date or short range, or a single origin.
 Return ONLY a JSON array of 3 strings. No explanation.
 Example: ["Berlin to Paris next Friday", "Berlin to Amsterdam or Rome in April, cheapest day", "BER to LHR March 20 direct under €200"]"""
+
+def _trim_to_limit(parsed: dict, return_dates: list, is_round_trip: bool, limit: int = 100) -> tuple[dict, int]:
+    """Trim parsed search dimensions to fit under the route combination limit.
+
+    Strategy: iteratively halve the largest dimension until total <= limit.
+    Priority order when dimensions are equal: return_dates > dates > destinations > origins.
+    Uses evenly-spaced sampling to preserve coverage across the range.
+    """
+    import math
+
+    def _sample(lst: list, n: int) -> list:
+        """Pick n evenly-spaced items from lst, always including first and last."""
+        if n >= len(lst):
+            return lst
+        if n <= 0:
+            return [lst[0]]
+        if n == 1:
+            return [lst[0]]
+        step = (len(lst) - 1) / (n - 1)
+        return [lst[round(i * step)] for i in range(n)]
+
+    def _total(p: dict) -> int:
+        rd = p.get("return_dates", [])
+        return len(p["origins"]) * len(p["destinations"]) * len(p["dates"]) * max(len(rd), 1)
+
+    p = dict(parsed)
+    for _ in range(20):  # safety cap on iterations
+        t = _total(p)
+        if t <= limit:
+            return p, t
+        # Find which dimension to trim: pick the largest, with priority order for ties
+        dims = [
+            ("return_dates", len(p.get("return_dates", []))),
+            ("dates", len(p["dates"])),
+            ("destinations", len(p["destinations"])),
+            ("origins", len(p["origins"])),
+        ]
+        # Only trim dimensions with length > 1 (and return_dates > 0)
+        trimmable = [(name, size) for name, size in dims if size > 1]
+        if not trimmable:
+            break
+        # Sort by size descending, then by priority order (return_dates first)
+        trimmable.sort(key=lambda x: (-x[1], dims.index(x)))
+        dim_name = trimmable[0][0]
+        current_size = trimmable[0][1]
+        # Halve the dimension (minimum 1, except return_dates can go to 1)
+        new_size = max(math.ceil(current_size / 2), 1)
+        p[dim_name] = _sample(p[dim_name], new_size)
+
+    return p, _total(p)
+
 
 async def suggest_narrowing(prompt: str, parsed: dict, combined_total: int) -> list[str]:
     """Ask Gemini to suggest 3 narrowed alternatives when a search is too broad."""
@@ -750,6 +828,7 @@ def _run_scan(
     progress_cb: callable = None,
     cancel: threading.Event | None = None,
     error_counter: list | None = None,
+    partial_results: list | None = None,
 ) -> tuple[list[ScoredFlight], int | None]:
     """Run multi-origin x multi-dest x multi-date search with parallel workers.
 
@@ -792,7 +871,7 @@ def _run_scan(
                     error_counter.append(1)
                 return [], None
 
-        workers = min(8, total)
+        workers = min(16, total)
         with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = {executor.submit(_search_one, c): c for c in combos}
             for future in as_completed(futures):
@@ -800,6 +879,8 @@ def _run_scan(
                     break
                 results, age = future.result()
                 all_scored.extend(results)
+                if partial_results is not None:
+                    partial_results.extend(results)
                 if age is not None:
                     cache_ages.append(age)
                 completed += 1
@@ -829,6 +910,8 @@ def _flight_result_to_dict(fr, origin: str, dest: str, dt: str, url: str, label:
         "duration_minutes": fr.duration_minutes,
         "stops": fr.stops,
         "route": f"{origin} -> {dest}",
+        "risk_level": "safe",
+        "risk_details": [],
         "legs": [
             {
                 "airline": leg.airline,
@@ -882,6 +965,20 @@ def _round_trip_to_out(
     outbound_dict = _flight_result_to_dict(rt.outbound, origin, dest, outbound_date, out_url, out_label, out_exact)
     inbound_dict = _flight_result_to_dict(rt.inbound, dest, origin, return_date, in_url, in_label, in_exact)
 
+    # Compute per-leg risk so individual flight rows show accurate badges
+    out_risk = check_route(_legs_airports(rt.outbound.legs))
+    outbound_dict["risk_level"] = out_risk.risk_level.value
+    outbound_dict["risk_details"] = [
+        {"airport": fa.code, "country": fa.country, "zone": fa.zone_name, "risk": fa.risk_level.value}
+        for fa in out_risk.flagged_airports
+    ]
+    in_risk = check_route(_legs_airports(rt.inbound.legs))
+    inbound_dict["risk_level"] = in_risk.risk_level.value
+    inbound_dict["risk_details"] = [
+        {"airport": fa.code, "country": fa.country, "zone": fa.zone_name, "risk": fa.risk_level.value}
+        for fa in in_risk.flagged_airports
+    ]
+
     return {
         "outbound": outbound_dict,
         "inbound": inbound_dict,
@@ -901,7 +998,13 @@ def _run_round_trip_scan(
     progress_cb=None,
     cancel: threading.Event | None = None,
     error_counter: list | None = None,
+    partial_results: list | None = None,
 ) -> tuple[list[dict], int | None]:
+    """Split-scan round trips: search outbound and return as separate one-way flights, then pair.
+
+    For 5 dests × 4 outbound × 5 return dates, this does 5×4 + 5×5 = 45 calls
+    instead of 5×4×5 = 100 round-trip calls.
+    """
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     engine = SearchEngine(
@@ -913,55 +1016,142 @@ def _run_round_trip_scan(
         provider="google",
     )
     try:
-        results: list[dict] = []
         cabin = parsed.get("cabin", "economy")
-        outbound_dates = parsed["dates"]
-        return_dates_list = parsed["return_dates"]
+        max_price = parsed.get("max_price", 0)
 
-        combos = [
-            (o.upper(), d.upper(), od, rd)
+        # Build unique one-way combos for outbound and return legs
+        outbound_combos = list({
+            (o.upper(), d.upper(), od)
             for o in parsed["origins"]
             for d in parsed["destinations"]
-            for od in outbound_dates
-            for rd in return_dates_list
-        ]
-        total = len(combos)
+            for od in parsed["dates"]
+        })
+        return_combos = list({
+            (d.upper(), o.upper(), rd)
+            for o in parsed["origins"]
+            for d in parsed["destinations"]
+            for rd in parsed["return_dates"]
+        })
+
+        total = len(outbound_combos) + len(return_combos)
         completed = 0
 
-        def _search_one(combo):
-            origin, dest, od, rd = combo
+        # Store results keyed by (origin, dest) for pairing
+        outbound_by_route: dict[tuple[str, str], list] = {}
+        return_by_route: dict[tuple[str, str], list] = {}
+
+        def _search_one_way(combo):
+            origin, dest, dt = combo
             try:
-                rt_results = engine.search_round_trip(
-                    origin, dest, od, rd,
-                    max_price=parsed.get("max_price", 0),
+                report = engine.search_scored_report(
+                    origin=origin, dest=dest, date=dt,
+                    risk_threshold=RiskLevel.HIGH_RISK,
+                    max_price=0,  # filter later on combined price
                 )
-                out = []
-                for rt in rt_results:
-                    converted = _round_trip_to_out(rt, origin, dest, od, rd, cabin)
-                    if converted is not None:
-                        out.append(converted)
-                return out
+                return report.results
             except Exception as e:
-                log.warning("RT search failed %s->%s %s/%s: %s", origin, dest, od, rd, e)
+                log.warning("RT leg failed %s->%s %s: %s", origin, dest, dt, e)
                 if error_counter is not None:
                     error_counter.append(1)
                 return []
 
-        workers = min(8, total)
+        def _pair_route(orig: str, dest: str) -> list[dict]:
+            """Pair outbound and return flights for one (origin, dest) route."""
+            out_flights = outbound_by_route.get((orig, dest), [])
+            ret_flights = return_by_route.get((dest, orig), [])
+            if not out_flights or not ret_flights:
+                return []
+            pairs = []
+            out_sorted = sorted(out_flights, key=lambda sf: sf.score)[:5]
+            ret_sorted = sorted(ret_flights, key=lambda sf: sf.score)[:5]
+            for sf_out in out_sorted:
+                for sf_ret in ret_sorted:
+                    out_airports = _legs_airports(sf_out.flight.legs)
+                    ret_airports = _legs_airports(sf_ret.flight.legs)
+                    all_airports_list = out_airports + ret_airports
+                    risk = check_route(list(dict.fromkeys(all_airports_list)))
+                    if risk.risk_level >= RiskLevel.HIGH_RISK:
+                        continue
+                    total_price = sf_out.flight.price + sf_ret.flight.price
+                    if max_price > 0 and total_price > max_price:
+                        continue
+                    currency = parsed.get("currency", "EUR")
+                    risk_penalty = {RiskLevel.SAFE: 0, RiskLevel.CAUTION: 200}.get(risk.risk_level, 500)
+                    total_hours = (sf_out.flight.duration_minutes + sf_ret.flight.duration_minutes) / 60
+                    effective_price = total_price if total_price > 0 else 99999
+                    score = effective_price + (0.5 * total_hours) + risk_penalty
+                    out_url, out_label, out_exact = _booking_link(
+                        getattr(sf_out.flight, "booking_url", ""), orig, dest, sf_out.date, currency, cabin, ""
+                    )
+                    in_url, in_label, in_exact = _booking_link(
+                        getattr(sf_ret.flight, "booking_url", ""), dest, orig, sf_ret.date, currency, cabin, ""
+                    )
+                    outbound_dict = _flight_result_to_dict(sf_out.flight, orig, dest, sf_out.date, out_url, out_label, out_exact)
+                    inbound_dict = _flight_result_to_dict(sf_ret.flight, dest, orig, sf_ret.date, in_url, in_label, in_exact)
+                    out_risk = check_route(out_airports)
+                    outbound_dict["risk_level"] = out_risk.risk_level.value
+                    outbound_dict["risk_details"] = [
+                        {"airport": fa.code, "country": fa.country, "zone": fa.zone_name, "risk": fa.risk_level.value}
+                        for fa in out_risk.flagged_airports
+                    ]
+                    in_risk = check_route(ret_airports)
+                    inbound_dict["risk_level"] = in_risk.risk_level.value
+                    inbound_dict["risk_details"] = [
+                        {"airport": fa.code, "country": fa.country, "zone": fa.zone_name, "risk": fa.risk_level.value}
+                        for fa in in_risk.flagged_airports
+                    ]
+                    pairs.append({
+                        "outbound": outbound_dict,
+                        "inbound": inbound_dict,
+                        "total_price": total_price,
+                        "currency": currency,
+                        "risk_level": risk.risk_level.value,
+                        "risk_details": [
+                            {"airport": fa.code, "country": fa.country, "zone": fa.zone_name, "risk": fa.risk_level.value}
+                            for fa in risk.flagged_airports
+                        ],
+                        "score": round(score, 2),
+                    })
+            return pairs
+
+        # All unique (origin, dest) route pairs for incremental pairing
+        route_pairs = list({(o.upper(), d.upper()) for o in parsed["origins"] for d in parsed["destinations"]})
+
+        workers = min(16, total)
+        all_combos = [(c, "outbound") for c in outbound_combos] + [(c, "return") for c in return_combos]
+
+        results: list[dict] = []
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {executor.submit(_search_one, c): c for c in combos}
+            futures = {executor.submit(_search_one_way, c): (c, direction) for c, direction in all_combos}
             for future in as_completed(futures):
                 if cancel and cancel.is_set():
                     break
-                rs = future.result()
-                results.extend(rs)
+                combo, direction = futures[future]
+                origin, dest, dt = combo
+                scored_flights = future.result()
+
+                if direction == "outbound":
+                    outbound_by_route.setdefault((origin, dest), []).extend(scored_flights)
+                else:
+                    return_by_route.setdefault((origin, dest), []).extend(scored_flights)
+
                 completed += 1
-                combo = futures[future]
+
+                # Incremental pairing: re-pair all routes and update partial_results
+                if partial_results is not None:
+                    partial_results.clear()
+                    for orig, dest_code in route_pairs:
+                        partial_results.extend(_pair_route(orig, dest_code))
+
                 if progress_cb:
-                    progress_cb(completed, total, combo[0], combo[1], combo[2])
+                    progress_cb(completed, total, origin, dest, dt)
+
+        # Final pairing
+        for orig, dest_code in route_pairs:
+            results.extend(_pair_route(orig, dest_code))
 
         results.sort(key=lambda x: x["score"])
-        return results, None  # Round-trip cache age tracking not yet exposed
+        return results, None
     finally:
         engine.close()
 
@@ -1081,24 +1271,21 @@ async def search_flights(req: PromptRequest, request: Request):
     else:
         combined_total = total
 
-    # Guard: same origin and destination
+    # Guard: same origin and destination – remove overlap instead of rejecting
     overlapping = set(parsed["origins"]) & set(parsed["destinations"])
     if overlapping:
-        codes = ", ".join(sorted(overlapping))
-        return JSONResponse(
-            status_code=400,
-            content={"detail": f"Origin and destination are the same ({codes}). Please choose different airports."},
-        )
+        parsed["destinations"] = [d for d in parsed["destinations"] if d not in overlapping]
+        if not parsed["destinations"]:
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "Origin and destination are the same. Please choose different airports."},
+            )
 
     if combined_total > 100:
-        suggestions = await suggest_narrowing(req.prompt, parsed, combined_total)
-        return JSONResponse(
-            status_code=400,
-            content={
-                "detail": f"Search too broad: {combined_total} route combinations.",
-                "suggestions": suggestions,
-            },
-        )
+        # Auto-trim to fit under 100 instead of rejecting
+        parsed, combined_total = _trim_to_limit(parsed, return_dates, is_round_trip)
+        return_dates = parsed.get("return_dates", [])
+        is_round_trip = len(return_dates) > 0
 
     names = _airport_names(parsed["origins"] + parsed["destinations"])
     parsed_out = ParsedSearch(
@@ -1130,9 +1317,36 @@ async def search_flights(req: PromptRequest, request: Request):
         progress_q: queue.Queue = queue.Queue()
 
         filtered_counter: list[int] = [0]
+        partial_results: list = []  # Shared list for streaming preview flights
 
         def on_progress(done: int, total: int, origin: str, dest: str, dt: str):
-            progress_q.put({"type": "progress", "done": done, "total": total, "route": f"{origin} -> {dest}", "date": dt, "filtered": filtered_counter[0]})
+            # Build preview from best partial results so far (deduped)
+            preview = []
+            if partial_results and done < total:
+                if is_round_trip:
+                    # Dedup by (route, date, stops) keeping lowest combined price
+                    deduped: dict[tuple, tuple] = {}
+                    for r in partial_results:
+                        key = (r["outbound"]["route"], r["outbound"].get("date", ""), r["outbound"]["stops"])
+                        combined = r["outbound"]["price"] + r["inbound"]["price"]
+                        if key not in deduped or combined < deduped[key][1]:
+                            deduped[key] = (r, combined)
+                    sorted_deduped = sorted(deduped.values(), key=lambda x: x[1])[:3]
+                    preview = [{"price": r["outbound"]["price"] + r["inbound"]["price"], "currency": r["outbound"].get("currency", "EUR"), "route": r["outbound"]["route"], "duration_minutes": r["outbound"]["duration_minutes"], "stops": r["outbound"]["stops"], "risk_level": r.get("risk_level", "safe"), "risk_details": r.get("risk_details", []), "legs": r["outbound"].get("legs", []), "_combined_price": r["outbound"]["price"] + r["inbound"]["price"]} for r, _ in sorted_deduped]
+                else:
+                    # Dedup by (route, date, stops) keeping lowest score
+                    deduped_ow: dict[tuple, tuple] = {}
+                    for sf in partial_results:
+                        d = _flight_result_to_dict(sf.flight, sf.origin, sf.destination, sf.date, "", "", True)
+                        key = (d["route"], d["date"], d["stops"])
+                        if key not in deduped_ow or sf.score < deduped_ow[key][1]:
+                            deduped_ow[key] = (d, sf.score)
+                    sorted_deduped_ow = sorted(deduped_ow.values(), key=lambda x: x[1])[:3]
+                    preview = [d for d, _ in sorted_deduped_ow]
+            msg = {"type": "progress", "done": done, "total": total, "route": f"{origin} -> {dest}", "date": dt, "filtered": filtered_counter[0]}
+            if preview:
+                msg["preview_flights"] = preview
+            progress_q.put(msg)
 
         # Run scan in thread
         result_holder: list = []
@@ -1142,7 +1356,7 @@ async def search_flights(req: PromptRequest, request: Request):
         if is_round_trip:
             def run():
                 try:
-                    result_holder.append(_run_round_trip_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors))
+                    result_holder.append(_run_round_trip_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors, partial_results=partial_results))
                 except Exception as e:
                     error_holder.append(str(e))
                 finally:
@@ -1150,7 +1364,7 @@ async def search_flights(req: PromptRequest, request: Request):
         else:
             def run():
                 try:
-                    result_holder.append(_run_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors))
+                    result_holder.append(_run_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors, partial_results=partial_results))
                 except Exception as e:
                     error_holder.append(str(e))
                 finally:
@@ -1159,12 +1373,12 @@ async def search_flights(req: PromptRequest, request: Request):
         thread = threading.Thread(target=run, daemon=True)
         thread.start()
 
-        # Stream progress events with keepalive (max 60s total)
+        # Stream progress events with keepalive (max 300s total)
         scan_start = time.time()
         while True:
-            if time.time() - scan_start > 60:
+            if time.time() - scan_start > 300:
                 cancel.set()
-                yield f"data: {json.dumps({'type': 'error', 'detail': 'Search timed out after 60 seconds. Try a narrower search.'})}\n\n"
+                yield f"data: {json.dumps({'type': 'error', 'detail': 'Search timed out after 5 minutes. Try a narrower search.'})}\n\n"
                 thread.join(timeout=5)
                 return
             try:
