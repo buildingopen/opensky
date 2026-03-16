@@ -98,22 +98,46 @@ export default async function ZonePage({
         </span>
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
-        {(ZONE_FLAGS[zone.id] || []).map((code) => (
-          <img
-            key={code}
-            src={`https://flagcdn.com/32x24/${code}.png`}
-            srcSet={`https://flagcdn.com/64x48/${code}.png 2x`}
-            width={32}
-            height={24}
-            alt=""
-            className="rounded-sm"
-          />
-        ))}
-        <h1 className="text-3xl font-bold text-[var(--color-text)]">
-          {zone.name}
-        </h1>
-      </div>
+      {(() => {
+        const flags = ZONE_FLAGS[zone.id] || [];
+        const singleFlag = flags.length === 1;
+        return singleFlag ? (
+          <div className="mt-4 flex items-center gap-3">
+            <img
+              src={`https://flagcdn.com/40x30/${flags[0]}.png`}
+              srcSet={`https://flagcdn.com/80x60/${flags[0]}.png 2x`}
+              width={40}
+              height={30}
+              alt=""
+              className="rounded-sm shrink-0"
+            />
+            <h1 className="text-3xl font-bold text-[var(--color-text)]">
+              {zone.name}
+            </h1>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <h1 className="text-3xl font-bold text-[var(--color-text)]">
+              {zone.name}
+            </h1>
+            {flags.length > 0 && (
+              <div className="mt-2 flex items-center gap-1.5">
+                {flags.map((code) => (
+                  <img
+                    key={code}
+                    src={`https://flagcdn.com/24x18/${code}.png`}
+                    srcSet={`https://flagcdn.com/48x36/${code}.png 2x`}
+                    width={24}
+                    height={18}
+                    alt=""
+                    className="rounded-sm"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <section className="mt-10 space-y-8 text-sm text-[var(--color-text-muted)]">
         {/* Current status */}
