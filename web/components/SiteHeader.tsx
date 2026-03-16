@@ -37,9 +37,7 @@ export function SiteHeader() {
       <div className="max-w-[min(64rem,92vw)] mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
-            <path d="M4 4h10l-3 8h5l-9 8 3-8H4z" fill="var(--color-accent)" />
-            <path d="M14 4l6-1.5" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-            <path d="M12 8l7-1" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" opacity="0.35" />
+            <path d="M3 12l9-8v5h8l-9 8v-5H3z" fill="var(--color-accent)" />
           </svg>
           <span className="text-lg font-semibold tracking-tight">
             <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>

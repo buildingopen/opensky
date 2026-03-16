@@ -1216,6 +1216,7 @@ function HomePage() {
   const [popupStatus, setPopupStatus] = useState<"idle" | "loading" | "success">("idle");
   const [expandPhase, setExpandPhase] = useState<"idle" | "expanding" | "done">("idle");
   const [expandCount, setExpandCount] = useState(0);
+  const [expandError, setExpandError] = useState<string | null>(null);
   const [expansionInfo, setExpansionInfo] = useState<string | null>(null);
   const [expandProgress, setExpandProgress] = useState<{ done: number; total: number } | null>(null);
   const expandAbortRef = useRef<AbortController | null>(null);
@@ -1369,6 +1370,7 @@ function HomePage() {
     setTripTab("roundtrip");
     setExpandPhase("idle");
     setExpandCount(0);
+    setExpandError(null);
     setExpansionInfo(null);
     setExpandProgress(null);
     expandAbortRef.current?.abort();
@@ -1536,6 +1538,7 @@ function HomePage() {
     if (!parsed || expandPhase !== "idle") return;
     setExpandPhase("expanding");
     setExpandCount(0);
+    setExpandError(null);
     setExpansionInfo(null);
     setExpandProgress(null);
     trackEvent("expand_search_clicked", { original_results: flights.length });
@@ -1567,13 +1570,14 @@ function HomePage() {
       if (resp.status === 429) {
         const retryAfter = parseInt(resp.headers.get("Retry-After") || "", 10);
         if (retryAfter > 0) setRateLimitReset(Date.now() + retryAfter * 1000);
+        const mins = retryAfter > 0 ? Math.ceil(retryAfter / 60) : 60;
+        setExpandError(`Search limit reached. Try again in ~${mins}m.`);
         setExpandPhase("done");
-        setExpandCount(0);
         return;
       }
       if (!resp.ok) {
+        setExpandError("Expansion failed. Try again later.");
         setExpandPhase("done");
-        setExpandCount(0);
         return;
       }
 
@@ -1633,15 +1637,15 @@ function HomePage() {
               setExpandPhase("done");
               trackEvent("expand_search_results", { new_flights: expandedFlights.length, new_rt: expandedRT.length });
             } else if (msg.type === "error") {
+              setExpandError(msg.detail || "Expansion search failed.");
               setExpandPhase("done");
-              setExpandCount(0);
             }
           } catch {}
         }
       }
     } catch {
+      setExpandError("Could not reach search API.");
       setExpandPhase("done");
-      setExpandCount(0);
     } finally {
       expandAbortRef.current = null;
       setExpandPhase(p => p === "expanding" ? "done" : p);
@@ -2384,8 +2388,10 @@ function HomePage() {
                     )}
                     {expandPhase === "done" && (
                       <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm text-[var(--color-text-muted)]">
-                        {expandCount > 0 ? (
-                          <span className="text-[var(--color-accent)]">Found {expandCount} more flight{expandCount !== 1 ? "s" : ""} — merged into results above</span>
+                        {expandError ? (
+                          <span className="text-[var(--color-caution)]">{expandError}</span>
+                        ) : expandCount > 0 ? (
+                          <span className="text-[var(--color-accent)]">Found {expandCount} more flight{expandCount !== 1 ? "s" : ""}, merged into results above</span>
                         ) : (
                           <span>No additional flights found with expanded search</span>
                         )}
