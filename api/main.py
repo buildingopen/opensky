@@ -8,6 +8,8 @@ import logging
 import os
 import queue
 import random
+import re
+import sqlite3
 import threading
 import time
 import urllib.parse
@@ -19,7 +21,7 @@ from uuid import uuid4
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from redis import asyncio as redis
 from redis.exceptions import RedisError
@@ -97,6 +99,44 @@ _api_key_log: dict[str, list[float]] = defaultdict(list)
 redis_client: redis.Redis | None = None
 _startup_at = time.time()
 _zones_loaded = False
+
+# ---------------------------------------------------------------------------
+# Alerts DB (SQLite)
+# ---------------------------------------------------------------------------
+ALERTS_DB_PATH = os.environ.get("ALERTS_DB_PATH", "/opt/opensky/alerts.db")
+_EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$")
+MAX_ALERTS_PER_EMAIL = 5
+
+
+def _init_alerts_db() -> None:
+    conn = sqlite3.connect(ALERTS_DB_PATH)
+    conn.execute("""CREATE TABLE IF NOT EXISTS alerts (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        query TEXT NOT NULL,
+        origins TEXT NOT NULL,
+        destinations TEXT NOT NULL,
+        max_price REAL DEFAULT 0,
+        currency TEXT DEFAULT 'EUR',
+        cabin TEXT DEFAULT 'economy',
+        is_round_trip INTEGER DEFAULT 0,
+        last_price REAL,
+        last_checked TEXT,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        unsubscribe_token TEXT NOT NULL UNIQUE,
+        is_active INTEGER DEFAULT 1
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_active ON alerts(is_active, expires_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_email ON alerts(email)")
+    conn.commit()
+    conn.close()
+
+
+def _alerts_db() -> sqlite3.Connection:
+    conn = sqlite3.connect(ALERTS_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 def _check_rate_limit_memory(ip: str) -> int:
@@ -567,6 +607,8 @@ async def lifespan(app: FastAPI):
 
     if REQUIRE_GEMINI_KEY and not GEMINI_KEY:
         raise RuntimeError("GEMINI_API_KEY is required for startup.")
+
+    _init_alerts_db()
 
     try:
         load_zones()
@@ -1505,3 +1547,86 @@ async def readyz():
     if not ready:
         raise HTTPException(status_code=503, detail={"status": "not_ready", "checks": checks})
     return {"status": "ready", "checks": checks}
+
+
+# ---------------------------------------------------------------------------
+# Price Alerts
+# ---------------------------------------------------------------------------
+class AlertCreate(BaseModel):
+    email: str
+    query: str
+    origins: list[str]
+    destinations: list[str]
+    max_price: float = 0
+    currency: str = "EUR"
+    cabin: str = "economy"
+    is_round_trip: bool = False
+
+
+@app.post("/api/alerts")
+async def create_alert(body: AlertCreate):
+    if not _EMAIL_RE.match(body.email):
+        raise HTTPException(status_code=400, detail="Invalid email address.")
+    if not body.origins or not body.destinations:
+        raise HTTPException(status_code=400, detail="Origins and destinations are required.")
+    if len(body.origins) > MAX_ORIGINS or len(body.destinations) > MAX_DESTINATIONS:
+        raise HTTPException(status_code=400, detail="Too many origins or destinations.")
+
+    conn = _alerts_db()
+    try:
+        active_count = conn.execute(
+            "SELECT COUNT(*) FROM alerts WHERE email = ? AND is_active = 1 AND expires_at > datetime('now')",
+            (body.email.lower(),),
+        ).fetchone()[0]
+        if active_count >= MAX_ALERTS_PER_EMAIL:
+            raise HTTPException(status_code=429, detail=f"Maximum {MAX_ALERTS_PER_EMAIL} active alerts per email.")
+
+        alert_id = uuid4().hex[:12]
+        unsub_token = uuid4().hex
+        now = datetime.utcnow().isoformat()
+        expires = (datetime.utcnow() + timedelta(days=90)).isoformat()
+
+        conn.execute(
+            """INSERT INTO alerts (id, email, query, origins, destinations, max_price, currency, cabin, is_round_trip, created_at, expires_at, unsubscribe_token)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                alert_id,
+                body.email.lower(),
+                body.query,
+                json.dumps(body.origins),
+                json.dumps(body.destinations),
+                body.max_price,
+                body.currency.upper(),
+                body.cabin,
+                1 if body.is_round_trip else 0,
+                now,
+                expires,
+                unsub_token,
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {"id": alert_id, "message": "Alert created. We'll email you when prices drop."}
+
+
+@app.get("/api/alerts/unsubscribe/{token}")
+async def unsubscribe_alert(token: str):
+    conn = _alerts_db()
+    try:
+        row = conn.execute("SELECT id, query FROM alerts WHERE unsubscribe_token = ?", (token,)).fetchone()
+        if not row:
+            return HTMLResponse("<html><body><h2>Alert not found</h2><p>This link may have expired.</p></body></html>", status_code=404)
+        conn.execute("UPDATE alerts SET is_active = 0 WHERE unsubscribe_token = ?", (token,))
+        conn.commit()
+    finally:
+        conn.close()
+
+    return HTMLResponse(
+        "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
+        "<h2>Alert cancelled</h2>"
+        f"<p>You won't receive further emails for: <strong>{row['query']}</strong></p>"
+        "<p><a href='https://flyfast.app'>Back to FlyFast</a></p>"
+        "</body></html>"
+    )
