@@ -28,6 +28,7 @@ interface ParsedSearch {
   currency: string;
   cabin: string;
   stops: string;
+  safe_only?: boolean;
   total_routes: number;
   airport_names: Record<string, string>;
 }
@@ -329,7 +330,8 @@ function RiskBadge({ level }: { level: string }) {
     high_risk: { bg: "bg-[var(--color-high-risk)]/15", text: "text-[var(--color-high-risk)]", border: "border-[var(--color-high-risk)]/25", label: "High Risk", icon: "\u26A0", tooltip: "Route crosses high-risk airspace. Consider safer alternatives." },
     do_not_fly: { bg: "bg-[var(--color-danger)]/15", text: "text-[var(--color-danger)]", border: "border-[var(--color-danger)]/25", label: "Do Not Fly", icon: "\u2717", tooltip: "Route crosses active conflict zone or restricted airspace. Strongly recommend avoiding." },
   };
-  const x = c[level] || c.safe;
+  if (!level || !c[level]) return null;
+  const x = c[level];
   return (
     <span
       className={`relative inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border cursor-help ${x.bg} ${x.text} ${x.border}`}
@@ -1032,7 +1034,7 @@ function PriceAlertSection({
 // ---------------------------------------------------------------------------
 // Fix 2: Parsed Config chips
 // ---------------------------------------------------------------------------
-function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void }) {
+function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number }) {
   const { origins, destinations, dates, return_dates, max_price, currency, cabin, stops, airport_names } = parsed;
   const sym = currencySymbol(currency);
   const isRoundTrip = return_dates && return_dates.length > 0;
@@ -1072,6 +1074,18 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh }: { parsed: ParsedSe
           <span>{stops === "non_stop" ? "Direct only" : stops === "one_stop_or_fewer" ? "1 stop max" : "2 stops max"}</span>
         )}
         {max_price > 0 && <span>Max {sym}{Math.round(max_price)}</span>}
+        {parsed.safe_only && (
+          <span className="px-1.5 py-0.5 rounded bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 text-[var(--color-safe)] font-medium">Safe only</span>
+        )}
+        {totalCount != null && totalCount > 0 && !parsed.safe_only && (
+          <span className={`px-1.5 py-0.5 rounded font-medium ${
+            safeCount === totalCount
+              ? "bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 text-[var(--color-safe)]"
+              : "bg-[var(--color-caution)]/10 border border-[var(--color-caution)]/20 text-[var(--color-caution)]"
+          }`}>
+            {safeCount === totalCount ? "All safe" : `${safeCount}/${totalCount} safe`}
+          </span>
+        )}
         {cacheAgeSeconds !== null && (
           <>
             <span className="text-[var(--color-text-muted)]">·</span>
@@ -1653,7 +1667,7 @@ function HomePage() {
       })()}
 
       {/* Hero - outcome-focused */}
-      <section className={`max-w-3xl mx-auto px-4 w-full text-center transition-all duration-300 ${hasResults ? "pt-6 pb-4" : "pt-16 sm:pt-24 pb-6"}`}>
+      <section className={`max-w-3xl mx-auto px-4 w-full transition-all duration-300 ${hasResults ? "pt-6 pb-4 text-left" : "pt-16 sm:pt-24 pb-6 text-center"}`}>
         <h1 className={`font-bold tracking-tight transition-all duration-300 ${hasResults ? "text-2xl" : "text-4xl sm:text-5xl"}`}>
           Describe your{" "}
           <span className="text-[var(--color-accent)]">trip.</span>
@@ -1951,25 +1965,10 @@ function HomePage() {
         {phase === "done" && parsed && (
           <>
             {/* Fix 2: Parsed config chips */}
-            <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} />
-
-            {/* Safety value prop badge */}
             {(() => {
               const items = (tripTab === "roundtrip" && roundTripResults?.length) ? roundTripResults : flights;
-              if (!items.length) return null;
-              const safeCount = items.filter((f) => f.risk_level === "safe").length;
-              const total = items.length;
-              const allSafe = safeCount === total;
-              return (
-                <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border ${
-                  allSafe
-                    ? "bg-[var(--color-safe)]/10 border-[var(--color-safe)]/20 text-[var(--color-safe)]"
-                    : "bg-[var(--color-caution)]/10 border-[var(--color-caution)]/20 text-[var(--color-caution)]"
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${allSafe ? "bg-[var(--color-safe)]" : "bg-[var(--color-caution)]"}`} />
-                  {allSafe ? `All ${total} routes verified safe` : `${safeCount} of ${total} routes are safe`}
-                </div>
-              );
+              const safeCount = items.filter((f: any) => f.risk_level === "safe").length;
+              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} />;
             })()}
 
             {/* Fix 5: Show warning if return date was before departure */}
@@ -2100,7 +2099,24 @@ function HomePage() {
                       filteredCount={displayFlights.length}
                     />
 
-                    {/* Compare all + share */}
+                    {/* Recommendation stack */}
+                    <div className="mt-6 space-y-4">
+                      <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
+                      {recs.slice(0, 4).map(({ label, flight }, i) => (
+                        <FlightCard
+                          key={i}
+                          flight={flight}
+                          label={label}
+                          reason={getRecommendationReason(flight, flights, label)}
+                          airportNames={airportNames}
+                          attributionParams={attributionParams}
+                          onOutboundClick={handleOutboundClick}
+                          cabin={parsed?.cabin}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Compare all + share (after recommendations) */}
                     {summary && summary.stats.total_flights > 0 && (
                       <div className="mt-6">
                         <div className="flex items-center justify-between mb-2">
@@ -2129,23 +2145,6 @@ function HomePage() {
                         )}
                       </div>
                     )}
-
-                    {/* Recommendation stack */}
-                    <div className="mt-6 space-y-4">
-                      <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
-                      {recs.slice(0, 4).map(({ label, flight }, i) => (
-                        <FlightCard
-                          key={i}
-                          flight={flight}
-                          label={label}
-                          reason={getRecommendationReason(flight, flights, label)}
-                          airportNames={airportNames}
-                          attributionParams={attributionParams}
-                          onOutboundClick={handleOutboundClick}
-                          cabin={parsed?.cabin}
-                        />
-                      ))}
-                    </div>
 
                     {/* More flights */}
                     {(() => {

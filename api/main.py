@@ -310,10 +310,12 @@ Return ONLY valid JSON with this exact structure:
   "max_price": 0,
   "currency": "EUR",
   "cabin": "economy",
-  "stops": "any"
+  "stops": "any",
+  "safe_only": false
 }}
 
 Rules:
+- If the user says "safe", "safe routes", "safe only", "safe routes only", "avoid conflict zones", "avoid war zones", "only safe", "no conflict zones", set safe_only to true.
 - Convert city names to IATA codes. Use the main airport for each city.
 - For date ranges like "March 10-20", list every date in the range.
 - For relative dates like "next week" or "tomorrow", calculate from today ({today}).
@@ -674,6 +676,7 @@ class ParsedSearch(BaseModel):
     currency: str = "EUR"
     cabin: str = "economy"
     stops: str = "any"
+    safe_only: bool = False
     total_routes: int = 0
     airport_names: dict[str, str] = {}  # IATA -> "City (Airport Name)"
 
@@ -915,9 +918,10 @@ def _run_scan(
         def _search_one(combo):
             origin, dest, dt = combo
             try:
+                threshold = RiskLevel.CAUTION if parsed.get("safe_only") else RiskLevel.HIGH_RISK
                 report = engine.search_scored_report(
                     origin=origin, dest=dest, date=dt,
-                    risk_threshold=RiskLevel.HIGH_RISK,
+                    risk_threshold=threshold,
                     max_price=parsed.get("max_price", 0),
                 )
                 return report.results, report.cache_age_seconds
@@ -1099,9 +1103,10 @@ def _run_round_trip_scan(
         def _search_one_way(combo):
             origin, dest, dt = combo
             try:
+                threshold = RiskLevel.CAUTION if parsed.get("safe_only") else RiskLevel.HIGH_RISK
                 report = engine.search_scored_report(
                     origin=origin, dest=dest, date=dt,
-                    risk_threshold=RiskLevel.HIGH_RISK,
+                    risk_threshold=threshold,
                     max_price=0,  # filter later on combined price
                 )
                 return report.results
@@ -1126,7 +1131,8 @@ def _run_round_trip_scan(
                     ret_airports = _legs_airports(sf_ret.flight.legs)
                     all_airports_list = out_airports + ret_airports
                     risk = check_route(list(dict.fromkeys(all_airports_list)))
-                    if risk.risk_level >= RiskLevel.HIGH_RISK:
+                    pair_threshold = RiskLevel.CAUTION if parsed.get("safe_only") else RiskLevel.HIGH_RISK
+                    if risk.risk_level >= pair_threshold:
                         continue
                     total_price = sf_out.flight.price + sf_ret.flight.price
                     if max_price > 0 and total_price > max_price:
@@ -1353,6 +1359,7 @@ async def search_flights(req: PromptRequest, request: Request):
         currency=parsed.get("currency", "EUR"),
         cabin=parsed.get("cabin", "economy"),
         stops=parsed.get("stops", "any"),
+        safe_only=bool(parsed.get("safe_only", False)),
         total_routes=combined_total,
         airport_names=names,
     )
@@ -1394,6 +1401,11 @@ async def search_flights(req: PromptRequest, request: Request):
                     deduped_ow: dict[tuple, tuple] = {}
                     for sf in partial_results:
                         d = _flight_result_to_dict(sf.flight, sf.origin, sf.destination, sf.date, "", "", True)
+                        d["risk_level"] = sf.risk.risk_level.value
+                        d["risk_details"] = [
+                            {"airport": fa.code, "country": fa.country, "zone": fa.zone_name, "risk": fa.risk_level.value}
+                            for fa in sf.risk.flagged_airports
+                        ]
                         key = (d["route"], d["date"], d["stops"])
                         if key not in deduped_ow or sf.score < deduped_ow[key][1]:
                             deduped_ow[key] = (d, sf.score)
@@ -1500,7 +1512,8 @@ async def search_flights(req: PromptRequest, request: Request):
                 return sorted(seen.values(), key=lambda x: x["score"])
 
             flights = _process_flights(scored)
-            safety_filtered_count = sum(1 for f in flights if f.get("risk_level") in ("high_risk", "do_not_fly"))
+            filter_levels = ("high_risk", "do_not_fly", "caution") if parsed.get("safe_only") else ("high_risk", "do_not_fly")
+            safety_filtered_count = sum(1 for f in flights if f.get("risk_level") in filter_levels)
             # C8: when every result is high_risk, suppress them and emit safety_filtered
             if flights and all(f.get("risk_level") == "high_risk" for f in flights):
                 no_results_reason = "safety_filtered"
