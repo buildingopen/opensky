@@ -2040,6 +2040,36 @@ function HomePage() {
                       filteredCount={displayFlights.length}
                     />
 
+                    {/* Compare all + share */}
+                    {summary && summary.stats.total_flights > 0 && (
+                      <div className="mt-6">
+                        <div className="flex items-center justify-between mb-2">
+                          {!showCompare && (
+                            <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} />
+                          )}
+                          <button
+                            onClick={handleCopyLink}
+                            className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors ml-auto"
+                          >
+                            {copyFeedback ? (
+                              <>
+                                <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[var(--color-accent)]" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><path d="M13.5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM15 3a3 3 0 0 1-5.133 2.107L5.4 7.4a3.014 3.014 0 0 1 0 1.2l4.467 2.293A3 3 0 1 1 8.8 12.4L4.333 10.107a3 3 0 1 1 0-4.214L8.8 3.6A3.015 3.015 0 0 1 9 3a3 3 0 0 1 6 0zM4.5 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM13.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
+                                Share results
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        {showCompare && (
+                          <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} cabin={parsed?.cabin} />
+                        )}
+                      </div>
+                    )}
+
                     {/* Recommendation stack */}
                     <div className="mt-6 space-y-4">
                       <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
@@ -2131,16 +2161,6 @@ function HomePage() {
                   </div>
                 )}
 
-                {/* Progressive disclosure: compare all */}
-                {summary && summary.stats.total_flights > 0 && (
-                  <div className="mt-8">
-                    {showCompare ? (
-                      <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} cabin={parsed?.cabin} />
-                    ) : (
-                      <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} />
-                    )}
-                  </div>
-                )}
 
                 {/* Price alert */}
                 {parsed && phase === "done" && flights.length > 0 && (
