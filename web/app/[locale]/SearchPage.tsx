@@ -2373,7 +2373,7 @@ function HomePage() {
                     {searchMode === "structured" ? t("describeTrip") : t("useForm")}
                   </button>
                   {searchMode === "natural" && !isLoading && queryPreview && (
-                    <p className="text-[11px] text-[var(--color-text-muted)]/50 truncate transition-opacity duration-300">
+                    <p className="text-[11px] text-[var(--color-text-muted)]/50 truncate transition-opacity duration-300 hidden sm:block">
                       {queryPreview.origin}
                       {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> {queryPreview.dest}</>}
                       {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
