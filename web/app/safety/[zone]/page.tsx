@@ -7,6 +7,7 @@ import {
   COUNTRY_NAMES,
   RISK_CONFIG,
   TRAVELER_ADVICE,
+  ZONE_FLAGS,
 } from "../zones-data";
 
 export const revalidate = 3600;
@@ -97,9 +98,22 @@ export default async function ZonePage({
         </span>
       </div>
 
-      <h1 className="mt-4 text-3xl font-bold text-[var(--color-text)]">
-        {zone.name}
-      </h1>
+      <div className="mt-4 flex items-center gap-3">
+        {(ZONE_FLAGS[zone.id] || []).map((code) => (
+          <img
+            key={code}
+            src={`https://flagcdn.com/32x24/${code}.png`}
+            srcSet={`https://flagcdn.com/64x48/${code}.png 2x`}
+            width={32}
+            height={24}
+            alt=""
+            className="rounded-sm"
+          />
+        ))}
+        <h1 className="text-3xl font-bold text-[var(--color-text)]">
+          {zone.name}
+        </h1>
+      </div>
 
       <section className="mt-10 space-y-8 text-sm text-[var(--color-text-muted)]">
         {/* Current status */}

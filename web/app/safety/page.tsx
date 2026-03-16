@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getZones, RISK_CONFIG } from "./zones-data";
+import { getZones, RISK_CONFIG, ZONE_FLAGS } from "./zones-data";
 
 export const revalidate = 3600;
 
@@ -34,6 +34,20 @@ const GROUP_LABELS: Record<string, string> = {
   caution: "Caution",
 };
 
+function FlagImg({ code }: { code: string }) {
+  return (
+    <img
+      src={`https://flagcdn.com/24x18/${code}.png`}
+      srcSet={`https://flagcdn.com/48x36/${code}.png 2x`}
+      width={24}
+      height={18}
+      alt=""
+      className="rounded-sm shrink-0"
+      loading="lazy"
+    />
+  );
+}
+
 export default async function SafetyIndexPage() {
   const zones = await getZones();
 
@@ -61,9 +75,29 @@ export default async function SafetyIndexPage() {
         unsafe routes automatically.
       </p>
 
-      <section className="mt-10 space-y-10">
+      {/* Jump nav */}
+      <nav className="mt-6 flex gap-2">
         {grouped.map((group) => (
-          <div key={group.level}>
+          <a
+            key={group.level}
+            href={`#${group.level}`}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] transition-colors"
+          >
+            <span
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: group.color }}
+            />
+            {group.label}
+            <span className="text-[var(--color-text-muted)]">
+              {group.zones.length}
+            </span>
+          </a>
+        ))}
+      </nav>
+
+      <section className="mt-8 space-y-10">
+        {grouped.map((group) => (
+          <div key={group.level} id={group.level} className="scroll-mt-6">
             <div className="flex items-center gap-2 mb-4">
               <span
                 className="w-3 h-3 rounded-full shrink-0"
@@ -77,31 +111,48 @@ export default async function SafetyIndexPage() {
               </span>
             </div>
             <div className="grid gap-2">
-              {group.zones.map((zone) => (
-                <Link
-                  key={zone.id}
-                  href={`/safety/${zone.id}`}
-                  className="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-4 py-3 hover:bg-[var(--color-surface-2)] transition-colors"
-                >
-                  <div>
-                    <span className="text-sm font-medium text-[var(--color-text)]">
-                      {zone.name}
-                    </span>
-                    <p className="text-xs text-[var(--color-text-muted)] mt-0.5 line-clamp-1">
-                      {zone.details}
-                    </p>
-                  </div>
-                  <span
-                    className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ml-4"
-                    style={{
-                      backgroundColor: `${group.color}20`,
-                      color: group.color,
-                    }}
+              {group.zones.map((zone) => {
+                const flags = ZONE_FLAGS[zone.id] || [];
+                return (
+                  <Link
+                    key={zone.id}
+                    href={`/safety/${zone.id}`}
+                    className="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-4 py-3 hover:bg-[var(--color-surface-2)] transition-colors"
                   >
-                    {group.label}
-                  </span>
-                </Link>
-              ))}
+                    <div className="flex items-center gap-3 min-w-0">
+                      {flags.length > 0 && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          {flags.slice(0, 3).map((code) => (
+                            <FlagImg key={code} code={code} />
+                          ))}
+                          {flags.length > 3 && (
+                            <span className="text-[10px] text-[var(--color-text-muted)]">
+                              +{flags.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <span className="text-sm font-medium text-[var(--color-text)]">
+                          {zone.name}
+                        </span>
+                        <p className="text-xs text-[var(--color-text-muted)] mt-0.5 line-clamp-1">
+                          {zone.details}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ml-4"
+                      style={{
+                        backgroundColor: `${group.color}20`,
+                        color: group.color,
+                      }}
+                    >
+                      {group.label}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         ))}

@@ -83,6 +83,29 @@ export const RISK_CONFIG: Record<
   },
 };
 
+/** Primary flag code per zone (for zones without countries, or multi-country zones). */
+export const ZONE_FLAGS: Record<string, string[]> = {
+  ukraine: ["ua"],
+  iran: ["ir"],
+  iraq: ["iq"],
+  syria: ["sy"],
+  israel: ["il"],
+  lebanon: ["lb"],
+  yemen: ["ye"],
+  libya: ["ly"],
+  somalia: ["so"],
+  afghanistan: ["af"],
+  north_korea: ["kp"],
+  sudan: ["sd"],
+  eritrea: ["er"],
+  ethiopia_partial: ["et"],
+  mali: ["ml"],
+  niger: ["ne"],
+  gulf_states: ["ae", "qa", "bh", "kw", "om"],
+  pakistan_partial: ["pk"],
+  russia_partial: ["ru"],
+};
+
 export const TRAVELER_ADVICE: Record<string, string> = {
   do_not_fly:
     "No commercial flights operate through this airspace. If your route would normally transit this zone, airlines automatically reroute around it. You do not need to take any action, but flights may be longer or more expensive due to detours. FlyFast filters out any routes that would pass through this zone.",
