@@ -2343,10 +2343,10 @@ function HomePage() {
                   {searchMode === "natural" && !isLoading && queryPreview && (
                     <>
                       <span className="text-[var(--color-border)] select-none">|</span>
-                      <p className="text-[11px] text-[var(--color-text-muted)]/70 truncate transition-opacity duration-300">
+                      <p className="text-[11px] text-[var(--color-accent)]/80 truncate transition-opacity duration-300">
                         {queryPreview.origin}
-                        {queryPreview.dest && <> <span className="opacity-70">{"\u2192"}</span> {queryPreview.dest}</>}
-                        {queryPreview.date && <> <span className="opacity-50">{"\u00B7"}</span> {queryPreview.date}</>}
+                        {queryPreview.dest && <> <span className="opacity-80">{"\u2192"}</span> {queryPreview.dest}</>}
+                        {queryPreview.date && <> <span className="opacity-60">{"\u00B7"}</span> <span className="text-[var(--color-text-muted)]">{queryPreview.date}</span></>}
                       </p>
                     </>
                   )}
