@@ -445,7 +445,7 @@ function PreviewLoc({ text, airports }: { text: string; airports: { iata: string
     <span className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
       <span className="cursor-help border-b border-dotted border-[var(--color-accent)]/30">{text}</span>
       {show && (
-        <span className="absolute bottom-full left-0 mb-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg whitespace-nowrap animate-fade-in" style={{ maxHeight: 200, overflowY: "auto" }}>
+        <span className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg whitespace-nowrap animate-fade-in" style={{ maxHeight: 200, overflowY: "auto" }}>
           {airports.map((a, i) => (
             <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)]">
               <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
@@ -2469,7 +2469,7 @@ function HomePage() {
                   {searchMode === "natural" && queryPreview && (
                     <>
                       <span className="text-[var(--color-border)] select-none">|</span>
-                      <p className="text-[11px] text-[var(--color-accent)]/80 truncate transition-opacity duration-300 flex items-center gap-0">
+                      <p className="text-[11px] text-[var(--color-accent)]/80 transition-opacity duration-300 flex items-center gap-0 min-w-0 overflow-visible">
                         <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
                         {queryPreview.dest && <><span className="opacity-80 mx-1">{"\u2192"}</span><PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
                         {queryPreview.date && <> <span className="opacity-60 mx-1">{"\u00B7"}</span> <span className="text-[var(--color-text-muted)]">{queryPreview.date}</span></>}
