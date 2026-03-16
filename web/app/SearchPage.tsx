@@ -964,6 +964,7 @@ function PriceAlertSection({
           currency: parsed.currency,
           cabin: parsed.cabin,
           is_round_trip: parsed.return_dates?.length > 0,
+          current_price: cheapestPrice > 0 ? cheapestPrice : null,
         }),
       });
       const data = await resp.json();
@@ -1193,6 +1194,7 @@ function HomePage() {
   const [rtShowCount, setRtShowCount] = useState(5);
   const [rateLimitReset, setRateLimitReset] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
+  const [shareCTADismissed, setShareCTADismissed] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -1578,13 +1580,28 @@ function HomePage() {
   return (
     <div className="flex-1 flex flex-col">
       {/* Referred-visit message */}
-      {attributionParams.ref === "share" && (
-        <div className="max-w-3xl mx-auto px-4 pt-4">
-          <p className="text-sm text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2">
-            Someone shared a flight with you. Search below to compare options.
-          </p>
-        </div>
-      )}
+      {attributionParams.ref === "share" && (() => {
+        const sp = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+        const sharedRoute = sp?.get("route");
+        const sharedPrice = sp?.get("price");
+        const sharedCurrency = sp?.get("currency") || "EUR";
+        const sym = currencySymbol(sharedCurrency);
+        return (
+          <div className="max-w-3xl mx-auto px-4 pt-4">
+            <div className="text-sm bg-[var(--color-surface)] border border-[var(--color-accent)]/20 rounded-lg px-4 py-3 flex items-start gap-3">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-[var(--color-accent)] shrink-0 mt-0.5"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg>
+              <div>
+                <p className="text-[var(--color-text)] font-medium">
+                  {sharedRoute && sharedPrice
+                    ? `A friend found ${sharedRoute} from ${sym}${sharedPrice}`
+                    : "Someone shared a flight with you"}
+                </p>
+                <p className="text-[var(--color-text-muted)] mt-0.5">Search below to compare options and find your own deals.</p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Hero - outcome-focused */}
       <section className={`max-w-3xl mx-auto px-4 w-full text-center transition-all duration-300 ${hasResults ? "pt-6 pb-4" : "pt-16 sm:pt-24 pb-6"}`}>
@@ -2125,6 +2142,25 @@ function HomePage() {
                 {parsed && phase === "done" && flights.length > 0 && (
                   <PriceAlertSection parsed={parsed} cheapestPrice={summary?.stats?.min_price || flights[0]?.price || 0} />
                 )}
+
+                {/* Share CTA - show once per session after results */}
+                {parsed && phase === "done" && flights.length > 0 && !shareCTADismissed && (() => {
+                  const destCode = summary?.best_destinations?.[0]?.destination || flights[0]?.destination;
+                  const destName = destCode ? (airportNames[destCode] || destCode) : null;
+                  return (
+                    <div className="mt-4 flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5">
+                      <p className="text-sm text-[var(--color-text-muted)]">
+                        {destName ? `Know someone flying to ${destName}?` : "Know someone who might want these flights?"}{" "}
+                        <button onClick={() => { handleCopyLink(); setShareCTADismissed(true); }} className="text-[var(--color-accent)] hover:underline font-medium">
+                          Share these results
+                        </button>
+                      </p>
+                      <button onClick={() => setShareCTADismissed(true)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] shrink-0" aria-label="Dismiss">
+                        <svg viewBox="0 0 16 16" className="w-4 h-4" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"/></svg>
+                      </button>
+                    </div>
+                  );
+                })()}
 
                 {/* Bottom bar: share + trust */}
                 <div className="mt-8 pt-5 border-t border-[var(--color-border)]/50 flex flex-wrap items-center justify-between gap-3">

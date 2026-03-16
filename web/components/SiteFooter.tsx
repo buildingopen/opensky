@@ -17,6 +17,7 @@ export function SiteFooter() {
           <span className="flex flex-wrap justify-center gap-3">
             <Link href="/privacy" className="hover:text-[var(--color-text)]">Privacy</Link>
             <Link href="/terms" className="hover:text-[var(--color-text)]">Terms</Link>
+            <Link href="/imprint" className="hover:text-[var(--color-text)]">Imprint</Link>
             <Link href="/methodology" className="hover:text-[var(--color-text)]">Methodology</Link>
             <Link href="/contact" className="hover:text-[var(--color-text)]">Contact</Link>
           </span>

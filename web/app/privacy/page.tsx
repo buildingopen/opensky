@@ -23,6 +23,7 @@ export default function PrivacyPage() {
             <li><span className="text-[var(--color-text)] font-medium">Search queries</span> -- your natural language prompts are sent to our backend to parse and search flights. We do not store queries long-term.</li>
             <li><span className="text-[var(--color-text)] font-medium">Usage analytics</span> -- anonymized page views, search counts, and error rates via PostHog. No personally identifiable information is tracked.</li>
             <li><span className="text-[var(--color-text)] font-medium">Rate limiting data</span> -- your IP address is used server-side to enforce the 10 searches per hour limit. It is not stored or shared.</li>
+            <li><span className="text-[var(--color-text)] font-medium">Email for price alerts</span> -- if you set a price alert, we store your email address and search criteria (routes, price threshold). This data is stored in a local database and used solely to send you price notifications. Alerts expire after 90 days. You can unsubscribe at any time via the link in each email.</li>
           </ul>
         </div>
 
@@ -44,6 +45,7 @@ export default function PrivacyPage() {
             <li><span className="text-[var(--color-text)] font-medium">Google Gemini</span> -- AI service for parsing natural language queries into structured search parameters.</li>
             <li><span className="text-[var(--color-text)] font-medium">PostHog</span> -- privacy-focused analytics. EU-hosted. No personal data is sent.</li>
             <li><span className="text-[var(--color-text)] font-medium">Vercel</span> -- hosting provider for the web application.</li>
+            <li><span className="text-[var(--color-text)] font-medium">Resend</span> -- email delivery service for price alert notifications. Only your email address and alert details are shared with Resend when sending notifications.</li>
           </ul>
           <p className="mt-2">Each service processes data under its own privacy policy. We recommend reviewing their terms if you have concerns.</p>
         </div>
@@ -53,6 +55,7 @@ export default function PrivacyPage() {
           <p>
             Search queries are processed in real time and not stored after the response is sent.
             Anonymized analytics data is retained for up to 12 months. Rate limiting data expires automatically.
+            Price alert data (email, search criteria) is retained for 90 days and automatically deleted after expiry.
           </p>
         </div>
 

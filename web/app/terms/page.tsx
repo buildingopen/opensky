@@ -46,6 +46,15 @@ export default function TermsPage() {
         </div>
 
         <div>
+          <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">Price alerts</h2>
+          <p>
+            Price alerts are provided on a best-effort basis. Prices in alert emails are indicative and may have changed by the time you check.
+            We are not liable for missed deals or incorrect pricing in alert notifications. Alerts are active for 90 days from creation.
+            You can unsubscribe from any alert at any time via the link included in each email.
+          </p>
+        </div>
+
+        <div>
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">Acceptable use</h2>
           <ul className="space-y-2 list-disc list-inside">
             <li>Do not bypass or attempt to circumvent rate limits (10 searches per hour per user).</li>

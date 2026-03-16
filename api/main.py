@@ -15,10 +15,11 @@ import time
 import urllib.parse
 from collections import defaultdict
 from contextlib import asynccontextmanager
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from uuid import uuid4
 
 import httpx
+from html import escape as html_escape
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
@@ -1552,6 +1553,71 @@ async def readyz():
 # ---------------------------------------------------------------------------
 # Price Alerts
 # ---------------------------------------------------------------------------
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+FROM_EMAIL = "FlyFast <alerts@flyfast.app>"
+
+
+def _currency_symbol(c: str) -> str:
+    return {"EUR": "\u20ac", "USD": "$", "GBP": "\u00a3"}.get(c, c)
+
+
+def _send_confirmation_email(
+    to: str, query: str, currency: str, max_price: float,
+    current_price: float | None, unsub_token: str,
+) -> None:
+    """Send confirmation email via Resend (fire-and-forget, non-blocking)."""
+    if not RESEND_API_KEY:
+        return
+    sym = _currency_symbol(currency)
+    encoded_q = urllib.parse.quote(query)
+    flyfast_url = f"https://flyfast.app/?q={encoded_q}&ref=alert_email&utm_source=alert_confirmation"
+    unsub_url = f"https://api.flyfast.app/api/alerts/unsubscribe/{unsub_token}"
+
+    safe_query = html_escape(query.replace("\n", " ").replace("\r", " "))
+    price_line = ""
+    if current_price and current_price > 0:
+        price_line = f'<p style="margin:0 0 16px;color:#6b7280;font-size:14px">Current best price: <strong style="color:#22c55e;font-size:18px">{sym}{current_price:.0f}</strong></p>'
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+<body style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:20px;color:#1a1a2e">
+  <div style="text-align:center;padding:16px 0;border-bottom:1px solid #e5e7eb">
+    <h1 style="margin:0;font-size:20px;font-weight:700">FlyFast</h1>
+  </div>
+  <div style="padding:24px 0">
+    <h2 style="margin:0 0 8px;font-size:18px">Alert set: {safe_query}</h2>
+    <p style="margin:0 0 12px;color:#6b7280;font-size:14px">
+      We'll notify you when prices drop{f' below <strong>{sym}{max_price:.0f}</strong>' if max_price > 0 else ''}.
+    </p>
+    {price_line}
+    <a href="{flyfast_url}" style="display:inline-block;padding:12px 24px;background:#f97316;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+      View current prices on FlyFast
+    </a>
+  </div>
+  <div style="padding:16px 0;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;text-align:center">
+    Alert active for 90 days. Daily price checks.<br>
+    <a href="{unsub_url}" style="color:#9ca3af">Unsubscribe</a>
+  </div>
+</body>
+</html>"""
+
+    try:
+        httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+            json={
+                "from": FROM_EMAIL,
+                "to": [to],
+                "subject": f"Alert set: {query}",
+                "html": html,
+            },
+            timeout=10,
+        )
+    except Exception as exc:
+        log.warning("Confirmation email failed for %s: %s", to, exc)
+
+
 class AlertCreate(BaseModel):
     email: str
     query: str
@@ -1561,6 +1627,7 @@ class AlertCreate(BaseModel):
     currency: str = "EUR"
     cabin: str = "economy"
     is_round_trip: bool = False
+    current_price: float | None = None
 
 
 @app.post("/api/alerts")
@@ -1583,8 +1650,8 @@ async def create_alert(body: AlertCreate):
 
         alert_id = uuid4().hex[:12]
         unsub_token = uuid4().hex
-        now = datetime.utcnow().isoformat()
-        expires = (datetime.utcnow() + timedelta(days=90)).isoformat()
+        now = datetime.now(timezone.utc).isoformat()
+        expires = (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()
 
         conn.execute(
             """INSERT INTO alerts (id, email, query, origins, destinations, max_price, currency, cabin, is_round_trip, created_at, expires_at, unsubscribe_token)
@@ -1608,6 +1675,16 @@ async def create_alert(body: AlertCreate):
     finally:
         conn.close()
 
+    # Fire-and-forget confirmation email
+    _send_confirmation_email(
+        to=body.email.lower(),
+        query=body.query,
+        currency=body.currency.upper(),
+        max_price=body.max_price,
+        current_price=body.current_price,
+        unsub_token=unsub_token,
+    )
+
     return {"id": alert_id, "message": "Alert created. We'll email you when prices drop."}
 
 
@@ -1626,7 +1703,7 @@ async def unsubscribe_alert(token: str):
     return HTMLResponse(
         "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
         "<h2>Alert cancelled</h2>"
-        f"<p>You won't receive further emails for: <strong>{row['query']}</strong></p>"
+        f"<p>You won't receive further emails for: <strong>{html_escape(row['query'])}</strong></p>"
         "<p><a href='https://flyfast.app'>Back to FlyFast</a></p>"
         "</body></html>"
     )

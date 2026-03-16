@@ -11,6 +11,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 
+from html import escape as html_escape
 import httpx
 
 sys.path.insert(0, "/opt/opensky/repo/src")
@@ -83,6 +84,7 @@ def _build_email_html(
     unsub_token: str,
 ) -> str:
     sym = _currency_symbol(currency)
+    safe_query = html_escape(query)
     gf_url = f"https://www.google.com/travel/flights?q=flights+from+{origin}+to+{dest}+on+{date}"
     unsub_url = f"{API_BASE}/api/alerts/unsubscribe/{unsub_token}"
     return f"""<!DOCTYPE html>
@@ -93,7 +95,7 @@ def _build_email_html(
     <h1 style="margin:0;font-size:20px;font-weight:700">FlyFast</h1>
   </div>
   <div style="padding:24px 0">
-    <h2 style="margin:0 0 8px;font-size:18px">Price alert for {query}</h2>
+    <h2 style="margin:0 0 8px;font-size:18px">Price alert for {safe_query}</h2>
     <p style="margin:0 0 16px;color:#6b7280;font-size:14px">
       We found flights from <strong>{origin}</strong> to <strong>{dest}</strong>
       for <strong style="color:#22c55e;font-size:18px">{sym}{price:.0f}</strong> on {date}.
