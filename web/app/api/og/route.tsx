@@ -57,8 +57,9 @@ export async function GET(req: NextRequest) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
-            <path d="M4 6L17 6L28 15L13 15Z" fill="#22c55e" />
-            <path d="M4 26L13 17L28 17L17 26Z" fill="#22c55e" opacity="0.45" />
+            <path d="M9 27V11L15 4" stroke="#22c55e" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter" />
+            <path d="M19 27V11L25 4" stroke="#22c55e" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter" />
+            <line x1="4" y1="15" x2="26" y2="15" stroke="#22c55e" stroke-width="2.8" stroke-linecap="square" />
           </svg>
           <div style={{ display: "flex" }}>
             <span style={{ fontSize: "32px", fontWeight: 700, color: "#22c55e", letterSpacing: "-0.5px" }}>fly</span>

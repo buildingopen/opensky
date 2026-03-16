@@ -37,10 +37,11 @@ export function SiteHeader() {
       <div className="max-w-[min(64rem,92vw)] mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
-            <path d="M4 6L17 6L28 15L13 15Z" fill="var(--color-accent)" />
-            <path d="M4 26L13 17L28 17L17 26Z" fill="var(--color-accent)" opacity="0.45" />
+            <path d="M9 27V11L15 4" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" strokeLinejoin="miter" />
+            <path d="M19 27V11L25 4" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" strokeLinejoin="miter" />
+            <line x1="4" y1="15" x2="26" y2="15" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" />
           </svg>
-          <span className="text-lg font-semibold tracking-tight">
+          <span className="text-lg font-semibold tracking-tight font-[family-name:var(--font-brand)]">
             <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
           </span>
         </Link>
@@ -99,10 +100,11 @@ export function SiteHeader() {
             <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--color-border)]">
               <div className="flex items-center gap-2">
                 <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
-                  <path d="M4 6L17 6L28 15L13 15Z" fill="var(--color-accent)" />
-                  <path d="M4 26L13 17L28 17L17 26Z" fill="var(--color-accent)" opacity="0.45" />
+                  <path d="M9 27V11L15 4" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" strokeLinejoin="miter" />
+                  <path d="M19 27V11L25 4" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" strokeLinejoin="miter" />
+                  <line x1="4" y1="15" x2="26" y2="15" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" />
                 </svg>
-                <span className="text-lg font-semibold tracking-tight">
+                <span className="text-lg font-semibold tracking-tight font-[family-name:var(--font-brand)]">
                   <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
                 </span>
               </div>

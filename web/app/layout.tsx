@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { AnalyticsProvider } from "../components/AnalyticsProvider";
 import { CloudsBackground } from "../components/CloudsBackground";
 import { SiteHeader } from "../components/SiteHeader";
@@ -16,6 +16,12 @@ const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-mono",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-brand",
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app";
@@ -135,7 +141,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} ${jetbrains.variable} antialiased min-h-screen flex flex-col`}>
+      <body className={`${inter.variable} ${jetbrains.variable} ${spaceGrotesk.variable} antialiased min-h-screen flex flex-col`}>
         <AnalyticsProvider />
         <CloudsBackground />
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-1.5 focus:bg-[var(--color-accent)] focus:text-black focus:rounded focus:text-sm focus:font-medium">
