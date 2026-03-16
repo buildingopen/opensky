@@ -1147,8 +1147,8 @@ function buildPromptFromForm(f: SearchFormState): string {
 // Examples
 // ---------------------------------------------------------------------------
 const EXAMPLES = [
+  "India to Germany, next week, safe routes only",
   "JFK to London, next week, under $500",
-  "Barcelona to Paris, round trip April 10-17",
   "New York to Tokyo, business class, under $3000",
   "Berlin to anywhere in Europe, July, under 100",
 ];
