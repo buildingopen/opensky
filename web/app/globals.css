@@ -90,6 +90,15 @@ body {
   animation: pulse-bar 1.5s ease-in-out infinite;
 }
 
+/* Mobile menu slide-in */
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slideInRight 0.2s ease-out;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
