@@ -17,6 +17,12 @@ demo.tape
 
 # Local artifacts
 .tmp/
+*.png
+!web/public/*.png
+screenshots/
+tests/quality/screenshots/
+index.html
+node_modules/
 
 # Web frontend
 web/node_modules/
