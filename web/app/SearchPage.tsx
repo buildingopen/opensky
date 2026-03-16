@@ -933,6 +933,102 @@ function ScanSummaryExpanded({
 }
 
 // ---------------------------------------------------------------------------
+// Price Alert Section
+// ---------------------------------------------------------------------------
+function PriceAlertSection({
+  parsed,
+  cheapestPrice,
+}: {
+  parsed: ParsedSearch;
+  cheapestPrice: number;
+}) {
+  const [email, setEmail] = useState("");
+  const [threshold, setThreshold] = useState(cheapestPrice > 0 ? String(Math.round(cheapestPrice)) : "");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+  const sym = currencySymbol(parsed.currency);
+
+  const handleSubmit = async () => {
+    if (!email.trim()) return;
+    setStatus("loading");
+    try {
+      const resp = await fetch(`${API_URL}/api/alerts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          query: `${parsed.origins.join(",")} to ${parsed.destinations.join(",")}`,
+          origins: parsed.origins,
+          destinations: parsed.destinations,
+          max_price: parseFloat(threshold) || 0,
+          currency: parsed.currency,
+          cabin: parsed.cabin,
+          is_round_trip: parsed.return_dates?.length > 0,
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        setStatus("error");
+        setMessage(data.detail || "Something went wrong.");
+      } else {
+        setStatus("success");
+        setMessage(`We'll email you when prices drop below ${sym}${threshold || "current"}. Alert active for 90 days.`);
+      }
+    } catch {
+      setStatus("error");
+      setMessage("Network error. Please try again.");
+    }
+  };
+
+  if (status === "success") {
+    return (
+      <div className="mt-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3">
+        <p className="text-sm text-[var(--color-text)]">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block mr-1 text-green-500 -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+          {message}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 space-y-2">
+      <p className="text-sm font-medium text-[var(--color-text)]">Get notified when prices drop</p>
+      <div className="flex flex-wrap gap-2">
+        <input
+          type="email"
+          placeholder="your@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="flex-1 min-w-[180px] px-3 py-1.5 text-sm bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+        />
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-[var(--color-text-muted)]">{sym}</span>
+          <input
+            type="number"
+            placeholder="Max price"
+            value={threshold}
+            onChange={(e) => setThreshold(e.target.value)}
+            className="w-24 px-3 py-1.5 text-sm bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+          />
+        </div>
+        <button
+          onClick={handleSubmit}
+          disabled={status === "loading" || !email.trim()}
+          className="px-4 py-1.5 text-sm font-medium bg-[var(--color-accent)] text-black rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+        >
+          {status === "loading" ? "Setting..." : "Set alert"}
+        </button>
+      </div>
+      {status === "error" && (
+        <p className="text-xs text-red-500">{message}</p>
+      )}
+      <p className="text-xs text-[var(--color-text-muted)]">Daily check, 90-day expiry, one-click unsubscribe. No account needed.</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Fix 2: Parsed Config chips
 // ---------------------------------------------------------------------------
 function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void }) {
@@ -2023,6 +2119,11 @@ function HomePage() {
                       <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} />
                     )}
                   </div>
+                )}
+
+                {/* Price alert */}
+                {parsed && phase === "done" && flights.length > 0 && (
+                  <PriceAlertSection parsed={parsed} cheapestPrice={summary?.stats?.min_price || flights[0]?.price || 0} />
                 )}
 
                 {/* Bottom bar: share + trust */}
