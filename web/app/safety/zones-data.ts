@@ -50,8 +50,23 @@ export const COUNTRY_NAMES: Record<string, string> = {
   KP: "North Korea",
   SD: "Sudan",
   ER: "Eritrea",
+  ET: "Ethiopia",
   ML: "Mali",
   NE: "Niger",
+  AE: "UAE",
+  QA: "Qatar",
+  BH: "Bahrain",
+  KW: "Kuwait",
+  OM: "Oman",
+  PK: "Pakistan",
+  RU: "Russia",
+};
+
+export const ZOOM_REGIONS: Record<string, { center: [number, number]; zoom: number }> = {
+  do_not_fly: { center: [40, 25], zoom: 2.5 },
+  high_risk: { center: [25, 12], zoom: 3 },
+  caution: { center: [55, 30], zoom: 2.5 },
+  reset: { center: [30, 25], zoom: 1 },
 };
 
 export const RISK_CONFIG: Record<
