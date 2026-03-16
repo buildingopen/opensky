@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Component, createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { Component, createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { trackEvent } from "../lib/analytics";
 import { AirportAutocomplete } from "../components/AirportAutocomplete";
 import { useSavedSearches, SavedSearchesList } from "../components/SavedSearches";
@@ -18,6 +18,322 @@ function flagUrl(iata: string, countries?: Record<string, string>): string | nul
   return null;
 }
 const ZONES_UPDATED_AT = process.env.NEXT_PUBLIC_ZONES_UPDATED_AT || "March 2026";
+
+// ---------------------------------------------------------------------------
+// Query Preview: lookup maps (built once from AIRPORTS)
+// ---------------------------------------------------------------------------
+// Country code -> display name. Covers every code in AIRPORTS.
+const COUNTRY_NAMES: Record<string, string> = {
+  AE: "UAE", AG: "Antigua", AL: "Albania", AM: "Armenia", AR: "Argentina",
+  AT: "Austria", AU: "Australia", BD: "Bangladesh", BE: "Belgium", BG: "Bulgaria",
+  BH: "Bahrain", BO: "Bolivia", BR: "Brazil", BS: "Bahamas", CA: "Canada",
+  CH: "Switzerland", CI: "Ivory Coast", CL: "Chile", CN: "China", CO: "Colombia",
+  CR: "Costa Rica", CU: "Cuba", CW: "Curacao", CY: "Cyprus", CZ: "Czechia",
+  DE: "Germany", DK: "Denmark", DO: "Dominican Republic", DZ: "Algeria",
+  EC: "Ecuador", EE: "Estonia", EG: "Egypt", ES: "Spain", ET: "Ethiopia",
+  FI: "Finland", FJ: "Fiji", FR: "France", GB: "UK", GD: "Grenada",
+  GE: "Georgia", GH: "Ghana", GR: "Greece", GT: "Guatemala", GU: "Guam",
+  HK: "Hong Kong", HR: "Croatia", HT: "Haiti", HU: "Hungary", ID: "Indonesia",
+  IE: "Ireland", IL: "Israel", IN: "India", IS: "Iceland", IT: "Italy",
+  JM: "Jamaica", JO: "Jordan", JP: "Japan", KE: "Kenya", KH: "Cambodia",
+  KR: "South Korea", KW: "Kuwait", KZ: "Kazakhstan", LA: "Laos", LB: "Lebanon",
+  LK: "Sri Lanka", LT: "Lithuania", LU: "Luxembourg", LV: "Latvia", MA: "Morocco",
+  MM: "Myanmar", MN: "Mongolia", MO: "Macau", MT: "Malta", MU: "Mauritius",
+  MV: "Maldives", MX: "Mexico", MY: "Malaysia", MZ: "Mozambique", NG: "Nigeria",
+  NL: "Netherlands", NO: "Norway", NP: "Nepal", NZ: "New Zealand", OM: "Oman",
+  PA: "Panama", PE: "Peru", PF: "French Polynesia", PH: "Philippines", PK: "Pakistan",
+  PL: "Poland", PR: "Puerto Rico", PT: "Portugal", PY: "Paraguay", QA: "Qatar",
+  RO: "Romania", RS: "Serbia", RU: "Russia", SA: "Saudi Arabia", SC: "Seychelles",
+  SE: "Sweden", SG: "Singapore", SI: "Slovenia", SK: "Slovakia", SN: "Senegal",
+  SX: "St. Maarten", TH: "Thailand", TN: "Tunisia", TR: "Turkey", TT: "Trinidad",
+  TW: "Taiwan", TZ: "Tanzania", UA: "Ukraine", UG: "Uganda", US: "USA",
+  UY: "Uruguay", UZ: "Uzbekistan", VE: "Venezuela", VN: "Vietnam", ZA: "South Africa",
+  ZM: "Zambia",
+};
+// Auto-build: lowercase country name -> { code, name } from every code in AIRPORTS
+const COUNTRY_LOOKUP: Record<string, { code: string; name: string }> = {};
+for (const a of AIRPORTS) {
+  const name = COUNTRY_NAMES[a.country];
+  if (name && !COUNTRY_LOOKUP[name.toLowerCase()]) {
+    COUNTRY_LOOKUP[name.toLowerCase()] = { code: a.country, name };
+  }
+}
+// Aliases for common alternate names
+const COUNTRY_ALIASES: Record<string, string> = {
+  "united kingdom": "GB", england: "GB", uk: "GB", britain: "GB",
+  "united states": "US", america: "US", usa: "US",
+  korea: "KR", "south korea": "KR",
+  uae: "AE", "united arab emirates": "AE",
+  czechia: "CZ", "czech republic": "CZ",
+  holland: "NL",
+};
+for (const [alias, code] of Object.entries(COUNTRY_ALIASES)) {
+  const name = COUNTRY_NAMES[code];
+  if (name && !COUNTRY_LOOKUP[alias]) {
+    COUNTRY_LOOKUP[alias] = { code, name };
+  }
+}
+
+const IATA_SET = new Set(AIRPORTS.map((a) => a.iata));
+const CITY_DISPLAY = new Map<string, string>();
+const COUNTRY_AIRPORT_COUNT = new Map<string, number>();
+const CITY_AIRPORT_COUNT = new Map<string, number>();
+for (const a of AIRPORTS) {
+  const cl = a.city.toLowerCase();
+  CITY_DISPLAY.set(cl, a.city);
+  COUNTRY_AIRPORT_COUNT.set(a.country, (COUNTRY_AIRPORT_COUNT.get(a.country) || 0) + 1);
+  CITY_AIRPORT_COUNT.set(cl, (CITY_AIRPORT_COUNT.get(cl) || 0) + 1);
+}
+
+// City aliases: common names that differ from airport data city names
+const CITY_ALIASES: Record<string, string> = {
+  delhi: "new delhi", nyc: "new york", sf: "san francisco", la: "los angeles",
+  "ho chi minh": "ho chi minh city", "saigon": "ho chi minh city",
+  "bombay": "mumbai", "calcutta": "kolkata", "madras": "chennai",
+  "peking": "beijing", "cologne": "cologne", "nuremberg": "nuremberg",
+};
+for (const [alias, city] of Object.entries(CITY_ALIASES)) {
+  if (CITY_DISPLAY.has(city) && !CITY_DISPLAY.has(alias)) {
+    CITY_DISPLAY.set(alias, CITY_DISPLAY.get(city)!);
+    CITY_AIRPORT_COUNT.set(alias, CITY_AIRPORT_COUNT.get(city) || 1);
+  }
+}
+
+const AMBIGUOUS_CITIES = new Set(["nice", "mobile", "split", "reading", "bath", "chester", "orange"]);
+const SKIP_REGIONS = new Set(["anywhere", "europe", "asia", "africa", "south america", "north america", "middle east"]);
+
+const MONTH_NAMES = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAY_NAMES = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+
+function resolveDate(phrase: string): string | null {
+  const now = new Date();
+  const p = phrase.toLowerCase().trim();
+  if (p === "tomorrow") {
+    const d = new Date(now); d.setDate(d.getDate() + 1);
+    return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`;
+  }
+  if (p === "today") {
+    return `${MONTH_SHORT[now.getMonth()]} ${now.getDate()}`;
+  }
+  if (p === "next week") {
+    const d = new Date(now);
+    const dayOfWeek = d.getDay(); // 0=Sun
+    const daysUntilMon = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    d.setDate(d.getDate() + daysUntilMon);
+    const mon = new Date(d);
+    const sun = new Date(d); sun.setDate(sun.getDate() + 6);
+    if (mon.getMonth() === sun.getMonth()) return `${MONTH_SHORT[mon.getMonth()]} ${mon.getDate()}-${sun.getDate()}`;
+    return `${MONTH_SHORT[mon.getMonth()]} ${mon.getDate()} - ${MONTH_SHORT[sun.getMonth()]} ${sun.getDate()}`;
+  }
+  if (p === "this weekend") {
+    const d = new Date(now);
+    const dayOfWeek = d.getDay();
+    const daysUntilSat = dayOfWeek === 6 ? 0 : (6 - dayOfWeek);
+    d.setDate(d.getDate() + daysUntilSat);
+    const sat = new Date(d);
+    const sun = new Date(d); sun.setDate(sun.getDate() + 1);
+    if (sat.getMonth() === sun.getMonth()) return `${MONTH_SHORT[sat.getMonth()]} ${sat.getDate()}-${sun.getDate()}`;
+    return `${MONTH_SHORT[sat.getMonth()]} ${sat.getDate()} - ${MONTH_SHORT[sun.getMonth()]} ${sun.getDate()}`;
+  }
+  if (p === "next weekend") {
+    const d = new Date(now);
+    const dayOfWeek = d.getDay();
+    // Next Saturday (skip this weekend)
+    const daysUntilNextSat = dayOfWeek === 6 ? 7 : (6 - dayOfWeek + 7);
+    d.setDate(d.getDate() + daysUntilNextSat);
+    const sat = new Date(d);
+    const sun = new Date(d); sun.setDate(sun.getDate() + 1);
+    if (sat.getMonth() === sun.getMonth()) return `${MONTH_SHORT[sat.getMonth()]} ${sat.getDate()}-${sun.getDate()}`;
+    return `${MONTH_SHORT[sat.getMonth()]} ${sat.getDate()} - ${MONTH_SHORT[sun.getMonth()]} ${sun.getDate()}`;
+  }
+  if (p === "next month") {
+    const m = (now.getMonth() + 1) % 12;
+    const y = m === 0 ? now.getFullYear() + 1 : (now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear());
+    return `${MONTH_SHORT[m]} ${y}`;
+  }
+  // Day names: "monday", "tuesday", etc.
+  const dayIdx = DAY_NAMES.indexOf(p);
+  if (dayIdx >= 0) {
+    const d = new Date(now);
+    let diff = dayIdx - d.getDay();
+    if (diff <= 0) diff += 7;
+    d.setDate(d.getDate() + diff);
+    return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`;
+  }
+  // Month names: "july" -> "Jul 2026", "in july" already stripped
+  const monthIdx = MONTH_NAMES.indexOf(p);
+  if (monthIdx >= 0) {
+    const y = monthIdx < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
+    return `${MONTH_SHORT[monthIdx]} ${y}`;
+  }
+  // "march 15" or "15 march"
+  for (let mi = 0; mi < MONTH_NAMES.length; mi++) {
+    const mn = MONTH_NAMES[mi];
+    const m1 = p.match(new RegExp(`^${mn}\\s+(\\d{1,2})$`));
+    if (m1) return `${MONTH_SHORT[mi]} ${parseInt(m1[1])}`;
+    const m2 = p.match(new RegExp(`^(\\d{1,2})\\s+${mn}$`));
+    if (m2) return `${MONTH_SHORT[mi]} ${parseInt(m2[1])}`;
+  }
+  return null;
+}
+
+interface QueryPreview { origin: string; dest: string; date: string | null }
+
+// Pre-sorted arrays for prefix search (built once)
+const CITY_KEYS = Array.from(CITY_DISPLAY.keys()).sort();
+const COUNTRY_KEYS = Object.keys(COUNTRY_LOOKUP).sort();
+
+function prefixMatch(keys: string[], prefix: string): string | null {
+  // Binary search for first key starting with prefix
+  let lo = 0, hi = keys.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (keys[mid] < prefix) lo = mid + 1; else hi = mid;
+  }
+  if (lo >= keys.length || !keys[lo].startsWith(prefix)) return null;
+  // Only return if unique match (next key doesn't also start with prefix)
+  if (lo + 1 < keys.length && keys[lo + 1].startsWith(prefix)) return null;
+  return keys[lo];
+}
+
+function matchLocation(phrase: string, hasContext: boolean): { display: string; count: number } | null {
+  const p = phrase.toLowerCase().trim();
+  if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
+  // IATA code (3 uppercase letters)
+  const upper = phrase.trim().toUpperCase();
+  if (upper.length === 3 && IATA_SET.has(upper)) {
+    return { display: upper, count: 1 };
+  }
+  // Country (exact)
+  const country = COUNTRY_LOOKUP[p];
+  if (country) {
+    const cnt = COUNTRY_AIRPORT_COUNT.get(country.code) || 0;
+    return { display: country.name, count: cnt };
+  }
+  // City (exact)
+  if (CITY_DISPLAY.has(p)) {
+    if (AMBIGUOUS_CITIES.has(p) && !hasContext) return null;
+    const cnt = CITY_AIRPORT_COUNT.get(p) || 1;
+    return { display: CITY_DISPLAY.get(p)!, count: cnt };
+  }
+  // Prefix matching (only if >= 4 chars to avoid false positives)
+  if (p.length >= 4) {
+    const cityKey = prefixMatch(CITY_KEYS, p);
+    if (cityKey) {
+      if (AMBIGUOUS_CITIES.has(cityKey) && !hasContext) return null;
+      const cnt = CITY_AIRPORT_COUNT.get(cityKey) || 1;
+      return { display: CITY_DISPLAY.get(cityKey)!, count: cnt };
+    }
+    const countryKey = prefixMatch(COUNTRY_KEYS, p);
+    if (countryKey) {
+      const c = COUNTRY_LOOKUP[countryKey];
+      const cnt = COUNTRY_AIRPORT_COUNT.get(c.code) || 0;
+      return { display: c.name, count: cnt };
+    }
+  }
+  return null;
+}
+
+function formatLocationDisplay(loc: { display: string; count: number }): string {
+  return loc.count > 1 ? `${loc.display} (${loc.count} airports)` : loc.display;
+}
+
+function extractOriginDest(lower: string): { originPhrase: string; destPhrase: string } | null {
+  // Strategy: find "from" and "to" anchors, extract phrases between them.
+  // Handles: "from X to Y", "X to Y", "to Y from X", "flights from X to Y",
+  // "I want a cheap flight from Berlin to Tokyo next week", etc.
+  const NOISE = /^(?:(?:flights?|cheapest|cheap|direct|nonstop|i\s+want\s+(?:a\s+)?|find\s+(?:me\s+)?|search\s+(?:for\s+)?|show\s+(?:me\s+)?|get\s+(?:me\s+)?|book\s+(?:a\s+)?|looking\s+for\s+(?:a\s+)?|a\s+|the\s+)\s*)+/i;
+
+  // Pattern 1: explicit "from X to Y"
+  const fromTo = lower.match(/\bfrom\s+([\w\s/.'-]+?)\s+to\s+([\w\s/.'-]+?)(?:\s+(?:in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium|\d|€|\$|£).*)?$/);
+  if (fromTo) {
+    const orig = fromTo[1].replace(NOISE, "").trim();
+    let dest = fromTo[2].trim();
+    dest = dest.replace(/\s+(?:in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium)$/i, "").trim();
+    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
+  }
+
+  // Pattern 2: "to Y from X"
+  const toFrom = lower.match(/\bto\s+([\w\s/.'-]+?)\s+from\s+([\w\s/.'-]+?)(?:\s+(?:in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium|\d|€|\$|£).*)?$/);
+  if (toFrom) {
+    const dest = toFrom[1].trim();
+    const orig = toFrom[2].replace(NOISE, "").trim();
+    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
+  }
+
+  // Pattern 3: simple "X to Y" (no "from" keyword)
+  const simple = lower.match(/([\w\s/.'-]+?)\s+to\s+([\w\s/.'-]+?)(?:\s+(?:in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium|\d|€|\$|£).*)?$/);
+  if (simple) {
+    const orig = simple[1].replace(NOISE, "").trim();
+    let dest = simple[2].trim();
+    dest = dest.replace(/\s+(?:in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium)$/i, "").trim();
+    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
+  }
+
+  return null;
+}
+
+function useQueryPreview(prompt: string): QueryPreview | null {
+  return useMemo(() => {
+    if (!prompt || prompt.length < 5) return null;
+    const lower = prompt.toLowerCase();
+
+    const extracted = extractOriginDest(lower);
+    if (!extracted) return null;
+    const { originPhrase, destPhrase } = extracted;
+
+    // Handle "X or Y to Z" pattern for multiple origins
+    const orParts = originPhrase.split(/\s+or\s+/);
+    const origins: { display: string; count: number }[] = [];
+    for (const part of orParts) {
+      const loc = matchLocation(part.trim(), orParts.length > 1 || !!destPhrase);
+      if (loc) origins.push(loc);
+    }
+    if (origins.length === 0) return null;
+
+    const dest = matchLocation(destPhrase, true);
+    if (!dest) return null;
+
+    const originStr = origins.map(formatLocationDisplay).join(", ");
+    const destStr = formatLocationDisplay(dest);
+
+    // Date detection
+    let date: string | null = null;
+    const datePatterns = [
+      /\b(tomorrow|today)\b/i,
+      /\b(next week)\b/i,
+      /\b(next weekend)\b/i,
+      /\b(this weekend)\b/i,
+      /\b(next month)\b/i,
+      /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
+      /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})\b/i,
+      /\b(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
+      /\bin\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
+      /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
+    ];
+    for (const pat of datePatterns) {
+      const m = lower.match(pat);
+      if (m) {
+        // For "in july" pattern, extract just the month
+        if (pat.source.startsWith("\\bin\\s+")) {
+          date = resolveDate(m[1]);
+        } else if (m[2] && /^\d+$/.test(m[2])) {
+          // "march 15"
+          date = resolveDate(m[0]);
+        } else if (m[2] && MONTH_NAMES.includes(m[2].toLowerCase())) {
+          // "15 march"
+          date = resolveDate(m[0]);
+        } else {
+          date = resolveDate(m[1] || m[0]);
+        }
+        if (date) break;
+      }
+    }
+
+    return { origin: originStr, dest: destStr, date };
+  }, [prompt]);
+}
 
 // Context for airport country codes (avoids prop drilling for flags)
 const AirportCountriesCtx = createContext<Record<string, string>>({});
@@ -1795,6 +2111,7 @@ function HomePage() {
   };
 
   const isLoading = phase === "parsing" || phase === "searching";
+  const queryPreview = useQueryPreview(prompt);
 
   // Airline filter (post-results)
   const airlineFilter = useAirlineFilter(flights);
@@ -2013,6 +2330,17 @@ function HomePage() {
                 </div>
               )}
 
+              {/* Query preview: shows resolved locations + dates while typing */}
+              <div className={`overflow-hidden transition-all duration-300 ease-out ${searchMode === "natural" && !isLoading && queryPreview ? "max-h-6" : "max-h-0"}`}>
+                {queryPreview && (
+                  <p className="text-[11px] text-[var(--color-text-muted)]/40 truncate px-1 mt-0.5">
+                    {queryPreview.origin}
+                    {queryPreview.dest && <> <span className="opacity-50">{"\u2192"}</span> {queryPreview.dest}</>}
+                    {queryPreview.date && <> <span className="opacity-30">{"\u00B7"}</span> {queryPreview.date}</>}
+                  </p>
+                )}
+              </div>
+
               <div className={`${searchMode === "structured" ? "mt-3" : "mt-1 pt-3 border-t border-white/[0.04]"} flex items-center justify-between`}>
                 <button
                   type="button"
@@ -2061,7 +2389,7 @@ function HomePage() {
         {phase === "idle" && flights.length === 0 && savedSearches.searches.length > 0 && (
           <SavedSearchesList
             searches={savedSearches.searches}
-            onSelect={(q) => { setSearchMode("natural"); setPrompt(q); search(q); }}
+            onSelect={(q) => { setSearchMode("natural"); setPrompt(q); setTimeout(() => inputRef.current?.focus(), 0); }}
             onClear={savedSearches.clear}
           />
         )}
@@ -2310,6 +2638,36 @@ function HomePage() {
                       filteredCount={displayFlights.length}
                     />
 
+                    {/* Compare all + share (above recommendations so users see before clicking) */}
+                    {summary && summary.stats.total_flights > 0 && (
+                      <div className="mt-6">
+                        <div className="flex items-center justify-between mb-2">
+                          {!showCompare && (
+                            <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} flights={flights} />
+                          )}
+                          <button
+                            onClick={handleCopyLink}
+                            className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors ml-auto"
+                          >
+                            {copyFeedback ? (
+                              <>
+                                <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[var(--color-accent)]" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><path d="M13.5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM15 3a3 3 0 0 1-5.133 2.107L5.4 7.4a3.014 3.014 0 0 1 0 1.2l4.467 2.293A3 3 0 1 1 8.8 12.4L4.333 10.107a3 3 0 1 1 0-4.214L8.8 3.6A3.015 3.015 0 0 1 9 3a3 3 0 0 1 6 0zM4.5 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM13.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
+                                Share results
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        {showCompare && (
+                          <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} cabin={parsed?.cabin} />
+                        )}
+                      </div>
+                    )}
+
                     {/* Recommendation stack */}
                     <div className="mt-6 space-y-4">
                       <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
@@ -2432,35 +2790,6 @@ function HomePage() {
                   </div>
                 )}
 
-                {/* Compare all + share (after all flights and expand) */}
-                {summary && summary.stats.total_flights > 0 && (
-                  <div className="mt-6">
-                    <div className="flex items-center justify-between mb-2">
-                      {!showCompare && (
-                        <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} flights={flights} />
-                      )}
-                      <button
-                        onClick={handleCopyLink}
-                        className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors ml-auto"
-                      >
-                        {copyFeedback ? (
-                          <>
-                            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[var(--color-accent)]" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
-                            Copied!
-                          </>
-                        ) : (
-                          <>
-                            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><path d="M13.5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM15 3a3 3 0 0 1-5.133 2.107L5.4 7.4a3.014 3.014 0 0 1 0 1.2l4.467 2.293A3 3 0 1 1 8.8 12.4L4.333 10.107a3 3 0 1 1 0-4.214L8.8 3.6A3.015 3.015 0 0 1 9 3a3 3 0 0 1 6 0zM4.5 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM13.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
-                            Share results
-                          </>
-                        )}
-                      </button>
-                    </div>
-                    {showCompare && (
-                      <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} cabin={parsed?.cabin} />
-                    )}
-                  </div>
-                )}
 
                 {/* Price alert */}
                 {parsed && phase === "done" && flights.length > 0 && (
