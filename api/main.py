@@ -1478,6 +1478,9 @@ async def search_flights(req: PromptRequest, request: Request):
             rt_raw, rt_cache_age = result_holder[0] if result_holder else ([], None)
             cache_age_seconds = rt_cache_age
             rt_results: list[dict] = rt_raw
+            # Post-search safe_only filter for round trips
+            if parsed.get("safe_only"):
+                rt_results = [r for r in rt_results if r.get("risk_level") == "safe"]
             round_trip_results = rt_results[:20]
             # Derive outbound flights for summary purposes
             flights = [r["outbound"] for r in rt_results[:10]]
@@ -1512,8 +1515,12 @@ async def search_flights(req: PromptRequest, request: Request):
                 return sorted(seen.values(), key=lambda x: x["score"])
 
             flights = _process_flights(scored)
+            # Count how many flights will be filtered for safety reasons
             filter_levels = ("high_risk", "do_not_fly", "caution") if parsed.get("safe_only") else ("high_risk", "do_not_fly")
             safety_filtered_count = sum(1 for f in flights if f.get("risk_level") in filter_levels)
+            # Post-search safe_only filter: remove non-safe flights even from cache
+            if parsed.get("safe_only"):
+                flights = [f for f in flights if f.get("risk_level") == "safe"]
             # C8: when every result is high_risk, suppress them and emit safety_filtered
             if flights and all(f.get("risk_level") == "high_risk" for f in flights):
                 no_results_reason = "safety_filtered"
