@@ -1,13 +1,11 @@
 "use client";
 
 import React, { Component, createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslations, useLocale, useFormatter } from "next-intl";
-import { Link } from "../../i18n/navigation";
-import { trackEvent } from "../../lib/analytics";
-import { AirportAutocomplete } from "../../components/AirportAutocomplete";
-import { useSavedSearches, SavedSearchesList } from "../../components/SavedSearches";
-import { useAirlineFilter, AirlineFilterChips, AIRLINE_NAMES, airlineName } from "../../components/AirlineFilter";
-import { AIRPORTS } from "../../lib/airports";
+import { trackEvent } from "../lib/analytics";
+import { AirportAutocomplete } from "../components/AirportAutocomplete";
+import { useSavedSearches, SavedSearchesList } from "../components/SavedSearches";
+import { useAirlineFilter, AirlineFilterChips, AIRLINE_NAMES, airlineName } from "../components/AirlineFilter";
+import { AIRPORTS } from "../lib/airports";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -426,17 +424,17 @@ function formatDuration(min: number): string {
   const m = min % 60;
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
-function formatTime(iso: string, loc?: string): string {
+function formatTime(iso: string): string {
   if (!iso) return "";
   try {
-    return new Date(iso).toLocaleTimeString(loc || "en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+    return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
   } catch {
     return iso.slice(11, 16);
   }
 }
-function formatDate(iso: string, loc?: string): string {
+function formatDate(iso: string): string {
   try {
-    return new Date(iso + "T00:00:00").toLocaleDateString(loc || "en-US", { month: "short", day: "numeric" });
+    return new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
   } catch {
     return iso;
   }
@@ -523,7 +521,7 @@ function googleFlightsUrl(origin: string, dest: string, date: string, currency: 
   const tfs = [...slice, ..._pbBytes(8, [0x01]), ..._pbTag(9, 0), seat, ..._pbTag(19, 0), 2];
   const bytes = new Uint8Array(tfs);
   const b64 = btoa(String.fromCharCode(...bytes));
-  return `https://www.google.com/travel/flights/search?tfs=${encodeURIComponent(b64)}&hl=${typeof window !== "undefined" ? document.documentElement.lang || "en" : "en"}&curr=${cur}`;
+  return `https://www.google.com/travel/flights/search?tfs=${encodeURIComponent(b64)}&hl=en&curr=${cur}`;
 }
 function appendAttribution(url: string, params: AttributionParams): string {
   const s = safeUrl(url);
@@ -650,12 +648,11 @@ function getRecommendationReason(flight: FlightOut, all: FlightOut[], label: Rec
 // ---------------------------------------------------------------------------
 function RiskBadge({ level }: { level: string }) {
   const [showTip, setShowTip] = useState(false);
-  const tr = useTranslations("search.risk");
   const c: Record<string, { bg: string; text: string; border: string; label: string; icon: string; tooltip: string }> = {
-    safe: { bg: "bg-[var(--color-safe)]/15", text: "text-[var(--color-safe)]", border: "border-[var(--color-safe)]/25", label: tr("safe"), icon: "\u2713", tooltip: tr("safeTooltip") },
-    caution: { bg: "bg-[var(--color-caution)]/15", text: "text-[var(--color-caution)]", border: "border-[var(--color-caution)]/25", label: tr("caution"), icon: "\u26A0", tooltip: tr("cautionTooltip") },
-    high_risk: { bg: "bg-[var(--color-high-risk)]/15", text: "text-[var(--color-high-risk)]", border: "border-[var(--color-high-risk)]/25", label: tr("highRisk"), icon: "\u26A0", tooltip: tr("highRiskTooltip") },
-    do_not_fly: { bg: "bg-[var(--color-danger)]/15", text: "text-[var(--color-danger)]", border: "border-[var(--color-danger)]/25", label: tr("doNotFly"), icon: "\u2717", tooltip: tr("doNotFlyTooltip") },
+    safe: { bg: "bg-[var(--color-safe)]/15", text: "text-[var(--color-safe)]", border: "border-[var(--color-safe)]/25", label: "Safe route", icon: "\u2713", tooltip: "Route avoids all known conflict zones and restricted airspace." },
+    caution: { bg: "bg-[var(--color-caution)]/15", text: "text-[var(--color-caution)]", border: "border-[var(--color-caution)]/25", label: "Caution", icon: "\u26A0", tooltip: "Route passes near a lower-risk conflict area. Review details before booking." },
+    high_risk: { bg: "bg-[var(--color-high-risk)]/15", text: "text-[var(--color-high-risk)]", border: "border-[var(--color-high-risk)]/25", label: "High Risk", icon: "\u26A0", tooltip: "Route crosses high-risk airspace. Consider safer alternatives." },
+    do_not_fly: { bg: "bg-[var(--color-danger)]/15", text: "text-[var(--color-danger)]", border: "border-[var(--color-danger)]/25", label: "Do Not Fly", icon: "\u2717", tooltip: "Route crosses active conflict zone or restricted airspace. Strongly recommend avoiding." },
   };
   if (!level || !c[level]) return null;
   const x = c[level];
@@ -686,7 +683,7 @@ function FlightCard({
   cabin,
 }: {
   flight: FlightOut;
-  label?: string;
+  label?: RecLabel;
   reason?: string;
   airportNames: Record<string, string>;
   attributionParams: AttributionParams;
@@ -694,8 +691,6 @@ function FlightCard({
   cabin?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const t = useTranslations("search.results");
-  const locale = useLocale();
   const firstLeg = flight.legs[0];
   const lastLeg = flight.legs[flight.legs.length - 1];
   const airlines = flight.legs.length > 0
@@ -723,13 +718,13 @@ function FlightCard({
           <div className="text-sm font-medium text-[var(--color-text)]"><RouteWithFlags route={flight.route} names={airportNames} /></div>
           {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5"><AirlineLogos codes={airlines} /></div>}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-xs text-[var(--color-text-muted)] leading-relaxed">
-            <span>{formatDate(flightDisplayDate(flight), locale)}</span>
+            <span>{formatDate(flightDisplayDate(flight))}</span>
             {firstLeg && lastLeg && (
               <span className="text-[var(--color-text)]">
-                {formatTime(firstLeg.departs, locale)} – {formatTime(lastLeg.arrives, locale)}
+                {formatTime(firstLeg.departs)} – {formatTime(lastLeg.arrives)}
               </span>
             )}
-            <span>{flight.stops === 0 ? t("direct") : t("stops", { count: flight.stops })}</span>
+            <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
             <span>{formatDuration(flight.duration_minutes)}</span>
             <RiskBadge level={flight.risk_level} />
           </div>
@@ -750,10 +745,10 @@ function FlightCard({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => onOutboundClick("booking", flight)}
-                  aria-label={t("bookDirect")}
+                  aria-label="Book direct"
                   className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
                 >
-                  {t("bookDirect")}
+                  Book direct
                 </a>
               ) : (
                 <>
@@ -762,10 +757,10 @@ function FlightCard({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => onOutboundClick("google", flight)}
-                    aria-label={t("googleFlights")}
+                    aria-label="View on Google Flights"
                     className="px-3 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
                   >
-                    {t("googleFlights")} <ExternalLinkIcon />
+                    Google Flights <ExternalLinkIcon />
                   </a>
                 </>
               )}
@@ -779,7 +774,7 @@ function FlightCard({
           className="mt-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
           aria-expanded={expanded}
         >
-          {expanded ? t("hideDetails") : t("showSegments", { count: flight.legs.length })}
+          {expanded ? "Hide details" : `Show ${flight.legs.length} segments`}
         </button>
       )}
       {expanded && (
@@ -810,7 +805,7 @@ function FlightCard({
           ))}
           {flight.risk_details?.length > 0 && (
             <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
-              <p className="text-xs text-[var(--color-text-muted)] mb-1">{t("riskFactors")}</p>
+              <p className="text-xs text-[var(--color-text-muted)] mb-1">Risk factors:</p>
               {flight.risk_details.map((rd, i) => (
                 <div key={i} className="text-xs text-[var(--color-caution)]">
                   {rd.airport} ({rd.country}) – {rd.zone}
@@ -842,8 +837,6 @@ function RoundTripFlightRow({
   onOutboundClick: (provider: "booking" | "google", f: FlightOut) => void;
   cabin?: string;
 }) {
-  const t = useTranslations("search");
-  const locale = useLocale();
   const firstLeg = flight.legs[0];
   const lastLeg = flight.legs[flight.legs.length - 1];
   const airlines = flight.legs.length > 0
@@ -866,17 +859,17 @@ function RoundTripFlightRow({
         </div>
         {airlines && <div className="text-xs text-[var(--color-text-muted)] mt-0.5"><AirlineLogos codes={airlines} /></div>}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs text-[var(--color-text-muted)] leading-relaxed">
-          <span>{formatDate(flightDisplayDate(flight), locale)}</span>
+          <span>{formatDate(flightDisplayDate(flight))}</span>
           {firstLeg && lastLeg && (
             <span className="text-[var(--color-text)]">
-              {formatTime(firstLeg.departs, locale)} &ndash; {formatTime(lastLeg.arrives, locale)}
+              {formatTime(firstLeg.departs)} &ndash; {formatTime(lastLeg.arrives)}
             </span>
           )}
-          <span>{flight.stops === 0 ? t("results.direct") : t("results.stops", { count: flight.stops })}</span>
+          <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
           <span>{formatDuration(flight.duration_minutes)}</span>
           {flight.risk_level === "safe" ? (
             <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--color-safe)] bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 rounded px-1.5 py-0.5">
-              {t("risk.safe")}
+              Safe route
             </span>
           ) : (
             <RiskBadge level={flight.risk_level} />
@@ -892,7 +885,7 @@ function RoundTripFlightRow({
             onClick={() => onOutboundClick("booking", flight)}
             className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
           >
-            {t("results.book")} <ExternalLinkIcon />
+            Book <ExternalLinkIcon />
           </a>
         ) : (
           <a
@@ -902,7 +895,7 @@ function RoundTripFlightRow({
             onClick={() => onOutboundClick("google", flight)}
             className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
           >
-            {t("results.googleFlights")} <ExternalLinkIcon />
+            Google Flights <ExternalLinkIcon />
           </a>
         )}
       </div>
@@ -923,7 +916,6 @@ function RoundTripCard({
   onOutboundClick: (provider: "booking" | "google", f: FlightOut) => void;
   cabin?: string;
 }) {
-  const t = useTranslations("search");
   const { outbound, inbound, total_price, currency, risk_level } = result;
 
   return (
@@ -937,8 +929,8 @@ function RoundTripCard({
               <div className="w-5 h-5 rounded-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-accent)]">2</div>
             </div>
             <div className="flex-1 divide-y divide-[var(--color-border)]">
-              <RoundTripFlightRow flight={outbound} label={t("results.step1")} airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
-              <RoundTripFlightRow flight={inbound} label={t("results.step2")} airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
+              <RoundTripFlightRow flight={outbound} label="Step 1: Book outbound" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
+              <RoundTripFlightRow flight={inbound} label="Step 2: Book return" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
             </div>
           </div>
         </div>
@@ -948,11 +940,11 @@ function RoundTripCard({
               <div className="text-2xl font-bold text-[var(--color-accent)]">
                 {currencySymbol(currency)}{Math.round(total_price)}
               </div>
-              <div className="text-[10px] text-[var(--color-text-muted)]">{t("results.combinedTotal")}</div>
+              <div className="text-[10px] text-[var(--color-text-muted)]">combined total</div>
             </div>
           )}
           {risk_level !== "safe" && <RiskBadge level={risk_level} />}
-          <div className="text-[10px] text-[var(--color-text-muted)] mt-1">{t("results.twoBookings")}</div>
+          <div className="text-[10px] text-[var(--color-text-muted)] mt-1">Two bookings required</div>
         </div>
       </div>
     </div>
@@ -970,11 +962,9 @@ interface ProgressInfo {
 }
 
 function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSearch | null; progress: ProgressInfo | null; filteredCount: number }) {
-  const t = useTranslations("search");
-  const locale = useLocale();
   const totalRoutes = progress?.total ?? parsed?.total_routes ?? 0;
   const workers = Math.min(16, totalRoutes);
-  const manualMinutes = Math.ceil(totalRoutes * 2.5);
+  const manualMinutes = Math.ceil(totalRoutes * 2.5); // ~2.5 min per manual Google Flights search (navigate, enter airports, pick date, wait, compare)
   const manualLabel = manualMinutes >= 60
     ? `${Math.floor(manualMinutes / 60)}h ${manualMinutes % 60}min`
     : `${manualMinutes} min`;
@@ -987,8 +977,8 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
 
   const timeLabel = estimateSeconds != null
     ? estimateSeconds < 5
-      ? t("loading.almostDone")
-      : t("loading.remaining", { seconds: estimateSeconds })
+      ? "Almost done..."
+      : `~${estimateSeconds}s remaining`
     : null;
 
   return (
@@ -1001,38 +991,38 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
       {progress && parsed ? (
         <>
           <p className="text-[var(--color-text)]">
-            {t("loading.agentsChecking", { workers, total: progress.total })}
+            {workers} agents checking {progress.total} combinations on Google Flights
           </p>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1 font-mono">{t("loading.checkingRoute", { route: progress.route, date: formatDate(progress.date, locale) })}</p>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1 font-mono">{progress.route} on {formatDate(progress.date)}</p>
           <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
             <div className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
           </div>
           <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
-            {t("loading.checked", { done: progress.done, total: progress.total })} {timeLabel ? `· ${timeLabel}` : ""}
+            {progress.done}/{progress.total} checked {timeLabel ? `· ${timeLabel}` : ""}
           </p>
           {manualMinutes >= 2 && (
             <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
-              {t("loading.savingYou", { time: manualLabel })}
+              Saving you ~{manualLabel} of manual searching
             </p>
           )}
           {filteredCount > 0 && (
-            <p className="text-[11px] text-[var(--color-caution)] mt-1">{t("loading.safetyFiltered", { count: filteredCount })}</p>
+            <p className="text-[11px] text-[var(--color-caution)] mt-1">{filteredCount} route{filteredCount !== 1 ? "s" : ""} filtered for safety</p>
           )}
         </>
       ) : parsed ? (
         <>
           <p className="text-[var(--color-text)]">
-            {t("loading.agentsChecking", { workers, total: totalRoutes })}
+            {workers} agents checking {totalRoutes} combinations on Google Flights
           </p>
           <p className="text-sm text-[var(--color-text-muted)] mt-2">
             {manualMinutes >= 2
-              ? t("loading.wouldTake", { time: manualLabel })
-              : t("loading.fetchingPrices")}
+              ? `This would take ~${manualLabel} manually. We'll be done in seconds.`
+              : "Fetching live prices..."}
           </p>
         </>
       ) : (
         <>
-          <p className="text-[var(--color-text-muted)]">{t("loading.understanding")}</p>
+          <p className="text-[var(--color-text-muted)]">Understanding your trip...</p>
           <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
             <div className="h-full bg-[var(--color-accent)] opacity-60 rounded-full shimmer-bar" />
           </div>
@@ -1056,8 +1046,6 @@ function CompactFlightRow({
   airportNames: Record<string, string>;
   cabin?: string;
 }) {
-  const t = useTranslations("search");
-  const locale = useLocale();
   const firstLeg = flight.legs[0];
   const lastLeg = flight.legs[flight.legs.length - 1];
   const airline = flight.legs.length > 0
@@ -1070,11 +1058,11 @@ function CompactFlightRow({
         <div className="font-medium text-[var(--color-text)] truncate"><RouteWithFlags route={flight.route} names={airportNames} /></div>
         <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-0.5">
           {airline && <span><AirlineLogos codes={airline} /></span>}
-          <span>{formatDate(flightDisplayDate(flight), locale)}</span>
+          <span>{formatDate(flightDisplayDate(flight))}</span>
           {firstLeg && lastLeg && (
-            <span className="hidden sm:inline">{formatTime(firstLeg.departs, locale)} – {formatTime(lastLeg.arrives, locale)}</span>
+            <span className="hidden sm:inline">{formatTime(firstLeg.departs)} – {formatTime(lastLeg.arrives)}</span>
           )}
-          <span>{flight.stops === 0 ? t("results.direct") : t("results.stops", { count: flight.stops })}</span>
+          <span>{flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}</span>
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
@@ -1087,7 +1075,7 @@ function CompactFlightRow({
           rel="noopener noreferrer"
           className="text-xs text-[var(--color-accent)] hover:underline"
         >
-          {t("results.google")} <ExternalLinkIcon />
+          Google <ExternalLinkIcon />
         </a>
       </div>
     </div>
@@ -1108,7 +1096,6 @@ function ScanSummaryCollapsed({
   onExpand: () => void;
   flights?: FlightOut[];
 }) {
-  const t = useTranslations("search");
   const { stats } = summary;
   const sym = currencySymbol(currency);
   // Use live flight count/prices if available (e.g. after expand merge)
@@ -1122,7 +1109,7 @@ function ScanSummaryCollapsed({
         onClick={onExpand}
         className="text-sm text-[var(--color-accent)] hover:underline"
       >
-        {t("compare.compareAll", { flights: totalFlights, destinations: destCount })}
+        Compare all options ({totalFlights} flight{totalFlights !== 1 ? "s" : ""}, {destCount} destination{destCount !== 1 ? "s" : ""})
       </button>
       {minPrice > 0 && (
         <span className="ml-2 text-xs text-[var(--color-text-muted)]">
@@ -1564,9 +1551,6 @@ const EXAMPLES = [
 // Main Page
 // ---------------------------------------------------------------------------
 function HomePage() {
-  const t = useTranslations("search");
-  const tc = useTranslations("common");
-  const locale = useLocale();
   const [searchMode, setSearchMode] = useState<"structured" | "natural">("natural");
   const [form, setForm] = useState<SearchFormState>({
     from: "",
