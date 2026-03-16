@@ -1195,6 +1195,11 @@ function HomePage() {
   const [rateLimitReset, setRateLimitReset] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
   const [shareCTADismissed, setShareCTADismissed] = useState(false);
+  const [showAlertPopup, setShowAlertPopup] = useState(false);
+  const [alertPopupDismissed, setAlertPopupDismissed] = useState(false);
+  const [popupEmail, setPopupEmail] = useState("");
+  const [popupThreshold, setPopupThreshold] = useState("");
+  const [popupStatus, setPopupStatus] = useState<"idle" | "loading" | "success">("idle");
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -1218,6 +1223,35 @@ function HomePage() {
     return () => document.removeEventListener("visibilitychange", restore);
   }, []);
 
+  // Price alert popup: show 2s after results, auto-dismiss 10s
+  useEffect(() => {
+    if (phase !== "done" || flights.length === 0 || alertPopupDismissed) {
+      setShowAlertPopup(false);
+      return;
+    }
+    const showTimer = setTimeout(() => setShowAlertPopup(true), 2000);
+    return () => clearTimeout(showTimer);
+  }, [phase, flights.length, alertPopupDismissed]);
+
+  useEffect(() => {
+    if (!showAlertPopup) return;
+    const dismissTimer = setTimeout(() => {
+      setShowAlertPopup(false);
+      setAlertPopupDismissed(true);
+    }, 10000);
+    return () => clearTimeout(dismissTimer);
+  }, [showAlertPopup]);
+
+  // Reset popup on new search
+  useEffect(() => {
+    if (phase === "parsing") {
+      setAlertPopupDismissed(false);
+      setShowAlertPopup(false);
+      setPopupStatus("idle");
+      setPopupEmail("");
+      setPopupThreshold("");
+    }
+  }, [phase]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -2289,6 +2323,85 @@ function HomePage() {
 
         {/* Empty state spacer (trust microcopy is in hero section) */}
       </section>
+
+      {/* Floating price alert popup */}
+      {showAlertPopup && parsed && (
+        <div className="fixed bottom-4 right-4 z-50 w-80 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-2xl p-4 animate-fade-in">
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <div>
+              <p className="text-sm font-medium text-[var(--color-text)]">Price drop alert</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Get emailed when fares drop</p>
+            </div>
+            <button
+              onClick={() => { setShowAlertPopup(false); setAlertPopupDismissed(true); }}
+              className="p-0.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors shrink-0"
+              aria-label="Dismiss"
+            >
+              <svg viewBox="0 0 16 16" className="w-4 h-4" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"/></svg>
+            </button>
+          </div>
+          {popupStatus === "success" ? (
+            <p className="text-sm text-[var(--color-accent)]">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block mr-1 -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+              Alert set! We&apos;ll email you.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={popupEmail}
+                onChange={(e) => setPopupEmail(e.target.value)}
+                className="w-full px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+              />
+              <div className="flex gap-2">
+                <div className="flex items-center gap-1 flex-1">
+                  <span className="text-sm text-[var(--color-text-muted)]">{currencySymbol(parsed.currency)}</span>
+                  <input
+                    type="number"
+                    placeholder={flights[0] ? String(Math.round(flights[0].price)) : "Max"}
+                    value={popupThreshold}
+                    onChange={(e) => setPopupThreshold(e.target.value)}
+                    className="w-full px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                  />
+                </div>
+                <button
+                  disabled={!popupEmail.trim() || popupStatus === "loading"}
+                  onClick={async () => {
+                    if (!popupEmail.trim()) return;
+                    setPopupStatus("loading");
+                    try {
+                      await fetch(`${API_URL}/api/alerts`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          email: popupEmail.trim(),
+                          query: `${parsed.origins.join(",")} to ${parsed.destinations.join(",")}`,
+                          origins: parsed.origins,
+                          destinations: parsed.destinations,
+                          max_price: parseFloat(popupThreshold) || 0,
+                          currency: parsed.currency,
+                          cabin: parsed.cabin,
+                          is_round_trip: parsed.return_dates?.length > 0,
+                          current_price: flights[0]?.price || null,
+                        }),
+                      });
+                      setPopupStatus("success");
+                      trackEvent("alert_created", { source: "popup" });
+                      setTimeout(() => { setShowAlertPopup(false); setAlertPopupDismissed(true); }, 3000);
+                    } catch {
+                      setPopupStatus("idle");
+                    }
+                  }}
+                  className="px-3 py-1.5 text-sm font-medium bg-[var(--color-accent)] text-black rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors disabled:opacity-50 whitespace-nowrap"
+                >
+                  {popupStatus === "loading" ? "..." : "Set alert"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
     </div>
   );

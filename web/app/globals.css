@@ -90,6 +90,11 @@ body {
   animation: pulse-bar 1.5s ease-in-out infinite;
 }
 
+/* Fade in */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
 /* Mobile menu slide-in */
 @keyframes slideInRight {
   from { transform: translateX(100%); }
