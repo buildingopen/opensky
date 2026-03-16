@@ -3,24 +3,18 @@
 import { memo, useState, useCallback, useEffect, useRef, useMemo } from "react";
 // @ts-expect-error -- react-simple-maps has no types
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
-import { RISK_CONFIG, ZOOM_REGIONS, type ConflictZone } from "./zones-data";
+import { RISK_CONFIG, ZOOM_REGIONS, NUMERIC_TO_ALPHA2, type ConflictZone } from "./zones-data";
 import { useRouter } from "next/navigation";
 
 const GEO_URL = "/countries-110m.json";
 
-// ISO alpha-2 -> ISO 3166-1 numeric for matching topojson
+// ISO alpha-2 -> ISO 3166-1 numeric for matching topojson (conflict zone countries only)
 const ISO_NUMERIC: Record<string, string> = {
   UA: "804", IR: "364", IQ: "368", SY: "760", IL: "376", LB: "422",
   YE: "887", LY: "434", SO: "706", AF: "004", KP: "408", SD: "729",
   ER: "232", ET: "231", ML: "466", NE: "562", AE: "784", QA: "634",
   BH: "048", KW: "414", OM: "512", PK: "586", RU: "643",
 };
-
-// Reverse lookup: numeric -> alpha-2
-const NUMERIC_TO_ALPHA: Record<string, string> = {};
-for (const [alpha, num] of Object.entries(ISO_NUMERIC)) {
-  NUMERIC_TO_ALPHA[num] = alpha;
-}
 
 interface ZoneMapData {
   id: string;
@@ -42,13 +36,14 @@ interface Props {
 interface TooltipData {
   x: number;
   y: number;
-  zone: ZoneMapData;
+  zone: ZoneMapData | null;
+  countryName: string;
+  countryAlpha2: string | null;
 }
 
 function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, onCountryHover }: Props) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const tooltipZoneRef = useRef<string | null>(null);
   const [isTouch, setIsTouch] = useState(false);
@@ -117,7 +112,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
 
   const resolveZone = useCallback(
     (geoId: string): { zoneId: string; zone: ZoneMapData } | null => {
-      const alpha = NUMERIC_TO_ALPHA[geoId];
+      const alpha = NUMERIC_TO_ALPHA2[geoId]?.toUpperCase();
       if (!alpha) return null;
       const zoneId = countryToZone[alpha];
       if (!zoneId) return null;
@@ -128,48 +123,57 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
     [countryToZone, zoneMap],
   );
 
-  const updateTooltipPosition = useCallback(
-    (zone: ZoneMapData, event: React.MouseEvent) => {
+  const updateTooltip = useCallback(
+    (data: Omit<TooltipData, "x" | "y">, event: React.MouseEvent) => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      const TOOLTIP_W = 240; // half of max-w-[280px] + padding buffer
-      const TOOLTIP_H = 120; // approximate tooltip height
+      const TOOLTIP_W = 240;
+      const TOOLTIP_H = 120;
 
       let x = event.clientX - rect.left;
       let y = event.clientY - rect.top;
 
-      // Clamp horizontal: keep tooltip within container
       x = Math.max(TOOLTIP_W / 2, Math.min(x, rect.width - TOOLTIP_W / 2));
-      // If too close to top, show below cursor instead
       if (y < TOOLTIP_H + 16) {
         y = event.clientY - rect.top + TOOLTIP_H + 8;
       }
 
-      setTooltip({ x, y, zone });
+      setTooltip({ ...data, x, y });
     },
     [],
   );
 
-  const handleGeoMouseEnter = useCallback(
-    (geoId: string, event: React.MouseEvent) => {
-      if (isTouch) return; // handled by click on touch
+  const buildTooltipData = useCallback(
+    (geoId: string, geoName: string): Omit<TooltipData, "x" | "y"> => {
       const result = resolveZone(geoId);
-      if (!result) return;
-      tooltipZoneRef.current = result.zoneId;
-      onCountryHover?.(result.zoneId);
-      updateTooltipPosition(result.zone, event);
+      if (result) {
+        return { zone: result.zone, countryName: result.zone.name, countryAlpha2: null };
+      }
+      const alpha2 = NUMERIC_TO_ALPHA2[geoId] || null;
+      return { zone: null, countryName: geoName, countryAlpha2: alpha2 };
     },
-    [resolveZone, onCountryHover, updateTooltipPosition],
+    [resolveZone],
+  );
+
+  const handleGeoMouseEnter = useCallback(
+    (geoId: string, geoName: string, event: React.MouseEvent) => {
+      if (isTouch) return;
+      const result = resolveZone(geoId);
+      tooltipZoneRef.current = result?.zoneId || null;
+      onCountryHover?.(result?.zoneId || null);
+      const data = buildTooltipData(geoId, geoName);
+      if (data.countryName) updateTooltip(data, event);
+    },
+    [resolveZone, onCountryHover, updateTooltip, buildTooltipData],
   );
 
   const handleGeoMouseMove = useCallback(
-    (geoId: string, event: React.MouseEvent) => {
+    (geoId: string, geoName: string, event: React.MouseEvent) => {
       if (isTouch) return;
-      const result = resolveZone(geoId);
-      if (!result) return;
-      updateTooltipPosition(result.zone, event);
+      const data = buildTooltipData(geoId, geoName);
+      if (data.countryName) updateTooltip(data, event);
     },
-    [resolveZone, updateTooltipPosition],
+    [buildTooltipData, updateTooltip],
   );
 
   const handleGeoMouseLeave = useCallback(() => {
@@ -180,25 +184,37 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
   }, [onCountryHover]);
 
   const handleGeoClick = useCallback(
-    (geoId: string, event: React.MouseEvent) => {
+    (geoId: string, geoName: string, event: React.MouseEvent) => {
       const result = resolveZone(geoId);
-      if (!result) return;
 
-      // Touch: first tap shows tooltip, second tap navigates
       if (isTouch) {
-        if (tooltipZoneRef.current === result.zoneId) {
-          router.push(`/safety/${result.zoneId}`);
-        } else {
-          tooltipZoneRef.current = result.zoneId;
-          onCountryHover?.(result.zoneId);
-          updateTooltipPosition(result.zone, event);
+        // Zone country: first tap = tooltip, second tap = navigate
+        if (result) {
+          if (tooltipZoneRef.current === result.zoneId) {
+            router.push(`/safety/${result.zoneId}`);
+          } else {
+            tooltipZoneRef.current = result.zoneId;
+            onCountryHover?.(result.zoneId);
+            updateTooltip(buildTooltipData(geoId, geoName), event);
+          }
+          return;
+        }
+        // Non-zone country: just show tooltip
+        const data = buildTooltipData(geoId, geoName);
+        if (data.countryName) {
+          tooltipZoneRef.current = null;
+          onCountryHover?.(null);
+          updateTooltip(data, event);
         }
         return;
       }
 
-      router.push(`/safety/${result.zoneId}`);
+      // Desktop click: navigate to zone page if it's a zone country
+      if (result) {
+        router.push(`/safety/${result.zoneId}`);
+      }
     },
-    [resolveZone, router, isTouch, onCountryHover, updateTooltipPosition],
+    [resolveZone, router, isTouch, onCountryHover, updateTooltip, buildTooltipData],
   );
 
   const handleZoomIn = () => {
@@ -231,10 +247,11 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
             }}
           >
             <Geographies geography={GEO_URL}>
-              {({ geographies }: { geographies: Array<{ rsmKey: string; id: string }> }) =>
+              {({ geographies }: { geographies: Array<{ rsmKey: string; id: string; properties?: { name?: string } }> }) =>
                 geographies.map((geo) => {
                   const fill = getFill(geo.id);
                   const isZoneCountry = !!colorMap[geo.id] && !dimmedSet.has(geo.id);
+                  const geoName = geo.properties?.name || "";
                   return (
                     <Geography
                       key={geo.rsmKey}
@@ -252,10 +269,10 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
                         },
                         pressed: { outline: "none" },
                       }}
-                      onMouseEnter={(e: React.MouseEvent) => handleGeoMouseEnter(geo.id, e)}
-                      onMouseMove={(e: React.MouseEvent) => handleGeoMouseMove(geo.id, e)}
+                      onMouseEnter={(e: React.MouseEvent) => handleGeoMouseEnter(geo.id, geoName, e)}
+                      onMouseMove={(e: React.MouseEvent) => handleGeoMouseMove(geo.id, geoName, e)}
                       onMouseLeave={handleGeoMouseLeave}
-                      onClick={(e: React.MouseEvent) => handleGeoClick(geo.id, e)}
+                      onClick={(e: React.MouseEvent) => handleGeoClick(geo.id, geoName, e)}
                     />
                   );
                 })
@@ -305,40 +322,70 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
           }}
         >
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-xl px-3 py-2.5 min-w-[200px] max-w-[280px]">
-            <div className="flex items-center gap-2 mb-1.5">
-              {tooltip.zone.flags.length > 0 && (
-                <div className="flex gap-1 shrink-0">
-                  {tooltip.zone.flags.slice(0, 2).map((code) => (
+            {tooltip.zone ? (
+              <>
+                <div className="flex items-center gap-2 mb-1.5">
+                  {tooltip.zone.flags.length > 0 && (
+                    <div className="flex gap-1 shrink-0">
+                      {tooltip.zone.flags.slice(0, 2).map((code) => (
+                        <img
+                          key={code}
+                          src={`https://flagcdn.com/24x18/${code}.png`}
+                          width={24}
+                          height={18}
+                          alt=""
+                          className="rounded-sm"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <span className="text-sm font-semibold text-[var(--color-text)] truncate">
+                    {tooltip.zone.name}
+                  </span>
+                </div>
+                <span
+                  className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full mb-1.5"
+                  style={{
+                    backgroundColor: `${RISK_CONFIG[tooltip.zone.risk_level]?.color || "#666"}20`,
+                    color: RISK_CONFIG[tooltip.zone.risk_level]?.color || "#666",
+                  }}
+                >
+                  {RISK_CONFIG[tooltip.zone.risk_level]?.label || tooltip.zone.risk_level}
+                </span>
+                <p className="text-[11px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed">
+                  {tooltip.zone.details}
+                </p>
+                <p className="text-[10px] text-[var(--color-accent)] mt-1.5">
+                  {isTouch ? "Tap again to view details" : "Click to view details"}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-1">
+                  {tooltip.countryAlpha2 && (
                     <img
-                      key={code}
-                      src={`https://flagcdn.com/24x18/${code}.png`}
+                      src={`https://flagcdn.com/24x18/${tooltip.countryAlpha2}.png`}
                       width={24}
                       height={18}
                       alt=""
-                      className="rounded-sm"
+                      className="rounded-sm shrink-0"
                     />
-                  ))}
+                  )}
+                  <span className="text-sm font-semibold text-[var(--color-text)] truncate">
+                    {tooltip.countryName}
+                  </span>
                 </div>
-              )}
-              <span className="text-sm font-semibold text-[var(--color-text)] truncate">
-                {tooltip.zone.name}
-              </span>
-            </div>
-            <span
-              className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full mb-1.5"
-              style={{
-                backgroundColor: `${RISK_CONFIG[tooltip.zone.risk_level]?.color || "#666"}20`,
-                color: RISK_CONFIG[tooltip.zone.risk_level]?.color || "#666",
-              }}
-            >
-              {RISK_CONFIG[tooltip.zone.risk_level]?.label || tooltip.zone.risk_level}
-            </span>
-            <p className="text-[11px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed">
-              {tooltip.zone.details}
-            </p>
-            <p className="text-[10px] text-[var(--color-accent)] mt-1.5">
-              {isTouch ? "Tap again to view details" : "Click to view details"}
-            </p>
+                <span
+                  className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: `${RISK_CONFIG.safe.color}20`,
+                    color: RISK_CONFIG.safe.color,
+                  }}
+                >
+                  No restrictions
+                </span>
+              </>
+            )}
           </div>
         </div>
       )}
