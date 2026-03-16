@@ -36,8 +36,9 @@ export function SiteHeader() {
     <header className="border-b border-[var(--color-border)]">
       <div className="max-w-[min(64rem,92vw)] mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
-            <path d="M3 12l9-8v5h8l-9 8v-5H3z" fill="var(--color-accent)" />
+          <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+            <path d="M4 6L17 6L28 15L13 15Z" fill="var(--color-accent)" />
+            <path d="M4 26L13 17L28 17L17 26Z" fill="var(--color-accent)" opacity="0.45" />
           </svg>
           <span className="text-lg font-semibold tracking-tight">
             <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
@@ -97,8 +98,9 @@ export function SiteHeader() {
           <div className="absolute right-0 top-0 h-full w-64 bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-xl flex flex-col animate-slide-in-right">
             <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--color-border)]">
               <div className="flex items-center gap-2">
-                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
-                  <path d="M3 12l9-8v5h8l-9 8v-5H3z" fill="var(--color-accent)" />
+                <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+                  <path d="M4 6L17 6L28 15L13 15Z" fill="var(--color-accent)" />
+                  <path d="M4 26L13 17L28 17L17 26Z" fill="var(--color-accent)" opacity="0.45" />
                 </svg>
                 <span className="text-lg font-semibold tracking-tight">
                   <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
