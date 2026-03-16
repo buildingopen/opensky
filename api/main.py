@@ -130,6 +130,19 @@ def _init_alerts_db() -> None:
     )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_active ON alerts(is_active, expires_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_email ON alerts(email)")
+    # Zone alert subscriptions
+    conn.execute("""CREATE TABLE IF NOT EXISTS zone_alerts (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        zones TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        unsubscribe_token TEXT NOT NULL UNIQUE,
+        is_active INTEGER DEFAULT 1,
+        last_notified TEXT
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_zone_alerts_active ON zone_alerts(is_active, expires_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_zone_alerts_email ON zone_alerts(email)")
     conn.commit()
     conn.close()
 
@@ -1718,5 +1731,141 @@ async def unsubscribe_alert(token: str):
         "<h2>Alert cancelled</h2>"
         f"<p>You won't receive further emails for: <strong>{html_escape(row['query'])}</strong></p>"
         "<p><a href='https://flyfast.app'>Back to FlyFast</a></p>"
+        "</body></html>"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Zone Alert Subscriptions (Conflict Zone Newsletter)
+# ---------------------------------------------------------------------------
+MAX_ZONE_ALERTS_PER_EMAIL = 3
+
+# Valid zone IDs (must match zones-data.ts ZONE_FLAGS keys)
+VALID_ZONE_IDS = {
+    "ukraine", "iran", "iraq", "syria", "israel", "lebanon", "yemen",
+    "libya", "somalia", "afghanistan", "north_korea", "sudan", "eritrea",
+    "ethiopia_partial", "mali", "niger", "gulf_states", "pakistan_partial",
+    "russia_partial",
+}
+
+ZONE_DISPLAY_NAMES: dict[str, str] = {
+    "ukraine": "Ukraine", "iran": "Iran", "iraq": "Iraq", "syria": "Syria",
+    "israel": "Israel", "lebanon": "Lebanon", "yemen": "Yemen", "libya": "Libya",
+    "somalia": "Somalia", "afghanistan": "Afghanistan", "north_korea": "North Korea",
+    "sudan": "Sudan", "eritrea": "Eritrea", "ethiopia_partial": "Ethiopia (partial)",
+    "mali": "Mali", "niger": "Niger", "gulf_states": "Gulf States",
+    "pakistan_partial": "Pakistan (partial)", "russia_partial": "Russia (partial)",
+}
+
+
+class ZoneAlertCreate(BaseModel):
+    email: str
+    zones: list[str] = Field(..., min_length=1, max_length=19)
+
+
+def _send_zone_alert_confirmation(to: str, zone_names: list[str], unsub_token: str) -> None:
+    if not RESEND_API_KEY:
+        return
+    unsub_url = f"https://api.flyfast.app/api/zone-alerts/unsubscribe/{unsub_token}"
+    zone_list_html = "".join(f"<li>{html_escape(z)}</li>" for z in zone_names)
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+<body style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:20px;color:#1a1a2e">
+  <div style="text-align:center;padding:16px 0;border-bottom:1px solid #e5e7eb">
+    <h1 style="margin:0;font-size:20px;font-weight:700">FlyFast</h1>
+  </div>
+  <div style="padding:24px 0">
+    <h2 style="margin:0 0 8px;font-size:18px">Conflict zone alert active</h2>
+    <p style="margin:0 0 12px;color:#6b7280;font-size:14px">
+      You'll be notified when the risk level changes for:
+    </p>
+    <ul style="margin:0 0 16px;padding-left:20px;color:#374151;font-size:14px">{zone_list_html}</ul>
+    <a href="https://flyfast.app/safety" style="display:inline-block;padding:12px 24px;background:#f97316;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+      View conflict zone map
+    </a>
+  </div>
+  <div style="padding:16px 0;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;text-align:center">
+    Alert active for 180 days.<br>
+    <a href="{unsub_url}" style="color:#9ca3af">Unsubscribe</a>
+  </div>
+</body>
+</html>"""
+
+    try:
+        httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+            json={
+                "from": FROM_EMAIL,
+                "to": [to],
+                "subject": f"Zone alert active: {', '.join(zone_names[:3])}{'...' if len(zone_names) > 3 else ''}",
+                "html": html,
+            },
+            timeout=10,
+        )
+    except Exception as exc:
+        log.warning("Zone alert confirmation email failed for %s: %s", to, exc)
+
+
+@app.post("/api/zone-alerts")
+async def create_zone_alert(body: ZoneAlertCreate):
+    if not _EMAIL_RE.match(body.email):
+        raise HTTPException(status_code=400, detail="Invalid email address.")
+
+    # Validate zone IDs
+    invalid = [z for z in body.zones if z not in VALID_ZONE_IDS]
+    if invalid:
+        raise HTTPException(status_code=400, detail=f"Invalid zone(s): {', '.join(invalid[:5])}")
+
+    conn = _alerts_db()
+    try:
+        active_count = conn.execute(
+            "SELECT COUNT(*) FROM zone_alerts WHERE email = ? AND is_active = 1 AND expires_at > datetime('now')",
+            (body.email.lower(),),
+        ).fetchone()[0]
+        if active_count >= MAX_ZONE_ALERTS_PER_EMAIL:
+            raise HTTPException(status_code=429, detail=f"Maximum {MAX_ZONE_ALERTS_PER_EMAIL} active zone alert subscriptions per email.")
+
+        alert_id = uuid4().hex[:12]
+        unsub_token = uuid4().hex
+        now = datetime.now(timezone.utc).isoformat()
+        expires = (datetime.now(timezone.utc) + timedelta(days=180)).isoformat()
+
+        conn.execute(
+            """INSERT INTO zone_alerts (id, email, zones, created_at, expires_at, unsubscribe_token)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (alert_id, body.email.lower(), json.dumps(body.zones), now, expires, unsub_token),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    zone_names = [ZONE_DISPLAY_NAMES.get(z, z) for z in body.zones]
+    _send_zone_alert_confirmation(to=body.email.lower(), zone_names=zone_names, unsub_token=unsub_token)
+
+    return {"id": alert_id, "message": f"Zone alert created for {len(body.zones)} zone(s). Check your email for confirmation."}
+
+
+@app.get("/api/zone-alerts/unsubscribe/{token}")
+async def unsubscribe_zone_alert(token: str):
+    conn = _alerts_db()
+    try:
+        row = conn.execute("SELECT id, zones FROM zone_alerts WHERE unsubscribe_token = ?", (token,)).fetchone()
+        if not row:
+            return HTMLResponse("<html><body><h2>Alert not found</h2><p>This link may have expired.</p></body></html>", status_code=404)
+        conn.execute("UPDATE zone_alerts SET is_active = 0 WHERE unsubscribe_token = ?", (token,))
+        conn.commit()
+        zone_ids = json.loads(row["zones"])
+        zone_names = [ZONE_DISPLAY_NAMES.get(z, z) for z in zone_ids]
+    finally:
+        conn.close()
+
+    return HTMLResponse(
+        "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
+        "<h2>Zone alert cancelled</h2>"
+        f"<p>You won't receive further updates for: <strong>{html_escape(', '.join(zone_names))}</strong></p>"
+        "<p><a href='https://flyfast.app/safety'>Back to conflict zone map</a></p>"
         "</body></html>"
     )

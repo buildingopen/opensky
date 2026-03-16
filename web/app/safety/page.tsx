@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getZones, RISK_CONFIG, ZONE_FLAGS, ZONE_COUNTRIES } from "./zones-data";
 import { ConflictMapLoader } from "./ConflictMapLoader";
+import { ZoneAlertForm } from "./ZoneAlertForm";
 
 export const revalidate = 3600;
 
@@ -173,6 +174,11 @@ export default async function SafetyIndexPage() {
           </div>
         ))}
       </section>
+
+      {/* Zone alert subscription */}
+      <ZoneAlertForm
+        zones={zones.map((z) => ({ id: z.id, name: z.name, risk_level: z.risk_level }))}
+      />
 
       <p className="mt-12 text-xs text-[var(--color-text-muted)]">
         Data from EASA Conflict Zone Information Bulletins, FAA NOTAMs, and
