@@ -60,6 +60,32 @@ def _airport_names(codes: list[str]) -> dict[str, str]:
         if entry:
             names[code.upper()] = entry["city"]
     return names
+
+
+def _airport_countries(codes: list[str]) -> dict[str, str]:
+    """Build IATA -> ISO country code (lowercase) for flag rendering."""
+    countries = {}
+    for code in codes:
+        entry = _IATA_DB.get(code.upper())
+        if entry and entry.get("country"):
+            countries[code.upper()] = entry["country"].lower()
+    return countries
+
+
+def _collect_all_airport_codes(flights: list[dict]) -> set[str]:
+    """Extract every IATA code from flight results, including stopovers."""
+    codes: set[str] = set()
+    for f in flights:
+        if f.get("origin"):
+            codes.add(f["origin"])
+        if f.get("destination"):
+            codes.add(f["destination"])
+        for leg in f.get("legs") or []:
+            if leg.get("origin"):
+                codes.add(leg["origin"])
+            if leg.get("destination"):
+                codes.add(leg["destination"])
+    return codes
 log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -1529,6 +1555,7 @@ async def search_flights(req: PromptRequest, request: Request):
                 no_results_reason = "provider_error" if outbound_error_count > 0 else "no_routes"
             total_count = len(flights)
             summary = _build_summary(flights, parsed.get("currency", "EUR"))
+            all_codes = list(_collect_all_airport_codes(flights[:20]))
             result_data = {
                 "type": "results",
                 "flights": flights[:20],
@@ -1537,6 +1564,8 @@ async def search_flights(req: PromptRequest, request: Request):
                 "zones_warning": warning,
                 "summary": summary,
                 "safety_filtered_count": safety_filtered_count,
+                "airport_names": _airport_names(all_codes),
+                "airport_countries": _airport_countries(all_codes),
             }
 
         if no_results_reason:

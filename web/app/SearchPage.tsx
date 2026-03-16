@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Component, useEffect, useRef, useState } from "react";
+import React, { Component, createContext, useContext, useEffect, useRef, useState } from "react";
 import { trackEvent } from "../lib/analytics";
 import { AirportAutocomplete } from "../components/AirportAutocomplete";
 import { useSavedSearches, SavedSearchesList } from "../components/SavedSearches";
@@ -10,11 +10,18 @@ import { AIRPORTS } from "../lib/airports";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const AIRPORTS_BY_CODE = Object.fromEntries(AIRPORTS.map((a) => [a.iata, a]));
-function flagUrl(iata: string): string | null {
+function flagUrl(iata: string, countries?: Record<string, string>): string | null {
   const a = AIRPORTS_BY_CODE[iata];
-  return a ? `https://flagcdn.com/w20/${a.country.toLowerCase()}.png` : null;
+  if (a) return `https://flagcdn.com/w20/${a.country.toLowerCase()}.png`;
+  const cc = countries?.[iata];
+  if (cc) return `https://flagcdn.com/w20/${cc}.png`;
+  return null;
 }
 const ZONES_UPDATED_AT = process.env.NEXT_PUBLIC_ZONES_UPDATED_AT || "March 2026";
+
+// Context for airport country codes (avoids prop drilling for flags)
+const AirportCountriesCtx = createContext<Record<string, string>>({});
+const useAirportCountries = () => useContext(AirportCountriesCtx);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -245,12 +252,13 @@ function consumerRouteLabel(route: string, names: Record<string, string>): strin
 }
 
 function RouteWithFlags({ route, names }: { route: string; names: Record<string, string> }) {
+  const countries = useAirportCountries();
   const segments = route.split(" -> ").map((c) => c.trim());
   return (
     <span className="inline-flex items-center gap-1 flex-wrap">
       {segments.map((code, i) => {
         const city = names[code];
-        const flag = flagUrl(code);
+        const flag = flagUrl(code, countries);
         return (
           <React.Fragment key={code + i}>
             {i > 0 && <span className="text-[var(--color-text-muted)] mx-0.5">{"\u2192"}</span>}
@@ -814,6 +822,7 @@ function ScanSummaryExpanded({
   const { best_destinations, price_matrix, stats } = summary;
   const sym = currencySymbol(currency);
   const isMultiDest = best_destinations.length > 1;
+  const isMultiOrigin = stats.origins > 1;
   const showMatrix = isMultiDest && price_matrix.dates.length > 1 && Object.values(price_matrix.prices).some((v) => v != null);
 
   // Compute global min/max for heatmap coloring
@@ -821,10 +830,20 @@ function ScanSummaryExpanded({
   const globalMin = allPrices.length > 0 ? Math.min(...allPrices) : 0;
   const globalMax = allPrices.length > 0 ? Math.max(...allPrices) : 0;
 
-  // Price bars: sorted cheapest first
-  const sortedDests = isMultiDest
-    ? [...best_destinations].filter((f) => f.price > 0).sort((a, b) => a.price - b.price)
-    : [];
+  // Price bars: sorted cheapest first. When multi-origin, group by route instead of just dest.
+  const sortedDests = (() => {
+    if (!isMultiDest) return [];
+    if (isMultiOrigin) {
+      // Build best per route from flights
+      const routeBest = new Map<string, FlightOut>();
+      for (const f of flights) {
+        const key = `${f.origin}-${f.destination}`;
+        if (!routeBest.has(key) || f.score < routeBest.get(key)!.score) routeBest.set(key, f);
+      }
+      return [...routeBest.values()].filter((f) => f.price > 0).sort((a, b) => a.price - b.price);
+    }
+    return [...best_destinations].filter((f) => f.price > 0).sort((a, b) => a.price - b.price);
+  })();
   const barMax = sortedDests.length > 0 ? sortedDests[sortedDests.length - 1].price : 1;
 
   return (
@@ -843,7 +862,7 @@ function ScanSummaryExpanded({
       {/* Price bars per destination */}
       {sortedDests.length > 1 && (
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">Best price per destination</div>
+          <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">{isMultiOrigin ? "Best price per route" : "Best price per destination"}</div>
           <div className="px-4 py-3 space-y-2">
             {sortedDests.map((f, i) => {
               const pct = Math.max(8, (f.price / barMax) * 100);
@@ -851,7 +870,9 @@ function ScanSummaryExpanded({
               const gfUrl = safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin, f.legs));
               return (
                 <div key={i} className="flex items-center gap-3 text-sm">
-                  <span className="font-mono font-medium w-10 shrink-0">{f.destination}</span>
+                  <span className="font-mono font-medium shrink-0" style={{ width: isMultiOrigin ? "5.5rem" : "2.5rem" }}>
+                    {isMultiOrigin ? `${f.origin} → ${f.destination}` : f.destination}
+                  </span>
                   <span className="text-[var(--color-text-muted)] text-xs truncate hidden sm:inline w-24 shrink-0">{airportNames[f.destination] || ""}</span>
                   <div className="flex-1 min-w-0">
                     <div className="h-5 rounded" style={{ width: `${pct}%`, backgroundColor: barColor, minWidth: "2rem" }}>
@@ -887,52 +908,88 @@ function ScanSummaryExpanded({
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
           <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">Fare heatmap</div>
           <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-[var(--color-border)]">
-                  <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)] sticky left-0 z-10 bg-[var(--color-surface)]">Dest</th>
-                  {price_matrix.dates.map((d) => (
-                    <th key={d} className="px-2 py-2 text-center font-mono text-[var(--color-text-muted)] min-w-[60px]">{d.slice(5)}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {price_matrix.destinations.map((dest) => (
-                  <tr key={dest}>
-                    <td className="px-3 py-1.5 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
-                      {dest} <span className="font-sans text-[var(--color-text-muted)] hidden sm:inline">{airportNames[dest] || ""}</span>
-                    </td>
-                    {price_matrix.dates.map((dt) => {
-                      const price = price_matrix.prices[`${dest}|${dt}`];
-                      const bg = priceToColor(price, globalMin, globalMax);
-                      const gfLink = `https://www.google.com/travel/flights?q=flights+from+${best_destinations.find((d) => d.destination === dest)?.origin || ""}+to+${dest}+on+${dt}`;
-                      return (
-                        <td key={dt} className="px-1 py-1">
-                          {price != null ? (
-                            <a
-                              href={gfLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block px-2 py-1.5 text-center text-xs font-mono font-semibold rounded-md transition-opacity hover:opacity-80"
-                              style={{ backgroundColor: bg, color: "#fff" }}
-                            >
-                              {sym}{Math.round(price)}
-                            </a>
-                          ) : (
-                            <span className="block px-2 py-1.5 text-center text-xs font-mono text-[var(--color-text-muted)]">---</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {(() => {
+              // When multi-origin, build route-level matrix from flights data
+              const routeRows = isMultiOrigin
+                ? (() => {
+                    const routeMap = new Map<string, { origin: string; dest: string; byDate: Record<string, number> }>();
+                    for (const f of flights) {
+                      const key = `${f.origin}-${f.destination}`;
+                      if (!routeMap.has(key)) routeMap.set(key, { origin: f.origin, dest: f.destination, byDate: {} });
+                      const entry = routeMap.get(key)!;
+                      if (!entry.byDate[f.date] || f.price < entry.byDate[f.date]) entry.byDate[f.date] = f.price;
+                    }
+                    return [...routeMap.values()].sort((a, b) => a.origin.localeCompare(b.origin) || a.dest.localeCompare(b.dest));
+                  })()
+                : null;
+
+              return (
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-[var(--color-border)]">
+                      <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)] sticky left-0 z-10 bg-[var(--color-surface)]">{isMultiOrigin ? "Route" : "Dest"}</th>
+                      {price_matrix.dates.map((d) => (
+                        <th key={d} className="px-2 py-2 text-center font-mono text-[var(--color-text-muted)] min-w-[60px]">{d.slice(5)}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {routeRows
+                      ? routeRows.map((row) => (
+                          <tr key={`${row.origin}-${row.dest}`}>
+                            <td className="px-3 py-1.5 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
+                              {row.origin} → {row.dest} <span className="font-sans text-[var(--color-text-muted)] hidden sm:inline">{airportNames[row.dest] || ""}</span>
+                            </td>
+                            {price_matrix.dates.map((dt) => {
+                              const price = row.byDate[dt] ?? null;
+                              const bg = priceToColor(price, globalMin, globalMax);
+                              const gfLink = `https://www.google.com/travel/flights?q=flights+from+${row.origin}+to+${row.dest}+on+${dt}`;
+                              return (
+                                <td key={dt} className="px-1 py-1">
+                                  {price != null ? (
+                                    <a href={gfLink} target="_blank" rel="noopener noreferrer" className="block px-2 py-1.5 text-center text-xs font-mono font-semibold rounded-md transition-opacity hover:opacity-80" style={{ backgroundColor: bg, color: "#fff" }}>
+                                      {sym}{Math.round(price)}
+                                    </a>
+                                  ) : (
+                                    <span className="block px-2 py-1.5 text-center text-xs font-mono text-[var(--color-text-muted)]">---</span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))
+                      : price_matrix.destinations.map((dest) => (
+                          <tr key={dest}>
+                            <td className="px-3 py-1.5 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
+                              {dest} <span className="font-sans text-[var(--color-text-muted)] hidden sm:inline">{airportNames[dest] || ""}</span>
+                            </td>
+                            {price_matrix.dates.map((dt) => {
+                              const price = price_matrix.prices[`${dest}|${dt}`];
+                              const bg = priceToColor(price, globalMin, globalMax);
+                              const gfLink = `https://www.google.com/travel/flights?q=flights+from+${best_destinations.find((d) => d.destination === dest)?.origin || ""}+to+${dest}+on+${dt}`;
+                              return (
+                                <td key={dt} className="px-1 py-1">
+                                  {price != null ? (
+                                    <a href={gfLink} target="_blank" rel="noopener noreferrer" className="block px-2 py-1.5 text-center text-xs font-mono font-semibold rounded-md transition-opacity hover:opacity-80" style={{ backgroundColor: bg, color: "#fff" }}>
+                                      {sym}{Math.round(price)}
+                                    </a>
+                                  ) : (
+                                    <span className="block px-2 py-1.5 text-center text-xs font-mono text-[var(--color-text-muted)]">---</span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                  </tbody>
+                </table>
+              );
+            })()}
           </div>
           {/* Color legend */}
           <div className="px-4 py-2.5 border-t border-[var(--color-border)] flex items-center gap-2">
             <span className="text-xs text-[var(--color-text-muted)]">Cheapest</span>
-            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, #22c55e, #eab308, #ef4444)" }} />
+            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, var(--color-safe), var(--color-caution), var(--color-danger))" }} />
             <span className="text-xs text-[var(--color-text-muted)]">Most expensive</span>
           </div>
         </div>
@@ -982,7 +1039,7 @@ function PriceAlertSection({
         setMessage(data.detail || "Something went wrong.");
       } else {
         setStatus("success");
-        setMessage(`We'll email you when prices drop below ${sym}${threshold || "current"}. Alert active for 90 days.`);
+        setMessage(data.message || "Check your email to confirm the alert.");
       }
     } catch {
       setStatus("error");
@@ -994,8 +1051,8 @@ function PriceAlertSection({
     return (
       <div className="mt-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3">
         <p className="text-sm text-[var(--color-text)]">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block mr-1 text-green-500 -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-          {message}
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block mr-1 text-[var(--color-safe)] -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+          Price alert created. Check your email to confirm.
         </p>
       </div>
     );
@@ -1010,7 +1067,7 @@ function PriceAlertSection({
           placeholder="your@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 min-w-[180px] px-3 py-1.5 text-sm bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+          className="flex-1 min-w-[180px] px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
         />
         <div className="flex items-center gap-1">
           <span className="text-sm text-[var(--color-text-muted)]">{sym}</span>
@@ -1019,7 +1076,7 @@ function PriceAlertSection({
             placeholder="Max price"
             value={threshold}
             onChange={(e) => setThreshold(e.target.value)}
-            className="w-24 px-3 py-1.5 text-sm bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+            className="w-24 px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
           />
         </div>
         <button
@@ -1031,9 +1088,9 @@ function PriceAlertSection({
         </button>
       </div>
       {status === "error" && (
-        <p className="text-xs text-red-500">{message}</p>
+        <p className="text-xs text-[var(--color-danger)]">{message}</p>
       )}
-      <p className="text-xs text-[var(--color-text-muted)]">Daily check, 90-day expiry, one-click unsubscribe. No account needed.</p>
+      <p className="text-xs text-[var(--color-text-muted)]">We&apos;ll send a confirmation email. Daily check, 90-day expiry, one-click unsubscribe.</p>
     </div>
   );
 }
@@ -1234,7 +1291,9 @@ function HomePage() {
   const [minutesSaved, setMinutesSaved] = useState(0);
 
   const hasResults = phase === "done" || phase === "searching" || phase === "parsing";
-  const airportNames = parsed?.airport_names || {};
+  const [extraAirportNames, setExtraAirportNames] = useState<Record<string, string>>({});
+  const [airportCountries, setAirportCountries] = useState<Record<string, string>>({});
+  const airportNames = { ...(parsed?.airport_names || {}), ...extraAirportNames };
 
   useEffect(() => {
     if (searchMode === "natural") inputRef.current?.focus();
@@ -1477,6 +1536,8 @@ function HomePage() {
               setSearchWarning(msg.warning || null);
               setCacheAgeSeconds(msg.cache_age_seconds ?? null);
               if (msg.safety_filtered_count > 0) setSafetyFilteredCount(msg.safety_filtered_count);
+              if (msg.airport_names) setExtraAirportNames(prev => ({ ...prev, ...msg.airport_names }));
+              if (msg.airport_countries) setAirportCountries(prev => ({ ...prev, ...msg.airport_countries }));
               if (msg.partial) setIsPartial(true);
               setPhase("done");
               // Notify user if tab is in background
@@ -1548,6 +1609,8 @@ function HomePage() {
     setExpandError(null);
     setExpansionInfo(null);
     setExpandProgress(null);
+    // Scroll to top of results so user sees the progress bar
+    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     trackEvent("expand_search_clicked", { original_results: flights.length });
 
     const controller = new AbortController();
@@ -1778,6 +1841,7 @@ function HomePage() {
         : null;
 
   return (
+    <AirportCountriesCtx.Provider value={airportCountries}>
     <div className="flex-1 flex flex-col">
       {/* Referred-visit message */}
       {attributionParams.ref === "share" && (() => {
@@ -2098,6 +2162,26 @@ function HomePage() {
               return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} />;
             })()}
 
+            {/* Expand search progress (shown at top of results) */}
+            {expandPhase === "expanding" && (
+              <div className="mt-3 w-full bg-[var(--color-surface)] border border-[var(--color-accent)]/30 rounded-lg px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm text-[var(--color-text)]">Expanding search{expansionInfo ? `: ${expansionInfo}` : "..."}</span>
+                    {expandProgress && (
+                      <div className="mt-1.5 h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300"
+                          style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Fix 5: Show warning if return date was before departure */}
             {searchWarning && (
               <div className="mt-2 text-xs text-[var(--color-caution)] bg-[var(--color-caution)]/10 border border-[var(--color-caution)]/20 rounded-lg px-3 py-2">
@@ -2226,36 +2310,6 @@ function HomePage() {
                       filteredCount={displayFlights.length}
                     />
 
-                    {/* Compare all + share (before recommendations for context) */}
-                    {summary && summary.stats.total_flights > 0 && (
-                      <div className="mt-6">
-                        <div className="flex items-center justify-between mb-2">
-                          {!showCompare && (
-                            <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} flights={flights} />
-                          )}
-                          <button
-                            onClick={handleCopyLink}
-                            className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors ml-auto"
-                          >
-                            {copyFeedback ? (
-                              <>
-                                <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[var(--color-accent)]" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
-                                Copied!
-                              </>
-                            ) : (
-                              <>
-                                <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><path d="M13.5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM15 3a3 3 0 0 1-5.133 2.107L5.4 7.4a3.014 3.014 0 0 1 0 1.2l4.467 2.293A3 3 0 1 1 8.8 12.4L4.333 10.107a3 3 0 1 1 0-4.214L8.8 3.6A3.015 3.015 0 0 1 9 3a3 3 0 0 1 6 0zM4.5 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM13.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
-                                Share results
-                              </>
-                            )}
-                          </button>
-                        </div>
-                        {showCompare && (
-                          <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} cabin={parsed?.cabin} />
-                        )}
-                      </div>
-                    )}
-
                     {/* Recommendation stack */}
                     <div className="mt-6 space-y-4">
                       <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
@@ -2365,24 +2419,6 @@ function HomePage() {
                         </svg>
                       </button>
                     )}
-                    {expandPhase === "expanding" && (
-                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm text-[var(--color-text)]">Expanding search{expansionInfo ? `: ${expansionInfo}` : "..."}</span>
-                            {expandProgress && (
-                              <div className="mt-1.5 h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300"
-                                  style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
                     {expandPhase === "done" && expandError && (
                       <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
                         <span className="text-[var(--color-caution)]">{expandError}</span>
@@ -2392,6 +2428,36 @@ function HomePage() {
                       <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
                         <span className="text-[var(--color-accent)]">+{expandCount} flight{expandCount !== 1 ? "s" : ""} added from nearby airports</span>
                       </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Compare all + share (after all flights and expand) */}
+                {summary && summary.stats.total_flights > 0 && (
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      {!showCompare && (
+                        <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} flights={flights} />
+                      )}
+                      <button
+                        onClick={handleCopyLink}
+                        className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors ml-auto"
+                      >
+                        {copyFeedback ? (
+                          <>
+                            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[var(--color-accent)]" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><path d="M13.5 3a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM15 3a3 3 0 0 1-5.133 2.107L5.4 7.4a3.014 3.014 0 0 1 0 1.2l4.467 2.293A3 3 0 1 1 8.8 12.4L4.333 10.107a3 3 0 1 1 0-4.214L8.8 3.6A3.015 3.015 0 0 1 9 3a3 3 0 0 1 6 0zM4.5 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM13.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
+                            Share results
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    {showCompare && (
+                      <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} cabin={parsed?.cabin} />
                     )}
                   </div>
                 )}
@@ -2578,6 +2644,7 @@ function HomePage() {
       )}
 
     </div>
+    </AirportCountriesCtx.Provider>
   );
 }
 
