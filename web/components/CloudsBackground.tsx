@@ -1,53 +1,87 @@
 "use client";
 
-// Seeded random for deterministic SSR/client hydration
-function seeded(seed: number): number {
-  const x = Math.sin(seed * 9999) * 10000;
-  return x - Math.floor(x);
-}
-
-interface Cloud {
-  id: number;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  opacity: number;
-  delay: number;
-}
-
-// Cloud wisps: 6-14% opacity, large enough to register visually
-const clouds: Cloud[] = Array.from({ length: 22 }, (_, i) => ({
-  id: i,
-  x: Math.round(seeded(i * 5 + 1) * 10000) / 100,
-  y: Math.round(seeded(i * 5 + 2) * 10000) / 100,
-  w: 100 + Math.round(seeded(i * 5 + 3) * 200),
-  h: 14 + Math.round(seeded(i * 5 + 4) * 24),
-  opacity: 0.06 + seeded(i * 5 + 5) * 0.08,
-  delay: Math.round(seeded(i * 5 + 6) * 300) / 10,
-}));
-
+// Large atmospheric gradient orbs that drift slowly, creating a sky-like feel.
+// Inspired by Rocketlist's gradient orb approach (proven visible + performant).
 export function CloudsBackground() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-      {clouds.map((c) => (
-        <div
-          key={c.id}
-          className="cloud-wisp absolute rounded-full"
-          style={{
-            left: `${c.x}%`,
-            top: `${c.y}%`,
-            width: `${c.w}px`,
-            height: `${c.h}px`,
-            opacity: c.opacity,
-            background: c.id % 5 === 0 ? "rgba(34, 197, 94, 0.35)" : "white",
-            filter: `blur(${Math.round(c.h * 0.7)}px)`,
-            animationDelay: `${c.delay}s`,
-            animationDuration: `${20 + Math.round(seeded(c.id * 7) * 25)}s`,
-            willChange: "transform",
-          }}
-        />
-      ))}
+      {/* Primary cloud mass - upper left */}
+      <div
+        className="cloud-orb absolute rounded-full"
+        style={{
+          width: "500px",
+          height: "300px",
+          top: "-80px",
+          left: "-100px",
+          background: "radial-gradient(ellipse, rgba(255,255,255,0.06) 0%, transparent 70%)",
+          animationDuration: "18s",
+        }}
+      />
+      {/* Secondary - upper right, green tint */}
+      <div
+        className="cloud-orb absolute rounded-full"
+        style={{
+          width: "400px",
+          height: "250px",
+          top: "-40px",
+          right: "-60px",
+          background: "radial-gradient(ellipse, rgba(34,197,94,0.04) 0%, transparent 70%)",
+          animationDelay: "-5s",
+          animationDuration: "22s",
+        }}
+      />
+      {/* Mid-left wisp */}
+      <div
+        className="cloud-orb absolute rounded-full"
+        style={{
+          width: "350px",
+          height: "180px",
+          top: "30%",
+          left: "-50px",
+          background: "radial-gradient(ellipse, rgba(255,255,255,0.05) 0%, transparent 70%)",
+          animationDelay: "-8s",
+          animationDuration: "25s",
+        }}
+      />
+      {/* Center-right, larger, very subtle */}
+      <div
+        className="cloud-orb absolute rounded-full"
+        style={{
+          width: "600px",
+          height: "300px",
+          top: "20%",
+          right: "-150px",
+          background: "radial-gradient(ellipse, rgba(255,255,255,0.035) 0%, transparent 65%)",
+          animationDelay: "-12s",
+          animationDuration: "28s",
+        }}
+      />
+      {/* Lower left, green accent */}
+      <div
+        className="cloud-orb absolute rounded-full"
+        style={{
+          width: "450px",
+          height: "220px",
+          bottom: "15%",
+          left: "10%",
+          background: "radial-gradient(ellipse, rgba(34,197,94,0.03) 0%, transparent 70%)",
+          animationDelay: "-15s",
+          animationDuration: "20s",
+        }}
+      />
+      {/* Bottom right */}
+      <div
+        className="cloud-orb absolute rounded-full"
+        style={{
+          width: "500px",
+          height: "280px",
+          bottom: "-60px",
+          right: "5%",
+          background: "radial-gradient(ellipse, rgba(255,255,255,0.045) 0%, transparent 70%)",
+          animationDelay: "-3s",
+          animationDuration: "24s",
+        }}
+      />
     </div>
   );
 }

@@ -104,16 +104,16 @@ body {
   animation: slideInRight 0.2s ease-out;
 }
 
-/* Cloud wisps drift - multi-axis for natural movement */
+/* Cloud orb drift - large atmospheric movement */
 @keyframes cloud-drift {
-  0% { transform: translate3d(0, 0, 0); }
-  25% { transform: translate3d(25px, -8px, 0); }
-  50% { transform: translate3d(45px, 3px, 0); }
-  75% { transform: translate3d(15px, -5px, 0); }
-  100% { transform: translate3d(0, 0, 0); }
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(40px, -15px, 0) scale(1.05); }
+  66% { transform: translate3d(-20px, 10px, 0) scale(0.97); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
 }
-.cloud-wisp {
-  animation: cloud-drift 25s ease-in-out infinite;
+.cloud-orb {
+  animation: cloud-drift 20s ease-in-out infinite;
+  will-change: transform;
 }
 
 /* Scrollbar */
