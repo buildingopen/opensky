@@ -765,24 +765,31 @@ function ScanSummaryCollapsed({
   summary,
   currency,
   onExpand,
+  flights,
 }: {
   summary: ScanSummaryData;
   currency: string;
   onExpand: () => void;
+  flights?: FlightOut[];
 }) {
   const { stats } = summary;
   const sym = currencySymbol(currency);
+  // Use live flight count/prices if available (e.g. after expand merge)
+  const totalFlights = flights && flights.length > stats.total_flights ? flights.length : stats.total_flights;
+  const destCount = flights && flights.length > 0 ? new Set(flights.map(f => f.destination)).size : stats.destinations;
+  const minPrice = flights && flights.length > 0 ? Math.min(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.min_price;
+  const maxPrice = flights && flights.length > 0 ? Math.max(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.max_price;
   return (
     <div className="mt-4">
       <button
         onClick={onExpand}
         className="text-sm text-[var(--color-accent)] hover:underline"
       >
-        Compare all options ({stats.total_flights} flight{stats.total_flights !== 1 ? "s" : ""}, {stats.destinations} destination{stats.destinations !== 1 ? "s" : ""})
+        Compare all options ({totalFlights} flight{totalFlights !== 1 ? "s" : ""}, {destCount} destination{destCount !== 1 ? "s" : ""})
       </button>
-      {stats.min_price > 0 && (
+      {minPrice > 0 && (
         <span className="ml-2 text-xs text-[var(--color-text-muted)]">
-          {sym}{Math.round(stats.min_price)} – {sym}{Math.round(stats.max_price)}
+          {sym}{Math.round(minPrice)} – {sym}{Math.round(maxPrice)}
         </span>
       )}
     </div>
@@ -2234,7 +2241,7 @@ function HomePage() {
                       <div className="mt-6">
                         <div className="flex items-center justify-between mb-2">
                           {!showCompare && (
-                            <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} />
+                            <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} flights={flights} />
                           )}
                           <button
                             onClick={handleCopyLink}
