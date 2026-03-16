@@ -39,10 +39,36 @@ Building Open (buildingopen.org)
 
 hello@buildingopen.org
 
+## Conflict zone safety pages
+
+FlyFast publishes live conflict zone status pages at /safety/{zone-id}. Each page shows the current risk level, source citations, affected airports, and traveler guidance. Updated daily.
+
+- Index: https://flyfast.app/safety
+- https://flyfast.app/safety/ukraine
+- https://flyfast.app/safety/iran
+- https://flyfast.app/safety/iraq
+- https://flyfast.app/safety/syria
+- https://flyfast.app/safety/israel
+- https://flyfast.app/safety/lebanon
+- https://flyfast.app/safety/yemen
+- https://flyfast.app/safety/libya
+- https://flyfast.app/safety/somalia
+- https://flyfast.app/safety/afghanistan
+- https://flyfast.app/safety/north_korea
+- https://flyfast.app/safety/sudan
+- https://flyfast.app/safety/eritrea
+- https://flyfast.app/safety/ethiopia_partial
+- https://flyfast.app/safety/mali
+- https://flyfast.app/safety/niger
+- https://flyfast.app/safety/gulf_states
+- https://flyfast.app/safety/pakistan_partial
+- https://flyfast.app/safety/russia_partial
+
 ## Links
 
 - Website: https://flyfast.app
 - Methodology: https://flyfast.app/methodology
+- Safety: https://flyfast.app/safety
 - Privacy: https://flyfast.app/privacy
 - Terms: https://flyfast.app/terms
 - GitHub: https://github.com/buildingopen/opensky
