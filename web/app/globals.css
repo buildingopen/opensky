@@ -104,6 +104,15 @@ body {
   animation: slideInRight 0.2s ease-out;
 }
 
+/* Cloud wisps drift */
+@keyframes cloud-drift {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(30px); }
+}
+.cloud-wisp {
+  animation: cloud-drift 25s ease-in-out infinite;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
