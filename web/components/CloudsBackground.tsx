@@ -16,14 +16,14 @@ interface Cloud {
   delay: number;
 }
 
-// Small, subtle cloud wisps scattered across the page
+// Subtle cloud wisps scattered across the page (5-8% opacity range)
 const clouds: Cloud[] = Array.from({ length: 18 }, (_, i) => ({
   id: i,
   x: Math.round(seeded(i * 5 + 1) * 10000) / 100,
   y: Math.round(seeded(i * 5 + 2) * 10000) / 100,
-  w: 60 + Math.round(seeded(i * 5 + 3) * 120),
-  h: 8 + Math.round(seeded(i * 5 + 4) * 16),
-  opacity: 0.015 + seeded(i * 5 + 5) * 0.025,
+  w: 80 + Math.round(seeded(i * 5 + 3) * 140),
+  h: 10 + Math.round(seeded(i * 5 + 4) * 20),
+  opacity: 0.04 + seeded(i * 5 + 5) * 0.045,
   delay: Math.round(seeded(i * 5 + 6) * 300) / 10,
 }));
 
@@ -40,9 +40,11 @@ export function CloudsBackground() {
             width: `${c.w}px`,
             height: `${c.h}px`,
             opacity: c.opacity,
-            background: "white",
-            filter: `blur(${c.h + 4}px)`,
+            background: c.id % 5 === 0 ? "rgba(34, 197, 94, 0.3)" : "white",
+            filter: `blur(${c.h + 6}px)`,
             animationDelay: `${c.delay}s`,
+            animationDuration: `${20 + Math.round(seeded(c.id * 7) * 25)}s`,
+            willChange: "transform",
           }}
         />
       ))}

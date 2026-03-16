@@ -104,10 +104,13 @@ body {
   animation: slideInRight 0.2s ease-out;
 }
 
-/* Cloud wisps drift */
+/* Cloud wisps drift - multi-axis for natural movement */
 @keyframes cloud-drift {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(30px); }
+  0% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(25px, -8px, 0); }
+  50% { transform: translate3d(45px, 3px, 0); }
+  75% { transform: translate3d(15px, -5px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
 }
 .cloud-wisp {
   animation: cloud-drift 25s ease-in-out infinite;
