@@ -34,6 +34,12 @@ export function SiteHeader() {
             How it works
           </Link>
           <Link
+            href="/safety"
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+          >
+            Safety
+          </Link>
+          <Link
             href="/contact"
             className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
           >

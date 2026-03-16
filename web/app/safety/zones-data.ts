@@ -17,10 +17,18 @@ interface ZonesResponse {
 }
 
 export async function getZones(): Promise<ConflictZone[]> {
-  const res = await fetch(`${API_URL}/api/zones`, { next: { revalidate: 3600 } });
-  if (!res.ok) return [];
-  const data: ZonesResponse = await res.json();
-  return data.zones;
+  try {
+    const res = await fetch(`${API_URL}/api/zones`, { next: { revalidate: 3600 } });
+    if (!res.ok) {
+      console.error(`[zones] fetch failed: ${res.status} ${res.statusText}`);
+      return [];
+    }
+    const data: ZonesResponse = await res.json();
+    return data.zones;
+  } catch (err) {
+    console.error("[zones] fetch error:", err);
+    return [];
+  }
 }
 
 export async function getZoneById(id: string): Promise<ConflictZone | undefined> {
