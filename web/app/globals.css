@@ -107,13 +107,13 @@ body {
 /* Cloud orb drift - large atmospheric movement */
 @keyframes cloud-drift {
   0% { transform: translate3d(0, 0, 0) scale(1); }
-  33% { transform: translate3d(40px, -15px, 0) scale(1.05); }
-  66% { transform: translate3d(-20px, 10px, 0) scale(0.97); }
+  33% { transform: translate3d(60px, -20px, 0) scale(1.08); }
+  66% { transform: translate3d(-30px, 15px, 0) scale(0.95); }
   100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 .cloud-orb {
   animation: cloud-drift 20s ease-in-out infinite;
-  will-change: transform;
+  will-change: transform, filter;
 }
 
 /* Scrollbar */
