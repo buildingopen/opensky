@@ -4,7 +4,7 @@
   "description": "Describe your trip in plain English. FlyFast searches Google Flights, filters conflict zones.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0f1a",
+  "background_color": "#0a0a0a",
   "theme_color": "#22c55e",
   "icons": [
     { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any" },

@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
   const badges: Array<{ text: string; color: string; bg: string; border: string; dot?: boolean }> = [];
   if (stopsLabel) {
-    badges.push({ text: stopsLabel, color: "#94a3b8", bg: "transparent", border: "#334155" });
+    badges.push({ text: stopsLabel, color: "#a1a1aa", bg: "transparent", border: "#3f3f46" });
   }
   badges.push({ text: s.label, color: s.color, bg: `${s.color}15`, border: `${s.color}40`, dot: true });
 
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          backgroundColor: "#0A0F1A",
+          backgroundColor: "#0a0a0a",
           padding: "60px 70px",
           fontFamily: "Inter, system-ui, sans-serif",
         }}
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
                 {routeDisplay}
               </div>
               {codesDisplay && (
-                <span style={{ fontSize: "24px", color: "#64748b" }}>{codesDisplay}</span>
+                <span style={{ fontSize: "24px", color: "#71717a" }}>{codesDisplay}</span>
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
@@ -115,15 +115,15 @@ export async function GET(req: NextRequest) {
             <div style={{ fontSize: "56px", fontWeight: 700, color: "#ffffff", letterSpacing: "-1px", display: "flex" }}>
               Describe your trip.
             </div>
-            <div style={{ fontSize: "28px", color: "#94a3b8", display: "flex" }}>
+            <div style={{ fontSize: "28px", color: "#a1a1aa", display: "flex" }}>
               Every flight on Google Flights. Conflict zones filtered.
             </div>
           </div>
         )}
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "22px", color: "#64748b" }}>Prompt to fly. Free, no login.</span>
-          <span style={{ fontSize: "22px", color: "#64748b" }}>flyfast.app</span>
+          <span style={{ fontSize: "22px", color: "#71717a" }}>Prompt to fly. Free, no login.</span>
+          <span style={{ fontSize: "22px", color: "#71717a" }}>flyfast.app</span>
         </div>
       </div>
     ),

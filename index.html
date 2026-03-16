@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenSky — Intelligent Flight Search</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: #222222;
+    --border2: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #666666;
+    --muted2: #444444;
+    --accent: #22c55e;
+    --accent-dim: #16a34a;
+    --accent-bg: rgba(34,197,94,0.07);
+    --warn: #f59e0b;
+    --warn-bg: rgba(245,158,11,0.08);
+    --danger: #ef4444;
+    --danger-bg: rgba(239,68,68,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  section {
+    padding: 80px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  section:last-child { border-bottom: none; }
+
+  /* ── Typography ── */
+  .label {
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  h2 {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    color: var(--muted);
+    margin-top: 12px;
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+
+  .wordmark-logo {
+    width: 32px;
+    height: 28px;
+  }
+
+  .wordmark-text {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .input-demo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 14px 18px;
+    max-width: 600px;
+    margin-top: 32px;
+  }
+
+  .input-demo-icon {
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .input-demo-text {
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  .input-demo-text span {
+    color: var(--text);
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 16px;
+    background: var(--accent);
+    vertical-align: text-bottom;
+    animation: blink 1.1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ── Flow diagram ── */
+  .flow {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    margin-top: 40px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 120px;
+    position: relative;
+  }
+
+  .flow-step + .flow-step::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 28px;
+    width: 1px;
+    height: 1px;
+  }
+
+  .flow-node {
+    width: 56px;
+    height: 56px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .flow-node.accent {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+  }
+
+  .flow-node svg {
+    color: var(--muted);
+  }
+
+  .flow-node.accent svg {
+    color: var(--accent);
+  }
+
+  .flow-label {
+    margin-top: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .flow-sublabel {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.4;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  .flow-connector {
+    display: flex;
+    align-items: center;
+    padding-top: 28px;
+    padding: 0 4px;
+    padding-top: 20px;
+    flex-shrink: 0;
+  }
+
+  .flow-connector svg {
+    color: var(--muted2);
+  }
+
+  /* ── Parse output ── */
+  .parse-box {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .parse-input {
+    border-right: 1px solid var(--border);
+    padding-right: 24px;
+  }
+
+  .parse-title {
+    font-size: 11px;
+    font-family: monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+
+  .parse-prompt {
+    font-size: 14px;
+    color: var(--text);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  .parse-params {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .param-row {
+    display: flex;
+    gap: 10px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+  }
+
+  .param-key {
+    color: var(--muted);
+    min-width: 90px;
+  }
+
+  .param-val {
+    color: var(--accent);
+  }
+
+  /* ── Result cards ── */
+  .results-section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .results-meta {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: monospace;
+  }
+
+  .results-meta .count {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .cache-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--warn-bg);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--warn);
+    font-family: monospace;
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  /* ── Flight card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+
+  .card.ranked-1 {
+    border-color: rgba(34,197,94,0.25);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .card-rank {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .card-rank.top {
+    color: var(--accent);
+  }
+
+  .card-badges {
+    display: flex;
+    gap: 6px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: monospace;
+  }
+
+  .badge.safe {
+    background: var(--accent-bg);
+    border: 1px solid rgba(34,197,94,0.2);
+    color: var(--accent);
+  }
+
+  .badge.warn {
+    background: var(--warn-bg);
+    border: 1px solid rgba(245,158,11,0.2);
+    color: var(--warn);
+  }
+
+  .badge.danger {
+    background: var(--danger-bg);
+    border: 1px solid rgba(239,68,68,0.2);
+    color: var(--danger);
+  }
+
+  .badge.source {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+  }
+
+  .flight-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 12px;
+  }
+
+  .flight-row + .flight-row {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+
+  .airport {
+    text-align: center;
+    min-width: 70px;
+  }
+
+  .airport-code {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    font-family: 'SF Mono', monospace;
+  }
+
+  .airport-city {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .flight-middle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 12px;
+  }
+
+  .flight-duration {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    font-family: monospace;
+  }
+
+  .flight-line {
+    width: 100%;
+    height: 1px;
+    background: var(--border2);
+    position: relative;
+  }
+
+  .flight-line::before, .flight-line::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted2);
+  }
+
+  .flight-line::before { left: 0; }
+  .flight-line::after { right: 0; }
+
+  .flight-stops {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: monospace;
+  }
+
+  .flight-stops.direct {
+    color: var(--accent);
+  }
+
+  .flight-times {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: monospace;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-footer-left {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .price {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .price-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: monospace;
+  }
+
+  .score-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .score-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: monospace;
+  }
+
+  .score-bar {
+    width: 80px;
+    height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .score-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .score-val {
+    font-size: 11px;
+    color: var(--accent);
+    font-family: monospace;
+    font-weight: 600;
+  }
+
+  .book-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+  }
+
+  .trip-label {
+    font-size: 11px;
+    font-family: monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+
+  /* ── Round trip ── */
+  .rt-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: monospace;
+    margin-bottom: 14px;
+  }
+
+  /* ── What's special ── */
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 36px;
+  }
+
+  .feature {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .feature-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    color: var(--accent);
+  }
+
+  .feature-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .feature-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── Footer ── */
+  footer {
+    padding: 40px 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted2);
+    font-family: monospace;
+  }
+
+  /* ── Divider ── */
+  .section-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 28px; }
+    .flow { gap: 0; }
+    .flow-step { min-width: 80px; }
+    .parse-box { grid-template-columns: 1fr; }
+    .parse-input { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 16px; }
+    .features { grid-template-columns: 1fr; }
+    .flow-label { font-size: 10px; }
+    .flow-sublabel { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="container">
+    <div class="wordmark">
+      <svg class="wordmark-logo" viewBox="0 0 46 40" xmlns="http://www.w3.org/2000/svg">
+        <text x="0" y="32" font-family="system-ui, sans-serif" font-weight="700" font-size="40" fill="#22c55e">b</text>
+        <circle cx="36" cy="22" r="10" fill="#22c55e"/>
+      </svg>
+      <span class="wordmark-text">OpenSky</span>
+    </div>
+
+    <div class="label">Intelligent Flight Search</div>
+    <h1>Find flights by describing<br>what you want.</h1>
+    <p class="subtitle">Natural language in. Ranked results from Google Flights out. Conflict zones filtered automatically.</p>
+
+    <div class="input-demo">
+      <span class="input-demo-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </span>
+      <span class="input-demo-text"><span>fly from Berlin to Tokyo next week under €800, direct only</span><span class="cursor"></span></span>
+    </div>
+  </div>
+</header>
+
+<!-- ── How it works ── -->
+<section>
+  <div class="container">
+    <div class="label">How it works</div>
+    <h2>Five steps, under a second</h2>
+
+    <div class="flow">
+
+      <!-- Step 1 -->
+      <div class="flow-step">
+        <div class="flow-node accent">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div class="flow-label">Natural<br>Language Prompt</div>
+        <div class="flow-sublabel">user input</div>
+      </div>
+
+      <div class="flow-connector">
+        <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
+          <path d="M1 8h16M13 2l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="flow-step">
+        <div class="flow-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </div>
+        <div class="flow-label">Gemini AI<br>Parses Intent</div>
+        <div class="flow-sublabel">structured params</div>
+      </div>
+
+      <div class="flow-connector">
+        <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
+          <path d="M1 8h16M13 2l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="flow-step">
+        <div class="flow-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+          </svg>
+        </div>
+        <div class="flow-label">Two Providers<br>Searched in Parallel</div>
+        <div class="flow-sublabel">google + duffel</div>
+      </div>
+
+      <div class="flow-connector">
+        <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
+          <path d="M1 8h16M13 2l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="flow-step">
+        <div class="flow-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div class="flow-label">Conflict Zone<br>Safety Check</div>
+        <div class="flow-sublabel">filter / flag</div>
+      </div>
+
+      <div class="flow-connector">
+        <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
+          <path d="M1 8h16M13 2l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="flow-step">
+        <div class="flow-node accent">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class="flow-label">Ranked<br>Results</div>
+        <div class="flow-sublabel">price + safety</div>
+      </div>
+
+    </div>
+
+    <!-- Parse box -->
+    <div class="parse-box">
+      <div class="parse-input">
+        <div class="parse-title">Prompt</div>
+        <div class="parse-prompt">"fly from Berlin to Tokyo next week under €800, direct only"</div>
+      </div>
+      <div>
+        <div class="parse-title">Parsed by Gemini</div>
+        <div class="parse-params">
+          <div class="param-row"><span class="param-key">origins</span><span class="param-val">["BER", "TXL", "SXF"]</span></div>
+          <div class="param-row"><span class="param-key">destinations</span><span class="param-val">["NRT", "HND"]</span></div>
+          <div class="param-row"><span class="param-key">depart_after</span><span class="param-val">2026-03-16</span></div>
+          <div class="param-row"><span class="param-key">depart_before</span><span class="param-val">2026-03-22</span></div>
+          <div class="param-row"><span class="param-key">max_price</span><span class="param-val">800</span></div>
+          <div class="param-row"><span class="param-key">currency</span><span class="param-val">EUR</span></div>
+          <div class="param-row"><span class="param-key">max_stops</span><span class="param-val">0</span></div>
+          <div class="param-row"><span class="param-key">cabin</span><span class="param-val">economy</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Results mock ── -->
+<section>
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="label">Results</div>
+        <h2>What results look like</h2>
+      </div>
+    </div>
+
+    <div class="results-section-label">
+      <span class="results-meta"><span class="count">6</span> flights found &nbsp;·&nbsp; sorted by score &nbsp;·&nbsp; BER → TYO</span>
+      <span class="cache-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        cached 34m ago
+      </span>
+    </div>
+
+    <div class="cards">
+
+      <!-- Card 1: Best result -->
+      <div class="card ranked-1">
+        <div class="card-header">
+          <span class="card-rank top">#1 best match</span>
+          <div class="card-badges">
+            <span class="badge safe">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              safe route
+            </span>
+            <span class="badge source">Google Flights</span>
+          </div>
+        </div>
+
+        <div class="flight-row">
+          <div class="airport">
+            <div class="airport-code">BER</div>
+            <div class="airport-city">Berlin</div>
+          </div>
+          <div class="flight-middle">
+            <div class="flight-duration">13h 20m</div>
+            <div class="flight-line"></div>
+            <div class="flight-stops direct">direct</div>
+            <div class="flight-times">Lufthansa LH718</div>
+          </div>
+          <div class="airport">
+            <div class="airport-code">HND</div>
+            <div class="airport-city">Tokyo</div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="card-footer-left">
+            <span class="price">€ 694</span>
+            <span class="price-label">/ pax · economy</span>
+          </div>
+          <div class="score-bar-wrap">
+            <span class="score-label">score</span>
+            <div class="score-bar"><div class="score-fill" style="width:88%"></div></div>
+            <span class="score-val">88</span>
+          </div>
+          <button class="book-btn">Book</button>
+        </div>
+      </div>
+
+      <!-- Card 2: Warning route -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-rank">#2</span>
+          <div class="card-badges">
+            <span class="badge warn">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+              airspace advisory
+            </span>
+            <span class="badge source">Duffel</span>
+          </div>
+        </div>
+
+        <div class="flight-row">
+          <div class="airport">
+            <div class="airport-code">TXL</div>
+            <div class="airport-city">Berlin</div>
+          </div>
+          <div class="flight-middle">
+            <div class="flight-duration">12h 05m</div>
+            <div class="flight-line"></div>
+            <div class="flight-stops direct">direct</div>
+            <div class="flight-times">Finnair AY65</div>
+          </div>
+          <div class="airport">
+            <div class="airport-code">NRT</div>
+            <div class="airport-city">Tokyo</div>
+          </div>
+        </div>
+
+        <div style="background:var(--warn-bg);border:1px solid rgba(245,158,11,0.15);border-radius:5px;padding:8px 12px;font-size:12px;color:var(--warn);font-family:monospace;margin-top:2px;">
+          Route passes near restricted airspace over eastern Ukraine. Check airline advisories before booking.
+        </div>
+
+        <div class="card-footer">
+          <div class="card-footer-left">
+            <span class="price">€ 571</span>
+            <span class="price-label">/ pax · economy</span>
+          </div>
+          <div class="score-bar-wrap">
+            <span class="score-label">score</span>
+            <div class="score-bar"><div class="score-fill" style="width:61%"></div></div>
+            <span class="score-val">61</span>
+          </div>
+          <button class="book-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);">Book</button>
+        </div>
+      </div>
+
+      <!-- Card 3: Round trip -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-rank">#3</span>
+          <div class="card-badges">
+            <span class="badge safe">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              safe route
+            </span>
+            <span class="badge source">Google Flights</span>
+          </div>
+        </div>
+
+        <div class="rt-tag">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+          </svg>
+          round trip pair
+        </div>
+
+        <!-- Outbound -->
+        <div class="trip-label">Outbound · Mon Mar 17</div>
+        <div class="flight-row">
+          <div class="airport">
+            <div class="airport-code">BER</div>
+            <div class="airport-city">Berlin</div>
+          </div>
+          <div class="flight-middle">
+            <div class="flight-duration">13h 20m</div>
+            <div class="flight-line"></div>
+            <div class="flight-stops direct">direct</div>
+            <div class="flight-times">ANA NH205</div>
+          </div>
+          <div class="airport">
+            <div class="airport-code">HND</div>
+            <div class="airport-city">Tokyo</div>
+          </div>
+        </div>
+
+        <!-- Return -->
+        <div class="trip-label" style="margin-top:12px;">Return · Mon Mar 24</div>
+        <div class="flight-row">
+          <div class="airport">
+            <div class="airport-code">HND</div>
+            <div class="airport-city">Tokyo</div>
+          </div>
+          <div class="flight-middle">
+            <div class="flight-duration">14h 10m</div>
+            <div class="flight-line"></div>
+            <div class="flight-stops direct">direct</div>
+            <div class="flight-times">ANA NH206</div>
+          </div>
+          <div class="airport">
+            <div class="airport-code">BER</div>
+            <div class="airport-city">Berlin</div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="card-footer-left">
+            <span class="price">€ 1,340</span>
+            <span class="price-label">/ pax · both legs</span>
+          </div>
+          <div class="score-bar-wrap">
+            <span class="score-label">score</span>
+            <div class="score-bar"><div class="score-fill" style="width:82%"></div></div>
+            <span class="score-val">82</span>
+          </div>
+          <button class="book-btn">Book</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── What's special ── -->
+<section>
+  <div class="container">
+    <div class="label">What's different</div>
+    <h2>Built for travelers who think,<br>not for travelers who click.</h2>
+
+    <div class="features">
+
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div class="feature-title">Conflict zone filtering</div>
+        <div class="feature-desc">Every route is checked against a live database of war zones and restricted airspace. Affected flights are filtered out or flagged with an advisory — not buried in fine print.</div>
+      </div>
+
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div class="feature-title">Natural language search</div>
+        <div class="feature-desc">Describe the trip as you'd say it out loud. Gemini extracts airports, dates, cabin class, stop preferences, and price ceiling — no dropdowns required.</div>
+      </div>
+
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <div class="feature-title">Multi-origin, multi-destination</div>
+        <div class="feature-desc">"From Berlin" resolves to BER, TXL, and SXF. "To Tokyo" resolves to NRT and HND. All combinations are searched in one request — you see the best option, not the most obvious.</div>
+      </div>
+
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+          </svg>
+        </div>
+        <div class="feature-title">Round-trip as a pair</div>
+        <div class="feature-desc">Round trips return as matched outbound + return pairs with a combined total price. No mental arithmetic. No comparing two separate searches. Both legs shown together, one booking decision.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="container">
+    opensky · flight search engine · v0.1 &nbsp;·&nbsp; gemini ai · google flights · duffel api
+  </div>
+</footer>
+
+</body>
+</html>

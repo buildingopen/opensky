@@ -29,7 +29,7 @@ function ConflictMapInner({ countryRiskMap }: Props) {
     if (!num) continue;
     const existing = colorMap[num];
     if (!existing || (riskPriority[risk] || 0) > (riskPriority[Object.entries(countryRiskMap).find(([a]) => ISO_NUMERIC[a] === num)?.[1] || ""] || 0)) {
-      colorMap[num] = RISK_CONFIG[risk]?.color || "#334155";
+      colorMap[num] = RISK_CONFIG[risk]?.color || "#3f3f46";
     }
   }
 
@@ -47,17 +47,17 @@ function ConflictMapInner({ countryRiskMap }: Props) {
             <Geographies geography={GEO_URL}>
               {({ geographies }: { geographies: Array<{ rsmKey: string; id: string }> }) =>
                 geographies.map((geo) => {
-                  const fill = colorMap[geo.id] || "#1e293b";
+                  const fill = colorMap[geo.id] || "#2a2a2a";
                   return (
                     <Geography
                       key={geo.rsmKey}
                       geography={geo}
                       fill={fill}
-                      stroke="#0f172a"
+                      stroke="#141414"
                       strokeWidth={0.5}
                       style={{
                         default: { outline: "none" },
-                        hover: { outline: "none", fill: fill === "#1e293b" ? "#334155" : fill, opacity: 0.85 },
+                        hover: { outline: "none", fill: fill === "#2a2a2a" ? "#3f3f46" : fill, opacity: 0.85 },
                         pressed: { outline: "none" },
                       }}
                     />
