@@ -2340,11 +2340,14 @@ function HomePage() {
                     {searchMode === "structured" ? "Describe your trip instead" : "Use search form instead"}
                   </button>
                   {searchMode === "natural" && !isLoading && queryPreview && (
-                    <p className="text-[11px] text-[var(--color-text-muted)]/50 truncate transition-opacity duration-300">
-                      {queryPreview.origin}
-                      {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> {queryPreview.dest}</>}
-                      {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
-                    </p>
+                    <>
+                      <span className="text-[var(--color-border)] select-none">|</span>
+                      <p className="text-[11px] text-[var(--color-text-muted)]/70 truncate transition-opacity duration-300">
+                        {queryPreview.origin}
+                        {queryPreview.dest && <> <span className="opacity-70">{"\u2192"}</span> {queryPreview.dest}</>}
+                        {queryPreview.date && <> <span className="opacity-50">{"\u00B7"}</span> {queryPreview.date}</>}
+                      </p>
+                    </>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
