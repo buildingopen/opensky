@@ -2229,24 +2229,7 @@ function HomePage() {
                       filteredCount={displayFlights.length}
                     />
 
-                    {/* Recommendation stack */}
-                    <div className="mt-6 space-y-4">
-                      <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
-                      {recs.slice(0, 4).map(({ label, flight }, i) => (
-                        <FlightCard
-                          key={i}
-                          flight={flight}
-                          label={label}
-                          reason={getRecommendationReason(flight, flights, label)}
-                          airportNames={airportNames}
-                          attributionParams={attributionParams}
-                          onOutboundClick={handleOutboundClick}
-                          cabin={parsed?.cabin}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Compare all + share (after recommendations) */}
+                    {/* Compare all + share (before recommendations for context) */}
                     {summary && summary.stats.total_flights > 0 && (
                       <div className="mt-6">
                         <div className="flex items-center justify-between mb-2">
@@ -2275,6 +2258,23 @@ function HomePage() {
                         )}
                       </div>
                     )}
+
+                    {/* Recommendation stack */}
+                    <div className="mt-6 space-y-4">
+                      <h2 className="text-sm font-semibold text-[var(--color-text)]">Our recommendations</h2>
+                      {recs.slice(0, 4).map(({ label, flight }, i) => (
+                        <FlightCard
+                          key={i}
+                          flight={flight}
+                          label={label}
+                          reason={getRecommendationReason(flight, flights, label)}
+                          airportNames={airportNames}
+                          attributionParams={attributionParams}
+                          onOutboundClick={handleOutboundClick}
+                          cabin={parsed?.cabin}
+                        />
+                      ))}
+                    </div>
 
                     {/* More flights */}
                     {(() => {
