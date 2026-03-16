@@ -2393,15 +2393,14 @@ function HomePage() {
                         </div>
                       </div>
                     )}
-                    {expandPhase === "done" && (
-                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm text-[var(--color-text-muted)]">
-                        {expandError ? (
-                          <span className="text-[var(--color-caution)]">{expandError}</span>
-                        ) : expandCount > 0 ? (
-                          <span className="text-[var(--color-accent)]">Found {expandCount} more flight{expandCount !== 1 ? "s" : ""}, merged into results above</span>
-                        ) : (
-                          <span>No additional flights found with expanded search</span>
-                        )}
+                    {expandPhase === "done" && expandError && (
+                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
+                        <span className="text-[var(--color-caution)]">{expandError}</span>
+                      </div>
+                    )}
+                    {expandPhase === "done" && !expandError && expandCount > 0 && (
+                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
+                        <span className="text-[var(--color-accent)]">+{expandCount} flight{expandCount !== 1 ? "s" : ""} added from nearby airports</span>
                       </div>
                     )}
                   </div>

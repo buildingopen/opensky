@@ -96,9 +96,14 @@ export function SiteHeader() {
           {/* Panel */}
           <div className="absolute right-0 top-0 h-full w-64 bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-xl flex flex-col animate-slide-in-right">
             <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--color-border)]">
-              <span className="text-lg font-semibold tracking-tight">
-                <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
-              </span>
+              <div className="flex items-center gap-2">
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+                  <path d="M3 12l9-8v5h8l-9 8v-5H3z" fill="var(--color-accent)" />
+                </svg>
+                <span className="text-lg font-semibold tracking-tight">
+                  <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
+                </span>
+              </div>
               <button
                 onClick={() => setMenuOpen(false)}
                 className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
