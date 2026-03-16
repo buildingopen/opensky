@@ -55,9 +55,16 @@ export async function GET(req: NextRequest) {
           fontFamily: "Inter, system-ui, sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={{ fontSize: "32px", fontWeight: 700, color: "#ffffff" }}>fly</span>
-          <span style={{ fontSize: "32px", fontWeight: 700, color: "#22c55e" }}>fast</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+            <path d="M4 4h10l-3 8h5l-9 8 3-8H4z" fill="#22c55e" />
+            <path d="M14 4l6-1.5" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+            <path d="M12 8l7-1" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" opacity="0.35" />
+          </svg>
+          <div style={{ display: "flex" }}>
+            <span style={{ fontSize: "32px", fontWeight: 700, color: "#22c55e", letterSpacing: "-0.5px" }}>fly</span>
+            <span style={{ fontSize: "32px", fontWeight: 700, color: "#ffffff", letterSpacing: "-0.5px" }}>fast</span>
+          </div>
         </div>
 
         {hasData ? (

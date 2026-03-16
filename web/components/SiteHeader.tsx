@@ -36,11 +36,13 @@ export function SiteHeader() {
     <header className="border-b border-[var(--color-border)]">
       <div className="max-w-[min(64rem,92vw)] mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <svg viewBox="0 0 24 24" className="w-5 h-5 text-[var(--color-accent)]" fill="currentColor">
-            <path d="M2.5 19h19v2h-19v-2zm19.57-9.36c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 2.59 4.49L21 11.49c.81-.23 1.28-1.05 1.07-1.85z" />
+          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+            <path d="M4 4h10l-3 8h5l-9 8 3-8H4z" fill="var(--color-accent)" />
+            <path d="M14 4l6-1.5" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+            <path d="M12 8l7-1" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" opacity="0.35" />
           </svg>
-          <span className="text-lg font-semibold">
-            <span className="text-[var(--color-accent)]">fly</span>fast
+          <span className="text-lg font-semibold tracking-tight">
+            <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
           </span>
         </Link>
 
@@ -96,8 +98,8 @@ export function SiteHeader() {
           {/* Panel */}
           <div className="absolute right-0 top-0 h-full w-64 bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-xl flex flex-col animate-slide-in-right">
             <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--color-border)]">
-              <span className="text-lg font-semibold">
-                <span className="text-[var(--color-accent)]">fly</span>fast
+              <span className="text-lg font-semibold tracking-tight">
+                <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
               </span>
               <button
                 onClick={() => setMenuOpen(false)}

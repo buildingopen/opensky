@@ -1214,6 +1214,11 @@ function HomePage() {
   const [popupEmail, setPopupEmail] = useState("");
   const [popupThreshold, setPopupThreshold] = useState("");
   const [popupStatus, setPopupStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [expandPhase, setExpandPhase] = useState<"idle" | "expanding" | "done">("idle");
+  const [expandCount, setExpandCount] = useState(0);
+  const [expansionInfo, setExpansionInfo] = useState<string | null>(null);
+  const [expandProgress, setExpandProgress] = useState<{ done: number; total: number } | null>(null);
+  const expandAbortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -1362,6 +1367,11 @@ function HomePage() {
     setPreviewFlights([]);
     setIsPartial(false);
     setTripTab("roundtrip");
+    setExpandPhase("idle");
+    setExpandCount(0);
+    setExpansionInfo(null);
+    setExpandProgress(null);
+    expandAbortRef.current?.abort();
     setRtShowCount(5);
 
     // Update browser URL so refresh/back restores the search (C6)
@@ -1520,6 +1530,122 @@ function HomePage() {
     abortRef.current = null;
     setPhase("idle");
     setError(null);
+  };
+
+  const expandSearch = async () => {
+    if (!parsed || expandPhase !== "idle") return;
+    setExpandPhase("expanding");
+    setExpandCount(0);
+    setExpansionInfo(null);
+    setExpandProgress(null);
+    trackEvent("expand_search_clicked", { original_results: flights.length });
+
+    const controller = new AbortController();
+    expandAbortRef.current = controller;
+
+    try {
+      const resp = await fetch(`${API_URL}/api/expand-search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: prompt || "",
+          original_parsed: {
+            origins: parsed.origins,
+            destinations: parsed.destinations,
+            dates: parsed.dates,
+            return_dates: parsed.return_dates || [],
+            max_price: parsed.max_price,
+            currency: parsed.currency,
+            cabin: parsed.cabin,
+            stops: parsed.stops,
+            safe_only: parsed.safe_only,
+          },
+        }),
+        signal: controller.signal,
+      });
+
+      if (resp.status === 429) {
+        const retryAfter = parseInt(resp.headers.get("Retry-After") || "", 10);
+        if (retryAfter > 0) setRateLimitReset(Date.now() + retryAfter * 1000);
+        setExpandPhase("done");
+        setExpandCount(0);
+        return;
+      }
+      if (!resp.ok) {
+        setExpandPhase("done");
+        setExpandCount(0);
+        return;
+      }
+
+      const reader = resp.body?.getReader();
+      if (!reader) { setExpandPhase("done"); return; }
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const msg = JSON.parse(line.slice(6));
+            if (msg.type === "parsed") {
+              if (msg.expansion_info) setExpansionInfo(msg.expansion_info);
+            } else if (msg.type === "progress") {
+              setExpandProgress({ done: msg.done, total: msg.total });
+            } else if (msg.type === "results") {
+              const expandedFlights: FlightOut[] = msg.flights || [];
+              const expandedRT: RoundTripOut[] = msg.round_trip_results || [];
+
+              // Merge one-way flights
+              if (expandedFlights.length > 0) {
+                setFlights(prev => {
+                  const existingKeys = new Set(prev.map(f => `${f.route}|${f.date}|${f.stops}`));
+                  const newOnes = expandedFlights.filter(f => !existingKeys.has(`${f.route}|${f.date}|${f.stops}`));
+                  setExpandCount(newOnes.length);
+                  if (newOnes.length === 0) return prev;
+                  const merged = [...prev, ...newOnes];
+                  merged.sort((a, b) => a.score - b.score);
+                  return merged;
+                });
+              }
+
+              // Merge round-trip results
+              if (expandedRT.length > 0 && roundTripResults) {
+                setRoundTripResults(prev => {
+                  if (!prev) return expandedRT;
+                  const existingKeys = new Set(prev.map(r => `${r.outbound.route}|${r.outbound.date}|${r.inbound.route}|${r.inbound.date}`));
+                  const newOnes = expandedRT.filter(r => !existingKeys.has(`${r.outbound.route}|${r.outbound.date}|${r.inbound.route}|${r.inbound.date}`));
+                  if (!expandedFlights.length) setExpandCount(newOnes.length);
+                  if (newOnes.length === 0) return prev;
+                  const merged = [...prev, ...newOnes];
+                  merged.sort((a, b) => a.score - b.score);
+                  return merged;
+                });
+              } else if (expandedRT.length > 0 && !roundTripResults) {
+                setRoundTripResults(expandedRT);
+                if (!expandedFlights.length) setExpandCount(expandedRT.length);
+              }
+
+              setExpandPhase("done");
+              trackEvent("expand_search_results", { new_flights: expandedFlights.length, new_rt: expandedRT.length });
+            } else if (msg.type === "error") {
+              setExpandPhase("done");
+              setExpandCount(0);
+            }
+          } catch {}
+        }
+      }
+    } catch {
+      setExpandPhase("done");
+      setExpandCount(0);
+    } finally {
+      expandAbortRef.current = null;
+      setExpandPhase(p => p === "expanding" ? "done" : p);
+    }
   };
 
   const handleOutboundClick = (provider: "booking" | "google", flight: FlightOut) => {
@@ -2220,6 +2346,53 @@ function HomePage() {
                   </div>
                 )}
 
+
+                {/* Expand search */}
+                {parsed && phase === "done" && flights.length > 0 && (
+                  <div className="mt-6">
+                    {expandPhase === "idle" && (
+                      <button
+                        onClick={expandSearch}
+                        className="w-full flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 hover:border-[var(--color-accent)]/40 transition-colors group"
+                      >
+                        <div className="text-left">
+                          <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-accent)] transition-colors">Expand search</span>
+                          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Find more options with nearby airports and flexible dates</p>
+                        </div>
+                        <svg viewBox="0 0 20 20" className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] transition-colors shrink-0" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    )}
+                    {expandPhase === "expanding" && (
+                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-4 h-4 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm text-[var(--color-text)]">Expanding search{expansionInfo ? `: ${expansionInfo}` : "..."}</span>
+                            {expandProgress && (
+                              <div className="mt-1.5 h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300"
+                                  style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {expandPhase === "done" && (
+                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm text-[var(--color-text-muted)]">
+                        {expandCount > 0 ? (
+                          <span className="text-[var(--color-accent)]">Found {expandCount} more flight{expandCount !== 1 ? "s" : ""} — merged into results above</span>
+                        ) : (
+                          <span>No additional flights found with expanded search</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Price alert */}
                 {parsed && phase === "done" && flights.length > 0 && (

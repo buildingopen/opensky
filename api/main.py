@@ -1550,6 +1550,313 @@ async def search_flights(req: PromptRequest, request: Request):
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
+# ---------------------------------------------------------------------------
+# Expand Search: AI-driven search expansion
+# ---------------------------------------------------------------------------
+EXPAND_SYSTEM = """You are a flight search expansion advisor. Given an original search and its results,
+suggest how to expand the search to find MORE options the user hasn't seen yet.
+
+Today's date is {today}.
+
+Input: original search parameters (origins, destinations, dates, etc.) and a summary of results found.
+
+Return ONLY valid JSON with the SAME structure as a search query:
+{{
+  "origins": ["IATA", ...],
+  "destinations": ["IATA", ...],
+  "dates": ["YYYY-MM-DD", ...],
+  "return_dates": [],
+  "max_price": 0,
+  "currency": "EUR",
+  "cabin": "economy",
+  "stops": "any",
+  "safe_only": false,
+  "total_routes": <calculated>,
+  "expansion_strategy": "brief description of what was expanded"
+}}
+
+Rules:
+- EXCLUDE all airports that were already in the original search origins/destinations.
+- Keep the same currency, cabin, stops, safe_only, and max_price as the original.
+- Copy return_dates from original (preserve round-trip intent).
+
+Expansion strategy (apply in priority order):
+1. Nearby ORIGIN airports (highest ROI): add 2-3 airports within ~3h train/car of each original origin.
+   Examples: HAM -> BRE, HAJ, BER; BLR -> MAA, HYD; JFK -> EWR, PHL; LHR -> LGW, STN, BRS
+2. Adjacent dates: add 1-2 days before/after the original date range (if dates were narrow, 1-3 days).
+3. Nearby DESTINATION airports: add 1-2 airports in the same region as each original destination.
+   Examples: HAM -> BRE, HAJ; FRA -> STR, CGN; CDG -> ORY, BRU
+4. Only expand what makes sense. If origins already cover a wide area, skip origin expansion.
+
+CRITICAL LIMIT: total_routes = len(origins) * len(destinations) * len(dates) * max(len(return_dates), 1) must be <= 100.
+If over limit, reduce by cutting less promising airports or sampling dates.
+
+Always return valid 3-letter IATA airport codes, never city codes.
+Never include an airport that appears in BOTH the original AND expanded origins or destinations."""
+
+
+class ExpandRequest(BaseModel):
+    prompt: str = Field(..., min_length=3, max_length=500)
+    original_parsed: dict
+
+
+async def _expand_params(original: dict, prompt: str) -> dict:
+    """Use Gemini to decide how to expand the search."""
+    if not GEMINI_KEY:
+        raise HTTPException(status_code=503, detail="Search parser is not configured.")
+
+    today = date.today().isoformat()
+    system = EXPAND_SYSTEM.format(today=today)
+
+    user_msg = json.dumps({
+        "original_prompt": prompt,
+        "original_params": {
+            "origins": original.get("origins", []),
+            "destinations": original.get("destinations", []),
+            "dates": original.get("dates", []),
+            "return_dates": original.get("return_dates", []),
+            "max_price": original.get("max_price", 0),
+            "currency": original.get("currency", "EUR"),
+            "cabin": original.get("cabin", "economy"),
+            "stops": original.get("stops", "any"),
+            "safe_only": original.get("safe_only", False),
+        },
+    })
+
+    for attempt in range(GEMINI_MAX_RETRIES + 1):
+        try:
+            async with httpx.AsyncClient(timeout=GEMINI_TIMEOUT_SECONDS) as client:
+                resp = await client.post(
+                    GEMINI_URL,
+                    params={"key": GEMINI_KEY},
+                    json={
+                        "contents": [{"parts": [{"text": user_msg}]}],
+                        "systemInstruction": {"parts": [{"text": system}]},
+                        "generationConfig": {
+                            "temperature": 0,
+                            "responseMimeType": "application/json",
+                        },
+                    },
+                )
+            if resp.status_code != 200:
+                if attempt < GEMINI_MAX_RETRIES:
+                    await asyncio.sleep(1)
+                    continue
+                raise HTTPException(status_code=502, detail="Expansion AI unavailable.")
+            text = _extract_gemini_text(resp.json())
+            if not text.strip():
+                raise HTTPException(status_code=502, detail="Expansion AI returned empty response.")
+            parsed = json.loads(text)
+
+            # Sanitize: remove any airports that overlap with original
+            orig_origins = set(o.upper() for o in original.get("origins", []))
+            orig_dests = set(d.upper() for d in original.get("destinations", []))
+            parsed["origins"] = [o.upper() for o in parsed.get("origins", []) if o.upper() not in orig_origins and o.upper() in _VALID_IATA]
+            parsed["destinations"] = [d.upper() for d in parsed.get("destinations", []) if d.upper() not in orig_dests and d.upper() in _VALID_IATA]
+
+            # Also keep new dates that weren't in original
+            orig_dates = set(original.get("dates", []))
+            new_dates = [d for d in parsed.get("dates", []) if d not in orig_dates]
+            # If Gemini returned new dates, combine with original; otherwise use original dates
+            parsed["dates"] = list(orig_dates) + new_dates if new_dates else list(orig_dates)
+
+            # Carry over settings from original
+            parsed["currency"] = original.get("currency", "EUR")
+            parsed["cabin"] = original.get("cabin", "economy")
+            parsed["stops"] = original.get("stops", "any")
+            parsed["safe_only"] = original.get("safe_only", False)
+            parsed["max_price"] = original.get("max_price", 0)
+            parsed["return_dates"] = original.get("return_dates", [])
+
+            # If no new airports at all, add original airports too so we at least search new dates
+            if not parsed["origins"]:
+                parsed["origins"] = list(orig_origins)
+            if not parsed["destinations"]:
+                parsed["destinations"] = list(orig_dests)
+
+            # Remove overlap between expanded origins and destinations
+            overlap = set(parsed["origins"]) & set(parsed["destinations"])
+            if overlap:
+                parsed["destinations"] = [d for d in parsed["destinations"] if d not in overlap]
+
+            return parsed
+        except json.JSONDecodeError:
+            if attempt < GEMINI_MAX_RETRIES:
+                await asyncio.sleep(1)
+                continue
+            raise HTTPException(status_code=502, detail="Failed to parse expansion response.")
+        except HTTPException:
+            raise
+        except Exception:
+            if attempt < GEMINI_MAX_RETRIES:
+                await asyncio.sleep(1)
+                continue
+            raise HTTPException(status_code=502, detail="Expansion failed.")
+    raise HTTPException(status_code=502, detail="Expansion failed after retries.")
+
+
+@app.post("/api/expand-search")
+async def expand_search(req: ExpandRequest, request: Request):
+    """Expand a previous search with nearby airports, flexible dates, etc."""
+    api_key = _extract_api_key(request)
+    if api_key and api_key in API_KEYS:
+        key_hash = _hash_key(api_key)
+        if redis_client:
+            remaining = await _check_rate_limit_api_key_redis(key_hash)
+        else:
+            remaining = _check_rate_limit_api_key_memory(key_hash)
+    else:
+        ip = _get_client_ip(request)
+        remaining = await _check_rate_limit(ip)
+
+    original = req.original_parsed
+    expanded = await _expand_params(original, req.prompt)
+
+    return_dates = expanded.get("return_dates", [])
+    is_round_trip = len(return_dates) > 0
+
+    # Calculate total and trim if needed
+    if is_round_trip:
+        combined_total = len(expanded["origins"]) * len(expanded["destinations"]) * len(expanded["dates"]) * len(return_dates)
+    else:
+        combined_total = len(expanded["origins"]) * len(expanded["destinations"]) * len(expanded["dates"])
+
+    # Guard: remove overlap
+    overlapping = set(expanded["origins"]) & set(expanded["destinations"])
+    if overlapping:
+        expanded["destinations"] = [d for d in expanded["destinations"] if d not in overlapping]
+
+    if not expanded["destinations"]:
+        return JSONResponse(status_code=400, content={"detail": "No new airports to expand to."})
+
+    if combined_total > 100:
+        expanded, combined_total = _trim_to_limit(expanded, return_dates, is_round_trip)
+        return_dates = expanded.get("return_dates", [])
+        is_round_trip = len(return_dates) > 0
+
+    names = _airport_names(expanded["origins"] + expanded["destinations"])
+    expansion_strategy = expanded.pop("expansion_strategy", "Nearby airports and flexible dates")
+
+    parsed_out = ParsedSearch(
+        origins=expanded["origins"],
+        destinations=expanded["destinations"],
+        dates=expanded["dates"],
+        return_dates=return_dates,
+        max_price=expanded.get("max_price", 0),
+        currency=expanded.get("currency", "EUR"),
+        cabin=expanded.get("cabin", "economy"),
+        stops=expanded.get("stops", "any"),
+        safe_only=bool(expanded.get("safe_only", False)),
+        total_routes=combined_total,
+        airport_names=names,
+    )
+
+    async def event_stream():
+        try:
+            parsed_data = parsed_out.model_dump()
+        except Exception:
+            yield f"data: {json.dumps({'type': 'error', 'detail': 'Internal error preparing expansion.'})}\n\n"
+            return
+        parsed_event = {"type": "parsed", "parsed": parsed_data, "expansion_info": expansion_strategy}
+        yield f"data: {json.dumps(parsed_event)}\n\n"
+
+        cancel = threading.Event()
+        progress_q: queue.Queue = queue.Queue()
+        partial_results: list = []
+
+        def on_progress(done, total, origin, dest, dt):
+            msg = {"type": "progress", "done": done, "total": total, "route": f"{origin} -> {dest}", "date": dt}
+            progress_q.put(msg)
+
+        result_holder: list = []
+        error_holder: list = []
+        outbound_errors: list = []
+
+        if is_round_trip:
+            def run():
+                try:
+                    result_holder.append(_run_round_trip_scan(expanded, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors, partial_results=partial_results))
+                except Exception as e:
+                    error_holder.append(str(e))
+                finally:
+                    progress_q.put(None)
+        else:
+            def run():
+                try:
+                    result_holder.append(_run_scan(expanded, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors, partial_results=partial_results))
+                except Exception as e:
+                    error_holder.append(str(e))
+                finally:
+                    progress_q.put(None)
+
+        thread = threading.Thread(target=run, daemon=True)
+        thread.start()
+
+        scan_start = time.time()
+        while True:
+            if time.time() - scan_start > 300:
+                cancel.set()
+                yield f"data: {json.dumps({'type': 'error', 'detail': 'Expansion timed out.'})}\n\n"
+                thread.join(timeout=5)
+                return
+            try:
+                msg = progress_q.get(timeout=2.0)
+            except queue.Empty:
+                yield ": keepalive\n\n"
+                continue
+            if msg is None:
+                break
+            yield f"data: {json.dumps(msg)}\n\n"
+
+        thread.join(timeout=10)
+
+        if error_holder:
+            yield f"data: {json.dumps({'type': 'error', 'detail': 'Expansion search failed.'})}\n\n"
+            return
+
+        cabin = expanded.get("cabin", "economy")
+        warning = zones_age_warning()
+
+        if is_round_trip:
+            rt_raw, rt_cache_age = result_holder[0] if result_holder else ([], None)
+            rt_results = rt_raw
+            if expanded.get("safe_only"):
+                rt_results = [r for r in rt_results if r.get("risk_level") == "safe"]
+            result_data = {
+                "type": "results",
+                "flights": [r["outbound"] for r in rt_results[:20]],
+                "round_trip_results": rt_results[:20],
+                "count": len(rt_results[:20]),
+                "remaining_searches": remaining,
+                "expansion_info": expansion_strategy,
+            }
+        else:
+            scored_raw, scan_cache_age = result_holder[0] if result_holder else ([], None)
+            fl = [_scored_to_out(sf, cabin=cabin).model_dump() for sf in scored_raw]
+            priced = [f for f in fl if f["price"] > 0]
+            fl = priced if priced else fl
+            fl = _filter_price_anomalies(fl)
+            seen: dict[tuple, dict] = {}
+            for f in fl:
+                key = (f["route"], f["date"], f["stops"])
+                if key not in seen or f["price"] < seen[key]["price"]:
+                    seen[key] = f
+            flights = sorted(seen.values(), key=lambda x: x["score"])
+            if expanded.get("safe_only"):
+                flights = [f for f in flights if f.get("risk_level") == "safe"]
+            result_data = {
+                "type": "results",
+                "flights": flights[:20],
+                "count": len(flights),
+                "remaining_searches": remaining,
+                "expansion_info": expansion_strategy,
+            }
+
+        yield f"data: {json.dumps(result_data)}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
 @app.get("/api/zones", response_model=ZonesResponse)
 async def get_zones():
     zones = load_zones()
