@@ -445,9 +445,9 @@ function PreviewLoc({ text, airports }: { text: string; airports: { iata: string
     <span className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
       <span className="cursor-help border-b border-dotted border-[var(--color-accent)]/30">{text}</span>
       {show && (
-        <span className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg whitespace-nowrap animate-fade-in" style={{ maxHeight: 200, overflowY: "auto" }}>
-          {airports.map((a, i) => (
-            <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)]">
+        <span className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
+          {airports.map((a) => (
+            <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap overflow-hidden text-ellipsis" style={{ maxWidth: 200 }}>
               <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
               <span className="text-[var(--color-text-muted)]">{a.city}</span>
             </span>
@@ -1901,9 +1901,18 @@ function HomePage() {
 
     try {
       // Build fallback parsed data from client-side preview (used if Gemini fails)
-      const fallback = queryPreview && queryPreview.originCodes.length > 0 && queryPreview.destCodes.length > 0 && queryPreview.isoDates.length > 0
-        ? { origins: queryPreview.originCodes, destinations: queryPreview.destCodes, dates: queryPreview.isoDates }
-        : undefined;
+      // Cap to 100 combos: if origins × dests × dates > 100, reduce dates first, then dests
+      let fallback: { origins: string[]; destinations: string[]; dates: string[] } | undefined;
+      if (queryPreview && queryPreview.originCodes.length > 0 && queryPreview.destCodes.length > 0 && queryPreview.isoDates.length > 0) {
+        let fbOrigins = queryPreview.originCodes.slice(0, 10);
+        let fbDests = queryPreview.destCodes.slice(0, 20);
+        let fbDates = [...queryPreview.isoDates];
+        // Trim to fit under 100 combos
+        while (fbOrigins.length * fbDests.length * fbDates.length > 100 && fbDates.length > 1) fbDates.pop();
+        while (fbOrigins.length * fbDests.length * fbDates.length > 100 && fbDests.length > 1) fbDests.pop();
+        while (fbOrigins.length * fbDests.length * fbDates.length > 100 && fbOrigins.length > 1) fbOrigins.pop();
+        fallback = { origins: fbOrigins, destinations: fbDests, dates: fbDates };
+      }
       const resp = await fetch(`${API_URL}/api/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2330,6 +2339,13 @@ function HomePage() {
             <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-[var(--color-text)]/70 truncate">{prompt || [form.from, form.to, form.depart].filter(Boolean).join(" → ")}</p>
+                {queryPreview && (
+                  <p className="text-[11px] text-[var(--color-accent)]/60 truncate mt-0.5">
+                    {queryPreview.origin}
+                    {queryPreview.dest && <> <span className="opacity-80">{"\u2192"}</span> {queryPreview.dest}</>}
+                    {queryPreview.date && <> <span className="opacity-60">{"\u00B7"}</span> <span className="text-[var(--color-text-muted)]">{queryPreview.date}</span></>}
+                  </p>
+                )}
               </div>
               {isLoading ? (
                 <button
