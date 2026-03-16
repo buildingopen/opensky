@@ -5,7 +5,7 @@ import { memo } from "react";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { RISK_CONFIG } from "./zones-data";
 
-const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+const GEO_URL = "/countries-110m.json";
 
 // ISO alpha-2 -> ISO 3166-1 numeric for matching topojson
 const ISO_NUMERIC: Record<string, string> = {
