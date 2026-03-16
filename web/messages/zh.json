@@ -147,7 +147,9 @@
       "safeRoute": "安全航线",
       "belowAverage": "{price}，比均价低{saving}。",
       "fasterThanSlowest": "{duration} {stops}，比最慢快{saved}。",
-      "via": "经{cities}"
+      "via": "经{cities}",
+      "direct": "直飞",
+      "stops": "{count}次转机"
     },
     "noResults": {
       "timeout": "搜索超时",

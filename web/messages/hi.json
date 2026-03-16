@@ -147,7 +147,9 @@
       "safeRoute": "सुरक्षित मार्ग",
       "belowAverage": "{price}, औसत से {saving} कम।",
       "fasterThanSlowest": "{duration} {stops}, सबसे धीमे से {saved} तेज़।",
-      "via": "{cities} के रास्ते"
+      "via": "{cities} के रास्ते",
+      "direct": "सीधी उड़ान",
+      "stops": "{count} स्टॉप"
     },
     "noResults": {
       "timeout": "खोज का समय समाप्त",

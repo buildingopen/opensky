@@ -147,7 +147,9 @@
       "safeRoute": "安全ルート",
       "belowAverage": "{price}、平均より{saving}安い。",
       "fasterThanSlowest": "{duration} {stops}、最長より{saved}短い。",
-      "via": "{cities}経由"
+      "via": "{cities}経由",
+      "direct": "直行",
+      "stops": "{count}回乗り継ぎ"
     },
     "noResults": {
       "timeout": "検索がタイムアウトしました",

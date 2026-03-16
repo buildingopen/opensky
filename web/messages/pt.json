@@ -147,7 +147,9 @@
       "safeRoute": "rota segura",
       "belowAverage": "{price}, {saving} abaixo da média.",
       "fasterThanSlowest": "{duration} {stops}, {saved} mais rápido que o mais lento.",
-      "via": "via {cities}"
+      "via": "via {cities}",
+      "direct": "Direto",
+      "stops": "{count} escala"
     },
     "noResults": {
       "timeout": "A busca expirou",

@@ -147,7 +147,9 @@
       "safeRoute": "güvenli rota",
       "belowAverage": "{price}, ortalamanın {saving} altında.",
       "fasterThanSlowest": "{duration} {stops}, en yavaştan {saved} daha hızlı.",
-      "via": "{cities} aktarmalı"
+      "via": "{cities} aktarmalı",
+      "direct": "Direkt",
+      "stops": "{count} aktarma"
     },
     "noResults": {
       "timeout": "Arama zaman aşımına uğradı",

@@ -147,7 +147,9 @@
       "safeRoute": "safe route",
       "belowAverage": "{price}, {saving} below average.",
       "fasterThanSlowest": "{duration} {stops}, {saved} faster than slowest.",
-      "via": "via {cities}"
+      "via": "via {cities}",
+      "direct": "Direct",
+      "stops": "{count} stop"
     },
     "noResults": {
       "timeout": "Search timed out",

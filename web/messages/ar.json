@@ -147,7 +147,9 @@
       "safeRoute": "مسار آمن",
       "belowAverage": "{price}، أقل من المتوسط بـ {saving}.",
       "fasterThanSlowest": "{duration} {stops}، أسرع من الأبطأ بـ {saved}.",
-      "via": "عبر {cities}"
+      "via": "عبر {cities}",
+      "direct": "مباشر",
+      "stops": "{count} توقف"
     },
     "noResults": {
       "timeout": "انتهت مهلة البحث",

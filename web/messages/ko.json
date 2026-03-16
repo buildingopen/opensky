@@ -147,7 +147,9 @@
       "safeRoute": "안전 노선",
       "belowAverage": "{price}, 평균보다 {saving} 저렴.",
       "fasterThanSlowest": "{duration} {stops}, 가장 느린 편보다 {saved} 빠름.",
-      "via": "{cities} 경유"
+      "via": "{cities} 경유",
+      "direct": "직항",
+      "stops": "{count}회 경유"
     },
     "noResults": {
       "timeout": "검색 시간 초과",
