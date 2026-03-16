@@ -48,17 +48,18 @@ interface TooltipData {
 function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, onCountryHover }: Props) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const tooltipZoneRef = useRef<string | null>(null);
-  const isTouchRef = useRef(false);
+  const [isTouch, setIsTouch] = useState(false);
   const [position, setPosition] = useState<{ coordinates: [number, number]; zoom: number }>({
     coordinates: [30, 25],
     zoom: 1,
   });
 
-  // Detect touch device
+  // Detect touch device (state so tooltip text re-renders)
   useEffect(() => {
-    const onTouch = () => { isTouchRef.current = true; };
+    const onTouch = () => { setIsTouch(true); };
     window.addEventListener("touchstart", onTouch, { once: true });
     return () => window.removeEventListener("touchstart", onTouch);
   }, []);
@@ -129,21 +130,29 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
 
   const updateTooltipPosition = useCallback(
     (zone: ZoneMapData, event: React.MouseEvent) => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setTooltip({
-          x: event.clientX - rect.left,
-          y: event.clientY - rect.top,
-          zone,
-        });
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const TOOLTIP_W = 240; // half of max-w-[280px] + padding buffer
+      const TOOLTIP_H = 120; // approximate tooltip height
+
+      let x = event.clientX - rect.left;
+      let y = event.clientY - rect.top;
+
+      // Clamp horizontal: keep tooltip within container
+      x = Math.max(TOOLTIP_W / 2, Math.min(x, rect.width - TOOLTIP_W / 2));
+      // If too close to top, show below cursor instead
+      if (y < TOOLTIP_H + 16) {
+        y = event.clientY - rect.top + TOOLTIP_H + 8;
       }
+
+      setTooltip({ x, y, zone });
     },
     [],
   );
 
   const handleGeoMouseEnter = useCallback(
     (geoId: string, event: React.MouseEvent) => {
-      if (isTouchRef.current) return; // handled by click on touch
+      if (isTouch) return; // handled by click on touch
       const result = resolveZone(geoId);
       if (!result) return;
       tooltipZoneRef.current = result.zoneId;
@@ -155,7 +164,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
 
   const handleGeoMouseMove = useCallback(
     (geoId: string, event: React.MouseEvent) => {
-      if (isTouchRef.current) return;
+      if (isTouch) return;
       const result = resolveZone(geoId);
       if (!result) return;
       updateTooltipPosition(result.zone, event);
@@ -164,7 +173,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
   );
 
   const handleGeoMouseLeave = useCallback(() => {
-    if (isTouchRef.current) return;
+    if (isTouch) return;
     setTooltip(null);
     tooltipZoneRef.current = null;
     onCountryHover?.(null);
@@ -176,8 +185,8 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
       if (!result) return;
 
       // Touch: first tap shows tooltip, second tap navigates
-      if (isTouchRef.current) {
-        if (tooltipZoneRef.current === result.zoneId && tooltip) {
+      if (isTouch) {
+        if (tooltipZoneRef.current === result.zoneId) {
           router.push(`/safety/${result.zoneId}`);
         } else {
           tooltipZoneRef.current = result.zoneId;
@@ -189,7 +198,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
 
       router.push(`/safety/${result.zoneId}`);
     },
-    [resolveZone, router, tooltip, onCountryHover, updateTooltipPosition],
+    [resolveZone, router, isTouch, onCountryHover, updateTooltipPosition],
   );
 
   const handleZoomIn = () => {
@@ -328,7 +337,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
               {tooltip.zone.details}
             </p>
             <p className="text-[10px] text-[var(--color-accent)] mt-1.5">
-              {isTouchRef.current ? "Tap again to view details" : "Click to view details"}
+              {isTouch ? "Tap again to view details" : "Click to view details"}
             </p>
           </div>
         </div>
