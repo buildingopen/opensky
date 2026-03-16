@@ -1317,13 +1317,17 @@ function HomePage() {
     setRtShowCount(5);
 
     // Update browser URL so refresh/back restores the search (C6)
+    // Keep ref/utm_source when arriving from a share URL (first search only)
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.set("q", text.trim());
-      url.searchParams.delete("ref");
-      url.searchParams.delete("utm_source");
+      const isShareVisit = url.searchParams.get("ref") === "share";
+      if (!isShareVisit) {
+        url.searchParams.delete("ref");
+        url.searchParams.delete("utm_source");
+        setAttributionParams((prev) => ({ ...prev, ref: "organic", utm_source: undefined }));
+      }
       window.history.pushState({}, "", url.toString());
-      setAttributionParams((prev) => ({ ...prev, ref: "organic", utm_source: undefined }));
     }
 
     const controller = new AbortController();
