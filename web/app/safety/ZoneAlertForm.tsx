@@ -59,7 +59,7 @@ export function ZoneAlertForm({ zones }: Props) {
     return (
       <div className="mt-8 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
         <div className="flex items-center gap-2 text-sm text-[var(--color-text)]">
-          <svg className="w-5 h-5 text-[#22c55e] shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <svg className="w-5 h-5 text-[var(--color-safe)] shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
           </svg>
           {message}
@@ -129,7 +129,7 @@ export function ZoneAlertForm({ zones }: Props) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="flex-1 min-w-0 text-sm px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+              className="flex-1 min-w-0 text-sm px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
             />
             <button
               onClick={submit}
@@ -141,7 +141,7 @@ export function ZoneAlertForm({ zones }: Props) {
           </div>
 
           {status === "error" && (
-            <p className="text-xs text-red-400">{message}</p>
+            <p className="text-xs text-[var(--color-danger)]">{message}</p>
           )}
         </div>
       )}
