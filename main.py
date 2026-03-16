@@ -1,5 +1,11 @@
 """RunIt entry point: exposes OpenSky's SearchEngine as a deployable function."""
 
+import sys
+import os
+
+# Add src/ to path so opensky package is importable
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
 from opensky.search import SearchEngine
 
 
