@@ -2646,22 +2646,9 @@ function HomePage() {
         {/* Search surface */}
         <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-white/[0.06] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
           {hasResults ? (
-            /* Compact mode: raw prompt + parsed preview + action */
+            /* Compact mode: original prompt + action */
             <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                {prompt && <p className="text-[11px] text-[var(--color-text-muted)]/40 truncate">{prompt}</p>}
-                <p className="text-[12px] text-[var(--color-text-muted)]/70 min-w-0">
-                  {queryPreview ? (
-                    <>
-                      <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
-                      {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
-                      {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
-                    </>
-                  ) : prompt ? (
-                    <span className="opacity-60">{prompt}</span>
-                  ) : null}
-                </p>
-              </div>
+              {prompt && <p className="text-[12px] text-[var(--color-text-muted)]/60 truncate min-w-0 flex-1">{prompt}</p>}
               {isLoading ? (
                 <button
                   onClick={cancelSearch}
@@ -2788,7 +2775,7 @@ function HomePage() {
                 </div>
               )}
 
-              <div className={`${searchMode === "structured" ? "mt-3" : "mt-1 pt-3 border-t border-white/[0.04]"} flex items-center justify-between`}>
+              <div className={`${searchMode === "structured" ? "mt-3" : "mt-1 pt-3 border-t border-white/[0.04]"} flex flex-wrap items-center justify-between gap-y-1`}>
                 <div className="flex items-center gap-3 min-w-0">
                   <button
                     type="button"
@@ -2816,6 +2803,13 @@ function HomePage() {
                     {tc("search")}
                   </button>
                 </div>
+                {searchMode === "natural" && !isLoading && queryPreview && (
+                  <p className="w-full text-[11px] text-[var(--color-text-muted)]/60 sm:hidden">
+                    <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
+                    {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
+                    {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
+                  </p>
+                )}
               </div>
             </>
           )}
