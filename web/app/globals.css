@@ -7,14 +7,14 @@
   --color-border: #2a2a2a;
   --color-text: #e4e4e7;
   --color-text-muted: #a1a1aa;
-  --color-accent: #22c55e;
-  --color-accent-hover: #16a34a;
-  --color-safe: #22c55e;
+  --color-accent: #6C7BF7;
+  --color-accent-hover: #5A6AE0;
+  --color-safe: #6b7280;
   --color-interactive: #6C7BF7;
   --color-interactive-hover: #5A6AE0;
-  --color-caution: #f59e0b;
-  --color-high-risk: #ff6b35;
-  --color-danger: #ef4444;
+  --color-caution: #b8952f;
+  --color-high-risk: #c47a5a;
+  --color-danger: #b85c5c;
 }
 
 body {
@@ -155,7 +155,7 @@ body {
 
 /* iOS Safari fallback for sticky glass header */
 @supports not (backdrop-filter: blur(1px)) {
-  .glass-header { background: rgba(10, 10, 10, 0.95) !important; }
+  .glass-header { background: rgba(10, 10, 10, 0.5) !important; }
 }
 
 /* Staggered card entry */

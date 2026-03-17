@@ -42,7 +42,7 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
                 href={`#${item.id}`}
                 className={`block text-xs ps-3 py-1 -ms-px border-s-2 transition-colors ${
                   activeId === item.id
-                    ? "border-[var(--color-accent)] text-[var(--color-text)]"
+                    ? "border-[var(--color-interactive)] text-[var(--color-text)]"
                     : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border)]"
                 }`}
               >

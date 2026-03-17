@@ -26,8 +26,10 @@ export async function generateMetadata({
   const zone = await getZoneById(zoneId);
   const t = await getTranslations("safety");
   if (!zone) return { title: t("zone.notFound") };
-  const title = t("zone.safeToFlyTitle", { zone: zone.name });
-  const description = t("zone.safeToFlyDescription", { details: zone.details, level: t(`groupLabels.${zone.risk_level}` as "groupLabels.do_not_fly"), updated: zone.updated });
+  const zoneName = t(`zoneNames.${zone.id}` as "zoneNames.ukraine") || zone.name;
+  const title = t("zone.safeToFlyTitle", { zone: zoneName });
+  const riskDesc = t(`riskDescriptions.${zone.risk_level}` as "riskDescriptions.do_not_fly");
+  const description = t("zone.safeToFlyDescription", { details: riskDesc, level: t(`groupLabels.${zone.risk_level}` as "groupLabels.do_not_fly"), updated: zone.updated });
   return {
     title,
     description,
@@ -39,22 +41,14 @@ export async function generateMetadata({
   };
 }
 
-const faqSchema = (zone: { name: string; risk_level: string; details: string }) => ({
+const faqSchema = (question: string, answer: string) => ({
   "@context": "https://schema.org",
   "@type": "FAQPage",
   mainEntity: [
     {
       "@type": "Question",
-      name: `Is it safe to fly over ${zone.name}?`,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text:
-          zone.risk_level === "do_not_fly"
-            ? `No. ${zone.name} airspace is classified as Do Not Fly. ${zone.details} Airlines automatically reroute flights around this zone.`
-            : zone.risk_level === "high_risk"
-              ? `${zone.name} is classified as High Risk. ${zone.details} Most airlines avoid this airspace.`
-              : `${zone.name} is classified as Caution. ${zone.details} Airports operate normally but flights may be rerouted near conflict zones.`,
-      },
+      name: question,
+      acceptedAnswer: { "@type": "Answer", text: answer },
     },
   ],
 });
@@ -69,23 +63,33 @@ export default async function ZonePage({
   if (!zone) notFound();
 
   const t = await getTranslations("safety");
+  const tSearch = await getTranslations("search");
   const risk = RISK_CONFIG[zone.risk_level];
   const advice = t(`travelerAdvice.${zone.risk_level}` as "travelerAdvice.do_not_fly");
+  const zoneName = t(`zoneNames.${zone.id}` as "zoneNames.ukraine") || zone.name;
+  const riskDesc = t(`riskDescriptions.${zone.risk_level}` as "riskDescriptions.do_not_fly");
+  const faqQuestion = t("zone.faqQuestion", { zone: zoneName });
+  const faqAnswer = t(`zone.faqAnswer_${zone.risk_level}` as "zone.faqAnswer_do_not_fly", { zone: zoneName, details: riskDesc });
 
   const countryNames = zone.countries
-    .map((c) => COUNTRY_NAMES[c] || c)
+    .map((c) => {
+      const key = `countryNames.${c}` as "countryNames.US";
+      const val = tSearch(key);
+      // next-intl returns "search.countryNames.XX" when key is missing
+      return /^search\.countryNames\./.test(val) ? (COUNTRY_NAMES[c] || c) : val;
+    })
     .filter(Boolean);
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-12">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(zone)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqQuestion, faqAnswer)) }}
       />
 
       <Link
         href="/safety"
-        className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+        className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-interactive)] transition-colors"
       >
         &larr; {t("backToAll")}
       </Link>
@@ -116,13 +120,13 @@ export default async function ZonePage({
               className="rounded-sm shrink-0"
             />
             <h1 className="text-3xl font-bold text-[var(--color-text)]">
-              {zone.name}
+              {zoneName}
             </h1>
           </div>
         ) : (
           <div className="mt-4">
             <h1 className="text-3xl font-bold text-[var(--color-text)]">
-              {zone.name}
+              {zoneName}
             </h1>
             {flags.length > 0 && (
               <div className="mt-2 flex items-center gap-1.5">
@@ -149,7 +153,7 @@ export default async function ZonePage({
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">
             {t("zone.currentStatus")}
           </h2>
-          <p>{zone.details}</p>
+          <p>{t(`riskDescriptions.${zone.risk_level}` as "riskDescriptions.do_not_fly")}</p>
         </div>
 
         {/* Source */}
@@ -201,10 +205,10 @@ export default async function ZonePage({
         {/* CTA */}
         <div className="border-t border-[var(--color-border)] pt-8">
           <Link
-            href={`/?q=${encodeURIComponent(`flights avoiding ${zone.name}`)}`}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-accent-hover)] transition-colors"
+            href={`/?q=${encodeURIComponent(`flights avoiding ${zoneName}`)}`}
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-interactive)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-interactive-hover)] transition-colors"
           >
-            {t("zone.searchAvoiding", { zone: zone.name })}
+            {t("zone.searchAvoiding", { zone: zoneName })}
           </Link>
         </div>
       </section>

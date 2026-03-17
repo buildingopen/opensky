@@ -73,10 +73,10 @@ export const RISK_CONFIG: Record<
   string,
   { label: string; color: string }
 > = {
-  do_not_fly: { label: "Do Not Fly", color: "#ef4444" },
-  high_risk: { label: "High Risk", color: "#ff6b35" },
-  caution: { label: "Caution", color: "#f59e0b" },
-  safe: { label: "Safe", color: "#22c55e" },
+  do_not_fly: { label: "Do Not Fly", color: "#b85c5c" },
+  high_risk: { label: "High Risk", color: "#c47a5a" },
+  caution: { label: "Caution", color: "#b8952f" },
+  safe: { label: "Safe", color: "#6b7280" },
 };
 
 /** Primary flag code per zone (for zones without countries, or multi-country zones). */

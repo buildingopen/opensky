@@ -152,7 +152,7 @@ export function SafetyPageClient({ zones, countryRiskMap, zoneMapData, countryTo
                         href={`/safety/${zone.id}`}
                         className={`flex items-center justify-between rounded-lg border px-4 py-3 hover:bg-[var(--color-surface-2)] transition-all ${
                           isHovered
-                            ? "border-[var(--color-accent)] bg-[var(--color-surface-2)] shadow-[0_0_0_1px_var(--color-accent)]"
+                            ? "border-[var(--color-interactive)] bg-[var(--color-surface-2)] shadow-[0_0_0_1px_var(--color-interactive)]"
                             : "border-[var(--color-border)]"
                         }`}
                       >
@@ -171,10 +171,10 @@ export function SafetyPageClient({ zones, countryRiskMap, zoneMapData, countryTo
                           )}
                           <div className="min-w-0">
                             <span className="text-sm font-medium text-[var(--color-text)]">
-                              {zone.name}
+                              {t(`zoneNames.${zone.id}` as "zoneNames.ukraine") || zone.name}
                             </span>
                             <p className="text-xs text-[var(--color-text-muted)] mt-0.5 line-clamp-1">
-                              {zone.details}
+                              {t(`riskDescriptions.${zone.risk_level}` as "riskDescriptions.do_not_fly")}
                             </p>
                           </div>
                         </div>

@@ -89,7 +89,7 @@ export default async function SafetyIndexPage() {
         {t("dataSource")}{" "}
         <Link
           href="/methodology"
-          className="text-[var(--color-accent)] hover:underline"
+          className="text-[var(--color-interactive)] hover:underline"
         >
           {t("learnMore")}
         </Link>

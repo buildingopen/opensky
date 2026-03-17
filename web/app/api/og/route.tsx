@@ -19,10 +19,10 @@ export async function GET(req: NextRequest) {
   const sym = currencySymbol[currency.toUpperCase()] || currency;
 
   const safetyConfig: Record<string, { label: string; color: string }> = {
-    safe: { label: "Safe route", color: "#22c55e" },
-    caution: { label: "Caution zone", color: "#f59e0b" },
-    high_risk: { label: "High risk", color: "#ff6b35" },
-    do_not_fly: { label: "Do not fly", color: "#ef4444" },
+    safe: { label: "Safe route", color: "#6b7280" },
+    caution: { label: "Caution zone", color: "#b8952f" },
+    high_risk: { label: "High risk", color: "#c47a5a" },
+    do_not_fly: { label: "Do not fly", color: "#b85c5c" },
   };
   const s = safetyConfig[safety] || safetyConfig.safe;
 
@@ -57,12 +57,12 @@ export async function GET(req: NextRequest) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
-            <path d="M9 27V11L15 4" stroke="#22c55e" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter" />
-            <path d="M19 27V11L25 4" stroke="#22c55e" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter" />
-            <line x1="4" y1="15" x2="26" y2="15" stroke="#22c55e" stroke-width="2.8" stroke-linecap="square" />
+            <path d="M9 27V11L15 4" stroke="#6C7BF7" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter" />
+            <path d="M19 27V11L25 4" stroke="#6C7BF7" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter" />
+            <line x1="4" y1="15" x2="26" y2="15" stroke="#6C7BF7" stroke-width="2.8" stroke-linecap="square" />
           </svg>
           <div style={{ display: "flex" }}>
-            <span style={{ fontSize: "32px", fontWeight: 700, color: "#22c55e", letterSpacing: "-0.5px" }}>fly</span>
+            <span style={{ fontSize: "32px", fontWeight: 700, color: "#6C7BF7", letterSpacing: "-0.5px" }}>fly</span>
             <span style={{ fontSize: "32px", fontWeight: 700, color: "#ffffff", letterSpacing: "-0.5px" }}>fast</span>
           </div>
         </div>
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-              <span style={{ fontSize: "52px", fontWeight: 700, color: "#22c55e" }}>
+              <span style={{ fontSize: "52px", fontWeight: 700, color: "#6C7BF7" }}>
                 {`from ${sym}${price}`}
               </span>
               {badges.map((b, i) => (

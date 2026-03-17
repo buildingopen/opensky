@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "../i18n/navigation";
 import { locales } from "../i18n/config";
-import { useCurrency, CURRENCIES } from "./CurrencyProvider";
+import { useCurrency, CURRENCIES, CURRENCY_SYMBOLS } from "./CurrencyProvider";
 
 export function SiteHeader() {
   const t = useTranslations("header");
@@ -151,7 +151,7 @@ export function SiteHeader() {
               className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors text-xs font-medium px-1.5 py-1"
               aria-label={t("selectCurrency")}
             >
-              {currency}
+              {CURRENCY_SYMBOLS[currency] || ""} {currency}
             </button>
             {currencyPickerOpen && (
               <div className="absolute end-0 top-full mt-1 w-48 max-h-64 overflow-y-auto bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-xl z-50">
@@ -165,7 +165,7 @@ export function SiteHeader() {
                         : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)]"
                     }`}
                   >
-                    {c}
+                    {CURRENCY_SYMBOLS[c] || ""} {c}
                   </button>
                 ))}
               </div>
@@ -212,7 +212,7 @@ export function SiteHeader() {
             className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors text-xs font-medium"
             aria-label={t("selectCurrency")}
           >
-            {currency}
+            {CURRENCY_SYMBOLS[currency] || ""} {currency}
           </button>
 
           <button

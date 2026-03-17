@@ -289,14 +289,14 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
         <button
           onClick={handleZoomIn}
           className="w-11 h-11 flex items-center justify-center rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors text-lg font-medium"
-          aria-label="Zoom in"
+          aria-label={t("zoomIn")}
         >
           +
         </button>
         <button
           onClick={handleZoomOut}
           className="w-11 h-11 flex items-center justify-center rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors text-lg font-medium"
-          aria-label="Zoom out"
+          aria-label={t("zoomOut")}
         >
           -
         </button>
@@ -304,7 +304,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
           <button
             onClick={handleReset}
             className="w-11 h-11 flex items-center justify-center rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors"
-            aria-label="Reset zoom"
+            aria-label={t("resetZoom")}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" />
@@ -342,7 +342,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
                     </div>
                   )}
                   <span className="text-sm font-semibold text-[var(--color-text)] truncate">
-                    {tooltip.zone.name}
+                    {t(`zoneNames.${tooltip.zone.id}` as "zoneNames.ukraine") || tooltip.zone.name}
                   </span>
                 </div>
                 <span
@@ -355,10 +355,10 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
                   {t(`groupLabels.${tooltip.zone.risk_level}` as "groupLabels.do_not_fly")}
                 </span>
                 <p className="text-[11px] text-[var(--color-text-muted)] line-clamp-2 leading-relaxed">
-                  {tooltip.zone.details}
+                  {t(`riskDescriptions.${tooltip.zone.risk_level}` as "riskDescriptions.do_not_fly")}
                 </p>
-                <p className="text-[10px] text-[var(--color-accent)] mt-1.5">
-                  {isTouch ? "Tap again to view details" : "Click to view details"}
+                <p className="text-[10px] text-[var(--color-interactive)] mt-1.5">
+                  {isTouch ? t("tapToView") : t("clickToView")}
                 </p>
               </>
             ) : (

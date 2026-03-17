@@ -83,7 +83,7 @@ export function ZoneAlertForm({ zones }: Props) {
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-xs text-[var(--color-accent)] hover:underline shrink-0 ml-4"
+          className="text-xs text-[var(--color-interactive)] hover:underline shrink-0 ml-4"
         >
           {expanded ? t("collapse") : t("subscribe")}
         </button>
@@ -99,7 +99,7 @@ export function ZoneAlertForm({ zones }: Props) {
               </span>
               <button
                 onClick={selectAll}
-                className="text-xs text-[var(--color-accent)] hover:underline"
+                className="text-xs text-[var(--color-interactive)] hover:underline"
               >
                 {selected.size === zones.length ? t("deselectAll") : t("selectAll")}
               </button>
@@ -113,7 +113,7 @@ export function ZoneAlertForm({ zones }: Props) {
                     onClick={() => toggle(zone.id)}
                     className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                       isSelected
-                        ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
+                        ? "border-[var(--color-interactive)] bg-[var(--color-interactive)]/10 text-[var(--color-interactive)]"
                         : "border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]"
                     }`}
                   >
@@ -131,12 +131,12 @@ export function ZoneAlertForm({ zones }: Props) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t("emailPlaceholder")}
-              className="flex-1 min-w-0 text-sm px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+              className="flex-1 min-w-0 text-sm px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-interactive)]"
             />
             <button
               onClick={submit}
               disabled={!email || selected.size === 0 || status === "loading"}
-              className="text-sm font-medium px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0"
+              className="text-sm font-medium px-4 py-2 rounded-lg bg-[var(--color-interactive)] text-white disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0"
             >
               {status === "loading" ? t("loading") : t("subscribe")}
             </button>

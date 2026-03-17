@@ -398,7 +398,23 @@
     "description": "Seyahatinizi kendi cümlelerinizle anlatın. FlyFast, Google Flights'ı arar, çatışma bölgelerini filtreler ve en güvenli, en ucuz rotayı bulur. Ücretsiz, giriş gerektirmez.",
     "ogAlt": "FlyFast: seyahatinizi anlatın, en iyi uçuşu bulalım",
     "flightTitle": "{route} {price}'den itibaren - FlyFast",
-    "flightDescription": "{route} için {price}'den başlayan fiyatlar bulundu. Çatışma bölgeleri filtrelendi. FlyFast'te kendi uçuşlarınızı arayın."
+    "flightDescription": "{route} için {price}'den başlayan fiyatlar bulundu. Çatışma bölgeleri filtrelendi. FlyFast'te kendi uçuşlarınızı arayın.",
+    "faq": {
+      "q1": "FlyFast nasıl çalışır?",
+      "a1": "Seyahatinizi doğal dilde yazın, örneğin 'Gelecek hafta Mumbai'den Hamburg'a 300 € altında'. FlyFast, Google Flights'taki tüm uçuşları arar, çatışma bölgelerini filtreler ve fiyat, süre ve rota güvenliğine göre sıralar. Doğrudan havayolu şirketinden rezervasyon yaparsınız.",
+      "q2": "FlyFast ücretsiz mi?",
+      "a2": "Evet. FlyFast tamamen ücretsizdir ve giriş gerektirmez. Saatte 10 arama yapabilirsiniz. Reklam yok, premium plan yok.",
+      "q3": "FlyFast çatışma bölgelerini nasıl filtreler?",
+      "a3": "FlyFast, aktif çatışma bölgeleri, kısıtlı hava sahası ve havacılık uyarıları olan bölgelerin veri setini tutar. Her uçuş rotası bu bölgelerle karşılaştırılır. Yüksek riskli rotalar sonuçlardan çıkarılır. Dikkat seviyesindeki rotalar işaretlenir ve karar size bırakılır. Veriler düzenli olarak güncellenir.",
+      "q4": "Çatışma bölgeleri üzerinden uçmak güvenli mi?",
+      "a4": "Çatışma bölgeleri üzerindeki bazı hava sahaları havacılık otoriteleri tarafından kapatılmış veya kısıtlanmıştır (NOTAMs). Havayolları bu bölgelerin etrafından rota değiştirir, bu da uçuş süresini ve maliyeti artırabilir. FlyFast, hangi rotaların çatışma hava sahasını geçtiğini otomatik olarak kontrol eder ve filtreler veya işaretler. Rezervasyon yapmadan önce her zaman hükümetinizin resmi seyahat uyarılarını kontrol edin.",
+      "q5": "Çatışma bölgelerinden kaçınan ucuz uçuşları nasıl bulurum?",
+      "a5": "FlyFast'te doğal dilde bir sorgu yazın, örneğin 'Londra'dan Bangkok'a en ucuz uçuş, çatışma bölgelerinden kaçınarak'. FlyFast, Google Flights'taki tüm uçuşları arar, yüksek riskli hava sahasından geçen rotaları kaldırır ve kalan seçenekleri fiyata göre sıralar. En ucuz günü bulmak için esnek tarihler de belirleyebilirsiniz.",
+      "q6": "FlyFast hangi havayollarını arar?",
+      "a6": "FlyFast, Google Flights'taki tüm uçuşları arar; tüm büyük havayolları, düşük maliyetli havayolları ve dünya çapında çok havayollu güzergahları kapsar.",
+      "q7": "Çok şehirli veya karmaşık rotalar arayabilir miyim?",
+      "a7": "Evet. FlyFast çok şehirli aramaları, esnek tarihleri, yakın havalimanlarını ve bütçe kısıtlamalarını yönetir. Tüm kalkış-varış-tarih kombinasyonlarını arar ve en iyi seçenekleri sıralar."
+    }
   },
   "privacy": {
     "title": "Gizlilik Politikası - FlyFast",

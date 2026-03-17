@@ -443,12 +443,12 @@ function PreviewLoc({ text, airports }: { text: string; airports: { iata: string
   if (airports.length <= 1) return <span>{text}</span>;
   return (
     <span className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
-      <span className="cursor-help border-b border-dotted border-[var(--color-accent)]/30">{text}</span>
+      <span className="cursor-help border-b border-dotted border-[var(--color-interactive)]/30">{text}</span>
       {show && (
         <span className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
           {airports.map((a) => (
             <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap overflow-hidden text-ellipsis" style={{ maxWidth: 200 }}>
-              <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
+              <span className="font-mono text-[var(--color-interactive)] font-semibold">{a.iata}</span>{" "}
               <span className="text-[var(--color-text-muted)]">{a.city}</span>
             </span>
           ))}
@@ -574,19 +574,12 @@ function flightDisplayDate(flight: FlightOut): string {
 function priceToColor(price: number | null, min: number, max: number): string {
   if (price == null || min === max) return "transparent";
   const ratio = Math.min(1, Math.max(0, (price - min) / (max - min)));
-  // green -> amber -> red
-  if (ratio <= 0.5) {
-    const t = ratio * 2;
-    const r = Math.round(34 + t * (234 - 34));
-    const g = Math.round(197 + t * (179 - 197));
-    const b = Math.round(94 + t * (8 - 94));
-    return `rgb(${r},${g},${b})`;
-  }
-  const t = (ratio - 0.5) * 2;
-  const r = Math.round(234 + t * (239 - 234));
-  const g = Math.round(179 + t * (68 - 179));
-  const b = Math.round(8 + t * (68 - 8));
-  return `rgb(${r},${g},${b})`;
+  // Monochromatic indigo scale: bright indigo (cheap) -> muted indigo (expensive)
+  const r = Math.round(108 - ratio * 50);
+  const g = Math.round(123 - ratio * 55);
+  const b = Math.round(247 - ratio * 80);
+  const a = 0.9 - ratio * 0.35;
+  return `rgba(${r},${g},${b},${a})`;
 }
 
 function safeUrl(url: string): string | null {
@@ -825,14 +818,14 @@ function FlightCard({
     attributionParams
   );
   return (
-    <div className={`bg-[var(--color-surface)] border rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors ${
+    <div className={`bg-[var(--color-surface)] border rounded-xl p-4 sm:p-5 hover:border-[var(--color-interactive)]/30 transition-colors ${
       label === "Recommended"
-        ? "border-[var(--color-accent)]/40 ring-1 ring-[var(--color-accent)]/20"
+        ? "border-[var(--color-interactive)]/40 ring-1 ring-[var(--color-interactive)]/20"
         : "border-[var(--color-border)]"
     }`}>
       {label && (
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wider">{label}</span>
+          <span className="text-xs font-semibold text-[var(--color-interactive)] uppercase tracking-wider">{label}</span>
           {reason && <span className="text-xs text-[var(--color-text-muted)]">{reason}</span>}
         </div>
       )}
@@ -869,7 +862,7 @@ function FlightCard({
                   rel="noopener noreferrer"
                   onClick={() => onOutboundClick("booking", flight)}
                   aria-label="Book direct"
-                  className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                  className="px-4 py-2 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-black text-sm font-medium rounded-lg transition-colors"
                 >
                   Book direct
                 </a>
@@ -881,7 +874,7 @@ function FlightCard({
                     rel="noopener noreferrer"
                     onClick={() => onOutboundClick("google", flight)}
                     aria-label="View on Google Flights"
-                    className="px-3 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                    className="px-3 py-2 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-black text-sm font-medium rounded-lg transition-colors"
                   >
                     Google Flights <ExternalLinkIcon />
                   </a>
@@ -894,7 +887,7 @@ function FlightCard({
       {flight.legs.length > 1 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+          className="mt-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-interactive)]"
           aria-expanded={expanded}
         >
           {expanded ? "Hide details" : `Show ${flight.legs.length} segments`}
@@ -904,7 +897,7 @@ function FlightCard({
         <div className="mt-3 pt-3 border-t border-[var(--color-border)] space-y-2">
           {flight.legs.map((leg, i) => (
             <div key={i} className="flex items-center gap-3 text-sm">
-              <span className="font-mono text-xs text-[var(--color-accent)] w-14 inline-flex items-center gap-1">
+              <span className="font-mono text-xs text-[var(--color-interactive)] w-14 inline-flex items-center gap-1">
                 {leg.airline && leg.airline !== "ZZ" && (
                   <img
                     src={`https://images.kiwi.com/airlines/64/${leg.airline}.png`}
@@ -1006,7 +999,7 @@ function RoundTripFlightRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onOutboundClick("booking", flight)}
-            className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
+            className="px-3 py-1.5 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-black text-xs font-medium rounded-lg transition-colors"
           >
             Book <ExternalLinkIcon />
           </a>
@@ -1016,7 +1009,7 @@ function RoundTripFlightRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onOutboundClick("google", flight)}
-            className="px-3 py-1.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-black text-xs font-medium rounded-lg transition-colors"
+            className="px-3 py-1.5 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-black text-xs font-medium rounded-lg transition-colors"
           >
             Google Flights <ExternalLinkIcon />
           </a>
@@ -1042,14 +1035,14 @@ function RoundTripCard({
   const { outbound, inbound, total_price, currency, risk_level } = result;
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 hover:border-[var(--color-accent)]/30 transition-colors">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 hover:border-[var(--color-interactive)]/30 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <div className="flex gap-3">
             <div className="flex flex-col items-center pt-4 shrink-0">
-              <div className="w-5 h-5 rounded-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-accent)]">1</div>
+              <div className="w-5 h-5 rounded-full bg-[var(--color-interactive)]/20 border border-[var(--color-interactive)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-interactive)]">1</div>
               <div className="w-px flex-1 bg-[var(--color-border)] my-1" />
-              <div className="w-5 h-5 rounded-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-accent)]">2</div>
+              <div className="w-5 h-5 rounded-full bg-[var(--color-interactive)]/20 border border-[var(--color-interactive)]/40 flex items-center justify-center text-[10px] font-bold text-[var(--color-interactive)]">2</div>
             </div>
             <div className="flex-1 divide-y divide-[var(--color-border)]">
               <RoundTripFlightRow flight={outbound} label="Step 1: Book outbound" airportNames={airportNames} attributionParams={attributionParams} onOutboundClick={onOutboundClick} cabin={cabin} />
@@ -1060,7 +1053,7 @@ function RoundTripCard({
         <div className="flex flex-col items-end gap-1 pt-2 shrink-0">
           {total_price > 0 && (
             <div className="text-right">
-              <div className="text-2xl font-bold text-[var(--color-accent)]">
+              <div className="text-2xl font-bold text-[var(--color-interactive)]">
                 {currencySymbol(currency)}{Math.round(total_price)}
               </div>
               <div className="text-[10px] text-[var(--color-text-muted)]">combined total</div>
@@ -1107,9 +1100,9 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
   return (
     <div className="text-center py-12">
       <div className="inline-flex items-center gap-3 mb-4">
-        <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-pulse" />
-        <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-pulse" style={{ animationDelay: "0.3s" }} />
-        <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-pulse" style={{ animationDelay: "0.6s" }} />
+        <div className="w-2 h-2 rounded-full bg-[var(--color-interactive)] animate-pulse" />
+        <div className="w-2 h-2 rounded-full bg-[var(--color-interactive)] animate-pulse" style={{ animationDelay: "0.3s" }} />
+        <div className="w-2 h-2 rounded-full bg-[var(--color-interactive)] animate-pulse" style={{ animationDelay: "0.6s" }} />
       </div>
       {progress && parsed ? (
         <>
@@ -1118,7 +1111,7 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
           </p>
           <p className="text-sm text-[var(--color-text-muted)] mt-1 font-mono">{progress.route} on {formatDate(progress.date)}</p>
           <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-            <div className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
+            <div className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-300" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
           </div>
           <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
             {progress.done}/{progress.total} checked {timeLabel ? `· ${timeLabel}` : ""}
@@ -1147,7 +1140,7 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
         <>
           <p className="text-[var(--color-text-muted)]">Understanding your trip...</p>
           <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-            <div className="h-full bg-[var(--color-accent)] opacity-60 rounded-full shimmer-bar" />
+            <div className="h-full bg-[var(--color-interactive)] opacity-60 rounded-full shimmer-bar" />
           </div>
         </>
       )}
@@ -1189,14 +1182,14 @@ function CompactFlightRow({
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-sm font-semibold text-[var(--color-accent)]">
+        <span className="text-sm font-semibold text-[var(--color-interactive)]">
           {flight.price > 0 ? `${sym}${Math.round(flight.price)}` : "-"}
         </span>
         <a
           href={safeUrl(googleUrl) || "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-[var(--color-accent)] hover:underline"
+          className="text-xs text-[var(--color-interactive)] hover:underline"
         >
           Google <ExternalLinkIcon />
         </a>
@@ -1230,7 +1223,7 @@ function ScanSummaryCollapsed({
     <div className="mt-4">
       <button
         onClick={onExpand}
-        className="text-sm text-[var(--color-accent)] hover:underline"
+        className="text-sm text-[var(--color-interactive)] hover:underline"
       >
         Compare all options ({totalFlights} flight{totalFlights !== 1 ? "s" : ""}, {destCount} destination{destCount !== 1 ? "s" : ""})
       </button>
@@ -1287,7 +1280,7 @@ function ScanSummaryExpanded({
 
   return (
     <div className="mt-4 space-y-4">
-      <button onClick={onCollapse} className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)]">
+      <button onClick={onCollapse} className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-interactive)]">
         Hide comparison
       </button>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
@@ -1320,7 +1313,7 @@ function ScanSummaryExpanded({
                   </div>
                   <span className="text-[var(--color-text-muted)] text-xs shrink-0">{formatDate(f.date)}</span>
                   {gfUrl && (
-                    <a href={gfUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-accent)] hover:underline shrink-0">
+                    <a href={gfUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-interactive)] hover:underline shrink-0">
                       Google <ExternalLinkIcon />
                     </a>
                   )}
@@ -1428,7 +1421,7 @@ function ScanSummaryExpanded({
           {/* Color legend */}
           <div className="px-4 py-2.5 border-t border-[var(--color-border)] flex items-center gap-2">
             <span className="text-xs text-[var(--color-text-muted)]">Cheapest</span>
-            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, var(--color-safe), var(--color-caution), var(--color-danger))" }} />
+            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgba(108,123,247,0.9), rgba(58,68,167,0.55))" }} />
             <span className="text-xs text-[var(--color-text-muted)]">Most expensive</span>
           </div>
         </div>
@@ -1506,7 +1499,7 @@ function PriceAlertSection({
           placeholder="your@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 min-w-[180px] px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+          className="flex-1 min-w-[180px] px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-interactive)]"
         />
         <div className="flex items-center gap-1">
           <span className="text-sm text-[var(--color-text-muted)]">{sym}</span>
@@ -1515,13 +1508,13 @@ function PriceAlertSection({
             placeholder="Max price"
             value={threshold}
             onChange={(e) => setThreshold(e.target.value)}
-            className="w-24 px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+            className="w-24 px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-interactive)]"
           />
         </div>
         <button
           onClick={handleSubmit}
           disabled={status === "loading" || !email.trim()}
-          className="px-4 py-1.5 text-sm font-medium bg-[var(--color-accent)] text-black rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="px-4 py-1.5 text-sm font-medium bg-[var(--color-interactive)] text-black rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
         >
           {status === "loading" ? "Setting..." : "Set alert"}
         </button>
@@ -1568,7 +1561,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
           <span>{collapsedDates}</span>
         )}
         {isRoundTrip && (
-          <span className="px-1.5 py-0.5 rounded bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium">
+          <span className="px-1.5 py-0.5 rounded bg-[var(--color-interactive)]/10 border border-[var(--color-interactive)]/20 text-[var(--color-interactive)] font-medium">
             Round trip → {return_dates.length <= 2 ? return_dates.map((d) => formatDate(d)).join(", ") : `${formatDate(return_dates[0])} + ${return_dates.length - 1} more`}
           </span>
         )}
@@ -1617,7 +1610,7 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Er
           <div className="text-center max-w-md px-4">
             <h2 className="text-xl font-semibold text-[var(--color-text)] mb-2">Something went wrong</h2>
             <p className="text-sm text-[var(--color-text-muted)] mb-4">Please refresh the page.</p>
-            <button onClick={() => { this.setState({ error: null }); window.location.reload(); }} className="px-4 py-2 bg-[var(--color-accent)] text-black text-sm font-medium rounded-lg">
+            <button onClick={() => { this.setState({ error: null }); window.location.reload(); }} className="px-4 py-2 bg-[var(--color-interactive)] text-black text-sm font-medium rounded-lg">
               Refresh
             </button>
           </div>
@@ -2305,8 +2298,8 @@ function HomePage() {
         const sym = currencySymbol(sharedCurrency);
         return (
           <div className="max-w-3xl mx-auto px-4 pt-4">
-            <div className="text-sm bg-[var(--color-surface)] border border-[var(--color-accent)]/20 rounded-lg px-4 py-3 flex items-start gap-3">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-[var(--color-accent)] shrink-0 mt-0.5"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg>
+            <div className="text-sm bg-[var(--color-surface)] border border-[var(--color-interactive)]/20 rounded-lg px-4 py-3 flex items-start gap-3">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-[var(--color-interactive)] shrink-0 mt-0.5"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg>
               <div>
                 <p className="text-[var(--color-text)] font-medium">
                   {sharedRoute && sharedPrice
@@ -2335,18 +2328,9 @@ function HomePage() {
         {/* Search surface */}
         <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-white/[0.06] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
           {hasResults ? (
-            /* Compact mode: single-line query display with action button */
+            /* Compact mode: original prompt + action */
             <div className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-[var(--color-text)]/70 truncate">{prompt || [form.from, form.to, form.depart].filter(Boolean).join(" → ")}</p>
-                {queryPreview && (
-                  <p className="text-[11px] text-[var(--color-accent)]/60 truncate mt-0.5">
-                    {queryPreview.origin}
-                    {queryPreview.dest && <> <span className="opacity-80">{"\u2192"}</span> {queryPreview.dest}</>}
-                    {queryPreview.date && <> <span className="opacity-60">{"\u00B7"}</span> <span className="text-[var(--color-text-muted)]">{queryPreview.date}</span></>}
-                  </p>
-                )}
-              </div>
+              {prompt && <p className="text-[12px] text-[var(--color-text-muted)]/60 truncate min-w-0 flex-1">{prompt}</p>}
               {isLoading ? (
                 <button
                   onClick={cancelSearch}
@@ -2395,10 +2379,10 @@ function HomePage() {
                         value={form.depart}
                         onChange={(e) => setForm((f) => ({ ...f, depart: e.target.value }))}
                         disabled={isLoading}
-                        className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors"
+                        className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-interactive)]/50 transition-colors"
                       />
                       <label className="flex items-center gap-1.5 mt-1.5 text-[11px] text-[var(--color-text-muted)] cursor-pointer select-none">
-                        <input type="checkbox" checked={form.flexibleDates} onChange={(e) => setForm((f) => ({ ...f, flexibleDates: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" aria-label="Search flexible dates" />
+                        <input type="checkbox" checked={form.flexibleDates} onChange={(e) => setForm((f) => ({ ...f, flexibleDates: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-interactive)]" aria-label="Search flexible dates" />
                         +/- 3 days
                       </label>
                     </div>
@@ -2410,7 +2394,7 @@ function HomePage() {
                         value={form.returnDate}
                         onChange={(e) => setForm((f) => ({ ...f, returnDate: e.target.value }))}
                         disabled={isLoading || !form.roundTrip}
-                        className={`w-full bg-[var(--color-background)] border rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 transition-colors disabled:opacity-30 ${returnDateInvalid ? "border-[var(--color-danger)]" : "border-[var(--color-border)]"}`}
+                        className={`w-full bg-[var(--color-background)] border rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-interactive)]/50 transition-colors disabled:opacity-30 ${returnDateInvalid ? "border-[var(--color-danger)]" : "border-[var(--color-border)]"}`}
                       />
                       {returnDateInvalid && (
                         <p className="mt-1 text-[11px] text-[var(--color-danger)]">Return must be after departure</p>
@@ -2419,15 +2403,15 @@ function HomePage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5">
                     <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] cursor-pointer select-none">
-                      <input type="checkbox" checked={form.roundTrip} onChange={(e) => setForm((f) => ({ ...f, roundTrip: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
+                      <input type="checkbox" checked={form.roundTrip} onChange={(e) => setForm((f) => ({ ...f, roundTrip: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-interactive)]" />
                       Round trip
                     </label>
                     <label className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] cursor-pointer select-none">
-                      <input type="checkbox" checked={form.directOnly} onChange={(e) => setForm((f) => ({ ...f, directOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
+                      <input type="checkbox" checked={form.directOnly} onChange={(e) => setForm((f) => ({ ...f, directOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-interactive)]" />
                       Direct only
                     </label>
-                    <label className="flex items-center gap-2 text-sm text-[var(--color-accent)] cursor-pointer select-none" title="Filter out routes through conflict zones">
-                      <input type="checkbox" checked={form.safeOnly} onChange={(e) => setForm((f) => ({ ...f, safeOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
+                    <label className="flex items-center gap-2 text-sm text-[var(--color-safe)] cursor-pointer select-none" title="Filter out routes through conflict zones">
+                      <input type="checkbox" checked={form.safeOnly} onChange={(e) => setForm((f) => ({ ...f, safeOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-safe)]" />
                       Safe routes only
                     </label>
                     <div className="flex items-center gap-2">
@@ -2435,7 +2419,7 @@ function HomePage() {
                         value={form.cabin}
                         onChange={(e) => setForm((f) => ({ ...f, cabin: e.target.value }))}
                         disabled={isLoading}
-                        className="bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-accent)]/50 cursor-pointer"
+                        className="bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-interactive)]/50 cursor-pointer"
                       >
                         <option value="economy">Economy</option>
                         <option value="premium_economy">Premium</option>
@@ -2452,7 +2436,7 @@ function HomePage() {
                         value={form.maxPrice}
                         onChange={(e) => setForm((f) => ({ ...f, maxPrice: e.target.value }))}
                         disabled={isLoading}
-                        className="w-20 bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none focus:border-[var(--color-accent)]/50"
+                        className="w-20 bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none focus:border-[var(--color-interactive)]/50"
                       />
                     </div>
                   </div>
@@ -2485,7 +2469,7 @@ function HomePage() {
                   {searchMode === "natural" && queryPreview && (
                     <div className="hidden sm:flex items-center gap-3 min-w-0">
                       <span className="text-[var(--color-border)] select-none">|</span>
-                      <p className="text-[11px] text-[var(--color-accent)]/80 transition-opacity duration-300 flex items-center gap-0 min-w-0 overflow-visible">
+                      <p className="text-[11px] text-[var(--color-interactive)]/80 transition-opacity duration-300 flex items-center gap-0 min-w-0 overflow-visible">
                         <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
                         {queryPreview.dest && <><span className="opacity-80 mx-1">{"\u2192"}</span><PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
                         {queryPreview.date && <> <span className="opacity-60 mx-1">{"\u00B7"}</span> <span className="text-[var(--color-text-muted)]">{queryPreview.date}</span></>}
@@ -2499,7 +2483,7 @@ function HomePage() {
                     onClick={() => search()}
                     disabled={!canSearch()}
                     aria-label="Search flights"
-                    className="px-6 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-25 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-[0_0_28px_rgba(34,197,94,0.2)]"
+                    className="px-6 py-2.5 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] disabled:opacity-25 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-[0_0_28px_rgba(34,197,94,0.2)]"
                   >
                     Search
                   </button>
@@ -2566,7 +2550,7 @@ function HomePage() {
                     <button
                       key={i}
                       onClick={() => { setSearchMode("natural"); setPrompt(s); search(s); }}
-                      className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
+                      className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-interactive)] hover:text-[var(--color-interactive)] transition-colors"
                     >
                       {s}
                     </button>
@@ -2636,15 +2620,15 @@ function HomePage() {
 
             {/* Expand search progress (shown at top of results) */}
             {expandPhase === "expanding" && (
-              <div className="mt-3 w-full bg-[var(--color-surface)] border border-[var(--color-accent)]/30 rounded-lg px-4 py-3">
+              <div className="mt-3 w-full bg-[var(--color-surface)] border border-[var(--color-interactive)]/30 rounded-lg px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin shrink-0" />
+                  <div className="w-4 h-4 border-2 border-[var(--color-interactive)] border-t-transparent rounded-full animate-spin shrink-0" />
                   <div className="flex-1 min-w-0">
                     <span className="text-sm text-[var(--color-text)]">Expanding search{expansionInfo ? `: ${expansionInfo}` : "..."}</span>
                     {expandProgress && (
                       <div className="mt-1.5 h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300"
+                          className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-300"
                           style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
                         />
                       </div>
@@ -2663,8 +2647,8 @@ function HomePage() {
 
             {/* Round-trip total */}
             {roundTripTotal != null && (
-              <div className="mt-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-lg px-4 py-3 text-sm">
-                <span className="text-[var(--color-accent)] font-semibold">Round trip from {currencySymbol(parsed.currency)}{Math.round(roundTripTotal)}</span>
+              <div className="mt-4 bg-[var(--color-interactive)]/10 border border-[var(--color-interactive)]/20 rounded-lg px-4 py-3 text-sm">
+                <span className="text-[var(--color-interactive)] font-semibold">Round trip from {currencySymbol(parsed.currency)}{Math.round(roundTripTotal)}</span>
               </div>
             )}
 
@@ -2677,7 +2661,7 @@ function HomePage() {
                       Google Flights was slow to respond. This usually works on a second try.
                     </p>
                     <div className="flex flex-col items-center gap-2 mt-2">
-                      <button onClick={() => search()} className="px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-black rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors">
+                      <button onClick={() => search()} className="px-4 py-2 text-sm font-medium bg-[var(--color-interactive)] text-black rounded-lg hover:bg-[var(--color-interactive-hover)] transition-colors">
                         Try again
                       </button>
                       <p className="text-xs text-[var(--color-text-muted)]">
@@ -2733,11 +2717,11 @@ function HomePage() {
 
                 {/* Partial results banner */}
                 {isPartial && flights.length > 0 && (
-                  <div className="mt-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg px-4 py-3 flex items-center justify-between">
+                  <div className="mt-4 bg-[var(--color-interactive)]/10 border border-[var(--color-interactive)]/30 rounded-lg px-4 py-3 flex items-center justify-between">
                     <p className="text-sm text-[var(--color-text-muted)]">
                       We found {flights.length} flight{flights.length !== 1 ? "s" : ""} but couldn&apos;t check all dates. Some options may be missing.
                     </p>
-                    <button onClick={() => search()} className="text-sm font-medium text-[var(--color-accent)] hover:underline whitespace-nowrap ml-4">
+                    <button onClick={() => search()} className="text-sm font-medium text-[var(--color-interactive)] hover:underline whitespace-nowrap ml-4">
                       Try again
                     </button>
                   </div>
@@ -2750,7 +2734,7 @@ function HomePage() {
                       onClick={() => setTripTab("roundtrip")}
                       className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                         tripTab === "roundtrip"
-                          ? "bg-[var(--color-accent)] text-black font-medium"
+                          ? "bg-[var(--color-interactive)] text-black font-medium"
                           : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
                       }`}
                     >
@@ -2760,7 +2744,7 @@ function HomePage() {
                       onClick={() => setTripTab("oneway")}
                       className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                         tripTab === "oneway"
-                          ? "bg-[var(--color-accent)] text-black font-medium"
+                          ? "bg-[var(--color-interactive)] text-black font-medium"
                           : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
                       }`}
                     >
@@ -2795,7 +2779,7 @@ function HomePage() {
                           >
                             {copyFeedback ? (
                               <>
-                                <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[var(--color-accent)]" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
+                                <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[var(--color-interactive)]" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
                                 Copied!
                               </>
                             ) : (
@@ -2910,13 +2894,13 @@ function HomePage() {
                     {expandPhase === "idle" && (
                       <button
                         onClick={expandSearch}
-                        className="w-full flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 hover:border-[var(--color-accent)]/40 transition-colors group"
+                        className="w-full flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 hover:border-[var(--color-interactive)]/40 transition-colors group"
                       >
                         <div className="text-left">
-                          <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-accent)] transition-colors">Expand search</span>
+                          <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-interactive)] transition-colors">Expand search</span>
                           <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Find more options with nearby airports and flexible dates</p>
                         </div>
-                        <svg viewBox="0 0 20 20" className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] transition-colors shrink-0" fill="currentColor">
+                        <svg viewBox="0 0 20 20" className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-interactive)] transition-colors shrink-0" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
                         </svg>
                       </button>
@@ -2928,7 +2912,7 @@ function HomePage() {
                     )}
                     {expandPhase === "done" && !expandError && expandCount > 0 && (
                       <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
-                        <span className="text-[var(--color-accent)]">+{expandCount} flight{expandCount !== 1 ? "s" : ""} added from nearby airports</span>
+                        <span className="text-[var(--color-interactive)]">+{expandCount} flight{expandCount !== 1 ? "s" : ""} added from nearby airports</span>
                       </div>
                     )}
                   </div>
@@ -2948,7 +2932,7 @@ function HomePage() {
                     <div className="mt-4 flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5">
                       <p className="text-sm text-[var(--color-text-muted)]">
                         {destName ? `Know someone flying to ${destName}?` : "Know someone who might want these flights?"}{" "}
-                        <button onClick={() => { handleCopyLink(); setShareCTADismissed(true); }} className="text-[var(--color-accent)] hover:underline font-medium">
+                        <button onClick={() => { handleCopyLink(); setShareCTADismissed(true); }} className="text-[var(--color-interactive)] hover:underline font-medium">
                           Share these results
                         </button>
                       </p>
@@ -2977,8 +2961,8 @@ function HomePage() {
                         >
                           {copyFeedback ? (
                             <>
-                              <svg viewBox="0 0 16 16" className="w-4 h-4 text-[var(--color-accent)] shrink-0" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
-                              <span className="text-[var(--color-accent)] font-medium">Copied!</span>
+                              <svg viewBox="0 0 16 16" className="w-4 h-4 text-[var(--color-interactive)] shrink-0" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
+                              <span className="text-[var(--color-interactive)] font-medium">Copied!</span>
                             </>
                           ) : (
                             <>
@@ -3001,7 +2985,7 @@ function HomePage() {
                   </div>
                   <span className="text-xs text-[var(--color-text-muted)]">
                     You book with the provider, not us.{" "}
-                    <a href="/methodology" className="text-[var(--color-accent)] hover:underline">How we rank</a>
+                    <a href="/methodology" className="text-[var(--color-interactive)] hover:underline">How we rank</a>
                   </span>
                   {/* zonesWarning is dev/CLI info, not user-facing */}
                 </div>
@@ -3027,7 +3011,7 @@ function HomePage() {
                 setAttributionParams((prev) => ({ ...prev, ref: "organic", utm_source: undefined }));
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+              className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-interactive)] transition-colors"
             >
               New search
             </button>
@@ -3054,7 +3038,7 @@ function HomePage() {
             </button>
           </div>
           {popupStatus === "success" ? (
-            <p className="text-sm text-[var(--color-accent)]">
+            <p className="text-sm text-[var(--color-interactive)]">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block mr-1 -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
               Alert set! We&apos;ll email you.
             </p>
@@ -3065,7 +3049,7 @@ function HomePage() {
                 placeholder="your@email.com"
                 value={popupEmail}
                 onChange={(e) => setPopupEmail(e.target.value)}
-                className="w-full px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                className="w-full px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-interactive)]"
               />
               <div className="flex gap-2">
                 <div className="flex items-center gap-1 flex-1">
@@ -3075,7 +3059,7 @@ function HomePage() {
                     placeholder={flights[0] ? String(Math.round(flights[0].price)) : "Max"}
                     value={popupThreshold}
                     onChange={(e) => setPopupThreshold(e.target.value)}
-                    className="w-full px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                    className="w-full px-3 py-1.5 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-interactive)]"
                   />
                 </div>
                 <button
@@ -3106,7 +3090,7 @@ function HomePage() {
                       setPopupStatus("idle");
                     }
                   }}
-                  className="px-3 py-1.5 text-sm font-medium bg-[var(--color-accent)] text-black rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors disabled:opacity-50 whitespace-nowrap"
+                  className="px-3 py-1.5 text-sm font-medium bg-[var(--color-interactive)] text-black rounded-lg hover:bg-[var(--color-interactive-hover)] transition-colors disabled:opacity-50 whitespace-nowrap"
                 >
                   {popupStatus === "loading" ? "..." : "Set alert"}
                 </button>
