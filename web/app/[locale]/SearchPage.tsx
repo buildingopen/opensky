@@ -599,7 +599,9 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
   }
 
   // Pattern 1: explicit "from X to Y" (Latin + Arabic) - greedy dest capture
-  const fromToRe = new RegExp(`(?:^|\\s)(?:${FROM}|${AR_FROM})\\s+(${W}+?)\\s+(?:${TO}|${TO_SHORT}|${AR_TO})\\s+(${W}+)$`, "iu");
+  // Dest group uses (.+)$ instead of (W+)$ to handle currency symbols ($, €, £) and other special chars;
+  // trimToLocation() handles trimming to valid location
+  const fromToRe = new RegExp(`(?:^|\\s)(?:${FROM}|${AR_FROM})\\s+(${W}+?)\\s+(?:${TO}|${TO_SHORT}|${AR_TO})\\s+(.+)$`, "iu");
   const fromTo = lower.match(fromToRe);
   if (fromTo) {
     const orig = fromTo[1].replace(NOISE, "").trim();
@@ -608,7 +610,7 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
   }
 
   // Pattern 2: "X to Y" with full "to" words (Latin) - greedy dest capture
-  const simpleToRe = new RegExp(`(${W}+?)\\s+(?:${TO})\\s+(${W}+)$`, "iu");
+  const simpleToRe = new RegExp(`(${W}+?)\\s+(?:${TO})\\s+(.+)$`, "iu");
   const simpleTo = lower.match(simpleToRe);
   if (simpleTo) {
     const orig = simpleTo[1].replace(NOISE, "").trim();
@@ -617,7 +619,7 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
   }
 
   // Pattern 3: "X a Y" / "X à Y" (short preposition) - greedy dest capture
-  const shortToRe = new RegExp(`(${W}+?)\\s+(?:${TO_SHORT})\\s+(${W}+)$`, "iu");
+  const shortToRe = new RegExp(`(${W}+?)\\s+(?:${TO_SHORT})\\s+(.+)$`, "iu");
   const shortTo = lower.match(shortToRe);
   if (shortTo) {
     const orig = shortTo[1].replace(NOISE, "").trim();
@@ -766,16 +768,34 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
     const extracted = extractOriginDest(lower);
     if (extracted) {
       const { originPhrase, destPhrase } = extracted;
-      // Find origin position in original (case-insensitive)
-      const oi = lower.indexOf(originPhrase);
-      if (oi >= 0) {
-        const loc = matchLocation(originPhrase, !!destPhrase);
-        if (loc) ranges.push({ start: oi, end: oi + originPhrase.length, type: "origin", airports: loc.airports });
+      // Handle "X or/o/ou/oder Y" multi-origin patterns (same as useQueryPreview)
+      const orParts = originPhrase.split(/\s+(?:or|o|ou|oder|oppure)\s+/);
+      let lastOriginEnd = 0;
+      if (orParts.length > 1) {
+        // Multi-origin: find and highlight each part separately
+        let searchFrom = lower.indexOf(originPhrase);
+        if (searchFrom < 0) searchFrom = 0;
+        for (const part of orParts) {
+          const pi = lower.indexOf(part.trim(), searchFrom);
+          if (pi >= 0) {
+            const loc = matchLocation(part.trim(), true);
+            if (loc) ranges.push({ start: pi, end: pi + part.trim().length, type: "origin", airports: loc.airports });
+            searchFrom = pi + part.trim().length;
+            lastOriginEnd = searchFrom;
+          }
+        }
+      } else {
+        // Single origin
+        const oi = lower.indexOf(originPhrase);
+        if (oi >= 0) {
+          const loc = matchLocation(originPhrase, !!destPhrase);
+          if (loc) ranges.push({ start: oi, end: oi + originPhrase.length, type: "origin", airports: loc.airports });
+          lastOriginEnd = oi + originPhrase.length;
+        }
       }
       // Find dest position
       if (destPhrase) {
-        // Search after origin to avoid overlap
-        const di = lower.indexOf(destPhrase, oi >= 0 ? oi + originPhrase.length : 0);
+        const di = lower.indexOf(destPhrase, lastOriginEnd);
         if (di >= 0) {
           const loc = matchLocation(destPhrase, true);
           if (loc) ranges.push({ start: di, end: di + destPhrase.length, type: "dest", airports: loc.airports });
@@ -870,7 +890,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       /(केवल\s+सुरक्षित(?:\s+मार्ग)?)/i, // hi
       /(مسارات?\s+آمنة?\s+فقط|آمنة?\s+فقط)/i, // ar
       // Direct / nonstop (en, de, es, fr, it, pt, tr, zh, ja, ko, hi, ar)
-      /\b(nonstop|non-stop|direct\s+(?:flights?\s*)?only)\b/i,
+      /\b(nonstop|non-stop|direct\s+(?:flights?\s*)?only|direct(?:\s+flights?)?)\b/i,
       /(nur\s+direkt(?:flüge)?|nonstop)/i, // de
       /(solo\s+directo)/i, // es
       /((?:vols?\s+)?directs?\s+uniquement)/i, // fr
