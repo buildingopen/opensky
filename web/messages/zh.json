@@ -62,6 +62,7 @@
     "placeholder": "例如：北京到东京，下周，3000元以内，商务舱",
     "ariaLabel": "用自然语言描述你的行程",
     "enterToSearch": "按回车搜索",
+    "preview": "预览：",
     "searchFlights": "搜索航班",
     "describeTrip": "改用自然语言描述行程",
     "useForm": "改用表单搜索",
@@ -94,7 +95,7 @@
     ],
     "timeSaved": "FlyFast为你节省了约{time}的手动搜索时间",
     "loading": {
-      "understanding": "正在理解你的行程...",
+      "understanding": "正在解析目的地、日期和偏好...",
       "agentsChecking": "{workers}个智能体正在谷歌航班上检查{total}个组合",
       "checkingRoute": "正在查询{date}的{route}",
       "checked": "已查询 {done}/{total}",

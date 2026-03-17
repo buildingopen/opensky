@@ -62,6 +62,7 @@
     "placeholder": "例: NRTからロンドン、来週、5万円以内、ビジネスクラス",
     "ariaLabel": "旅の内容を日本語で入力してください",
     "enterToSearch": "Enterで検索",
+    "preview": "プレビュー：",
     "searchFlights": "フライト検索",
     "describeTrip": "旅の内容を入力して検索",
     "useForm": "フォームで検索",
@@ -94,7 +95,7 @@
     ],
     "timeSaved": "FlyFastで手動検索の約{time}を節約しました",
     "loading": {
-      "understanding": "旅の内容を解析中...",
+      "understanding": "目的地・日程・条件を解析中...",
       "agentsChecking": "{workers}つのエージェントがGoogle Flightsで{total}の組み合わせを確認中",
       "checkingRoute": "{date}の{route}を確認中",
       "checked": "{done}/{total} 確認済み",

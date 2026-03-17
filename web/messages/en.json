@@ -71,6 +71,7 @@
     },
     "ariaLabel": "Describe your trip in plain English",
     "enterToSearch": "Enter to search",
+    "preview": "Preview:",
     "searchFlights": "Search flights",
     "describeTrip": "Describe your trip instead",
     "useForm": "Use search form instead",
@@ -103,7 +104,7 @@
     ],
     "timeSaved": "FlyFast saved you ~{time} of manual searching",
     "loading": {
-      "understanding": "Understanding your trip...",
+      "understanding": "Interpreting destinations, dates & preferences...",
       "agentsChecking": "{workers} agents checking {total} combinations on Google Flights",
       "checkingRoute": "{route} on {date}",
       "checked": "{done}/{total} checked",

@@ -62,6 +62,7 @@
     "placeholder": "जैसे मुंबई से लंदन, अगले हफ़्ते, ₹40000 से कम, बिज़नेस क्लास",
     "ariaLabel": "अपनी यात्रा सरल हिंदी में बताएं",
     "enterToSearch": "खोजने के लिए Enter दबाएं",
+    "preview": "पूर्वावलोकन:",
     "searchFlights": "फ़्लाइट खोजें",
     "describeTrip": "इसके बजाय अपनी यात्रा का वर्णन करें",
     "useForm": "इसके बजाय खोज फ़ॉर्म का उपयोग करें",
@@ -94,7 +95,7 @@
     ],
     "timeSaved": "FlyFast ने आपकी ~{time} की मैन्युअल खोज बचाई",
     "loading": {
-      "understanding": "आपकी यात्रा समझ रहे हैं...",
+      "understanding": "गंतव्य, तिथियाँ और प्राथमिकताएँ समझ रहे हैं...",
       "agentsChecking": "{workers} एजेंट Google Flights पर {total} कॉम्बिनेशन जांच रहे हैं",
       "checkingRoute": "{date} पर {route}",
       "checked": "{done}/{total} जांचे गए",

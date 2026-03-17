@@ -62,6 +62,7 @@
     "placeholder": "ör. İstanbul'dan Londra'ya gelecek hafta 15000 TL altında, business class",
     "ariaLabel": "Seyahatinizi kendi cümlelerinizle anlatın",
     "enterToSearch": "Aramak için Enter",
+    "preview": "Önizleme:",
     "searchFlights": "Uçuş ara",
     "describeTrip": "Seyahatinizi anlatarak arayın",
     "useForm": "Arama formunu kullanın",
@@ -94,7 +95,7 @@
     ],
     "timeSaved": "FlyFast size yaklaşık {time} manuel arama süresinden tasarruf ettirdi",
     "loading": {
-      "understanding": "Seyahatiniz anlaşılıyor...",
+      "understanding": "Hedefler, tarihler ve tercihler yorumlanıyor...",
       "agentsChecking": "{workers} ajan, Google Flights'ta {total} kombinasyonu kontrol ediyor",
       "checkingRoute": "{date} tarihinde {route}",
       "checked": "{done}/{total} kontrol edildi",

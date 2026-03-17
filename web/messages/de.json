@@ -62,6 +62,7 @@
     "placeholder": "z.B. Berlin nach London nächste Woche unter 500€, Business Class",
     "ariaLabel": "Beschreibe deine Reise in natürlicher Sprache",
     "enterToSearch": "Enter zum Suchen",
+    "preview": "Vorschau:",
     "searchFlights": "Flüge suchen",
     "describeTrip": "Reise stattdessen beschreiben",
     "useForm": "Suchformular verwenden",
@@ -94,7 +95,7 @@
     ],
     "timeSaved": "FlyFast hat dir ~{time} manuelle Suche erspart",
     "loading": {
-      "understanding": "Verstehe deine Reise...",
+      "understanding": "Ziele, Daten & Präferenzen werden interpretiert...",
       "agentsChecking": "{workers} Agenten prüfen {total} Kombinationen auf Google Flights",
       "checkingRoute": "{route} am {date}",
       "checked": "{done}/{total} geprüft",

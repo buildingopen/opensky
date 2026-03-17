@@ -62,6 +62,7 @@
     "placeholder": "Ex: GRU para Lisboa semana que vem abaixo de R$3000, classe executiva",
     "ariaLabel": "Descreva sua viagem em português",
     "enterToSearch": "Enter para buscar",
+    "preview": "Prévia:",
     "searchFlights": "Buscar voos",
     "describeTrip": "Descreva sua viagem",
     "useForm": "Usar formulário de busca",
@@ -94,7 +95,7 @@
     ],
     "timeSaved": "O FlyFast economizou ~{time} de busca manual para você",
     "loading": {
-      "understanding": "Entendendo sua viagem...",
+      "understanding": "Interpretando destinos, datas e preferências...",
       "agentsChecking": "{workers} agentes verificando {total} combinações no Google Flights",
       "checkingRoute": "{route} em {date}",
       "checked": "{done}/{total} verificados",

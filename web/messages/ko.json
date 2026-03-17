@@ -62,6 +62,7 @@
     "placeholder": "예: 서울에서 도쿄, 다음 주, 50만원 이하, 비즈니스 클래스",
     "ariaLabel": "여행 계획을 자유롭게 입력하세요",
     "enterToSearch": "Enter를 눌러 검색",
+    "preview": "미리보기:",
     "searchFlights": "항공편 검색",
     "describeTrip": "여행을 직접 설명하기",
     "useForm": "검색 양식 사용하기",
@@ -94,7 +95,7 @@
     ],
     "timeSaved": "FlyFast가 수동 검색 대비 약 {time}을 절약해 드렸습니다",
     "loading": {
-      "understanding": "여행 정보를 분석하고 있습니다...",
+      "understanding": "목적지, 날짜, 선호사항을 해석하는 중...",
       "agentsChecking": "{workers}개 에이전트가 구글 플라이트에서 {total}개 조합을 확인 중",
       "checkingRoute": "{date}의 {route} 확인 중",
       "checked": "{done}/{total} 확인 완료",

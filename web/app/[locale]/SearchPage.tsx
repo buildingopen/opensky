@@ -3127,6 +3127,7 @@ function HomePage() {
                   </button>
                   {searchMode === "natural" && !isLoading && queryPreview && (
                     <p className="text-[12px] text-[var(--color-text-muted)]/70 transition-opacity duration-300 hidden sm:block">
+                      <span className="opacity-50">{t("preview")}</span>{" "}
                       <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
                       {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
                       {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
@@ -3153,6 +3154,7 @@ function HomePage() {
                 </div>
                 {searchMode === "natural" && !isLoading && queryPreview && (
                   <p className="w-full text-[11px] text-[var(--color-text-muted)]/60 sm:hidden">
+                    <span className="opacity-50">{t("preview")}</span>{" "}
                     <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
                     {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
                     {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}

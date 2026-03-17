@@ -62,6 +62,7 @@
     "placeholder": "es. Roma a Londra la prossima settimana meno di 500€, business class",
     "ariaLabel": "Descrivi il tuo viaggio in italiano",
     "enterToSearch": "Invio per cercare",
+    "preview": "Anteprima:",
     "searchFlights": "Cerca voli",
     "describeTrip": "Descrivi il tuo viaggio",
     "useForm": "Usa il modulo di ricerca",
@@ -94,7 +95,7 @@
     ],
     "timeSaved": "FlyFast ti ha risparmiato circa {time} di ricerca manuale",
     "loading": {
-      "understanding": "Comprendiamo il tuo viaggio...",
+      "understanding": "Interpretazione di destinazioni, date e preferenze...",
       "agentsChecking": "{workers} agenti stanno verificando {total} combinazioni su Google Flights",
       "checkingRoute": "{route} il {date}",
       "checked": "{done}/{total} verificati",

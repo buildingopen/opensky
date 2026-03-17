@@ -62,6 +62,7 @@
     "placeholder": "مثال: من دبي إلى لندن، الأسبوع القادم، أقل من 2000 ريال، درجة رجال الأعمال",
     "ariaLabel": "صِف رحلتك بالعربية",
     "enterToSearch": "اضغط Enter للبحث",
+    "preview": "معاينة:",
     "searchFlights": "البحث عن رحلات",
     "describeTrip": "صِف رحلتك بدلاً من ذلك",
     "useForm": "استخدم نموذج البحث بدلاً من ذلك",
@@ -94,7 +95,7 @@
     ],
     "timeSaved": "FlyFast وفّر لك ~{time} من البحث اليدوي",
     "loading": {
-      "understanding": "جارٍ فهم رحلتك...",
+      "understanding": "جارٍ تفسير الوجهات والتواريخ والتفضيلات...",
       "agentsChecking": "{workers} وكيل يتحقق من {total} خيار على Google Flights",
       "checkingRoute": "{route} في {date}",
       "checked": "تم التحقق من {done}/{total}",
