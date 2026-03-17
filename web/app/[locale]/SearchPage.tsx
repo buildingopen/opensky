@@ -168,10 +168,10 @@ for (const a of AIRPORTS) {
 // Using Map to avoid duplicate key issues across languages
 const CITY_ALIASES_ENTRIES: [string, string][] = [
   // English aliases
-  ["delhi", "new delhi"], ["nyc", "new york"], ["sf", "san francisco"], ["la", "los angeles"],
+  ["delhi", "new delhi"], ["nyc", "new york"], ["sf", "san francisco"],
   ["ho chi minh", "ho chi minh city"], ["saigon", "ho chi minh city"],
   ["bombay", "mumbai"], ["calcutta", "kolkata"], ["madras", "chennai"],
-  ["peking", "beijing"], ["cologne", "cologne"], ["nuremberg", "nuremberg"],
+  ["peking", "beijing"],
   // Spanish city names
   ["londres", "london"], ["nueva york", "new york"], ["pekín", "beijing"], ["pekin", "beijing"],
   ["moscú", "moscow"], ["moscu", "moscow"], ["múnich", "munich"],
@@ -179,25 +179,49 @@ const CITY_ALIASES_ENTRIES: [string, string][] = [
   ["bruselas", "brussels"], ["ginebra", "geneva"], ["zúrich", "zurich"],
   ["estambul", "istanbul"], ["atenas", "athens"], ["varsovia", "warsaw"],
   ["copenhague", "copenhagen"], ["estocolmo", "stockholm"], ["praga", "prague"],
-  // German city names
+  ["el cairo", "cairo"], ["berlín", "berlin"], ["tokio", "tokyo"],
+  ["singapur", "singapore"], ["nueva delhi", "new delhi"], ["hamburgo", "hamburg"],
+  ["shanghái", "shanghai"], ["dubái", "dubai"], ["ámsterdam", "amsterdam"],
+  ["florencia", "florence"], ["nápoles", "naples"], ["marsella", "marseille"],
+  ["edimburgo", "edinburgh"], ["la habana", "havana"],
+  // German city names (tokio/peking already in English/Spanish sections)
   ["mailand", "milan"], ["rom", "rome"], ["wien", "vienna"], ["brüssel", "brussels"],
   ["lissabon", "lisbon"], ["warschau", "warsaw"], ["kopenhagen", "copenhagen"],
   ["prag", "prague"], ["athen", "athens"], ["kairo", "cairo"], ["moskau", "moscow"],
-  ["tokio", "tokyo"],
-  // French city names
+  ["neapel", "naples"], ["florenz", "florence"], ["havanna", "havana"],
+  ["neu-delhi", "new delhi"],
+  // French city names (londres/copenhague already in Spanish section)
   ["nouvelle-orléans", "new orleans"], ["moscou", "moscow"], ["athènes", "athens"],
   ["le caire", "cairo"], ["lisbonne", "lisbon"], ["varsovie", "warsaw"],
-  // Italian city names
+  ["vienne", "vienna"], ["genève", "geneva"], ["hambourg", "hamburg"],
+  ["pékin", "beijing"], ["singapour", "singapore"], ["dubaï", "dubai"],
+  ["édimbourg", "edinburgh"], ["barcelone", "barcelona"], ["séville", "seville"],
+  ["la havane", "havana"],
+  // Italian city names (londra shared with Turkish, registered here first)
   ["londra", "london"], ["nuova york", "new york"], ["parigi", "paris"],
   ["monaco di baviera", "munich"], ["bruxelles", "brussels"],
   ["ginevra", "geneva"], ["zurigo", "zurich"], ["lisbona", "lisbon"], ["atene", "athens"],
-  // Portuguese city names
+  ["varsavia", "warsaw"], ["copenaghen", "copenhagen"], ["stoccolma", "stockholm"],
+  ["il cairo", "cairo"], ["mosca", "moscow"], ["francoforte", "frankfurt"],
+  ["pechino", "beijing"], ["berlino", "berlin"],
+  ["amburgo", "hamburg"], ["firenze", "florence"], ["napoli", "naples"],
+  ["marsiglia", "marseille"], ["siviglia", "seville"], ["nuova delhi", "new delhi"],
+  // Portuguese city names (shared keys with es/it noted)
   ["nova iorque", "new york"], ["nova york", "new york"], ["munique", "munich"],
   ["genebra", "geneva"], ["zurique", "zurich"], ["copenhaga", "copenhagen"],
   ["varsóvia", "warsaw"], ["lisboa", "lisbon"],
-  // Turkish city names
+  ["pequim", "beijing"], ["moscovo", "moscow"], ["milão", "milan"],
+  ["bruxelas", "brussels"], ["istambul", "istanbul"],
+  ["berlim", "berlin"],
+  ["florença", "florence"], ["marselha", "marseille"],
+  ["sevilha", "seville"], ["nova deli", "new delhi"], ["tóquio", "tokyo"],
+  ["amesterdão", "amsterdam"], ["amsterdã", "amsterdam"], ["singapura", "singapore"],
+  // Turkish city names (londra/pekin/prag/singapur already registered above)
   ["münih", "munich"], ["viyana", "vienna"], ["cenevre", "geneva"],
   ["zürih", "zurich"], ["lizbon", "lisbon"], ["atina", "athens"], ["kahire", "cairo"],
+  ["yeni york", "new york"], ["moskova", "moscow"], ["brüksel", "brussels"],
+  ["varşova", "warsaw"], ["kopenhag", "copenhagen"], ["stokholm", "stockholm"],
+  ["floransa", "florence"], ["marsilya", "marseille"], ["yeni delhi", "new delhi"],
   // Chinese city names
   ["伦敦", "london"], ["巴黎", "paris"], ["纽约", "new york"], ["东京", "tokyo"],
   ["北京", "beijing"], ["慕尼黑", "munich"], ["米兰", "milan"], ["罗马", "rome"],
@@ -271,6 +295,32 @@ for (const [alias, city] of Object.entries(CITY_ALIASES)) {
 }
 
 const AMBIGUOUS_CITIES = new Set(["nice", "mobile", "split", "reading", "bath", "chester", "orange"]);
+
+// Block common function words across Latin-script languages that could match
+// an IATA code or city alias. Prefer blocking too many over a false positive.
+// NOTE: Some entries (sin, den, las, per, can, aus, got, del, los, ein) collide
+// with real IATA codes, but as standalone lowercase words in natural language
+// they are virtually always articles/prepositions. Multi-word phrases like
+// "las vegas" or "los angeles" still match via the multi-token scan.
+const LOCATION_SKIPWORDS = new Set([
+  // Spanish/Portuguese articles & prepositions
+  "la", "el", "lo", "los", "las", "un", "una", "del", "al",
+  "con", "sin", "por", "para", "sur", "son", "mas", "sus",
+  // French articles & prepositions
+  "le", "les", "des", "une", "par", "pas", "est", "sur",
+  "aux", "son", "ses", "mes", "nos", "mon", "ton",
+  // German articles & prepositions
+  "den", "der", "die", "das", "dem", "des", "ein",
+  "aus", "von", "vor", "fur", "nur", "mir", "ich",
+  // Italian articles & prepositions
+  "per", "dal", "del", "nel", "sul", "con", "una",
+  // Dutch
+  "van", "het", "een", "den",
+  // Turkish
+  "bir", "ile", "var", "ben", "sen",
+  // English function words that match IATA
+  "can", "hat", "was", "had", "may", "has", "got",
+]);
 const SKIP_REGIONS = new Set([
   "anywhere", "europe", "asia", "africa", "south america", "north america", "middle east",
   // Multilingual region names
@@ -460,7 +510,6 @@ function resolveDate(phrase: string): string | null {
 
 interface LocAirport { iata: string; city: string }
 interface PreviewLocInfo { display: string; count: number; airports: LocAirport[] }
-interface QueryPreview { origin: string; dest: string; date: string | null; originAirports: LocAirport[]; destAirports: LocAirport[] }
 
 function getAirportsForCountry(countryCode: string): LocAirport[] {
   return AIRPORTS.filter(a => a.country === countryCode).map(a => ({ iata: a.iata, city: a.city }));
@@ -468,74 +517,6 @@ function getAirportsForCountry(countryCode: string): LocAirport[] {
 function getAirportsForCity(cityLower: string): LocAirport[] {
   return AIRPORTS.filter(a => a.city.toLowerCase() === cityLower).map(a => ({ iata: a.iata, city: a.city }));
 }
-
-// Shared ref: closing one tooltip closes any other open tooltip
-const activeTooltipClose = { current: null as (() => void) | null };
-
-function PreviewLoc({ text, airports }: { text: string; airports: LocAirport[] }) {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  const tooltipRef = useRef<HTMLSpanElement>(null);
-
-  // Close on outside click (mobile)
-  useEffect(() => {
-    if (!show) return;
-    const handler = (e: MouseEvent | TouchEvent) => {
-      const target = e.target as Node;
-      if (ref.current && !ref.current.contains(target)) setShow(false);
-    };
-    document.addEventListener("mousedown", handler);
-    document.addEventListener("touchstart", handler);
-    return () => {
-      document.removeEventListener("mousedown", handler);
-      document.removeEventListener("touchstart", handler);
-    };
-  }, [show]);
-
-  // Register as active tooltip (mutual exclusion)
-  useEffect(() => {
-    if (show) {
-      activeTooltipClose.current?.();
-      activeTooltipClose.current = () => setShow(false);
-    } else if (activeTooltipClose.current === (() => setShow(false))) {
-      activeTooltipClose.current = null;
-    }
-  }, [show]);
-
-  // Clamp tooltip to viewport on open
-  useEffect(() => {
-    if (!show || !tooltipRef.current) return;
-    const rect = tooltipRef.current.getBoundingClientRect();
-    if (rect.right > window.innerWidth - 8) {
-      tooltipRef.current.style.left = "auto";
-      tooltipRef.current.style.right = "0";
-    }
-  }, [show]);
-
-  if (airports.length <= 1) return <span>{text}</span>;
-  return (
-    <span
-      ref={ref}
-      className="relative inline-block"
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onClick={(e) => { e.stopPropagation(); setShow(v => !v); }}
-    >
-      <span className="cursor-help border-b border-dotted border-[var(--color-text-muted)]/40">{text}</span>
-      {show && (
-        <span ref={tooltipRef} className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
-          {airports.map((a) => (
-            <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap overflow-hidden text-ellipsis" style={{ maxWidth: 200 }}>
-              <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
-              <span className="text-[var(--color-text-muted)]">{a.city}</span>
-            </span>
-          ))}
-        </span>
-      )}
-    </span>
-  );
-}
-
 
 // ---------------------------------------------------------------------------
 // Scan-based location detection: find all known locations in the prompt
@@ -546,18 +527,23 @@ interface ScannedLoc { start: number; end: number; loc: PreviewLocInfo }
 
 function scanLocations(prompt: string): ScannedLoc[] {
   const lower = prompt.toLowerCase();
-  // Tokenize into words with character positions
-  const tokens: Array<{ word: string; start: number; end: number }> = [];
+  // Tokenize into words with character positions (lowercase for matching)
+  const tokens: Array<{ word: string; original: string; start: number; end: number }> = [];
   const re = /[\p{L}\p{N}]+(?:['-][\p{L}\p{N}]+)*/gu;
   let m: RegExpExecArray | null;
   while ((m = re.exec(lower)) !== null) {
-    tokens.push({ word: m[0], start: m.index, end: m.index + m[0].length });
+    tokens.push({ word: m[0], original: prompt.slice(m.index, m.index + m[0].length), start: m.index, end: m.index + m[0].length });
   }
 
   // Exact-only match: no prefix matching, skip ambiguous cities
-  function matchExact(phrase: string): PreviewLocInfo | null {
+  // originalPhrase preserves case from user input to distinguish "SIN" (IATA) from "sin" (Spanish word)
+  function matchExact(phrase: string, originalPhrase?: string): PreviewLocInfo | null {
     const p = norm(phrase);
     if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
+    // Skipword check: only block if the user typed lowercase. If they typed
+    // all-uppercase (e.g. "SIN", "DEN"), they likely mean the IATA code.
+    const orig = originalPhrase || phrase;
+    if (LOCATION_SKIPWORDS.has(p) && orig !== orig.toUpperCase()) return null;
     const upper = phrase.toUpperCase();
     if (upper.length === 3 && IATA_SET.has(upper)) {
       const ap = AIRPORTS.find(a => a.iata === upper);
@@ -572,6 +558,13 @@ function scanLocations(prompt: string): ScannedLoc[] {
       const cnt = CITY_AIRPORT_COUNT.get(p) || 1;
       return { display: CITY_DISPLAY.get(p)!, count: cnt, airports: getAirportsForCity(p) };
     }
+    // Turkish agglutination: "Moskova'dan" → try "moskova" before the apostrophe
+    // Only for single-word tokens (no spaces) to avoid false matches on multi-word phrases
+    const apos = p.indexOf("'");
+    if (apos > 1 && !p.includes(" ")) {
+      const prefix = p.slice(0, apos);
+      return matchExact(prefix, originalPhrase ? originalPhrase.slice(0, apos) : undefined);
+    }
     return null;
   }
 
@@ -582,7 +575,19 @@ function scanLocations(prompt: string): ScannedLoc[] {
     // Try longest combination first (up to 4 words: "united arab emirates", "new york city")
     for (let len = Math.min(4, tokens.length - i); len >= 1; len--) {
       const phrase = tokens.slice(i, i + len).map(t => t.word).join(" ");
-      const loc = matchExact(phrase);
+      const originalPhrase = tokens.slice(i, i + len).map(t => t.original).join(" ");
+      let loc = matchExact(phrase, originalPhrase);
+      // For multi-word combos, also try stripping apostrophe suffix from last token
+      // (Turkish agglutination: "Yeni York'a" → try "yeni york")
+      if (!loc && len > 1) {
+        const lastWord = tokens[i + len - 1].word;
+        const apos = lastWord.indexOf("'");
+        if (apos > 1) {
+          const trimmed = tokens.slice(i, i + len - 1).map(t => t.word).join(" ") + " " + lastWord.slice(0, apos);
+          const trimmedOrig = tokens.slice(i, i + len - 1).map(t => t.original).join(" ") + " " + tokens[i + len - 1].original.slice(0, apos);
+          loc = matchExact(trimmed, trimmedOrig);
+        }
+      }
       if (loc) {
         results.push({ start: tokens[i].start, end: tokens[i + len - 1].end, loc });
         i += len;
@@ -596,7 +601,7 @@ function scanLocations(prompt: string): ScannedLoc[] {
 }
 
 // ---------------------------------------------------------------------------
-// Shared date detection helper (used by both useQueryPreview and useHighlightRanges)
+// Shared date detection helper (used by useHighlightRanges)
 // ---------------------------------------------------------------------------
 function detectDate(lower: string): { text: string; start: number; end: number; resolved: string | undefined } | null {
   const allTemporalKeys = Object.keys(I18N_TEMPORAL);
@@ -633,27 +638,6 @@ function detectDate(lower: string): { text: string; start: number; end: number; 
   const moM = monthRe.exec(lower);
   if (moM && moM.index !== undefined) return { text: moM[0], start: moM.index, end: moM.index + moM[0].length, resolved: resolveDate(moM[0]) || undefined };
   return null;
-}
-
-function useQueryPreview(prompt: string, fmtLoc?: (loc: { display: string; count: number }) => string): QueryPreview | null {
-  return useMemo(() => {
-    if (!prompt || prompt.length < 5) return null;
-    const locs = scanLocations(prompt);
-    if (locs.length === 0) return null;
-
-    const fmt = fmtLoc || ((loc: { display: string; count: number }) => loc.count > 1 ? `${loc.display} (${loc.count} airports)` : loc.display);
-    const origin = locs[0].loc;
-    const dest = locs.length > 1 ? locs[locs.length - 1].loc : null;
-    const originStr = fmt(origin);
-    const destStr = dest ? fmt(dest) : "";
-    const originAirports = origin.airports;
-    const destAirports = dest?.airports || [];
-
-    const dateMatch = detectDate(prompt.toLowerCase());
-
-    return { origin: originStr, dest: destStr || null!, date: dateMatch?.resolved || null, originAirports, destAirports };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prompt, fmtLoc]);
 }
 
 // ---------------------------------------------------------------------------
@@ -743,6 +727,15 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       /(اقتصادية)/i, // ar
       /\b(econômica)\b/i, // pt
       /\b(turista)\b/i, // es
+      // Standalone qualifier words (single-word, after multi-word patterns so longer matches win)
+      /\b(seguro|segura)\b/i,     // es: safe
+      /\b(sicher|sichere)\b/i,    // de: safe
+      /\b(sicuro|sicura)\b/i,     // it: safe
+      /\b(güvenli)\b/i,           // tr: safe
+      /\b(directo|directa)\b/i,   // es: direct
+      /\b(direkt)\b/i,            // de: direct
+      /\b(diretto|diretta)\b/i,   // it: direct
+      /\b(direto|direta)\b/i,     // pt: direct
       // Budget: under/less than + currency + amount (all languages)
       /\b(under\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*)\b/i, // en
       /\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*)\b/i, // en
@@ -793,6 +786,9 @@ function buildTextRuns(prompt: string, ranges: HighlightRange[]): TextRun[] {
   if (cursor < prompt.length) runs.push({ type: "plain", text: prompt.slice(cursor) });
   return runs;
 }
+
+// Shared ref: closing one tooltip closes any other open tooltip
+const activeTooltipClose = { current: null as (() => void) | null };
 
 function InlineHighlight({ text, airports, resolvedDate }: { text: string; airports: LocAirport[]; resolvedDate?: string }) {
   const [show, setShow] = useState(false);
@@ -2695,10 +2691,6 @@ function HomePage() {
   };
 
   const isLoading = phase === "parsing" || phase === "searching";
-  const fmtLoc = useCallback((loc: { display: string; count: number }) =>
-    loc.count > 1 ? `${loc.display} (${t("parsed.airportCount", { count: loc.count })})` : loc.display
-  , [t]);
-  const queryPreview = useQueryPreview(prompt, fmtLoc);
   const highlightRanges = useHighlightRanges(prompt);
 
   // Airline filter (post-results)
@@ -2940,14 +2932,6 @@ function HomePage() {
                   >
                     {searchMode === "structured" ? t("describeTrip") : t("useForm")}
                   </button>
-                  {searchMode === "natural" && !isLoading && queryPreview && (
-                    <p className="text-[12px] text-[var(--color-text-muted)]/70 transition-opacity duration-300 hidden sm:block truncate">
-                      <span className="opacity-50">{t("preview")}</span>{" "}
-                      <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
-                      {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
-                      {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
-                    </p>
-                  )}
                 </div>
                 <div className="flex items-center gap-3 ml-auto shrink-0">
                   {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/25 hidden sm:inline">{t("enterToSearch")}</span>}
@@ -2968,14 +2952,6 @@ function HomePage() {
                   </button>
                 </div>
               </div>
-              {searchMode === "natural" && !isLoading && queryPreview && (
-                <p className="mt-1 text-[11px] text-[var(--color-text-muted)]/60 sm:hidden">
-                  <span className="opacity-50">{t("preview")}</span>{" "}
-                  <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
-                  {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
-                  {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
-                </p>
-              )}
             </>
           )}
         </div>
