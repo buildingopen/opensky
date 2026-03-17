@@ -2522,7 +2522,7 @@ function HomePage() {
       const resp = await fetch(`${API_URL}/api/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text, currency: userCurrency }),
+        body: JSON.stringify({ prompt: text, currency: userCurrency, locale }),
         signal: controller.signal,
       });
 

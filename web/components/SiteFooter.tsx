@@ -32,6 +32,16 @@ export function SiteFooter() {
             <Link href="/imprint" className="hover:text-[var(--color-text)]">{t("imprint")}</Link>
             <Link href="/methodology" className="hover:text-[var(--color-text)]">{t("methodology")}</Link>
             <Link href="/contact" className="hover:text-[var(--color-text)]">{t("contact")}</Link>
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem("flyfast_consent");
+                window.dispatchEvent(new CustomEvent("flyfast_consent_change"));
+              }}
+              className="hover:text-[var(--color-text)]"
+            >
+              {t("cookieSettings")}
+            </button>
           </span>
         </div>
       </div>

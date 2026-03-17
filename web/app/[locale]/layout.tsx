@@ -10,6 +10,7 @@ import { CloudsBackground } from "../../components/CloudsBackground";
 import { CurrencyProvider } from "../../components/CurrencyProvider";
 import { SiteHeader } from "../../components/SiteHeader";
 import { SiteFooter } from "../../components/SiteFooter";
+import { CookieConsent } from "../../components/CookieConsent";
 import "../globals.css";
 
 const inter = Inter({
@@ -154,6 +155,7 @@ export default async function RootLayout({
           <SiteHeader />
           {children}
           <SiteFooter />
+          <CookieConsent />
           </CurrencyProvider>
         </NextIntlClientProvider>
       </body>

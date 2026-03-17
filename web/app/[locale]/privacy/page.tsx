@@ -35,6 +35,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
             <li>{t.rich("whatWeCollectSearchQueries", { bold })}</li>
             <li>{t.rich("whatWeCollectAnalytics", { bold })}</li>
             <li>{t.rich("whatWeCollectRateLimit", { bold })}</li>
+            <li>{t.rich("whatWeCollectServerAnalytics", { bold })}</li>
             <li>{t.rich("whatWeCollectEmail", { bold })}</li>
           </ul>
         </div>
@@ -47,6 +48,11 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
             <li>{t("whatWeDoNotCollect3")}</li>
             <li>{t("whatWeDoNotCollect4")}</li>
           </ul>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">{t("cookiesHeading")}</h2>
+          <p>{t("cookiesContent")}</p>
         </div>
 
         <div>

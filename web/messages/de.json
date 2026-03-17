@@ -31,7 +31,8 @@
     "terms": "AGB",
     "imprint": "Impressum",
     "methodology": "Methodik",
-    "contact": "Kontakt"
+    "contact": "Kontakt",
+    "cookieSettings": "Cookie-Einstellungen"
   },
   "savedSearches": {
     "recentSearches": "Letzte Suchen",
@@ -438,8 +439,8 @@
     "lastUpdated": "Zuletzt aktualisiert: {date}",
     "intro": "FlyFast wird von <link>Building Open</link> entwickelt. Wir erheben nur, was für den Betrieb des Dienstes und zur Missbrauchsvermeidung notwendig ist. Wir verkaufen keine personenbezogenen Daten.",
     "whatWeCollectHeading": "Was wir erheben",
-    "whatWeCollectSearchQueries": "<bold>Suchanfragen</bold> -- deine natürlichsprachlichen Eingaben werden an unser Backend gesendet, um Flüge zu suchen und zu analysieren. Wir speichern Suchanfragen nicht langfristig.",
-    "whatWeCollectAnalytics": "<bold>Nutzungsanalysen</bold> -- anonymisierte Seitenaufrufe, Suchanzahlen und Fehlerraten über PostHog. Es werden keine personenbezogenen Daten erfasst.",
+    "whatWeCollectSearchQueries": "<bold>Suchanfragen</bold> -- Ihre natürlichsprachlichen Eingaben werden an unser Backend gesendet, um Flüge zu analysieren und zu suchen. Wir speichern Ihren Suchtext nicht. Anonymisierte Metriken (Anzahl der Ergebnisse, Dauer, ausgewählte Filter) werden serverseitig protokolliert.",
+    "whatWeCollectAnalytics": "<bold>Nutzungsanalyse</bold> -- anonymisierte Seitenaufrufe und Interaktionsdaten über PostHog und Google Analytics, die nur geladen werden, wenn Sie Cookies akzeptieren. Es werden keine personenbezogenen Daten erfasst.",
     "whatWeCollectRateLimit": "<bold>Rate-Limiting-Daten</bold> -- deine IP-Adresse wird serverseitig verwendet, um das Limit von 10 Suchen pro Stunde durchzusetzen. Sie wird weder gespeichert noch weitergegeben.",
     "whatWeCollectEmail": "<bold>E-Mail für Preisalarme</bold> -- wenn du einen Preisalarm einrichtest, speichern wir deine E-Mail-Adresse und Suchkriterien (Routen, Preisschwelle). Diese Daten werden in einer lokalen Datenbank gespeichert und ausschließlich zum Versand von Preisbenachrichtigungen verwendet. Alarme laufen nach 90 Tagen ab. Du kannst dich jederzeit über den Link in jeder E-Mail abmelden.",
     "whatWeDoNotCollectHeading": "Was wir nicht erheben",
@@ -456,11 +457,14 @@
     "thirdPartyResend": "<bold>Resend</bold> -- E-Mail-Zustelldienst für Preisalarm-Benachrichtigungen. Nur deine E-Mail-Adresse und Alarmdetails werden beim Versand von Benachrichtigungen an Resend weitergegeben.",
     "thirdPartyOutro": "Jeder Dienst verarbeitet Daten gemäß seiner eigenen Datenschutzrichtlinie. Wir empfehlen, deren Bedingungen zu prüfen, falls du Bedenken hast.",
     "dataRetentionHeading": "Datenspeicherung",
-    "dataRetention": "Suchanfragen werden in Echtzeit verarbeitet und nach dem Senden der Antwort nicht gespeichert. Anonymisierte Analysedaten werden bis zu 12 Monate aufbewahrt. Rate-Limiting-Daten laufen automatisch ab. Preisalarm-Daten (E-Mail, Suchkriterien) werden 90 Tage aufbewahrt und nach Ablauf automatisch gelöscht.",
+    "dataRetention": "Suchanfragen werden in Echtzeit verarbeitet und nach dem Senden der Antwort nicht gespeichert. Clientseitige Analysedaten werden bis zu 12 Monate aufbewahrt. Serverseitige Suchmetriken werden bis zu 12 Monate aufbewahrt. Daten zur Ratenbegrenzung verfallen automatisch. Preisalarmdaten (E-Mail, Suchkriterien) werden 90 Tage lang aufbewahrt und nach Ablauf automatisch gelöscht.",
     "yourRightsHeading": "Deine Rechte",
     "yourRights": "Du kannst Auskunft über, Berichtigung oder Löschung aller Daten verlangen, die wir über dich gespeichert haben. Kontaktiere <emailLink>hello@buildingopen.org</emailLink> mit deiner Anfrage.",
     "openSourceHeading": "Open Source",
-    "openSource": "FlyFast ist Open Source. Du kannst genau überprüfen, welche Daten die Anwendung erhebt, indem du den Quellcode unter <repoLink>github.com/buildingopen/opensky</repoLink> einsehst."
+    "openSource": "FlyFast ist Open Source. Du kannst genau überprüfen, welche Daten die Anwendung erhebt, indem du den Quellcode unter <repoLink>github.com/buildingopen/opensky</repoLink> einsehst.",
+    "whatWeCollectServerAnalytics": "<bold>Serverseitige Suchmetriken</bold> -- Anzahl der Ergebnisse, Suchdauer und ausgewählte Filter werden anonym protokolliert. Ihr Suchtext wird niemals gespeichert.",
+    "cookiesHeading": "Cookies",
+    "cookiesContent": "Wir verwenden ein Analyse-Cookie von PostHog und eines von Google Analytics, die nur geladen werden, wenn Sie Cookies akzeptieren. Sie können Ihre Präferenz jederzeit über den Link 'Cookie-Einstellungen' in der Fußzeile ändern. Um Cookies manuell zu löschen, verwenden Sie die Einstellungen Ihres Browsers."
   },
   "terms": {
     "title": "Nutzungsbedingungen - FlyFast",
@@ -738,5 +742,10 @@
       "error": "Etwas ist schiefgelaufen.",
       "networkError": "Netzwerkfehler. Bitte versuche es erneut."
     }
+  },
+  "consent": {
+    "message": "Wir verwenden Analyse-Cookies, um FlyFast zu verbessern. Keine Werbung, kein seitenübergreifendes Tracking.",
+    "accept": "Akzeptieren",
+    "decline": "Ablehnen"
   }
 }

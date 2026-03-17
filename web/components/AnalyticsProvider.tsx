@@ -1,11 +1,29 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Script from "next/script";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 
+const STORAGE_KEY = "flyfast_consent";
+const EVENT_NAME = "flyfast_consent_change";
+
 export function AnalyticsProvider() {
+  const [consent, setConsent] = useState<string | null>(null);
+
+  useEffect(() => {
+    setConsent(localStorage.getItem(STORAGE_KEY));
+
+    const onConsentChange = () => {
+      setConsent(localStorage.getItem(STORAGE_KEY));
+    };
+    window.addEventListener(EVENT_NAME, onConsentChange);
+    return () => window.removeEventListener(EVENT_NAME, onConsentChange);
+  }, []);
+
+  if (consent !== "accepted") return null;
+
   return (
     <>
       {GA_ID && (

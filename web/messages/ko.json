@@ -31,7 +31,8 @@
     "terms": "이용약관",
     "imprint": "법적 고지",
     "methodology": "방법론",
-    "contact": "문의"
+    "contact": "문의",
+    "cookieSettings": "쿠키 설정"
   },
   "savedSearches": {
     "recentSearches": "최근 검색",
@@ -438,8 +439,8 @@
     "lastUpdated": "최종 업데이트: {date}",
     "intro": "FlyFast는 <link>Building Open</link>이 개발했습니다. 서비스 운영과 남용 방지에 필요한 데이터만 수집합니다. 개인정보를 판매하지 않습니다.",
     "whatWeCollectHeading": "수집하는 데이터",
-    "whatWeCollectSearchQueries": "<bold>검색 쿼리</bold> -- 자연어 프롬프트는 파싱 및 항공편 검색을 위해 백엔드로 전송됩니다. 쿼리를 장기 보관하지 않습니다.",
-    "whatWeCollectAnalytics": "<bold>이용 분석</bold> -- PostHog를 통한 익명화된 페이지 조회수, 검색 횟수, 오류율. 개인 식별 정보는 추적하지 않습니다.",
+    "whatWeCollectSearchQueries": "<bold>검색 쿼리</bold> -- 사용자의 자연어 프롬프트는 항공편을 분석하고 검색하기 위해 백엔드로 전송됩니다. 검색 텍스트는 저장하지 않습니다. 익명화된 지표(결과 수, 기간, 선택된 필터)는 서버 측에 기록됩니다.",
+    "whatWeCollectAnalytics": "<bold>사용량 분석</bold> -- PostHog 및 Google Analytics를 통한 익명화된 페이지 뷰 및 상호 작용 데이터는 쿠키에 동의하는 경우에만 로드됩니다. 개인 식별 정보는 추적되지 않습니다.",
     "whatWeCollectRateLimit": "<bold>요청 제한 데이터</bold> -- 시간당 10회 검색 제한을 적용하기 위해 IP 주소를 서버 측에서 사용합니다. 저장하거나 공유하지 않습니다.",
     "whatWeCollectEmail": "<bold>가격 알림용 이메일</bold> -- 가격 알림을 설정하면 이메일 주소와 검색 조건(노선, 가격 기준)을 저장합니다. 이 데이터는 로컬 데이터베이스에 저장되며, 가격 알림 전송 목적으로만 사용됩니다. 알림은 90일 후 만료됩니다. 각 이메일의 링크를 통해 언제든지 구독을 해지할 수 있습니다.",
     "whatWeDoNotCollectHeading": "수집하지 않는 데이터",
@@ -456,11 +457,14 @@
     "thirdPartyResend": "<bold>Resend</bold> -- 가격 알림 이메일 전송 서비스. 알림 전송 시 이메일 주소와 알림 세부 정보만 Resend와 공유됩니다.",
     "thirdPartyOutro": "각 서비스는 자체 개인정보처리방침에 따라 데이터를 처리합니다. 우려 사항이 있으시면 각 서비스의 약관을 확인하시기 바랍니다.",
     "dataRetentionHeading": "데이터 보존",
-    "dataRetention": "검색 쿼리는 실시간으로 처리되며 응답 전송 후 저장되지 않습니다. 익명화된 분석 데이터는 최대 12개월간 보존됩니다. 요청 제한 데이터는 자동으로 만료됩니다. 가격 알림 데이터(이메일, 검색 조건)는 90일간 보존되며 만료 후 자동 삭제됩니다.",
+    "dataRetention": "검색 쿼리는 실시간으로 처리되며 응답 전송 후 저장되지 않습니다. 클라이언트 측 분석 데이터는 최대 12개월 동안 보관됩니다. 서버 측 검색 지표는 최대 12개월 동안 보관됩니다. 속도 제한 데이터는 자동으로 만료됩니다. 가격 알림 데이터(이메일, 검색 기준)는 90일 동안 보관되며 만료 후 자동으로 삭제됩니다.",
     "yourRightsHeading": "이용자의 권리",
     "yourRights": "당사가 보유한 귀하의 데이터에 대한 접근, 수정 또는 삭제를 요청하실 수 있습니다. <emailLink>hello@buildingopen.org</emailLink>으로 요청해 주세요.",
     "openSourceHeading": "오픈 소스",
-    "openSource": "FlyFast는 오픈 소스입니다. <repoLink>github.com/buildingopen/opensky</repoLink>에서 코드를 검토하여 애플리케이션이 어떤 데이터를 수집하는지 확인하실 수 있습니다."
+    "openSource": "FlyFast는 오픈 소스입니다. <repoLink>github.com/buildingopen/opensky</repoLink>에서 코드를 검토하여 애플리케이션이 어떤 데이터를 수집하는지 확인하실 수 있습니다.",
+    "whatWeCollectServerAnalytics": "<bold>서버 측 검색 지표</bold> -- 결과 수, 검색 기간 및 선택된 필터는 익명으로 기록됩니다. 검색 텍스트는 절대 저장되지 않습니다.",
+    "cookiesHeading": "쿠키",
+    "cookiesContent": "저희는 PostHog에서 하나, Google Analytics에서 하나의 분석 쿠키를 사용하며, 이는 쿠키에 동의하는 경우에만 로드됩니다. 푸터의 '쿠키 설정' 링크를 통해 언제든지 기본 설정을 변경할 수 있습니다. 쿠키를 수동으로 삭제하려면 브라우저 설정을 사용하십시오."
   },
   "terms": {
     "title": "이용약관 - FlyFast",
@@ -738,5 +742,10 @@
       "error": "문제가 발생했습니다.",
       "networkError": "네트워크 오류. 다시 시도해 주세요."
     }
+  },
+  "consent": {
+    "message": "FlyFast 개선을 위해 분석 쿠키를 사용합니다. 광고 없음, 사이트 간 추적 없음.",
+    "accept": "동의",
+    "decline": "거부"
   }
 }

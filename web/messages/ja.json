@@ -31,7 +31,8 @@
     "terms": "利用規約",
     "imprint": "運営者情報",
     "methodology": "検索方法",
-    "contact": "お問い合わせ"
+    "contact": "お問い合わせ",
+    "cookieSettings": "クッキー設定"
   },
   "savedSearches": {
     "recentSearches": "最近の検索",
@@ -438,8 +439,8 @@
     "lastUpdated": "最終更新: {date}",
     "intro": "FlyFastは<link>Building Open</link>が開発しています。サービスの運営と不正利用の防止に必要なデータのみを収集します。個人データの販売は行いません。",
     "whatWeCollectHeading": "収集するデータ",
-    "whatWeCollectSearchQueries": "<bold>検索クエリ</bold> -- 自然言語のプロンプトは、解析とフライト検索のためにバックエンドに送信されます。クエリを長期保存することはありません。",
-    "whatWeCollectAnalytics": "<bold>利用状況分析</bold> -- PostHogによる匿名化されたページビュー、検索回数、エラー率。個人を特定できる情報は追跡しません。",
+    "whatWeCollectSearchQueries": "<bold>検索クエリ</bold> -- 自然言語のプロンプトは、フライトの解析と検索のために当社のバックエンドに送信されます。検索テキストは保存されません。匿名化されたメトリクス（結果数、期間、選択されたフィルター）はサーバー側でログに記録されます。",
+    "whatWeCollectAnalytics": "<bold>利用状況分析</bold> -- クッキーを承諾した場合にのみロードされる、PostHogおよびGoogle Analyticsを介した匿名化されたページビューおよびインタラクションデータ。個人を特定できる情報は追跡されません。",
     "whatWeCollectRateLimit": "<bold>レート制限データ</bold> -- 1時間あたり10回の検索制限を適用するために、IPアドレスをサーバー側で使用します。保存や共有は行いません。",
     "whatWeCollectEmail": "<bold>料金アラート用メールアドレス</bold> -- 料金アラートを設定した場合、メールアドレスと検索条件（ルート、価格閾値）を保存します。このデータはローカルデータベースに保存され、料金通知の送信にのみ使用されます。アラートは90日後に期限切れとなります。各メールのリンクからいつでも登録解除できます。",
     "whatWeDoNotCollectHeading": "収集しないデータ",
@@ -456,11 +457,14 @@
     "thirdPartyResend": "<bold>Resend</bold> -- 料金アラート通知のメール配信サービス。通知送信時にメールアドレスとアラートの詳細のみがResendと共有されます。",
     "thirdPartyOutro": "各サービスは独自のプライバシーポリシーに基づいてデータを処理します。ご懸念がある場合は、各サービスの規約をご確認ください。",
     "dataRetentionHeading": "データの保持",
-    "dataRetention": "検索クエリはリアルタイムで処理され、応答送信後は保存されません。匿名化されたアナリティクスデータは最大12か月間保持されます。レート制限データは自動的に期限切れとなります。料金アラートデータ（メール、検索条件）は90日間保持され、期限後に自動削除されます。",
+    "dataRetention": "検索クエリはリアルタイムで処理され、応答送信後に保存されることはありません。クライアント側分析データは最大12ヶ月間保持されます。サーバー側検索メトリクスは最大12ヶ月間保持されます。レート制限データは自動的に期限切れになります。価格アラートデータ（メール、検索条件）は90日間保持され、期限切れ後に自動的に削除されます。",
     "yourRightsHeading": "お客様の権利",
     "yourRights": "当社が保有するお客様のデータへのアクセス、訂正、削除を要求できます。<emailLink>hello@buildingopen.org</emailLink>までご連絡ください。",
     "openSourceHeading": "オープンソース",
-    "openSource": "FlyFastはオープンソースです。<repoLink>github.com/buildingopen/opensky</repoLink>でコードを確認し、アプリケーションがどのようなデータを収集しているか確認できます。"
+    "openSource": "FlyFastはオープンソースです。<repoLink>github.com/buildingopen/opensky</repoLink>でコードを確認し、アプリケーションがどのようなデータを収集しているか確認できます。",
+    "whatWeCollectServerAnalytics": "<bold>サーバー側検索メトリクス</bold> -- 結果数、検索期間、選択されたフィルターは匿名でログに記録されます。検索テキストが保存されることはありません。",
+    "cookiesHeading": "クッキー",
+    "cookiesContent": "クッキーを承諾した場合にのみロードされる、PostHogから1つ、Google Analyticsから1つの分析クッキーを使用しています。フッターの「クッキー設定」リンクからいつでも設定を変更できます。手動でクッキーをクリアするには、ブラウザの設定を使用してください。"
   },
   "terms": {
     "title": "利用規約 - FlyFast",
@@ -738,5 +742,10 @@
       "error": "エラーが発生しました。",
       "networkError": "ネットワークエラー。もう一度お試しください。"
     }
+  },
+  "consent": {
+    "message": "FlyFastを改善するために分析クッキーを使用しています。広告なし、サイトをまたいだ追跡なし。",
+    "accept": "同意する",
+    "decline": "拒否する"
   }
 }

@@ -31,7 +31,8 @@
     "terms": "服务条款",
     "imprint": "法律声明",
     "methodology": "工作原理",
-    "contact": "联系我们"
+    "contact": "联系我们",
+    "cookieSettings": "Cookie 设置"
   },
   "savedSearches": {
     "recentSearches": "最近搜索",
@@ -438,8 +439,8 @@
     "lastUpdated": "最后更新：{date}",
     "intro": "FlyFast由<link>Building Open</link>开发。我们仅收集运营服务和防止滥用所必需的数据。我们不出售个人数据。",
     "whatWeCollectHeading": "我们收集的数据",
-    "whatWeCollectSearchQueries": "<bold>搜索查询</bold> -- 你的自然语言提示会发送到我们的后端进行解析和航班搜索。我们不会长期存储查询内容。",
-    "whatWeCollectAnalytics": "<bold>使用分析</bold> -- 通过PostHog收集匿名化的页面浏览量、搜索次数和错误率。不追踪任何个人可识别信息。",
+    "whatWeCollectSearchQueries": "<bold>搜索查询</bold> -- 您的自然语言提示会发送到我们的后端，用于解析和搜索航班。我们不存储您的搜索文本。匿名化指标（结果数量、持续时间、选定过滤器）会在服务器端记录。",
+    "whatWeCollectAnalytics": "<bold>使用分析</bold> -- 通过 PostHog 和 Google Analytics 收集匿名页面浏览量和交互数据，仅在您接受 Cookie 后加载。不跟踪任何个人身份信息。",
     "whatWeCollectRateLimit": "<bold>频率限制数据</bold> -- 你的IP地址仅在服务端用于执行每小时10次搜索的限制。IP地址不会被存储或共享。",
     "whatWeCollectEmail": "<bold>价格提醒邮箱</bold> -- 如果你设置了价格提醒，我们会存储你的邮箱地址和搜索条件（航线、价格阈值）。这些数据存储在本地数据库中，仅用于向你发送价格通知。提醒在90天后过期。你可以随时通过每封邮件中的链接取消订阅。",
     "whatWeDoNotCollectHeading": "我们不收集的数据",
@@ -456,11 +457,14 @@
     "thirdPartyResend": "<bold>Resend</bold> -- 价格提醒通知的邮件发送服务。发送通知时，仅你的邮箱地址和提醒详情会与Resend共享。",
     "thirdPartyOutro": "每项服务按其各自的隐私政策处理数据。如有疑虑，建议查看其相关条款。",
     "dataRetentionHeading": "数据保留",
-    "dataRetention": "搜索查询实时处理，响应发送后不会存储。匿名化分析数据最多保留12个月。频率限制数据自动过期。价格提醒数据（邮箱、搜索条件）保留90天，过期后自动删除。",
+    "dataRetention": "搜索查询实时处理，并在发送响应后不存储。客户端分析数据保留长达 12 个月。服务器端搜索指标保留长达 12 个月。速率限制数据自动过期。价格提醒数据（电子邮件、搜索条件）保留 90 天，并在过期后自动删除。",
     "yourRightsHeading": "你的权利",
     "yourRights": "你可以请求访问、更正或删除我们持有的关于你的任何数据。请联系<emailLink>hello@buildingopen.org</emailLink>提出你的请求。",
     "openSourceHeading": "开源",
-    "openSource": "FlyFast是开源的。你可以通过查看<repoLink>github.com/buildingopen/opensky</repoLink>上的代码来了解应用收集了哪些数据。"
+    "openSource": "FlyFast是开源的。你可以通过查看<repoLink>github.com/buildingopen/opensky</repoLink>上的代码来了解应用收集了哪些数据。",
+    "whatWeCollectServerAnalytics": "<bold>服务器端搜索指标</bold> -- 结果数量、搜索持续时间以及选定的过滤器会匿名记录。您的搜索文本绝不存储。",
+    "cookiesHeading": "Cookie",
+    "cookiesContent": "我们使用一个来自 PostHog 的分析 Cookie 和一个来自 Google Analytics 的分析 Cookie，仅在您接受 Cookie 后加载。您可以随时通过页脚中的“Cookie 设置”链接更改您的偏好。要手动清除 Cookie，请使用您的浏览器设置。"
   },
   "terms": {
     "title": "服务条款 - FlyFast",
@@ -738,5 +742,10 @@
       "error": "出了点问题。",
       "networkError": "网络错误。请重试。"
     }
+  },
+  "consent": {
+    "message": "我们使用分析 Cookie 来改进 FlyFast。无广告，无跨站跟踪。",
+    "accept": "接受",
+    "decline": "拒绝"
   }
 }

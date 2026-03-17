@@ -31,7 +31,8 @@
     "terms": "Şartlar",
     "imprint": "Künye",
     "methodology": "Metodoloji",
-    "contact": "İletişim"
+    "contact": "İletişim",
+    "cookieSettings": "Çerez ayarları"
   },
   "savedSearches": {
     "recentSearches": "Son aramalar",
@@ -438,8 +439,8 @@
     "lastUpdated": "Son güncelleme: {date}",
     "intro": "FlyFast, <link>Building Open</link> tarafından geliştirilmiştir. Yalnızca hizmeti işletmek ve kötüye kullanımı önlemek için gerekli verileri toplarız. Kişisel verileri satmayız.",
     "whatWeCollectHeading": "Topladığımız veriler",
-    "whatWeCollectSearchQueries": "<bold>Arama sorguları</bold> -- doğal dil istemleriniz, ayrıştırma ve uçuş arama için arka ucumuza gönderilir. Sorguları uzun süreli olarak saklamayız.",
-    "whatWeCollectAnalytics": "<bold>Kullanım analitiği</bold> -- PostHog aracılığıyla anonimleştirilmiş sayfa görüntülemeleri, arama sayıları ve hata oranları. Kişisel olarak tanımlanabilir bilgi izlenmez.",
+    "whatWeCollectSearchQueries": "<bold>Arama sorguları</bold> -- doğal dil istemleriniz, uçuşları ayrıştırmak ve aramak için arka ucumuza gönderilir. Arama metninizi saklamıyoruz. Anonimleştirilmiş metrikler (sonuç sayısı, süre, seçilen filtreler) sunucu tarafında kaydedilir.",
+    "whatWeCollectAnalytics": "<bold>Kullanım analizi</bold> -- PostHog ve Google Analytics aracılığıyla anonimleştirilmiş sayfa görüntülemeleri ve etkileşim verileri, yalnızca çerezleri kabul etmeniz durumunda yüklenir. Kişisel olarak tanımlanabilir hiçbir bilgi izlenmez.",
     "whatWeCollectRateLimit": "<bold>Hız sınırlama verileri</bold> -- saatte 10 arama sınırını uygulamak için IP adresiniz sunucu tarafında kullanılır. Saklanmaz veya paylaşılmaz.",
     "whatWeCollectEmail": "<bold>Fiyat uyarıları için e-posta</bold> -- bir fiyat uyarısı oluşturursanız, e-posta adresinizi ve arama kriterlerinizi (rotalar, fiyat eşiği) saklarız. Bu veriler yerel bir veritabanında saklanır ve yalnızca fiyat bildirimlerini göndermek için kullanılır. Uyarılar 90 gün sonra sona erer. Her e-postadaki bağlantıdan istediğiniz zaman aboneliğinizi iptal edebilirsiniz.",
     "whatWeDoNotCollectHeading": "Toplamadığımız veriler",
@@ -456,11 +457,14 @@
     "thirdPartyResend": "<bold>Resend</bold> -- fiyat uyarısı bildirimleri için e-posta teslim hizmeti. Bildirim gönderilirken yalnızca e-posta adresiniz ve uyarı ayrıntılarınız Resend ile paylaşılır.",
     "thirdPartyOutro": "Her hizmet, kendi gizlilik politikası kapsamında verileri işler. Endişeleriniz varsa, koşullarını incelemenizi öneririz.",
     "dataRetentionHeading": "Veri saklama",
-    "dataRetention": "Arama sorguları gerçek zamanlı olarak işlenir ve yanıt gönderildikten sonra saklanmaz. Anonimleştirilmiş analitik verileri en fazla 12 ay süreyle saklanır. Hız sınırlama verileri otomatik olarak sona erer. Fiyat uyarısı verileri (e-posta, arama kriterleri) 90 gün süreyle saklanır ve süresi dolduktan sonra otomatik olarak silinir.",
+    "dataRetention": "Arama sorguları gerçek zamanlı olarak işlenir ve yanıt gönderildikten sonra saklanmaz. İstemci tarafı analiz verileri 12 aya kadar saklanır. Sunucu tarafı arama metrikleri 12 aya kadar saklanır. Hız sınırlama verileri otomatik olarak sona erer. Fiyat uyarısı verileri (e-posta, arama kriterleri) 90 gün boyunca saklanır ve sona erme tarihinden sonra otomatik olarak silinir.",
     "yourRightsHeading": "Haklarınız",
     "yourRights": "Hakkınızda tuttuğumuz verilere erişim, düzeltme veya silme talebinde bulunabilirsiniz. Talebinizi <emailLink>hello@buildingopen.org</emailLink> adresine gönderin.",
     "openSourceHeading": "Açık kaynak",
-    "openSource": "FlyFast açık kaynaktır. <repoLink>github.com/buildingopen/opensky</repoLink> adresindeki kodu inceleyerek uygulamanın tam olarak hangi verileri topladığını görebilirsiniz."
+    "openSource": "FlyFast açık kaynaktır. <repoLink>github.com/buildingopen/opensky</repoLink> adresindeki kodu inceleyerek uygulamanın tam olarak hangi verileri topladığını görebilirsiniz.",
+    "whatWeCollectServerAnalytics": "<bold>Sunucu tarafı arama metrikleri</bold> -- sonuç sayısı, arama süresi ve seçilen filtreler anonim olarak kaydedilir. Arama metniniz asla saklanmaz.",
+    "cookiesHeading": "Çerezler",
+    "cookiesContent": "Yalnızca çerezleri kabul etmeniz durumunda yüklenen PostHog'dan bir ve Google Analytics'ten bir analiz çerezi kullanıyoruz. Tercihinizi istediğiniz zaman altbilgideki 'Çerez ayarları' bağlantısı aracılığıyla değiştirebilirsiniz. Çerezleri manuel olarak temizlemek için tarayıcınızın ayarlarını kullanın."
   },
   "terms": {
     "title": "Kullanım Şartları - FlyFast",
@@ -738,5 +742,10 @@
       "error": "Bir hata oluştu.",
       "networkError": "Ağ hatası. Lütfen tekrar deneyin."
     }
+  },
+  "consent": {
+    "message": "FlyFast'i geliştirmek için analiz çerezleri kullanıyoruz. Reklam yok, siteler arası takip yok.",
+    "accept": "Kabul et",
+    "decline": "Reddet"
   }
 }

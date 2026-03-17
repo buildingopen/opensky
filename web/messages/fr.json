@@ -31,7 +31,8 @@
     "terms": "Conditions",
     "imprint": "Mentions légales",
     "methodology": "Méthodologie",
-    "contact": "Contact"
+    "contact": "Contact",
+    "cookieSettings": "Paramètres des cookies"
   },
   "savedSearches": {
     "recentSearches": "Recherches récentes",
@@ -438,8 +439,8 @@
     "lastUpdated": "Dernière mise à jour : {date}",
     "intro": "FlyFast est développé par <link>Building Open</link>. Nous ne collectons que ce qui est nécessaire au fonctionnement du service et à la prévention des abus. Nous ne vendons aucune donnée personnelle.",
     "whatWeCollectHeading": "Ce que nous collectons",
-    "whatWeCollectSearchQueries": "<bold>Requêtes de recherche</bold> : vos requêtes en langage naturel sont envoyées à notre serveur pour analyser et rechercher des vols. Nous ne conservons pas les requêtes à long terme.",
-    "whatWeCollectAnalytics": "<bold>Données d'utilisation</bold> : pages vues anonymisées, nombre de recherches et taux d'erreurs via PostHog. Aucune information personnelle identifiable n'est suivie.",
+    "whatWeCollectSearchQueries": "<bold>Requêtes de recherche</bold> -- vos requêtes en langage naturel sont envoyées à notre backend pour analyser et rechercher des vols. Nous ne stockons pas votre texte de recherche. Des métriques anonymisées (nombre de résultats, durée, filtres sélectionnés) sont enregistrées côté serveur.",
+    "whatWeCollectAnalytics": "<bold>Analyses d'utilisation</bold> -- vues de page anonymisées et données d'interaction via PostHog et Google Analytics, chargées uniquement si vous acceptez les cookies. Aucune information personnellement identifiable n'est suivie.",
     "whatWeCollectRateLimit": "<bold>Données de limitation de débit</bold> : votre adresse IP est utilisée côté serveur pour appliquer la limite de 10 recherches par heure. Elle n'est ni stockée ni partagée.",
     "whatWeCollectEmail": "<bold>Email pour les alertes de prix</bold> : si vous créez une alerte de prix, nous stockons votre adresse email et vos critères de recherche (routes, seuil de prix). Ces données sont stockées dans une base de données locale et utilisées uniquement pour vous envoyer des notifications de prix. Les alertes expirent après 90 jours. Vous pouvez vous désabonner à tout moment via le lien contenu dans chaque email.",
     "whatWeDoNotCollectHeading": "Ce que nous ne collectons pas",
@@ -456,11 +457,14 @@
     "thirdPartyResend": "<bold>Resend</bold> : service de livraison d'emails pour les notifications d'alertes de prix. Seuls votre adresse email et les détails de l'alerte sont partagés avec Resend lors de l'envoi des notifications.",
     "thirdPartyOutro": "Chaque service traite les données selon sa propre politique de confidentialité. Nous vous recommandons de consulter leurs conditions si vous avez des préoccupations.",
     "dataRetentionHeading": "Conservation des données",
-    "dataRetention": "Les requêtes de recherche sont traitées en temps réel et ne sont pas conservées après l'envoi de la réponse. Les données d'analyse anonymisées sont conservées jusqu'à 12 mois. Les données de limitation de débit expirent automatiquement. Les données d'alertes de prix (email, critères de recherche) sont conservées pendant 90 jours et automatiquement supprimées après expiration.",
+    "dataRetention": "Les requêtes de recherche sont traitées en temps réel et ne sont pas stockées après l'envoi de la réponse. Les données d'analyse côté client sont conservées jusqu'à 12 mois. Les métriques de recherche côté serveur sont conservées jusqu'à 12 mois. Les données de limitation de débit expirent automatiquement. Les données d'alerte de prix (e-mail, critères de recherche) sont conservées pendant 90 jours et automatiquement supprimées après expiration.",
     "yourRightsHeading": "Vos droits",
     "yourRights": "Vous pouvez demander l'accès, la rectification ou la suppression de toute donnée que nous détenons à votre sujet. Contactez <emailLink>hello@buildingopen.org</emailLink> avec votre demande.",
     "openSourceHeading": "Open source",
-    "openSource": "FlyFast est open source. Vous pouvez inspecter exactement quelles données l'application collecte en consultant le code sur <repoLink>github.com/buildingopen/opensky</repoLink>."
+    "openSource": "FlyFast est open source. Vous pouvez inspecter exactement quelles données l'application collecte en consultant le code sur <repoLink>github.com/buildingopen/opensky</repoLink>.",
+    "whatWeCollectServerAnalytics": "<bold>Métriques de recherche côté serveur</bold> -- le nombre de résultats, la durée de la recherche et les filtres sélectionnés sont enregistrés anonymement. Votre texte de recherche n'est jamais stocké.",
+    "cookiesHeading": "Cookies",
+    "cookiesContent": "Nous utilisons un cookie analytique de PostHog et un de Google Analytics, chargés uniquement si vous acceptez les cookies. Vous pouvez modifier vos préférences à tout moment via le lien 'Paramètres des cookies' dans le pied de page. Pour effacer les cookies manuellement, utilisez les paramètres de votre navigateur."
   },
   "terms": {
     "title": "Conditions d'utilisation - FlyFast",
@@ -738,5 +742,10 @@
       "error": "Une erreur est survenue.",
       "networkError": "Erreur réseau. Veuillez réessayer."
     }
+  },
+  "consent": {
+    "message": "Nous utilisons des cookies analytiques pour améliorer FlyFast. Pas de publicités, pas de suivi intersites.",
+    "accept": "Accepter",
+    "decline": "Refuser"
   }
 }

@@ -31,7 +31,13 @@
     "terms": "Terms",
     "imprint": "Imprint",
     "methodology": "Methodology",
-    "contact": "Contact"
+    "contact": "Contact",
+    "cookieSettings": "Cookie settings"
+  },
+  "consent": {
+    "message": "We use analytics cookies to improve FlyFast. No ads, no tracking across sites.",
+    "accept": "Accept",
+    "decline": "Decline"
   },
   "savedSearches": {
     "recentSearches": "Recent searches",
@@ -438,8 +444,9 @@
     "lastUpdated": "Last updated: {date}",
     "intro": "FlyFast is built by <link>Building Open</link>. We collect only what is necessary to operate the service and prevent abuse. We do not sell personal data.",
     "whatWeCollectHeading": "What we collect",
-    "whatWeCollectSearchQueries": "<bold>Search queries</bold> -- your natural language prompts are sent to our backend to parse and search flights. We do not store queries long-term.",
-    "whatWeCollectAnalytics": "<bold>Usage analytics</bold> -- anonymized page views, search counts, and error rates via PostHog. No personally identifiable information is tracked.",
+    "whatWeCollectSearchQueries": "<bold>Search queries</bold> -- your natural language prompts are sent to our backend to parse and search flights. We do not store your search text. Anonymized metrics (result count, duration, selected filters) are logged server-side.",
+    "whatWeCollectAnalytics": "<bold>Usage analytics</bold> -- anonymized page views and interaction data via PostHog and Google Analytics, loaded only if you accept cookies. No personally identifiable information is tracked.",
+    "whatWeCollectServerAnalytics": "<bold>Server-side search metrics</bold> -- result count, search duration, and selected filters are logged anonymously. Your search text is never stored.",
     "whatWeCollectRateLimit": "<bold>Rate limiting data</bold> -- your IP address is used server-side to enforce the 10 searches per hour limit. It is not stored or shared.",
     "whatWeCollectEmail": "<bold>Email for price alerts</bold> -- if you set a price alert, we store your email address and search criteria (routes, price threshold). This data is stored in a local database and used solely to send you price notifications. Alerts expire after 90 days. You can unsubscribe at any time via the link in each email.",
     "whatWeDoNotCollectHeading": "What we do not collect",
@@ -456,9 +463,11 @@
     "thirdPartyResend": "<bold>Resend</bold> -- email delivery service for price alert notifications. Only your email address and alert details are shared with Resend when sending notifications.",
     "thirdPartyOutro": "Each service processes data under its own privacy policy. We recommend reviewing their terms if you have concerns.",
     "dataRetentionHeading": "Data retention",
-    "dataRetention": "Search queries are processed in real time and not stored after the response is sent. Anonymized analytics data is retained for up to 12 months. Rate limiting data expires automatically. Price alert data (email, search criteria) is retained for 90 days and automatically deleted after expiry.",
+    "dataRetention": "Search queries are processed in real time and not stored after the response is sent. Client-side analytics data is retained for up to 12 months. Server-side search metrics are retained for up to 12 months. Rate limiting data expires automatically. Price alert data (email, search criteria) is retained for 90 days and automatically deleted after expiry.",
     "yourRightsHeading": "Your rights",
     "yourRights": "You can request access to, correction of, or deletion of any data we hold about you. Contact <emailLink>hello@buildingopen.org</emailLink> with your request.",
+    "cookiesHeading": "Cookies",
+    "cookiesContent": "We use one analytics cookie from PostHog and one from Google Analytics, loaded only if you accept cookies. You can change your preference at any time via the 'Cookie settings' link in the footer. To clear cookies manually, use your browser's settings.",
     "openSourceHeading": "Open source",
     "openSource": "FlyFast is open source. You can inspect exactly what data the application collects by reviewing the code at <repoLink>github.com/buildingopen/opensky</repoLink>."
   },
