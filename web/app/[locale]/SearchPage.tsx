@@ -850,18 +850,82 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       }
     }
 
-    // Qualifier detection: safe routes, budget, class, etc.
-    const qualifierPats = [
-      /\b(safe\s+routes?\s*(?:only)?)\b/i,
-      /\b(safe\s+only)\b/i,
-      /\b(avoid\s+conflict\s+zones?)\b/i,
-      /\b(business\s+class)\b/i,
-      /\b(first\s+class)\b/i,
-      /\b(premium\s+economy)\b/i,
-      /\b(economy)\b/i,
+    // Qualifier detection: safe routes, budget, class, etc. (all 12 languages)
+    const qualifierPats: RegExp[] = [
+      // Safe routes / safe only (en, de, es, fr, it, pt, tr, zh, ja, ko, hi, ar)
+      /\b(safe\s+routes?\s*(?:only)?|safe\s+only|avoid\s+conflict\s+zones?)\b/i,
+      /(nur\s+sicher(?:e\s+routen)?)/i, // de
+      /(solo\s+(?:rutas?\s+)?segur[ao]s?)/i, // es
+      /((?:routes?\s+)?s[uû]r(?:e?s)?\s+uniquement|s[uû]rs?\s+uniquement)/i, // fr
+      /(solo\s+(?:rotte?\s+)?sicur[ei])/i, // it
+      /(somente\s+(?:rotas?\s+)?segur[ao]s?)/i, // pt
+      /(sadece\s+güvenli(?:\s+rotalar)?)/i, // tr
+      /(仅安全航线|安全航线)/i, // zh
+      /(安全ルートのみ|安全のみ)/i, // ja
+      /(안전\s*노선만)/i, // ko
+      /(केवल\s+सुरक्षित(?:\s+मार्ग)?)/i, // hi
+      /(مسارات?\s+آمنة?\s+فقط|آمنة?\s+فقط)/i, // ar
+      // Direct / nonstop (en, de, es, fr, it, pt, tr, zh, ja, ko, hi, ar)
       /\b(nonstop|non-stop|direct\s+(?:flights?\s*)?only)\b/i,
-      /\b(under\s+[\$\u20ac\u00a3\u20b9]?\s*\d[\d,]*)\b/i,
-      /\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9]?\s*\d[\d,]*)\b/i,
+      /(nur\s+direkt(?:flüge)?|nonstop)/i, // de
+      /(solo\s+directo)/i, // es
+      /((?:vols?\s+)?directs?\s+uniquement)/i, // fr
+      /(solo\s+dirett[io])/i, // it
+      /(somente\s+diretos)/i, // pt
+      /(sadece\s+direkt)/i, // tr
+      /(仅直飞)/i, // zh
+      /(直行便のみ)/i, // ja
+      /(직항만)/i, // ko
+      /(केवल\s+सीधी(?:\s+फ़?्लाइट)?)/i, // hi
+      /(مباشر\s+فقط)/i, // ar
+      // Business class (all languages)
+      /\b(business\s+class)\b/i,
+      /(classe?\s+affaires?)/i, // fr
+      /(clase\s+business)/i, // es
+      /(ビジネスクラス)/i, // ja
+      /(비즈니스\s*클래스)/i, // ko
+      /(商务舱)/i, // zh
+      /(बिज़नेस\s+क्लास)/i, // hi
+      /(درجة\s+رجال\s+الأعمال)/i, // ar
+      /(classe?\s+executiva)/i, // pt
+      // First class (all languages)
+      /\b(first\s+class)\b/i,
+      /(première\s+classe?)/i, // fr
+      /(primera\s+clase)/i, // es
+      /(ファーストクラス)/i, // ja
+      /(퍼스트\s*클래스)/i, // ko
+      /(头等舱)/i, // zh
+      /(फ़र्स्ट\s+क्लास)/i, // hi
+      /(الدرجة\s+الأولى)/i, // ar
+      /(primeira\s+classe?)/i, // pt
+      // Premium economy
+      /\b(premium\s+economy)\b/i,
+      /(超级经济舱)/i, // zh
+      /(اقتصادية\s+مميزة)/i, // ar
+      /(turista\s+premium)/i, // es
+      // Economy (all languages, word-boundary sensitive)
+      /\b(economy)\b/i,
+      /(économique)/i, // fr
+      /(经济舱)/i, // zh
+      /(エコノミー)/i, // ja
+      /(이코노미)/i, // ko
+      /(इकॉनमी)/i, // hi
+      /(اقتصادية)/i, // ar
+      /\b(econômica)\b/i, // pt
+      /\b(turista)\b/i, // es
+      // Budget: under/less than + currency + amount (all languages)
+      /\b(under\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*)\b/i, // en
+      /\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*)\b/i, // en
+      /(unter\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, // de: "unter 500€"
+      /(menos\s+de\s+[\$\u20ac\u00a3R]?\$?\s*\d[\d.,]*)/i, // es/pt: "menos de 500€"
+      /(meno\s+di\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, // it: "meno di 500€"
+      /(moins\s+de\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, // fr: "moins de 500€"
+      /(\d[\d.,]*\s*(?:TL|₺)\s*altında)/i, // tr: "15000 TL altında"
+      /(\d[\d.,]*\s*(?:元|美元)以[内下])/i, // zh: "3000元以内"
+      /(\d[\d.,]*\s*(?:万?円)以[内下])/i, // ja: "5万円以内"
+      /(\d[\d.,]*\s*(?:만?원)\s*이하)/i, // ko: "50만원 이하"
+      /([\$\u20ac\u00a3\u20b9]?\s*\d[\d,]*\s*से\s*कम)/i, // hi: "₹40000 से कम"
+      /(أقل\s+من\s+\d[\d.,]*)/i, // ar: "أقل من 2000"
     ];
     for (const pat of qualifierPats) {
       const m = pat.exec(lower);
