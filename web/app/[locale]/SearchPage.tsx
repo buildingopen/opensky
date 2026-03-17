@@ -440,7 +440,36 @@ function resolveDate(phrase: string): string | null {
   return null;
 }
 
-interface QueryPreview { origin: string; dest: string; date: string | null }
+interface LocAirport { iata: string; city: string }
+interface PreviewLocInfo { display: string; count: number; airports: LocAirport[] }
+interface QueryPreview { origin: string; dest: string; date: string | null; originAirports: LocAirport[]; destAirports: LocAirport[] }
+
+function getAirportsForCountry(countryCode: string): LocAirport[] {
+  return AIRPORTS.filter(a => a.country === countryCode).map(a => ({ iata: a.iata, city: a.city }));
+}
+function getAirportsForCity(cityLower: string): LocAirport[] {
+  return AIRPORTS.filter(a => a.city.toLowerCase() === cityLower).map(a => ({ iata: a.iata, city: a.city }));
+}
+
+function PreviewLoc({ text, airports }: { text: string; airports: LocAirport[] }) {
+  const [show, setShow] = useState(false);
+  if (airports.length <= 1) return <span>{text}</span>;
+  return (
+    <span className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+      <span className="cursor-help border-b border-dotted border-[var(--color-interactive)]/30">{text}</span>
+      {show && (
+        <span className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
+          {airports.map((a) => (
+            <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap overflow-hidden text-ellipsis" style={{ maxWidth: 200 }}>
+              <span className="font-mono text-[var(--color-interactive)] font-semibold">{a.iata}</span>{" "}
+              <span className="text-[var(--color-text-muted)]">{a.city}</span>
+            </span>
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
 
 // Pre-sorted arrays for prefix search (built once)
 const CITY_KEYS = Array.from(CITY_DISPLAY.keys()).sort();
@@ -459,25 +488,26 @@ function prefixMatch(keys: string[], prefix: string): string | null {
   return keys[lo];
 }
 
-function matchLocation(phrase: string, hasContext: boolean): { display: string; count: number } | null {
+function matchLocation(phrase: string, hasContext: boolean): PreviewLocInfo | null {
   const p = phrase.toLowerCase().trim();
   if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
   // IATA code (3 uppercase letters)
   const upper = phrase.trim().toUpperCase();
   if (upper.length === 3 && IATA_SET.has(upper)) {
-    return { display: upper, count: 1 };
+    const ap = AIRPORTS.find(a => a.iata === upper);
+    return { display: upper, count: 1, airports: ap ? [{ iata: ap.iata, city: ap.city }] : [] };
   }
   // Country (exact)
   const country = COUNTRY_LOOKUP[p];
   if (country) {
     const cnt = COUNTRY_AIRPORT_COUNT.get(country.code) || 0;
-    return { display: country.name, count: cnt };
+    return { display: country.name, count: cnt, airports: getAirportsForCountry(country.code) };
   }
   // City (exact)
   if (CITY_DISPLAY.has(p)) {
     if (AMBIGUOUS_CITIES.has(p) && !hasContext) return null;
     const cnt = CITY_AIRPORT_COUNT.get(p) || 1;
-    return { display: CITY_DISPLAY.get(p)!, count: cnt };
+    return { display: CITY_DISPLAY.get(p)!, count: cnt, airports: getAirportsForCity(p) };
   }
   // Prefix matching (only if >= 4 chars to avoid false positives)
   if (p.length >= 4) {
@@ -485,13 +515,13 @@ function matchLocation(phrase: string, hasContext: boolean): { display: string; 
     if (cityKey) {
       if (AMBIGUOUS_CITIES.has(cityKey) && !hasContext) return null;
       const cnt = CITY_AIRPORT_COUNT.get(cityKey) || 1;
-      return { display: CITY_DISPLAY.get(cityKey)!, count: cnt };
+      return { display: CITY_DISPLAY.get(cityKey)!, count: cnt, airports: getAirportsForCity(cityKey) };
     }
     const countryKey = prefixMatch(COUNTRY_KEYS, p);
     if (countryKey) {
       const c = COUNTRY_LOOKUP[countryKey];
       const cnt = COUNTRY_AIRPORT_COUNT.get(c.code) || 0;
-      return { display: c.name, count: cnt };
+      return { display: c.name, count: cnt, airports: getAirportsForCountry(c.code) };
     }
   }
   return null;
@@ -596,7 +626,7 @@ function useQueryPreview(prompt: string): QueryPreview | null {
 
     // Handle "X or/o/ou/oder Y to Z" pattern for multiple origins (multilingual "or")
     const orParts = originPhrase.split(/\s+(?:or|o|ou|oder|oppure)\s+/);
-    const origins: { display: string; count: number }[] = [];
+    const origins: PreviewLocInfo[] = [];
     for (const part of orParts) {
       const loc = matchLocation(part.trim(), orParts.length > 1 || !!destPhrase);
       if (loc) origins.push(loc);
@@ -608,6 +638,8 @@ function useQueryPreview(prompt: string): QueryPreview | null {
 
     const originStr = origins.map(formatLocationDisplay).join(", ");
     const destStr = formatLocationDisplay(dest);
+    const originAirports = origins.flatMap(o => o.airports);
+    const destAirports = dest.airports;
 
     // Date detection (multilingual)
     let date: string | null = null;
@@ -665,7 +697,7 @@ function useQueryPreview(prompt: string): QueryPreview | null {
       if (moM) date = resolveDate(moM[1]);
     }
 
-    return { origin: originStr, dest: destStr, date };
+    return { origin: originStr, dest: destStr, date, originAirports, destAirports };
   }, [prompt]);
 }
 
@@ -2573,19 +2605,22 @@ function HomePage() {
         {/* Search surface */}
         <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-white/[0.06] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
           {hasResults ? (
-            /* Compact mode: query preview + modify search action */
+            /* Compact mode: raw prompt + parsed preview + action */
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[12px] text-[var(--color-text-muted)]/70 truncate min-w-0">
-                {queryPreview ? (
-                  <>
-                    {queryPreview.origin}
-                    {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> {queryPreview.dest}</>}
-                    {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
-                  </>
-                ) : prompt ? (
-                  <span className="opacity-60">{prompt}</span>
-                ) : null}
-              </p>
+              <div className="min-w-0 flex-1">
+                {prompt && <p className="text-[11px] text-[var(--color-text-muted)]/40 truncate">{prompt}</p>}
+                <p className="text-[12px] text-[var(--color-text-muted)]/70 min-w-0">
+                  {queryPreview ? (
+                    <>
+                      <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
+                      {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
+                      {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
+                    </>
+                  ) : prompt ? (
+                    <span className="opacity-60">{prompt}</span>
+                  ) : null}
+                </p>
+              </div>
               {isLoading ? (
                 <button
                   onClick={cancelSearch}
@@ -2722,9 +2757,9 @@ function HomePage() {
                     {searchMode === "structured" ? t("describeTrip") : t("useForm")}
                   </button>
                   {searchMode === "natural" && !isLoading && queryPreview && (
-                    <p className="text-[12px] text-[var(--color-text-muted)]/70 truncate transition-opacity duration-300 hidden sm:block">
-                      {queryPreview.origin}
-                      {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> {queryPreview.dest}</>}
+                    <p className="text-[12px] text-[var(--color-text-muted)]/70 transition-opacity duration-300 hidden sm:block">
+                      <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
+                      {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
                       {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
                     </p>
                   )}
