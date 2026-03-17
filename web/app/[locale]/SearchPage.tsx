@@ -3043,8 +3043,12 @@ function HomePage() {
                     onClick={() => search()}
                     disabled={!canSearch()}
                     aria-label={tc("searchFlights")}
-                    className="px-6 py-2.5 btn-cta text-sm font-semibold rounded-xl disabled:opacity-25 disabled:cursor-not-allowed"
+                    className="px-5 py-2.5 btn-cta text-sm font-semibold rounded-xl disabled:opacity-25 disabled:cursor-not-allowed inline-flex items-center gap-2"
                   >
+                    <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 14l6-6 4 4 6-8" />
+                      <path d="M15 4h3v3" />
+                    </svg>
                     {tc("search")}
                   </button>
                 </div>

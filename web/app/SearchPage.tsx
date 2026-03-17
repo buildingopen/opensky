@@ -2492,8 +2492,12 @@ function HomePage() {
                     onClick={() => search()}
                     disabled={!canSearch()}
                     aria-label="Search flights"
-                    className="px-6 py-2.5 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] disabled:opacity-25 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-[0_0_28px_rgba(34,197,94,0.2)]"
+                    className="px-5 py-2.5 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] disabled:opacity-25 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-[0_0_28px_rgba(34,197,94,0.2)] inline-flex items-center gap-2"
                   >
+                    <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 14l6-6 4 4 6-8" />
+                      <path d="M15 4h3v3" />
+                    </svg>
                     Search
                   </button>
                 </div>
