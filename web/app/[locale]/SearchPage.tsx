@@ -53,6 +53,8 @@ const COUNTRY_NAMES: Record<string, string> = {
   UY: "Uruguay", UZ: "Uzbekistan", VE: "Venezuela", VN: "Vietnam", ZA: "South Africa",
   ZM: "Zambia",
 };
+// Strip diacritics for fuzzy matching (São Paulo -> sao paulo, Zürich -> zurich)
+const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 // Auto-build: lowercase country name -> { code, name } from every code in AIRPORTS
 const COUNTRY_LOOKUP: Record<string, { code: string; name: string }> = {};
 for (const a of AIRPORTS) {
@@ -139,6 +141,14 @@ for (const [alias, code] of COUNTRY_ALIAS_ENTRIES) {
   const name = COUNTRY_NAMES[code];
   if (name && !COUNTRY_LOOKUP[alias]) {
     COUNTRY_LOOKUP[alias] = { code, name };
+  }
+}
+// Register diacritic-stripped forms so "turkei" matches "türkei", "espana" matches "españa"
+for (const [alias, code] of COUNTRY_ALIAS_ENTRIES) {
+  const name = COUNTRY_NAMES[code];
+  const normAlias = norm(alias);
+  if (name && normAlias !== alias && !COUNTRY_LOOKUP[normAlias]) {
+    COUNTRY_LOOKUP[normAlias] = { code, name };
   }
 }
 
@@ -246,9 +256,17 @@ for (const [alias, city] of CITY_ALIASES_ENTRIES) {
   if (!CITY_ALIASES[alias]) CITY_ALIASES[alias] = city;
 }
 for (const [alias, city] of Object.entries(CITY_ALIASES)) {
-  if (CITY_DISPLAY.has(city) && !CITY_DISPLAY.has(alias)) {
-    CITY_DISPLAY.set(alias, CITY_DISPLAY.get(city)!);
-    CITY_AIRPORT_COUNT.set(alias, CITY_AIRPORT_COUNT.get(city) || 1);
+  if (CITY_DISPLAY.has(city)) {
+    const normAlias = norm(alias);
+    if (!CITY_DISPLAY.has(alias)) {
+      CITY_DISPLAY.set(alias, CITY_DISPLAY.get(city)!);
+      CITY_AIRPORT_COUNT.set(alias, CITY_AIRPORT_COUNT.get(city) || 1);
+    }
+    // Also register normalized (diacritic-stripped) form so "são paulo" -> "sao paulo" matches
+    if (normAlias !== alias && !CITY_DISPLAY.has(normAlias)) {
+      CITY_DISPLAY.set(normAlias, CITY_DISPLAY.get(city)!);
+      CITY_AIRPORT_COUNT.set(normAlias, CITY_AIRPORT_COUNT.get(city) || 1);
+    }
   }
 }
 
@@ -536,7 +554,7 @@ function prefixMatch(keys: string[], prefix: string): string | null {
 }
 
 function matchLocation(phrase: string, hasContext: boolean): PreviewLocInfo | null {
-  const p = phrase.toLowerCase().trim();
+  const p = norm(phrase.toLowerCase().trim());
   if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
   // IATA code (3 uppercase letters)
   const upper = phrase.trim().toUpperCase();
