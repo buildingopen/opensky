@@ -61,16 +61,51 @@ for (const a of AIRPORTS) {
     COUNTRY_LOOKUP[name.toLowerCase()] = { code: a.country, name };
   }
 }
-// Aliases for common alternate names
-const COUNTRY_ALIASES: Record<string, string> = {
-  "united kingdom": "GB", england: "GB", uk: "GB", britain: "GB",
-  "united states": "US", america: "US", usa: "US",
-  korea: "KR", "south korea": "KR",
-  uae: "AE", "united arab emirates": "AE",
-  czechia: "CZ", "czech republic": "CZ",
-  holland: "NL",
-};
-for (const [alias, code] of Object.entries(COUNTRY_ALIASES)) {
+// Aliases for common alternate names (using entries to avoid TS duplicate key errors)
+const COUNTRY_ALIAS_ENTRIES: [string, string][] = [
+  ["united kingdom","GB"],["england","GB"],["uk","GB"],["britain","GB"],
+  ["united states","US"],["america","US"],["usa","US"],
+  ["korea","KR"],["south korea","KR"],
+  ["uae","AE"],["united arab emirates","AE"],
+  ["czechia","CZ"],["czech republic","CZ"],["holland","NL"],
+  // German
+  ["deutschland","DE"],["frankreich","FR"],["italien","IT"],["spanien","ES"],
+  ["türkei","TR"],["griechenland","GR"],["indien","IN"],["österreich","AT"],
+  ["schweiz","CH"],["niederlande","NL"],["vereinigtes königreich","GB"],
+  ["vereinigte staaten","US"],["schweden","SE"],["norwegen","NO"],
+  ["dänemark","DK"],["polen","PL"],["tschechien","CZ"],["ungarn","HU"],
+  ["rumänien","RO"],["bulgarien","BG"],["kroatien","HR"],["ägypten","EG"],
+  // Spanish
+  ["alemania","DE"],["francia","FR"],["italia","IT"],["españa","ES"],
+  ["turquía","TR"],["grecia","GR"],["india","IN"],["austria","AT"],
+  ["suiza","CH"],["países bajos","NL"],["reino unido","GB"],
+  ["estados unidos","US"],["suecia","SE"],["noruega","NO"],
+  ["dinamarca","DK"],["polonia","PL"],["hungría","HU"],["rumania","RO"],
+  ["croacia","HR"],["egipto","EG"],
+  // French
+  ["allemagne","DE"],["italie","IT"],["espagne","ES"],
+  ["turquie","TR"],["grèce","GR"],["inde","IN"],["autriche","AT"],
+  ["suisse","CH"],["pays-bas","NL"],["royaume-uni","GB"],
+  ["états-unis","US"],["suède","SE"],["norvège","NO"],
+  ["danemark","DK"],["pologne","PL"],["hongrie","HU"],["roumanie","RO"],
+  ["croatie","HR"],["égypte","EG"],
+  // Italian
+  ["germania","DE"],["spagna","ES"],["turchia","TR"],["svizzera","CH"],
+  ["paesi bassi","NL"],["stati uniti","US"],["svezia","SE"],["norvegia","NO"],
+  ["danimarca","DK"],["ungheria","HU"],["egitto","EG"],
+  // Portuguese
+  ["alemanha","DE"],["frança","FR"],["itália","IT"],["espanha","ES"],
+  ["turquia","TR"],["grécia","GR"],["índia","IN"],["áustria","AT"],
+  ["suíça","CH"],["holanda","NL"],["suécia","SE"],
+  ["polónia","PL"],["hungria","HU"],["roménia","RO"],["croácia","HR"],["egito","EG"],
+  // Turkish
+  ["almanya","DE"],["fransa","FR"],["italya","IT"],["ispanya","ES"],
+  ["yunanistan","GR"],["hindistan","IN"],["avusturya","AT"],
+  ["isviçre","CH"],["hollanda","NL"],["birleşik krallık","GB"],
+  ["amerika birleşik devletleri","US"],["isveç","SE"],["norveç","NO"],
+  ["polonya","PL"],["macaristan","HU"],["romanya","RO"],["hırvatistan","HR"],["mısır","EG"],
+];
+for (const [alias, code] of COUNTRY_ALIAS_ENTRIES) {
   const name = COUNTRY_NAMES[code];
   if (name && !COUNTRY_LOOKUP[alias]) {
     COUNTRY_LOOKUP[alias] = { code, name };
@@ -89,12 +124,45 @@ for (const a of AIRPORTS) {
 }
 
 // City aliases: common names that differ from airport data city names
-const CITY_ALIASES: Record<string, string> = {
-  delhi: "new delhi", nyc: "new york", sf: "san francisco", la: "los angeles",
-  "ho chi minh": "ho chi minh city", "saigon": "ho chi minh city",
-  "bombay": "mumbai", "calcutta": "kolkata", "madras": "chennai",
-  "peking": "beijing", "cologne": "cologne", "nuremberg": "nuremberg",
-};
+// Includes multilingual city names for preview to work across locales
+// Using Map to avoid duplicate key issues across languages
+const CITY_ALIASES_ENTRIES: [string, string][] = [
+  // English aliases
+  ["delhi", "new delhi"], ["nyc", "new york"], ["sf", "san francisco"], ["la", "los angeles"],
+  ["ho chi minh", "ho chi minh city"], ["saigon", "ho chi minh city"],
+  ["bombay", "mumbai"], ["calcutta", "kolkata"], ["madras", "chennai"],
+  ["peking", "beijing"], ["cologne", "cologne"], ["nuremberg", "nuremberg"],
+  // Spanish city names
+  ["londres", "london"], ["nueva york", "new york"], ["pekín", "beijing"], ["pekin", "beijing"],
+  ["moscú", "moscow"], ["moscu", "moscow"], ["múnich", "munich"],
+  ["milán", "milan"], ["roma", "rome"], ["viena", "vienna"],
+  ["bruselas", "brussels"], ["ginebra", "geneva"], ["zúrich", "zurich"],
+  ["estambul", "istanbul"], ["atenas", "athens"], ["varsovia", "warsaw"],
+  ["copenhague", "copenhagen"], ["estocolmo", "stockholm"], ["praga", "prague"],
+  // German city names
+  ["mailand", "milan"], ["rom", "rome"], ["wien", "vienna"], ["brüssel", "brussels"],
+  ["lissabon", "lisbon"], ["warschau", "warsaw"], ["kopenhagen", "copenhagen"],
+  ["prag", "prague"], ["athen", "athens"], ["kairo", "cairo"], ["moskau", "moscow"],
+  ["tokio", "tokyo"],
+  // French city names
+  ["nouvelle-orléans", "new orleans"], ["moscou", "moscow"], ["athènes", "athens"],
+  ["le caire", "cairo"], ["lisbonne", "lisbon"], ["varsovie", "warsaw"],
+  // Italian city names
+  ["londra", "london"], ["nuova york", "new york"], ["parigi", "paris"],
+  ["monaco di baviera", "munich"], ["bruxelles", "brussels"],
+  ["ginevra", "geneva"], ["zurigo", "zurich"], ["lisbona", "lisbon"], ["atene", "athens"],
+  // Portuguese city names
+  ["nova iorque", "new york"], ["nova york", "new york"], ["munique", "munich"],
+  ["genebra", "geneva"], ["zurique", "zurich"], ["copenhaga", "copenhagen"],
+  ["varsóvia", "warsaw"],
+  // Turkish city names
+  ["münih", "munich"], ["viyana", "vienna"], ["cenevre", "geneva"],
+  ["zürih", "zurich"], ["lizbon", "lisbon"], ["atina", "athens"], ["kahire", "cairo"],
+];
+const CITY_ALIASES: Record<string, string> = {};
+for (const [alias, city] of CITY_ALIASES_ENTRIES) {
+  if (!CITY_ALIASES[alias]) CITY_ALIASES[alias] = city;
+}
 for (const [alias, city] of Object.entries(CITY_ALIASES)) {
   if (CITY_DISPLAY.has(city) && !CITY_DISPLAY.has(alias)) {
     CITY_DISPLAY.set(alias, CITY_DISPLAY.get(city)!);
@@ -103,7 +171,15 @@ for (const [alias, city] of Object.entries(CITY_ALIASES)) {
 }
 
 const AMBIGUOUS_CITIES = new Set(["nice", "mobile", "split", "reading", "bath", "chester", "orange"]);
-const SKIP_REGIONS = new Set(["anywhere", "europe", "asia", "africa", "south america", "north america", "middle east"]);
+const SKIP_REGIONS = new Set([
+  "anywhere", "europe", "asia", "africa", "south america", "north america", "middle east",
+  // Multilingual region names
+  "cualquier lugar", "europa", "asia", "áfrica", "sudamérica", "norteamérica",
+  "überall", "asien", "afrika", "südamerika", "nordamerika",
+  "n'importe où", "asie", "afrique", "amérique du sud", "amérique du nord",
+  "ovunque", "europa", "asia", "africa", "sud america", "nord america",
+  "qualquer lugar", "ásia", "áfrica", "américa do sul", "américa do norte",
+]);
 
 const MONTH_NAMES = ["january","february","march","april","may","june","july","august","september","october","november","december"];
 const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
