@@ -574,10 +574,10 @@ function flightDisplayDate(flight: FlightOut): string {
 function priceToColor(price: number | null, min: number, max: number): string {
   if (price == null || min === max) return "transparent";
   const ratio = Math.min(1, Math.max(0, (price - min) / (max - min)));
-  // Monochromatic indigo scale: bright indigo (cheap) -> muted indigo (expensive)
-  const r = Math.round(108 - ratio * 50);
-  const g = Math.round(123 - ratio * 55);
-  const b = Math.round(247 - ratio * 80);
+  // Monochromatic green scale: bright green (cheap) -> muted green (expensive)
+  const r = Math.round(34 + ratio * 20);
+  const g = Math.round(197 - ratio * 80);
+  const b = Math.round(94 - ratio * 40);
   const a = 0.9 - ratio * 0.35;
   return `rgba(${r},${g},${b},${a})`;
 }
@@ -862,7 +862,7 @@ function FlightCard({
                   rel="noopener noreferrer"
                   onClick={() => onOutboundClick("booking", flight)}
                   aria-label="Book direct"
-                  className="px-4 py-2 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                  className="px-4 py-2 border border-[var(--color-border)] hover:border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
                 >
                   Book direct
                 </a>
@@ -874,7 +874,7 @@ function FlightCard({
                     rel="noopener noreferrer"
                     onClick={() => onOutboundClick("google", flight)}
                     aria-label="View on Google Flights"
-                    className="px-3 py-2 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-black text-sm font-medium rounded-lg transition-colors"
+                    className="px-3 py-2 border border-[var(--color-border)] hover:border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
                   >
                     Google Flights <ExternalLinkIcon />
                   </a>
@@ -999,7 +999,7 @@ function RoundTripFlightRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onOutboundClick("booking", flight)}
-            className="px-3 py-1.5 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-black text-xs font-medium rounded-lg transition-colors"
+            className="px-3 py-1.5 border border-[var(--color-border)] hover:border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
           >
             Book <ExternalLinkIcon />
           </a>
@@ -1009,7 +1009,7 @@ function RoundTripFlightRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onOutboundClick("google", flight)}
-            className="px-3 py-1.5 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] text-black text-xs font-medium rounded-lg transition-colors"
+            className="px-3 py-1.5 border border-[var(--color-border)] hover:border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
           >
             Google Flights <ExternalLinkIcon />
           </a>
@@ -1421,7 +1421,7 @@ function ScanSummaryExpanded({
           {/* Color legend */}
           <div className="px-4 py-2.5 border-t border-[var(--color-border)] flex items-center gap-2">
             <span className="text-xs text-[var(--color-text-muted)]">Cheapest</span>
-            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgba(108,123,247,0.9), rgba(58,68,167,0.55))" }} />
+            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgba(34,197,94,0.9), rgba(54,117,54,0.55))" }} />
             <span className="text-xs text-[var(--color-text-muted)]">Most expensive</span>
           </div>
         </div>
