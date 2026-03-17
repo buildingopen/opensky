@@ -13,7 +13,8 @@
     "loading": "Loading...",
     "close": "Close",
     "skipToContent": "Skip to main content",
-    "searchFlights": "Search flights"
+    "searchFlights": "Search flights",
+    "onThisPage": "On this page"
   },
   "header": {
     "howItWorks": "How it works",
@@ -58,6 +59,10 @@
     "heroTitleAccent": "fly.",
     "heroSubtitle": "Search every flight on Google Flights. AI-powered, conflict zones filtered. Free, no login.",
     "placeholder": "e.g. JFK to London next week under $500, business class",
+    "airlineFilter": {
+      "ariaLabel": "Filter by airline",
+      "showing": "Showing {filtered} of {total} flights"
+    },
     "ariaLabel": "Describe your trip in plain English",
     "enterToSearch": "Enter to search",
     "searchFlights": "Search flights",
@@ -202,6 +207,15 @@
     "referredFriend": "A friend found {route} from {price}",
     "referredGeneric": "Someone shared a flight with you",
     "referredSubtext": "Search below to compare options and find your own deals.",
+    "prompt": {
+      "to": "to",
+      "roundTrip": "round trip",
+      "returning": "returning",
+      "flexible": "flexible +/- 3 days",
+      "directOnly": "direct only",
+      "safeOnly": "safe routes only",
+      "under": "under"
+    },
     "expand": {
       "expandSearch": "Expand search",
       "findMore": "Find more options with nearby airports and flexible dates",
@@ -224,7 +238,8 @@
       "pricesFrom": "Prices from ~{minutes} min ago.",
       "moreDates": "+ {count} more dates",
       "roundTripReturn": "Round trip",
-      "moreReturnDates": "+ {count} more"
+      "moreReturnDates": "+ {count} more",
+      "airportCount": "{count, plural, one {# airport} other {# airports}}"
     },
     "compare": {
       "compareAll": "Compare all options ({flights, plural, one {1 flight} other {{flights} flights}}, {destinations, plural, one {1 destination} other {{destinations} destinations}})",

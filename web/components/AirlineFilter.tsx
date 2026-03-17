@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface HasLegs {
   legs: { airline: string }[];
@@ -80,12 +81,15 @@ export function AirlineFilterChips({
   totalCount: number;
   filteredCount: number;
 }) {
+  const t = useTranslations("search");
+  const ts = useTranslations("savedSearches");
+
   if (airlines.length <= 1) return null;
 
   return (
     <div className="mt-4">
       <div className="flex items-center justify-between mb-2">
-        <div role="group" aria-label="Filter by airline" className="flex flex-wrap gap-1.5">
+        <div role="group" aria-label={t("airlineFilter.ariaLabel")} className="flex flex-wrap gap-1.5">
           {airlines.map((code) => (
             <button
               key={code}
@@ -112,13 +116,13 @@ export function AirlineFilterChips({
         </div>
         {selected.size > 0 && (
           <button onClick={clearFilter} className="text-[11px] text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)] transition-colors ms-2 shrink-0">
-            Clear
+            {ts("clear")}
           </button>
         )}
       </div>
       {selected.size > 0 && (
         <p className="text-[11px] text-[var(--color-text-muted)]">
-          Showing {filteredCount} of {totalCount} flights
+          {t("airlineFilter.showing", { filtered: filteredCount, total: totalCount })}
         </p>
       )}
     </div>

@@ -13,7 +13,8 @@
     "loading": "読み込み中...",
     "close": "閉じる",
     "skipToContent": "メインコンテンツへ",
-    "searchFlights": "フライト検索"
+    "searchFlights": "フライト検索",
+    "onThisPage": "このページで"
   },
   "header": {
     "howItWorks": "仕組み",
@@ -224,7 +225,8 @@
       "pricesFrom": "約{minutes}分前の料金です。",
       "moreDates": "+ 他{count}日程",
       "roundTripReturn": "往復",
-      "moreReturnDates": "+ 他{count}件"
+      "moreReturnDates": "+ 他{count}件",
+      "airportCount": "{count, plural, one {# 空港} other {# 空港}}"
     },
     "compare": {
       "compareAll": "すべてのオプションを比較 ({flights, plural, one {1便} other {{flights}便}}, {destinations, plural, one {1目的地} other {{destinations}目的地}})",
@@ -386,7 +388,20 @@
       "nextWeekend": "来週末",
       "nextMonth": "来月"
     },
-    "airports": "空港"
+    "airports": "空港",
+    "airlineFilter": {
+      "ariaLabel": "航空会社で絞り込む",
+      "showing": "{total}件中{filtered}件のフライトを表示中"
+    },
+    "prompt": {
+      "to": "へ",
+      "roundTrip": "往復",
+      "returning": "復路",
+      "flexible": "前後3日間で柔軟に",
+      "directOnly": "直行便のみ",
+      "safeOnly": "安全なルートのみ",
+      "under": "以下"
+    }
   },
   "notFound": {
     "title": "404",

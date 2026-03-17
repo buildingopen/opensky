@@ -13,7 +13,8 @@
     "loading": "로딩 중...",
     "close": "닫기",
     "skipToContent": "본문으로 건너뛰기",
-    "searchFlights": "항공편 검색"
+    "searchFlights": "항공편 검색",
+    "onThisPage": "이 페이지에서"
   },
   "header": {
     "howItWorks": "이용 방법",
@@ -224,7 +225,8 @@
       "pricesFrom": "약 {minutes}분 전 가격 기준.",
       "moreDates": "+ {count}개 추가 날짜",
       "roundTripReturn": "왕복",
-      "moreReturnDates": "+ {count}개 더"
+      "moreReturnDates": "+ {count}개 더",
+      "airportCount": "{count, plural, one {#개 공항} other {#개 공항}}"
     },
     "compare": {
       "compareAll": "모든 옵션 비교 ({flights, plural, one {1개 항공편} other {{flights}개 항공편}}, {destinations, plural, one {1개 목적지} other {{destinations}개 목적지}})",
@@ -386,7 +388,20 @@
       "nextWeekend": "다음 주말",
       "nextMonth": "다음 달"
     },
-    "airports": "공항"
+    "airports": "공항",
+    "airlineFilter": {
+      "ariaLabel": "항공사 필터링",
+      "showing": "항공편 {total}개 중 {filtered}개 표시"
+    },
+    "prompt": {
+      "to": "행",
+      "roundTrip": "왕복",
+      "returning": "귀국",
+      "flexible": "± 3일 유연",
+      "directOnly": "직항만",
+      "safeOnly": "안전 노선만",
+      "under": "미만"
+    }
   },
   "notFound": {
     "title": "404",

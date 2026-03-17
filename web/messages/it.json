@@ -13,7 +13,8 @@
     "loading": "Caricamento...",
     "close": "Chiudi",
     "skipToContent": "Vai al contenuto principale",
-    "searchFlights": "Cerca voli"
+    "searchFlights": "Cerca voli",
+    "onThisPage": "In questa pagina"
   },
   "header": {
     "howItWorks": "Come funziona",
@@ -224,7 +225,8 @@
       "pricesFrom": "Prezzi di circa {minutes} min fa.",
       "moreDates": "+ {count} altre date",
       "roundTripReturn": "Andata e ritorno",
-      "moreReturnDates": "+ {count} altre"
+      "moreReturnDates": "+ {count} altre",
+      "airportCount": "{count, plural, one {# aeroporto} other {# aeroporti}}"
     },
     "compare": {
       "compareAll": "Confronta tutte le opzioni ({flights, plural, one {1 volo} other {{flights} voli}}, {destinations, plural, one {1 destinazione} other {{destinations} destinazioni}})",
@@ -386,7 +388,20 @@
       "nextWeekend": "il prossimo fine settimana",
       "nextMonth": "il mese prossimo"
     },
-    "airports": "aeroporti"
+    "airports": "aeroporti",
+    "airlineFilter": {
+      "ariaLabel": "Filtra per compagnia aerea",
+      "showing": "Mostra {filtered} di {total} voli"
+    },
+    "prompt": {
+      "to": "a",
+      "roundTrip": "andata e ritorno",
+      "returning": "ritorno",
+      "flexible": "flessibile +/- 3 giorni",
+      "directOnly": "solo diretti",
+      "safeOnly": "solo rotte sicure",
+      "under": "sotto"
+    }
   },
   "notFound": {
     "title": "404",

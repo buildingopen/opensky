@@ -13,7 +13,8 @@
     "loading": "लोड हो रहा है...",
     "close": "बंद करें",
     "skipToContent": "मुख्य सामग्री पर जाएं",
-    "searchFlights": "फ़्लाइट खोजें"
+    "searchFlights": "फ़्लाइट खोजें",
+    "onThisPage": "इस पेज पर"
   },
   "header": {
     "howItWorks": "यह कैसे काम करता है",
@@ -224,7 +225,8 @@
       "pricesFrom": "कीमतें ~{minutes} मिनट पहले की।",
       "moreDates": "+ {count} और तारीख़ें",
       "roundTripReturn": "आना-जाना",
-      "moreReturnDates": "+ {count} और"
+      "moreReturnDates": "+ {count} और",
+      "airportCount": "{count, plural, one {# हवाई अड्डा} other {# हवाई अड्डे}}"
     },
     "compare": {
       "compareAll": "सभी विकल्पों की तुलना करें ({flights, plural, one {1 फ़्लाइट} other {{flights} फ़्लाइटें}}, {destinations, plural, one {1 गंतव्य} other {{destinations} गंतव्य}})",
@@ -386,7 +388,20 @@
       "nextWeekend": "अगला सप्ताहांत",
       "nextMonth": "अगला महीना"
     },
-    "airports": "हवाई अड्डे"
+    "airports": "हवाई अड्डे",
+    "airlineFilter": {
+      "ariaLabel": "एयरलाइन के अनुसार फ़िल्टर करें",
+      "showing": "{total} फ़्लाइट में से {filtered} दिखा रहा है"
+    },
+    "prompt": {
+      "to": "से",
+      "roundTrip": "आना-जाना",
+      "returning": "वापसी",
+      "flexible": "लचीला +/- 3 दिन",
+      "directOnly": "केवल सीधी",
+      "safeOnly": "केवल सुरक्षित मार्ग",
+      "under": "से कम"
+    }
   },
   "notFound": {
     "title": "404",

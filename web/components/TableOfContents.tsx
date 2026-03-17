@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 interface TocItem {
   id: string;
@@ -8,6 +9,7 @@ interface TocItem {
 }
 
 export function TableOfContents({ items }: { items: TocItem[] }) {
+  const tc = useTranslations("common");
   const [activeId, setActiveId] = useState(items[0]?.id || "");
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
     <nav className="hidden lg:block">
       <div className="sticky top-8">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-3">
-          On this page
+          {tc("onThisPage")}
         </p>
         <ul className="space-y-1 border-s border-[var(--color-border)]">
           {items.map((item) => (

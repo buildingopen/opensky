@@ -13,7 +13,8 @@
     "loading": "加载中...",
     "close": "关闭",
     "skipToContent": "跳到主要内容",
-    "searchFlights": "搜索航班"
+    "searchFlights": "搜索航班",
+    "onThisPage": "本页内容"
   },
   "header": {
     "howItWorks": "使用方法",
@@ -224,7 +225,8 @@
       "pricesFrom": "价格来自约{minutes}分钟前。",
       "moreDates": "还有{count}个日期",
       "roundTripReturn": "往返",
-      "moreReturnDates": "还有{count}个"
+      "moreReturnDates": "还有{count}个",
+      "airportCount": "{count, plural, one {# 个机场} other {# 个机场}}"
     },
     "compare": {
       "compareAll": "比较所有选项（{flights, plural, one {1个航班} other {{flights}个航班}}，{destinations, plural, one {1个目的地} other {{destinations}个目的地}}）",
@@ -386,7 +388,20 @@
       "nextWeekend": "下个周末",
       "nextMonth": "下个月"
     },
-    "airports": "机场"
+    "airports": "机场",
+    "airlineFilter": {
+      "ariaLabel": "按航空公司筛选",
+      "showing": "显示{filtered}/{total}个航班"
+    },
+    "prompt": {
+      "to": "到",
+      "roundTrip": "往返",
+      "returning": "返程",
+      "flexible": "弹性前后3天",
+      "directOnly": "仅直飞",
+      "safeOnly": "仅安全航线",
+      "under": "低于"
+    }
   },
   "notFound": {
     "title": "404",

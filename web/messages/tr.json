@@ -13,7 +13,8 @@
     "loading": "Yükleniyor...",
     "close": "Kapat",
     "skipToContent": "Ana içeriğe atla",
-    "searchFlights": "Uçuş ara"
+    "searchFlights": "Uçuş ara",
+    "onThisPage": "Bu sayfada"
   },
   "header": {
     "howItWorks": "Nasıl çalışır",
@@ -224,7 +225,8 @@
       "pricesFrom": "Fiyatlar yaklaşık {minutes} dk öncesine ait.",
       "moreDates": "+ {count} tarih daha",
       "roundTripReturn": "Gidiş-dönüş",
-      "moreReturnDates": "+ {count} daha"
+      "moreReturnDates": "+ {count} daha",
+      "airportCount": "{count, plural, one {# havalimanı} other {# havalimanı}}"
     },
     "compare": {
       "compareAll": "Tüm seçenekleri karşılaştır ({flights, plural, one {1 uçuş} other {{flights} uçuş}}, {destinations, plural, one {1 varış noktası} other {{destinations} varış noktası}})",
@@ -386,7 +388,20 @@
       "nextWeekend": "gelecek hafta sonu",
       "nextMonth": "gelecek ay"
     },
-    "airports": "havalimanları"
+    "airports": "havalimanları",
+    "airlineFilter": {
+      "ariaLabel": "Havayoluna göre filtrele",
+      "showing": "{total} uçuştan {filtered} gösteriliyor"
+    },
+    "prompt": {
+      "to": "Nereye",
+      "roundTrip": "Gidiş dönüş",
+      "returning": "Dönüş",
+      "flexible": "Esnek +/- 3 gün",
+      "directOnly": "Sadece aktarmasız",
+      "safeOnly": "Sadece güvenli rotalar",
+      "under": "Altında"
+    }
   },
   "notFound": {
     "title": "404",

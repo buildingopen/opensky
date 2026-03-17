@@ -574,10 +574,6 @@ function matchLocation(phrase: string, hasContext: boolean): PreviewLocInfo | nu
   return null;
 }
 
-function formatLocationDisplay(loc: { display: string; count: number }): string {
-  return loc.count > 1 ? `${loc.display} (${loc.count} airports)` : loc.display;
-}
-
 function extractOriginDest(lower: string): { originPhrase: string; destPhrase: string } | null {
   // Unicode-aware character class for location names (covers Latin, CJK, Arabic, Devanagari, etc.)
   const W = "[\\p{L}\\p{N}\\s/.'-]";
@@ -662,7 +658,7 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
   return null;
 }
 
-function useQueryPreview(prompt: string): QueryPreview | null {
+function useQueryPreview(prompt: string, fmtLoc?: (loc: { display: string; count: number }) => string): QueryPreview | null {
   return useMemo(() => {
     if (!prompt || prompt.length < 5) return null;
     const lower = prompt.toLowerCase();
@@ -683,8 +679,9 @@ function useQueryPreview(prompt: string): QueryPreview | null {
     const dest = matchLocation(destPhrase, true);
     if (!dest) return null;
 
-    const originStr = origins.map(formatLocationDisplay).join(", ");
-    const destStr = formatLocationDisplay(dest);
+    const fmt = fmtLoc || ((loc: { display: string; count: number }) => loc.count > 1 ? `${loc.display} (${loc.count} airports)` : loc.display);
+    const originStr = origins.map(fmt).join(", ");
+    const destStr = fmt(dest);
     const originAirports = origins.flatMap(o => o.airports);
     const destAirports = dest.airports;
 
@@ -2082,14 +2079,14 @@ function PriceAlertSection({
       const data = await resp.json();
       if (!resp.ok) {
         setStatus("error");
-        setMessage(data.detail || "Something went wrong.");
+        setMessage(data.detail || t("errors.somethingWentWrong"));
       } else {
         setStatus("success");
-        setMessage(data.message || "Check your email to confirm the alert.");
+        setMessage(data.message || t("priceAlert.success"));
       }
     } catch {
       setStatus("error");
-      setMessage("Network error. Please try again.");
+      setMessage(t("errors.networkError"));
     }
   };
 
@@ -2260,19 +2257,22 @@ interface SearchFormState {
   safeOnly: boolean;
 }
 
-function buildPromptFromForm(f: SearchFormState, sym = "$"): string {
+function buildPromptFromForm(f: SearchFormState, sym: string, t: (key: string) => string): string {
   const parts: string[] = [];
-  parts.push(`${f.from.trim()} to ${f.to.trim()}`);
+  parts.push(`${f.from.trim()} ${t("prompt.to")} ${f.to.trim()}`);
   if (f.roundTrip && f.returnDate) {
-    parts.push(`round trip ${f.depart} returning ${f.returnDate}`);
+    parts.push(`${t("prompt.roundTrip")} ${f.depart} ${t("prompt.returning")} ${f.returnDate}`);
   } else {
     parts.push(f.depart);
   }
-  if (f.flexibleDates) parts.push("flexible +/- 3 days");
-  if (f.cabin && f.cabin !== "economy") parts.push(f.cabin.replace("_", " "));
-  if (f.maxPrice && parseInt(f.maxPrice, 10) > 0) parts.push(`under ${sym}${f.maxPrice}`);
-  if (f.directOnly) parts.push("direct only");
-  if (f.safeOnly) parts.push("safe routes only");
+  if (f.flexibleDates) parts.push(t("prompt.flexible"));
+  if (f.cabin && f.cabin !== "economy") {
+    const cabinKey = f.cabin === "premium_economy" ? "premiumEconomy" : f.cabin;
+    parts.push(t(`form.${cabinKey}`));
+  }
+  if (f.maxPrice && parseInt(f.maxPrice, 10) > 0) parts.push(`${t("prompt.under")} ${sym}${f.maxPrice}`);
+  if (f.directOnly) parts.push(t("prompt.directOnly"));
+  if (f.safeOnly) parts.push(t("prompt.safeOnly"));
   return parts.join(", ");
 }
 
@@ -2446,7 +2446,7 @@ function HomePage() {
 
   const getSearchPrompt = (): string => {
     if (searchMode === "natural") return prompt.trim();
-    return buildPromptFromForm(form, currencySymbol(userCurrency));
+    return buildPromptFromForm(form, currencySymbol(userCurrency), t);
   };
 
   const returnDateInvalid = form.roundTrip && form.returnDate && form.depart && form.returnDate < form.depart;
@@ -2762,7 +2762,7 @@ function HomePage() {
               setExpandPhase("done");
               trackEvent("expand_search_results", { new_flights: expandedFlights.length, new_rt: expandedRT.length });
             } else if (msg.type === "error") {
-              setExpandError(msg.detail || "Expansion search failed.");
+              setExpandError(msg.detail || t("expand.failed"));
               setExpandPhase("done");
             }
           } catch {}
@@ -2851,7 +2851,9 @@ function HomePage() {
   };
 
   const isLoading = phase === "parsing" || phase === "searching";
-  const queryPreview = useQueryPreview(prompt);
+  const queryPreview = useQueryPreview(prompt, (loc) =>
+    loc.count > 1 ? `${loc.display} (${t("parsed.airportCount", { count: loc.count })})` : loc.display
+  );
   const highlightRanges = useHighlightRanges(prompt);
 
   // Airline filter (post-results)
