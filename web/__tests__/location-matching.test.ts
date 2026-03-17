@@ -45,6 +45,7 @@ const CITY_SET = new Set(AIRPORTS.map((a) => a.city.toLowerCase()));
 const IATA_SET = new Set(AIRPORTS.map((a) => a.iata));
 const LOCATION_SKIPWORDS = extractSet("LOCATION_SKIPWORDS");
 const AMBIGUOUS_CITIES = extractSet("AMBIGUOUS_CITIES");
+const SKIP_REGIONS = extractSet("SKIP_REGIONS");
 const ALIAS_ENTRIES = extractAliasEntries();
 const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -107,15 +108,16 @@ for (const a of AIRPORTS) {
 // ---------------------------------------------------------------------------
 function testMatchExact(phrase: string, originalPhrase?: string): string | null {
   const p = norm(phrase.toLowerCase());
-  if (!p || p.length < 2) return null;
+  if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
   const orig = originalPhrase || phrase;
   // Skipword: block if user typed lowercase; allow if all-uppercase (IATA intent)
   if (LOCATION_SKIPWORDS.has(p) && orig !== orig.toUpperCase()) return null;
   const upper = phrase.toUpperCase();
-  if (upper.length === 3 && IATA_SET.has(upper)) return `IATA:${upper}`;
+  // For explicit all-uppercase 3-letter input, IATA takes priority
+  if (upper.length === 3 && orig === orig.toUpperCase() && IATA_SET.has(upper)) return `IATA:${upper}`;
   // Country
   if (COUNTRY_LOOKUP[p]) return `country:${COUNTRY_LOOKUP[p].name}`;
-  // City
+  // City (checked before fallback IATA so "goa" → city:goa, not IATA:GOA Genoa)
   if (CITY_SET.has(p) && !AMBIGUOUS_CITIES.has(p)) return `city:${p}`;
   // Alias
   const normP = norm(p);
@@ -123,6 +125,8 @@ function testMatchExact(phrase: string, originalPhrase?: string): string | null 
     const target = CITY_ALIASES[normP].toLowerCase();
     if (CITY_SET.has(target)) return `alias:${target}`;
   }
+  // Fallback IATA for non-uppercase input (e.g. "jfk", "lax" still resolve)
+  if (upper.length === 3 && IATA_SET.has(upper)) return `IATA:${upper}`;
   // Turkish agglutination: "moskova'dan" → try "moskova" before the apostrophe
   // Only for single-word tokens (no spaces) to avoid false matches on multi-word phrases
   const apos = p.indexOf("'");
@@ -135,7 +139,7 @@ function testMatchExact(phrase: string, originalPhrase?: string): string | null 
 
 function scanPrompt(prompt: string): { token: string; match: string | null }[] {
   const lower = prompt.toLowerCase();
-  const re = /[\p{L}\p{N}]+(?:['-][\p{L}\p{N}]+)*/gu;
+  const re = /[\p{L}\p{N}\p{M}]+(?:['-][\p{L}\p{N}\p{M}]+)*/gu;
   const tokens: { word: string; original: string }[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(lower)) !== null) {
@@ -727,5 +731,388 @@ describe("Edge cases: sentence-initial capitalization", () => {
   it("'Can you find' - capital C but not all-caps, still blocked", () => {
     expect(matches("Can you find flights to London")).toContain("city:london");
     expect(nonMatches("Can you find flights to London")).toContain("Can");
+  });
+});
+
+// ===================================================================
+// BUG FIX VERIFICATION TESTS
+// ===================================================================
+
+describe("Bug fix: cities with periods (St. Louis, etc.)", () => {
+  it("St. Louis matches via alias (tokenizer strips period)", () => {
+    const m = matches("fly to St. Louis");
+    expect(m).toContain("alias:st. louis");
+  });
+
+  it("St. Petersburg matches via alias", () => {
+    const m = matches("St. Petersburg to Moscow");
+    expect(m).toContain("alias:st. petersburg");
+  });
+
+  it("Saint Louis matches via alias", () => {
+    expect(matches("Saint Louis flights")).toContain("alias:st. louis");
+  });
+
+  it("Saint Petersburg matches via alias", () => {
+    expect(matches("flights to Saint Petersburg")).toContain("alias:st. petersburg");
+  });
+
+  it("Sankt Petersburg (German) matches via alias", () => {
+    expect(matches("Flug nach Sankt Petersburg")).toContain("alias:st. petersburg");
+  });
+
+  it("St. John's matches via alias", () => {
+    const m = matches("fly to St. John's");
+    expect(m).toContain("alias:st. john's");
+  });
+
+  it("St. Maarten matches via alias", () => {
+    expect(matches("vacation in St. Maarten")).toContain("alias:st. maarten");
+  });
+});
+
+describe("Bug fix: AMBIGUOUS_CITIES false positive prevention", () => {
+  it("'male' is ambiguous, not highlighted", () => {
+    expect(matches("my male friend wants to fly")).toEqual([]);
+  });
+
+  it("'cork' is ambiguous, not highlighted", () => {
+    expect(matches("pop the cork and celebrate")).toEqual([]);
+  });
+
+  it("'buffalo' is ambiguous, not highlighted", () => {
+    expect(matches("buffalo wings recipe")).toEqual([]);
+  });
+
+  it("'lima' is ambiguous, not highlighted", () => {
+    expect(matches("lima bean soup")).toEqual([]);
+  });
+
+  it("'troy' is ambiguous, not highlighted", () => {
+    expect(matches("troy was an ancient city")).toEqual([]);
+  });
+
+  it("existing ambiguous cities still blocked: nice, mobile, split, bath", () => {
+    expect(matches("a nice mobile split bath")).toEqual([]);
+  });
+});
+
+describe("Bug fix: GOA IATA vs Goa city priority", () => {
+  it("'goa' (lowercase) matches city Goa India, not IATA Genoa", () => {
+    const m = matches("flights to goa");
+    expect(m).toContain("city:goa");
+    expect(m).not.toContain("IATA:GOA");
+  });
+
+  it("'Goa' (title case) matches city Goa India", () => {
+    const m = matches("Goa to Mumbai");
+    expect(m).toContain("city:goa");
+  });
+
+  it("'GOA' (all caps) matches IATA Genoa", () => {
+    const m = matches("fly to GOA");
+    expect(m).toContain("IATA:GOA");
+  });
+
+  it("lowercase IATA codes still work when not a city name", () => {
+    expect(matches("fly to jfk")).toContain("IATA:JFK");
+    expect(matches("fly to lax")).toContain("IATA:LAX");
+  });
+
+  it("all-caps IATA codes work", () => {
+    expect(matches("JFK to LAX")).toContain("IATA:JFK");
+    expect(matches("JFK to LAX")).toContain("IATA:LAX");
+  });
+});
+
+// ===================================================================
+// SKIP_REGIONS TESTS
+// ===================================================================
+
+describe("SKIP_REGIONS are not matched", () => {
+  it("'europe' is a region, not a city", () => {
+    expect(matches("anywhere in europe")).toEqual([]);
+  });
+
+  it("'asia' is a region", () => {
+    expect(matches("flights to asia")).toEqual([]);
+  });
+
+  it("multilingual regions blocked: europa, asie, asien", () => {
+    expect(matches("vuelo a europa")).toEqual([]);
+    expect(matches("vol vers asie")).toEqual([]);
+    expect(matches("Flug nach asien")).toEqual([]);
+  });
+});
+
+// ===================================================================
+// SKIPWORD-PREFIXED MULTI-WORD CITIES
+// ===================================================================
+
+describe("Skipword-prefixed multi-word cities", () => {
+  it("La Paz matches (multi-word wins over skipword 'la')", () => {
+    expect(matches("fly to La Paz")).toContain("city:la paz");
+  });
+
+  it("El Paso matches (multi-word wins over skipword 'el')", () => {
+    expect(matches("flights to El Paso")).toContain("city:el paso");
+  });
+
+  it("La Habana matches alias (multi-word wins over 'la')", () => {
+    expect(matches("vuelo a La Habana")).toContain("alias:havana");
+  });
+
+  it("Le Caire matches alias (multi-word wins over 'le')", () => {
+    expect(matches("vol vers Le Caire")).toContain("alias:cairo");
+  });
+
+  it("El Cairo matches alias", () => {
+    expect(matches("vuelo al El Cairo")).toContain("alias:cairo");
+  });
+});
+
+// ===================================================================
+// PUNCTUATION AROUND CITIES
+// ===================================================================
+
+describe("Punctuation around cities", () => {
+  it("'Paris!' matches (exclamation stripped)", () => {
+    expect(matches("Paris!")).toContain("city:paris");
+  });
+
+  it("'(London)' matches (parens stripped)", () => {
+    expect(matches("fly to (London)")).toContain("city:london");
+  });
+
+  it("'Berlin, Germany' matches both", () => {
+    const m = matches("Berlin, Germany");
+    expect(m).toContain("city:berlin");
+    expect(m).toContain("country:Germany");
+  });
+
+  it("'\"Tokyo\"' matches (quotes stripped)", () => {
+    expect(matches('"Tokyo" flights')).toContain("city:tokyo");
+  });
+
+  it("'London...' matches (ellipsis stripped)", () => {
+    expect(matches("fly to London...")).toContain("city:london");
+  });
+
+  it("'Paris—London' matches both (em dash as separator)", () => {
+    // em dash is not a word char, acts as separator
+    const m = matches("Paris\u2014London");
+    expect(m).toContain("city:paris");
+    expect(m).toContain("city:london");
+  });
+});
+
+// ===================================================================
+// NUMBERS MIXED WITH CITIES
+// ===================================================================
+
+describe("Numbers mixed with city names", () => {
+  it("'747 to London' - number ignored, London matches", () => {
+    const m = matches("747 to London");
+    expect(m).toContain("city:london");
+    expect(m).toHaveLength(1);
+  });
+
+  it("'flight 123 LAX to JFK' - IATA codes match, numbers ignored", () => {
+    const m = matches("flight 123 LAX to JFK");
+    expect(m).toContain("IATA:LAX");
+    expect(m).toContain("IATA:JFK");
+  });
+
+  it("'$500 flights to Paris' - dollar amount ignored", () => {
+    const m = matches("$500 flights to Paris");
+    expect(m).toContain("city:paris");
+  });
+});
+
+// ===================================================================
+// CASE SENSITIVITY EDGE CASES
+// ===================================================================
+
+describe("Case sensitivity edge cases", () => {
+  it("'PARIS' (all caps, 5 letters) matches as city, not IATA", () => {
+    expect(matches("PARIS")).toContain("city:paris");
+  });
+
+  it("'LONDON TO TOKYO' (all caps sentence) matches cities", () => {
+    const m = matches("LONDON TO TOKYO");
+    expect(m).toContain("city:london");
+    expect(m).toContain("city:tokyo");
+  });
+
+  it("'lOnDoN' (mixed case) matches city", () => {
+    expect(matches("lOnDoN")).toContain("city:london");
+  });
+
+  it("'SIN' (all caps) matches IATA, not blocked as skipword", () => {
+    expect(matches("SIN")).toContain("IATA:SIN");
+  });
+
+  it("'sin' (lowercase) is blocked as skipword", () => {
+    expect(matches("sin")).toEqual([]);
+  });
+
+  it("'Sin' (title case) is blocked as skipword (not all-caps)", () => {
+    expect(matches("Sin")).toEqual([]);
+  });
+});
+
+// ===================================================================
+// IATA EDGE CASES
+// ===================================================================
+
+describe("IATA code edge cases", () => {
+  it("2-letter input does not match IATA", () => {
+    expect(matches("AA")).toEqual([]);
+  });
+
+  it("4-letter input does not match IATA", () => {
+    expect(matches("ABCD")).toEqual([]);
+  });
+
+  it("lowercase 3-letter IATA still resolves", () => {
+    expect(matches("jfk")).toContain("IATA:JFK");
+    expect(matches("lax")).toContain("IATA:LAX");
+    expect(matches("cdg")).toContain("IATA:CDG");
+  });
+
+  it("NYC alias works (not IATA but alias)", () => {
+    expect(matches("NYC")).toContain("alias:new york");
+  });
+});
+
+// ===================================================================
+// HYPHENATED CITIES
+// ===================================================================
+
+describe("Hyphenated city names", () => {
+  it("Port-au-Prince matches as single hyphenated token", () => {
+    expect(matches("fly to Port-au-Prince")).toContain("city:port-au-prince");
+  });
+
+  it("Xi'an matches with straight apostrophe", () => {
+    expect(matches("fly to Xi'an")).toContain("city:xi'an");
+  });
+});
+
+// ===================================================================
+// CJK / ARABIC / HINDI ALIAS TESTS
+// ===================================================================
+
+describe("CJK alias matching", () => {
+  it("Chinese: 伦敦 (London) matches", () => {
+    expect(matches("伦敦")).toContain("alias:london");
+  });
+
+  it("Chinese: 巴黎 (Paris) matches", () => {
+    expect(matches("巴黎")).toContain("alias:paris");
+  });
+
+  it("Japanese: 東京 (Tokyo) matches", () => {
+    expect(matches("東京")).toContain("alias:tokyo");
+  });
+
+  it("Korean: 런던 (London) matches", () => {
+    expect(matches("런던")).toContain("alias:london");
+  });
+
+  it("Korean: 파리 (Paris) matches", () => {
+    expect(matches("파리")).toContain("alias:paris");
+  });
+});
+
+describe("Arabic alias matching", () => {
+  it("Arabic: لندن (London) matches", () => {
+    expect(matches("لندن")).toContain("alias:london");
+  });
+
+  it("Arabic: باريس (Paris) matches", () => {
+    expect(matches("باريس")).toContain("alias:paris");
+  });
+});
+
+describe("Hindi alias matching", () => {
+  it("Hindi: लंदन (London) matches", () => {
+    expect(matches("लंदन")).toContain("alias:london");
+  });
+
+  it("Hindi: पेरिस (Paris) matches", () => {
+    expect(matches("पेरिस")).toContain("alias:paris");
+  });
+
+  it("Hindi: दिल्ली (Delhi) matches", () => {
+    expect(matches("दिल्ली")).toContain("alias:new delhi");
+  });
+});
+
+// ===================================================================
+// OVERLAPPING MULTI-WORD MATCHES
+// ===================================================================
+
+describe("Overlapping multi-word matches", () => {
+  it("'San Jose' matches as 2-word city", () => {
+    expect(matches("fly to San Jose")).toContain("city:san jose");
+  });
+
+  it("'New York' matches as 2-word city (not 'New York City' 3-word)", () => {
+    // "new york" is in CITY_SET directly
+    expect(matches("fly to New York")).toContain("city:new york");
+  });
+
+  it("'Las Vegas' wins over 'las' skipword", () => {
+    expect(matches("Las Vegas")).toContain("city:las vegas");
+  });
+
+  it("'Los Angeles' wins over 'los' skipword", () => {
+    expect(matches("Los Angeles")).toContain("city:los angeles");
+  });
+});
+
+// ===================================================================
+// ADVERSARIAL / STRESS TESTS
+// ===================================================================
+
+describe("Adversarial stress tests", () => {
+  it("all AMBIGUOUS_CITIES in one sentence produce no matches", () => {
+    expect(matches("nice mobile split reading bath chester orange male cork buffalo lima troy")).toEqual([]);
+  });
+
+  it("every skipword in one sentence produces no matches", () => {
+    const allSkipwords = [...LOCATION_SKIPWORDS].join(" ");
+    expect(matches(allSkipwords)).toEqual([]);
+  });
+
+  it("city name repeated 200 times doesn't crash", () => {
+    const long = "Paris ".repeat(200);
+    const m = matches(long);
+    expect(m.length).toBe(200);
+    expect(m.every(x => x === "city:paris")).toBe(true);
+  });
+
+  it("1000 random words produce no false positives", () => {
+    const words = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum";
+    const m = matches(words);
+    // "est" is a skipword (French), "sint" is not a city, "in" is too short
+    // Only potential match: check no false positives slip through
+    expect(m).toEqual([]);
+  });
+
+  it("mixed scripts in one query", () => {
+    const m = matches("fly from 東京 to Paris via لندن");
+    expect(m).toContain("alias:tokyo");
+    expect(m).toContain("city:paris");
+    expect(m).toContain("alias:london");
+  });
+
+  it("repeated punctuation doesn't break scanner", () => {
+    expect(matches("!!! ??? ... --- +++")).toEqual([]);
+  });
+
+  it("emoji-heavy input doesn't crash", () => {
+    expect(matches("✈️ 🌍 fly to London 🇬🇧")).toContain("city:london");
   });
 });

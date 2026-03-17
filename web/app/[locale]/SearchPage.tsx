@@ -274,6 +274,15 @@ const CITY_ALIASES_ENTRIES: [string, string][] = [
   ["बर्लिन", "berlin"], ["फ्रैंकफर्ट", "frankfurt"], ["बैंकॉक", "bangkok"],
   ["सियोल", "seoul"], ["मुंबई", "mumbai"], ["सिंगापुर", "singapore"],
   ["दिल्ली", "new delhi"], ["कोलकाता", "kolkata"], ["चेन्नई", "chennai"],
+  // Tokenizer-safe aliases for cities with periods (tokenizer strips ".")
+  ["st louis", "st. louis"], ["st petersburg", "st. petersburg"],
+  ["st john's", "st. john's"], ["st johns", "st. john's"],
+  ["st george's", "st. george's"], ["st georges", "st. george's"],
+  ["st maarten", "st. maarten"],
+  // "Saint" full-form aliases
+  ["saint louis", "st. louis"], ["saint petersburg", "st. petersburg"],
+  ["sankt petersburg", "st. petersburg"],
+  ["san petersburgo", "st. petersburg"], ["san pietroburgo", "st. petersburg"],
 ];
 const CITY_ALIASES: Record<string, string> = {};
 for (const [alias, city] of CITY_ALIASES_ENTRIES) {
@@ -294,7 +303,10 @@ for (const [alias, city] of Object.entries(CITY_ALIASES)) {
   }
 }
 
-const AMBIGUOUS_CITIES = new Set(["nice", "mobile", "split", "reading", "bath", "chester", "orange"]);
+const AMBIGUOUS_CITIES = new Set([
+  "nice", "mobile", "split", "reading", "bath", "chester", "orange",
+  "male", "cork", "buffalo", "lima", "troy",
+]);
 
 // Block common function words across Latin-script languages that could match
 // an IATA code or city alias. Prefer blocking too many over a false positive.
@@ -529,7 +541,8 @@ function scanLocations(prompt: string): ScannedLoc[] {
   const lower = prompt.toLowerCase();
   // Tokenize into words with character positions (lowercase for matching)
   const tokens: Array<{ word: string; original: string; start: number; end: number }> = [];
-  const re = /[\p{L}\p{N}]+(?:['-][\p{L}\p{N}]+)*/gu;
+  // \p{M} includes combining marks needed for Indic scripts (anusvara ं, virama ्, etc.)
+  const re = /[\p{L}\p{N}\p{M}]+(?:['-][\p{L}\p{N}\p{M}]+)*/gu;
   let m: RegExpExecArray | null;
   while ((m = re.exec(lower)) !== null) {
     tokens.push({ word: m[0], original: prompt.slice(m.index, m.index + m[0].length), start: m.index, end: m.index + m[0].length });
@@ -545,7 +558,8 @@ function scanLocations(prompt: string): ScannedLoc[] {
     const orig = originalPhrase || phrase;
     if (LOCATION_SKIPWORDS.has(p) && orig !== orig.toUpperCase()) return null;
     const upper = phrase.toUpperCase();
-    if (upper.length === 3 && IATA_SET.has(upper)) {
+    // For explicit all-uppercase 3-letter input, IATA takes priority (e.g. "JFK", "GOA")
+    if (upper.length === 3 && orig === orig.toUpperCase() && IATA_SET.has(upper)) {
       const ap = AIRPORTS.find(a => a.iata === upper);
       return { display: upper, count: 1, airports: ap ? [{ iata: ap.iata, city: ap.city }] : [] };
     }
@@ -557,6 +571,11 @@ function scanLocations(prompt: string): ScannedLoc[] {
     if (CITY_DISPLAY.has(p) && !AMBIGUOUS_CITIES.has(p)) {
       const cnt = CITY_AIRPORT_COUNT.get(p) || 1;
       return { display: CITY_DISPLAY.get(p)!, count: cnt, airports: getAirportsForCity(p) };
+    }
+    // Fallback IATA for non-uppercase input (e.g. "jfk", "lax" still resolve)
+    if (upper.length === 3 && IATA_SET.has(upper)) {
+      const ap = AIRPORTS.find(a => a.iata === upper);
+      return { display: upper, count: 1, airports: ap ? [{ iata: ap.iata, city: ap.city }] : [] };
     }
     // Turkish agglutination: "Moskova'dan" → try "moskova" before the apostrophe
     // Only for single-word tokens (no spaces) to avoid false matches on multi-word phrases
