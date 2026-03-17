@@ -194,7 +194,7 @@ const CITY_ALIASES_ENTRIES: [string, string][] = [
   // Portuguese city names
   ["nova iorque", "new york"], ["nova york", "new york"], ["munique", "munich"],
   ["genebra", "geneva"], ["zurique", "zurich"], ["copenhaga", "copenhagen"],
-  ["varsóvia", "warsaw"],
+  ["varsóvia", "warsaw"], ["lisboa", "lisbon"],
   // Turkish city names
   ["münih", "munich"], ["viyana", "vienna"], ["cenevre", "geneva"],
   ["zürih", "zurich"], ["lizbon", "lisbon"], ["atina", "athens"], ["kahire", "cairo"],
