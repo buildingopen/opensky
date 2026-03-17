@@ -451,17 +451,64 @@ function getAirportsForCity(cityLower: string): LocAirport[] {
   return AIRPORTS.filter(a => a.city.toLowerCase() === cityLower).map(a => ({ iata: a.iata, city: a.city }));
 }
 
+// Shared ref: closing one tooltip closes any other open tooltip
+const activeTooltipClose = { current: null as (() => void) | null };
+
 function PreviewLoc({ text, airports }: { text: string; airports: LocAirport[] }) {
   const [show, setShow] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLSpanElement>(null);
+
+  // Close on outside click (mobile)
+  useEffect(() => {
+    if (!show) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (ref.current && !ref.current.contains(target)) setShow(false);
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
+  }, [show]);
+
+  // Register as active tooltip (mutual exclusion)
+  useEffect(() => {
+    if (show) {
+      activeTooltipClose.current?.();
+      activeTooltipClose.current = () => setShow(false);
+    } else if (activeTooltipClose.current === (() => setShow(false))) {
+      activeTooltipClose.current = null;
+    }
+  }, [show]);
+
+  // Clamp tooltip to viewport on open
+  useEffect(() => {
+    if (!show || !tooltipRef.current) return;
+    const rect = tooltipRef.current.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) {
+      tooltipRef.current.style.left = "auto";
+      tooltipRef.current.style.right = "0";
+    }
+  }, [show]);
+
   if (airports.length <= 1) return <span>{text}</span>;
   return (
-    <span className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
-      <span className="cursor-help border-b border-dotted border-[var(--color-interactive)]/30">{text}</span>
+    <span
+      ref={ref}
+      className="relative inline-block"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onClick={(e) => { e.stopPropagation(); setShow(v => !v); }}
+    >
+      <span className="cursor-help border-b border-dotted border-[var(--color-text-muted)]/40">{text}</span>
       {show && (
-        <span className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
+        <span ref={tooltipRef} className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
           {airports.map((a) => (
             <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap overflow-hidden text-ellipsis" style={{ maxWidth: 200 }}>
-              <span className="font-mono text-[var(--color-interactive)] font-semibold">{a.iata}</span>{" "}
+              <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
               <span className="text-[var(--color-text-muted)]">{a.city}</span>
             </span>
           ))}
@@ -817,19 +864,12 @@ function flightDisplayDate(flight: FlightOut): string {
 function priceToColor(price: number | null, min: number, max: number): string {
   if (price == null || min === max) return "transparent";
   const ratio = Math.min(1, Math.max(0, (price - min) / (max - min)));
-  // green -> amber -> red
-  if (ratio <= 0.5) {
-    const t = ratio * 2;
-    const r = Math.round(34 + t * (234 - 34));
-    const g = Math.round(197 + t * (179 - 197));
-    const b = Math.round(94 + t * (8 - 94));
-    return `rgb(${r},${g},${b})`;
-  }
-  const t = (ratio - 0.5) * 2;
-  const r = Math.round(234 + t * (239 - 234));
-  const g = Math.round(179 + t * (68 - 179));
-  const b = Math.round(8 + t * (68 - 8));
-  return `rgb(${r},${g},${b})`;
+  // Monochromatic indigo scale: bright indigo (cheap) -> muted indigo (expensive)
+  const r = Math.round(108 - ratio * 50);
+  const g = Math.round(123 - ratio * 55);
+  const b = Math.round(247 - ratio * 80);
+  const a = 0.9 - ratio * 0.35;
+  return `rgba(${r},${g},${b},${a})`;
 }
 
 function safeUrl(url: string): string | null {
@@ -1685,7 +1725,7 @@ function ScanSummaryExpanded({
           {/* Color legend */}
           <div className="px-4 py-2.5 border-t border-[var(--color-border)] flex items-center gap-2">
             <span className="text-xs text-[var(--color-text-muted)]">{t("compare.cheapest")}</span>
-            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, var(--color-safe), var(--color-caution), var(--color-danger))" }} />
+            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgba(108,123,247,0.9), rgba(58,68,167,0.55))" }} />
             <span className="text-xs text-[var(--color-text-muted)]">{t("compare.mostExpensive")}</span>
           </div>
         </div>
@@ -2424,6 +2464,7 @@ function HomePage() {
       setExpandPhase("done");
     } finally {
       expandAbortRef.current = null;
+      setExpandProgress(null);
       setExpandPhase(p => p === "expanding" ? "done" : p);
     }
   };
@@ -3208,6 +3249,11 @@ function HomePage() {
                     {expandPhase === "done" && !expandError && expandCount > 0 && (
                       <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
                         <span className="text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount })}</span>
+                      </div>
+                    )}
+                    {expandPhase === "done" && !expandError && expandCount === 0 && (
+                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
+                        <span className="text-[var(--color-text-muted)]">{t("expand.noNewFlights")}</span>
                       </div>
                     )}
                   </div>
