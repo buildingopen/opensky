@@ -587,35 +587,41 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
 
   const NOISE = /^(?:(?:flights?|vuelos?|vols?|flüge?|voo?s?|cheapest|cheap|direct|nonstop|航班|フライト|항공편|رحلات|उड़ानें|i\s+want\s+(?:a\s+)?|find\s+(?:me\s+)?|search\s+(?:for\s+)?|show\s+(?:me\s+)?|get\s+(?:me\s+)?|book\s+(?:a\s+)?|looking\s+for\s+(?:a\s+)?|buscar?\s*|chercher?\s*|a\s+|the\s+|un\s+|una\s+|le\s+|la\s+|el\s+|los\s+|les\s+|il\s+|lo\s+|ein\s+|eine\s+)\s*)+/iu;
 
-  const TRAIL = "in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium|safe|only|route|routes|menos|unter|moins|meno|sotto|bajo|debajo|billig|barato|económico|günstig|nächste|próxima|proxima|prochaine|prossima|la|el|le|die|der|den|das|il|los|les|ida|vuelta|aller|retour|andata|ritorno|hin|rück|semana|woche|mois|mes|mese|settimana|hoy|heute|morgen|mañana|demain|domani|amanhã";
+  // Trim trailing words from a phrase until matchLocation succeeds.
+  // "germany now today" -> try "germany now today", then "germany now", then "germany"
+  function trimToLocation(raw: string, hasContext: boolean): string {
+    const words = raw.trim().split(/\s+/);
+    for (let len = words.length; len >= 1; len--) {
+      const candidate = words.slice(0, len).join(" ");
+      if (matchLocation(candidate, hasContext)) return candidate;
+    }
+    return raw.trim();
+  }
 
-  // Pattern 1: explicit "from X to Y" (Latin + Arabic)
-  const fromToRe = new RegExp(`(?:^|\\s)(?:${FROM}|${AR_FROM})\\s+(${W}+?)\\s+(?:${TO}|${TO_SHORT}|${AR_TO})\\s+(${W}+?)(?:[,،\\s]+(?:${TRAIL}|\\d|€|\\$|£).*)?$`, "iu");
+  // Pattern 1: explicit "from X to Y" (Latin + Arabic) - greedy dest capture
+  const fromToRe = new RegExp(`(?:^|\\s)(?:${FROM}|${AR_FROM})\\s+(${W}+?)\\s+(?:${TO}|${TO_SHORT}|${AR_TO})\\s+(${W}+)$`, "iu");
   const fromTo = lower.match(fromToRe);
   if (fromTo) {
     const orig = fromTo[1].replace(NOISE, "").trim();
-    let dest = fromTo[2].trim();
-    dest = dest.replace(new RegExp(`\\s+(?:${TRAIL})$`, "i"), "").trim();
+    const dest = trimToLocation(fromTo[2], true);
     if (orig && dest) return { originPhrase: orig, destPhrase: dest };
   }
 
-  // Pattern 2: "X to Y" with full "to" words (Latin)
-  const simpleToRe = new RegExp(`(${W}+?)\\s+(?:${TO})\\s+(${W}+?)(?:[,\\s]+(?:${TRAIL}|\\d|€|\\$|£).*)?$`, "iu");
+  // Pattern 2: "X to Y" with full "to" words (Latin) - greedy dest capture
+  const simpleToRe = new RegExp(`(${W}+?)\\s+(?:${TO})\\s+(${W}+)$`, "iu");
   const simpleTo = lower.match(simpleToRe);
   if (simpleTo) {
     const orig = simpleTo[1].replace(NOISE, "").trim();
-    let dest = simpleTo[2].trim();
-    dest = dest.replace(new RegExp(`\\s+(?:${TRAIL})$`, "i"), "").trim();
+    const dest = trimToLocation(simpleTo[2], true);
     if (orig && dest) return { originPhrase: orig, destPhrase: dest };
   }
 
-  // Pattern 3: "X a Y" / "X à Y" (short preposition, require comma or trailing word)
-  const shortToRe = new RegExp(`(${W}+?)\\s+(?:${TO_SHORT})\\s+(${W}+?)(?:\\s*,\\s*.*|\\s+(?:${TRAIL}|\\d|€|\\$|£).*)?$`, "iu");
+  // Pattern 3: "X a Y" / "X à Y" (short preposition) - greedy dest capture
+  const shortToRe = new RegExp(`(${W}+?)\\s+(?:${TO_SHORT})\\s+(${W}+)$`, "iu");
   const shortTo = lower.match(shortToRe);
   if (shortTo) {
     const orig = shortTo[1].replace(NOISE, "").trim();
-    let dest = shortTo[2].trim();
-    dest = dest.replace(new RegExp(`\\s+(?:${TRAIL})$`, "i"), "").trim();
+    const dest = trimToLocation(shortTo[2], true);
     if (orig.length >= 2 && dest.length >= 2) return { originPhrase: orig, destPhrase: dest };
   }
 
