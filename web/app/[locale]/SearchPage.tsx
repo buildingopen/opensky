@@ -1004,7 +1004,7 @@ function InlineHighlight({ text, airports, resolvedDate }: { text: string; airpo
     });
   }, [show]);
 
-  if (!hasTooltip) return <span className="text-[var(--color-safe)]">{text}</span>;
+  if (!hasTooltip) return <span className="text-[var(--color-interactive)]">{text}</span>;
   return (
     <span
       ref={ref}
@@ -1013,7 +1013,7 @@ function InlineHighlight({ text, airports, resolvedDate }: { text: string; airpo
       onMouseLeave={() => setShow(false)}
       onClick={(e) => { e.stopPropagation(); setShow(v => !v); }}
     >
-      <span className="text-[var(--color-safe)] cursor-help border-b border-dotted border-[var(--color-safe)]/50">{text}</span>
+      <span className="text-[var(--color-interactive)] cursor-help border-b border-dotted border-[var(--color-interactive)]/50">{text}</span>
       {show && (
         <div ref={tooltipRef} className="fixed z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
           {resolvedDate ? (
