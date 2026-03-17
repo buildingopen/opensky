@@ -939,7 +939,7 @@ function HighlightOverlay({ prompt, ranges }: { prompt: string; ranges: Highligh
   const runs = buildTextRuns(prompt, ranges);
   return (
     <div
-      className="absolute inset-0 px-1 py-2 text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden pointer-events-none z-10"
+      className="absolute inset-0 px-1 py-2 text-base leading-relaxed whitespace-pre-wrap break-words pointer-events-none z-10"
       aria-hidden="true"
     >
       {runs.map((run, i) =>
@@ -2964,7 +2964,7 @@ function HomePage() {
                   </div>
                 </div>
               ) : (
-                <div className="relative">
+                <div className="relative text-left">
                   {prompt && highlightRanges.length > 0 && <HighlightOverlay prompt={prompt} ranges={highlightRanges} />}
                   <textarea
                     ref={inputRef}
