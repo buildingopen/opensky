@@ -2514,7 +2514,7 @@ function HomePage() {
                   trackEvent("example_prompt_clicked", { prompt: ex });
                   setTimeout(() => inputRef.current?.focus(), 0);
                 }}
-                className="text-[13px] px-4 py-2 rounded-full border border-white/[0.05] bg-[var(--color-surface)] text-[var(--color-text-muted)]/80 hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] hover:border-white/[0.1] transition-all duration-200 whitespace-nowrap hover:-translate-y-px"
+                className="text-[13px] px-4 py-2 rounded-full border border-[var(--color-interactive)]/20 bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] hover:border-[var(--color-interactive)]/40 transition-all duration-200 whitespace-nowrap hover:-translate-y-px"
               >
                 {ex}
               </button>

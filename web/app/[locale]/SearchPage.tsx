@@ -751,7 +751,7 @@ function useQueryPreview(prompt: string): QueryPreview | null {
 // ---------------------------------------------------------------------------
 // Inline Prompt Highlighting
 // ---------------------------------------------------------------------------
-interface HighlightRange { start: number; end: number; type: "origin" | "dest" | "date"; airports: LocAirport[]; resolvedDate?: string }
+interface HighlightRange { start: number; end: number; type: "origin" | "dest" | "date" | "qualifier"; airports: LocAirport[]; resolvedDate?: string }
 
 function useHighlightRanges(prompt: string): HighlightRange[] {
   return useMemo(() => {
@@ -850,6 +850,27 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       }
     }
 
+    // Qualifier detection: safe routes, budget, class, etc.
+    const qualifierPats = [
+      /\b(safe\s+routes?\s*(?:only)?)\b/i,
+      /\b(safe\s+only)\b/i,
+      /\b(avoid\s+conflict\s+zones?)\b/i,
+      /\b(business\s+class)\b/i,
+      /\b(first\s+class)\b/i,
+      /\b(premium\s+economy)\b/i,
+      /\b(economy)\b/i,
+      /\b(nonstop|non-stop|direct\s+(?:flights?\s*)?only)\b/i,
+      /\b(under\s+[\$\u20ac\u00a3\u20b9]?\s*\d[\d,]*)\b/i,
+      /\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9]?\s*\d[\d,]*)\b/i,
+    ];
+    for (const pat of qualifierPats) {
+      const m = pat.exec(lower);
+      if (m && m.index !== undefined) {
+        const overlaps = ranges.some((r) => m.index! < r.end && m.index! + m[0].length > r.start);
+        if (!overlaps) ranges.push({ start: m.index, end: m.index + m[0].length, type: "qualifier", airports: [] });
+      }
+    }
+
     // Sort by start, skip overlaps
     ranges.sort((a, b) => a.start - b.start);
     const clean: HighlightRange[] = [];
@@ -864,7 +885,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
   }, [prompt]);
 }
 
-interface TextRun { type: "plain" | "highlight"; text: string; segType?: "origin" | "dest" | "date"; airports?: LocAirport[]; resolvedDate?: string }
+interface TextRun { type: "plain" | "highlight"; text: string; segType?: "origin" | "dest" | "date" | "qualifier"; airports?: LocAirport[]; resolvedDate?: string }
 
 function buildTextRuns(prompt: string, ranges: HighlightRange[]): TextRun[] {
   if (!ranges.length) return [{ type: "plain", text: prompt }];
@@ -3054,7 +3075,7 @@ function HomePage() {
                   trackEvent("example_prompt_clicked", { prompt: ex });
                   setTimeout(() => inputRef.current?.focus(), 0);
                 }}
-                className="text-[13px] px-4 py-2 rounded-full border border-white/[0.05] bg-[var(--color-surface)] text-[var(--color-text-muted)]/80 hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] hover:border-white/[0.1] transition-all duration-200 whitespace-nowrap hover:-translate-y-px"
+                className="text-[13px] px-4 py-2 rounded-full border border-[var(--color-interactive)]/20 bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] hover:border-[var(--color-interactive)]/40 transition-all duration-200 whitespace-nowrap hover:-translate-y-px"
               >
                 {ex}
               </button>
