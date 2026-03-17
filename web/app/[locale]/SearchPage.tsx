@@ -939,7 +939,7 @@ function HighlightOverlay({ prompt, ranges }: { prompt: string; ranges: Highligh
   const runs = buildTextRuns(prompt, ranges);
   return (
     <div
-      className="absolute inset-0 px-1 py-2 text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden pointer-events-none"
+      className="absolute inset-0 px-1 py-2 text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden pointer-events-none z-10"
       aria-hidden="true"
     >
       {runs.map((run, i) =>
@@ -2975,7 +2975,7 @@ function HomePage() {
                     disabled={isLoading}
                     rows={2}
                     spellCheck={false}
-                    className="w-full bg-transparent border-none px-1 py-2 text-base leading-relaxed placeholder:text-[var(--color-text-muted)]/40 focus:outline-none resize-none relative z-10"
+                    className="w-full bg-transparent border-none px-1 py-2 text-base leading-relaxed placeholder:text-[var(--color-text-muted)]/40 focus:outline-none resize-none relative"
                     style={{ color: prompt && highlightRanges.length > 0 ? "transparent" : undefined, caretColor: "var(--color-text)" }}
                     aria-label={t("ariaLabel")}
                   />
