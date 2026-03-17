@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Component, createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { Component, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations, useLocale, useFormatter } from "next-intl";
 import { Link } from "../../i18n/navigation";
 import { trackEvent } from "../../lib/analytics";
@@ -742,7 +742,8 @@ function useQueryPreview(prompt: string, fmtLoc?: (loc: { display: string; count
     }
 
     return { origin: originStr, dest: destStr, date, originAirports, destAirports };
-  }, [prompt]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prompt, fmtLoc]);
 }
 
 // ---------------------------------------------------------------------------
@@ -2851,9 +2852,10 @@ function HomePage() {
   };
 
   const isLoading = phase === "parsing" || phase === "searching";
-  const queryPreview = useQueryPreview(prompt, (loc) =>
+  const fmtLoc = useCallback((loc: { display: string; count: number }) =>
     loc.count > 1 ? `${loc.display} (${t("parsed.airportCount", { count: loc.count })})` : loc.display
-  );
+  , [t]);
+  const queryPreview = useQueryPreview(prompt, fmtLoc);
   const highlightRanges = useHighlightRanges(prompt);
 
   // Airline filter (post-results)
