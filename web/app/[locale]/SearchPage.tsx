@@ -751,7 +751,7 @@ function useQueryPreview(prompt: string): QueryPreview | null {
 // ---------------------------------------------------------------------------
 // Inline Prompt Highlighting
 // ---------------------------------------------------------------------------
-interface HighlightRange { start: number; end: number; type: "origin" | "dest" | "date"; airports: LocAirport[] }
+interface HighlightRange { start: number; end: number; type: "origin" | "dest" | "date"; airports: LocAirport[]; resolvedDate?: string }
 
 function useHighlightRanges(prompt: string): HighlightRange[] {
   return useMemo(() => {
@@ -790,7 +790,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
     for (const phrase of sortedTemporal) {
       const idx = lower.indexOf(phrase);
       if (idx >= 0) {
-        ranges.push({ start: idx, end: idx + phrase.length, type: "date", airports: [] });
+        ranges.push({ start: idx, end: idx + phrase.length, type: "date", airports: [], resolvedDate: resolveDate(phrase) || undefined });
         dateFound = true;
         break;
       }
@@ -801,7 +801,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       for (const pat of enPats) {
         const m = pat.exec(lower);
         if (m && m.index !== undefined) {
-          ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+          ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
           dateFound = true;
           break;
         }
@@ -812,7 +812,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       const dayRe = new RegExp(`\\b(${allDayNamesStr})\\b`, "i");
       const m = dayRe.exec(lower);
       if (m && m.index !== undefined) {
-        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
         dateFound = true;
       }
     }
@@ -821,7 +821,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       const mdRe = new RegExp(`\\b(${allMonthNamesStr})\\s+\\d{1,2}\\b`, "i");
       const m = mdRe.exec(lower);
       if (m && m.index !== undefined) {
-        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
         dateFound = true;
       }
     }
@@ -829,7 +829,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       const dmRe = new RegExp(`\\b\\d{1,2}\\s+(${allMonthNamesStr})\\b`, "i");
       const m = dmRe.exec(lower);
       if (m && m.index !== undefined) {
-        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
         dateFound = true;
       }
     }
@@ -838,7 +838,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       const inMonthRe = new RegExp(`\\b(?:in|en|im|em|nel)\\s+(${allMonthNamesStr})\\b`, "i");
       const m = inMonthRe.exec(lower);
       if (m && m.index !== undefined) {
-        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
         dateFound = true;
       }
     }
@@ -846,7 +846,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       const monthRe = new RegExp(`\\b(${allMonthNamesStr})\\b`, "i");
       const m = monthRe.exec(lower);
       if (m && m.index !== undefined) {
-        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
       }
     }
 
@@ -864,7 +864,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
   }, [prompt]);
 }
 
-interface TextRun { type: "plain" | "highlight"; text: string; segType?: "origin" | "dest" | "date"; airports?: LocAirport[] }
+interface TextRun { type: "plain" | "highlight"; text: string; segType?: "origin" | "dest" | "date"; airports?: LocAirport[]; resolvedDate?: string }
 
 function buildTextRuns(prompt: string, ranges: HighlightRange[]): TextRun[] {
   if (!ranges.length) return [{ type: "plain", text: prompt }];
@@ -872,18 +872,18 @@ function buildTextRuns(prompt: string, ranges: HighlightRange[]): TextRun[] {
   let cursor = 0;
   for (const r of ranges) {
     if (r.start > cursor) runs.push({ type: "plain", text: prompt.slice(cursor, r.start) });
-    runs.push({ type: "highlight", text: prompt.slice(r.start, r.end), segType: r.type, airports: r.airports });
+    runs.push({ type: "highlight", text: prompt.slice(r.start, r.end), segType: r.type, airports: r.airports, resolvedDate: r.resolvedDate });
     cursor = r.end;
   }
   if (cursor < prompt.length) runs.push({ type: "plain", text: prompt.slice(cursor) });
   return runs;
 }
 
-function InlineHighlight({ text, airports }: { text: string; airports: LocAirport[] }) {
+function InlineHighlight({ text, airports, resolvedDate }: { text: string; airports: LocAirport[]; resolvedDate?: string }) {
   const [show, setShow] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const hasTooltip = airports.length > 1;
+  const hasTooltip = airports.length > 1 || !!resolvedDate;
 
   useEffect(() => {
     if (!show) return;
@@ -931,12 +931,16 @@ function InlineHighlight({ text, airports }: { text: string; airports: LocAirpor
       <span className="text-[var(--color-safe)] cursor-help border-b border-dotted border-[var(--color-safe)]/50">{text}</span>
       {show && (
         <div ref={tooltipRef} className="fixed z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
-          {airports.map((a) => (
-            <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap overflow-hidden text-ellipsis" style={{ maxWidth: 200 }}>
-              <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
-              <span className="text-[var(--color-text-muted)]">{a.city}</span>
-            </span>
-          ))}
+          {resolvedDate ? (
+            <span className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap">{resolvedDate}</span>
+          ) : (
+            airports.map((a) => (
+              <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap overflow-hidden text-ellipsis" style={{ maxWidth: 200 }}>
+                <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
+                <span className="text-[var(--color-text-muted)]">{a.city}</span>
+              </span>
+            ))
+          )}
         </div>
       )}
     </span>
@@ -953,7 +957,7 @@ function HighlightOverlay({ prompt, ranges }: { prompt: string; ranges: Highligh
       {runs.map((run, i) =>
         run.type === "plain"
           ? <span key={i} className="text-[var(--color-text)]">{run.text}</span>
-          : <InlineHighlight key={i} text={run.text} airports={run.airports || []} />
+          : <InlineHighlight key={i} text={run.text} airports={run.airports || []} resolvedDate={run.resolvedDate} />
       )}
     </div>
   );
@@ -2829,22 +2833,8 @@ function HomePage() {
 
       {/* Hero - outcome-focused */}
       <section className={`max-w-3xl mx-auto px-4 w-full transition-all duration-300 ${hasResults ? "pt-6 pb-4 text-start" : "pt-16 sm:pt-24 pb-6 text-center"}`}>
-        {hasResults && parsed && parsed.origins?.length > 0 && parsed.destinations?.length > 0 ? (
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-[family-name:var(--font-brand)]">
-            {(() => {
-              const oNames = parsed.origins.map((o: string) => parsed.airport_names?.[o] || o);
-              const shown = oNames.slice(0, 2).join(", ");
-              return oNames.length > 2 ? `${shown} +${oNames.length - 2}` : shown;
-            })()}
-            <span className="text-[var(--color-text-muted)] mx-2">{"\u2192"}</span>
-            {(() => {
-              const dNames = parsed.destinations.map((d: string) => parsed.airport_names?.[d] || d);
-              const shown = dNames.slice(0, 2).join(", ");
-              return dNames.length > 2 ? `${shown} +${dNames.length - 2}` : shown;
-            })()}
-          </h2>
-        ) : (
-          <h1 className={`font-bold tracking-tighter leading-tight transition-all duration-300 ${hasResults ? "text-2xl" : "text-5xl sm:text-6xl"}`}>
+        {!hasResults && (
+          <h1 className="font-bold tracking-tighter leading-tight text-5xl sm:text-6xl">
             {t("heroTitle")}{" "}
             <span className="text-[var(--color-accent)]">{t("heroTitleAccent")}</span>
           </h1>
@@ -2860,7 +2850,17 @@ function HomePage() {
           {hasResults ? (
             /* Compact mode: original prompt + action */
             <div className="flex items-center justify-between gap-3">
-              {prompt && <p className="text-[12px] text-[var(--color-text-muted)]/60 truncate min-w-0 flex-1">{prompt}</p>}
+              {prompt && (
+                <div className="text-[12px] text-[var(--color-text-muted)]/60 truncate min-w-0 flex-1">
+                  {highlightRanges.length > 0
+                    ? buildTextRuns(prompt, highlightRanges).map((run, i) =>
+                        run.type === "plain"
+                          ? <span key={i}>{run.text}</span>
+                          : <InlineHighlight key={i} text={run.text} airports={run.airports || []} resolvedDate={run.resolvedDate} />
+                      )
+                    : prompt}
+                </div>
+              )}
               {isLoading ? (
                 <button
                   onClick={cancelSearch}
