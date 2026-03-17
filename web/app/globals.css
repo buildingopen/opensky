@@ -179,16 +179,6 @@ body {
   border-radius: 6px;
 }
 
-/* Paper plane takeoff animation */
-@keyframes planeTakeoff {
-  0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
-  40% { transform: translate(8px, -10px) rotate(-25deg) scale(1.15); opacity: 0.9; }
-  100% { transform: translate(30px, -35px) rotate(-40deg) scale(0.6); opacity: 0; }
-}
-.plane-takeoff {
-  animation: planeTakeoff 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
 /* Tabular numbers for prices */
 .price-display {
   font-feature-settings: "tnum" on;

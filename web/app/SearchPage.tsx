@@ -2489,11 +2489,7 @@ function HomePage() {
                 <div className="flex items-center gap-3">
                   {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/25 hidden sm:inline">Enter to search</span>}
                   <button
-                    onClick={(e) => {
-                      const svg = e.currentTarget.querySelector("svg");
-                      if (svg) { svg.classList.remove("plane-takeoff"); void svg.getBoundingClientRect(); svg.classList.add("plane-takeoff"); }
-                      search();
-                    }}
+                    onClick={() => search()}
                     disabled={!canSearch()}
                     aria-label="Search flights"
                     className="px-5 py-2.5 bg-[var(--color-interactive)] hover:bg-[var(--color-interactive-hover)] disabled:opacity-25 disabled:cursor-not-allowed text-black text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-[0_0_28px_rgba(34,197,94,0.2)] inline-flex items-center gap-2"
