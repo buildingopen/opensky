@@ -2685,6 +2685,15 @@ function HomePage() {
     } catch {}
   };
 
+  // On mobile (navigator.share available), use native share sheet; on desktop, copy to clipboard
+  const handleShare = async () => {
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      await handleNativeShare();
+    } else {
+      await handleCopyLink();
+    }
+  };
+
   const isLoading = phase === "parsing" || phase === "searching";
   const fmtLoc = useCallback((loc: { display: string; count: number }) =>
     loc.count > 1 ? `${loc.display} (${t("parsed.airportCount", { count: loc.count })})` : loc.display
@@ -3256,7 +3265,7 @@ function HomePage() {
                             <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} flights={flights} />
                           )}
                           <button
-                            onClick={handleCopyLink}
+                            onClick={handleShare}
                             className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors ms-auto"
                           >
                             {copyFeedback ? (
@@ -3423,7 +3432,7 @@ function HomePage() {
                     <div className="mt-4 flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5">
                       <p className="text-sm text-[var(--color-text-muted)]">
                         {destName ? t("shareCTA", { destination: destName }) : t("shareCTAGeneric")}{" "}
-                        <button onClick={() => { handleCopyLink(); setShareCTADismissed(true); }} className="text-[var(--color-interactive)] hover:underline font-medium">
+                        <button onClick={() => { handleShare(); setShareCTADismissed(true); }} className="text-[var(--color-interactive)] hover:underline font-medium">
                           {t("shareTheseResults")}
                         </button>
                       </p>
