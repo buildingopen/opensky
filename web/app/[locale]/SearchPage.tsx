@@ -709,7 +709,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
     // Qualifier detection: safe routes, budget, class, etc. (all 12 languages)
     const qualifierPats: RegExp[] = [
       // Safe routes / safe only (en, de, es, fr, it, pt, tr, zh, ja, ko, hi, ar)
-      /\b(safe\s+routes?\s*(?:only)?|safe\s+only|avoid\s+conflict\s+zones?)\b/i,
+      /\b(safe\s+routes?\s*(?:only)?|safe\s+only|safe\b|avoid\s+conflict\s+zones?)\b/i,
       /(nur\s+sicher(?:e\s+routen)?)/i, // de
       /(solo\s+(?:rutas?\s+)?segur[ao]s?)/i, // es
       /((?:routes?\s+)?s[uû]r(?:e?s)?\s+uniquement|s[uû]rs?\s+uniquement)/i, // fr
@@ -779,8 +779,8 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       /\b(diretto|diretta)\b/i,   // it: direct
       /\b(direto|direta)\b/i,     // pt: direct
       // Budget: under/less than + currency + amount (all languages)
-      /\b(under\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*)\b/i, // en
-      /\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*)\b/i, // en
+      /\b(under\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, // en: "under $500" or "under 500$"
+      /\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, // en
       /(unter\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, // de: "unter 500€"
       /(menos\s+de\s+[\$\u20ac\u00a3R]?\$?\s*\d[\d.,]*)/i, // es/pt: "menos de 500€"
       /(meno\s+di\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, // it: "meno di 500€"
@@ -836,7 +836,7 @@ function InlineHighlight({ text, airports, resolvedDate }: { text: string; airpo
   const [show, setShow] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const hasTooltip = airports.length > 1 || !!resolvedDate;
+  const hasTooltip = airports.length > 0 || !!resolvedDate;
 
   useEffect(() => {
     if (!show) return;
@@ -3024,7 +3024,7 @@ function HomePage() {
                       aria-label={isListening ? "Stop listening" : "Voice input"}
                       className={`p-2 rounded-lg transition-colors ${
                         isListening
-                          ? "text-red-500 bg-red-500/10 animate-pulse"
+                          ? "text-[var(--color-interactive)] bg-[var(--color-interactive)]/10"
                           : "text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)]"
                       }`}
                     >
