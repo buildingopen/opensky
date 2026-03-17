@@ -27,6 +27,8 @@ from pydantic import BaseModel, Field
 from redis import asyncio as redis
 from redis.exceptions import RedisError
 
+import hashlib
+
 import airportsdata
 
 from skyroute.models import ConflictZone, RiskLevel, RoundTripResult, ScoredFlight
@@ -107,6 +109,9 @@ GEMINI_MAX_RETRIES = int(os.environ.get("GEMINI_MAX_RETRIES", "2"))
 PROXY = os.environ.get("SKYROUTE_PROXY")
 TRUST_PROXY = os.environ.get("TRUST_PROXY", "").lower() in ("1", "true", "yes")
 REQUIRE_GEMINI_KEY = os.environ.get("REQUIRE_GEMINI_KEY", "true").lower() in ("1", "true", "yes")
+
+# PostHog server-side analytics (optional)
+POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY", "")
 
 # Validation constants for Gemini output sanitization
 VALID_CURRENCIES = frozenset({
@@ -668,14 +673,52 @@ async def lifespan(app: FastAPI):
             log.warning("Redis unavailable, falling back to memory rate limiting: %s", exc)
             redis_client = None
 
+    # PostHog server-side analytics (optional)
+    if POSTHOG_API_KEY:
+        try:
+            import posthog as _ph
+            _ph.project_api_key = POSTHOG_API_KEY
+            _ph.host = "https://eu.i.posthog.com"
+            _ph.disabled = False
+            _ph.debug = False
+            log.info("PostHog server-side analytics enabled")
+        except Exception as exc:
+            log.warning("PostHog init failed, analytics disabled: %s", exc)
+
     log.info("Conflict zones loaded, Gemini key: %s", "set" if GEMINI_KEY else "MISSING")
     yield
 
+    if POSTHOG_API_KEY:
+        try:
+            import posthog as _ph
+            _ph.shutdown()
+        except Exception:
+            pass
     if redis_client:
         await redis_client.aclose()
 
 
 app = FastAPI(title="OpenSky API", version="0.2.0", lifespan=lifespan)
+
+
+# ---------------------------------------------------------------------------
+# PostHog helpers (server-side, no PII)
+# ---------------------------------------------------------------------------
+def _anonymous_id(ip: str) -> str:
+    """Hash IP into a non-reversible anonymous ID."""
+    return hashlib.sha256(f"flyfast:{ip}".encode()).hexdigest()[:16]
+
+
+def _capture(distinct_id: str, event: str, properties: dict | None = None):
+    """Fire-and-forget PostHog capture. Never fails the request."""
+    if not POSTHOG_API_KEY:
+        return
+    try:
+        import posthog
+        posthog.capture(distinct_id, event, properties or {})
+    except Exception:
+        pass
+
 
 allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 app.add_middleware(
@@ -700,6 +743,7 @@ class PromptRequest(BaseModel):
     prompt: str = Field(..., min_length=3, max_length=500)
     fallback_parsed: FallbackParsed | None = None
     currency: str | None = None
+    locale: str | None = None
 
 
 class ParsedSearch(BaseModel):
@@ -1344,6 +1388,15 @@ async def search_flights(req: PromptRequest, request: Request):
         ip = _get_client_ip(request)
         remaining = await _check_rate_limit(ip)
 
+    # PostHog: track search start
+    _search_start = time.time()
+    _anon = _anonymous_id(_get_client_ip(request))
+    _capture(_anon, "server_search_started", {
+        "prompt_length": len(req.prompt),
+        "currency": req.currency,
+        "locale": req.locale,
+    })
+
     # Step 1: Parse with Gemini (fallback to client-side parsed data if AI fails)
     used_fallback = False
     try:
@@ -1431,11 +1484,23 @@ async def search_flights(req: PromptRequest, request: Request):
         airport_names=names,
     )
 
+    _capture(_anon, "server_search_parsed", {
+        "origin_count": len(parsed["origins"]),
+        "destination_count": len(parsed["destinations"]),
+        "date_count": len(parsed["dates"]),
+        "cabin": parsed.get("cabin", "economy"),
+        "currency": parsed.get("currency", "EUR"),
+        "max_price": parsed.get("max_price", 0),
+        "is_round_trip": is_round_trip,
+        "total_routes": combined_total,
+    })
+
     async def event_stream():
         # Send parsed params immediately
         try:
             parsed_data = parsed_out.model_dump()
         except Exception:
+            _capture(_anon, "server_search_error", {"error_type": "parse_failure", "duration_ms": int((time.time() - _search_start) * 1000)})
             yield f"data: {json.dumps({'type': 'error', 'detail': 'Internal error preparing search.'})}\n\n"
             return
         parsed_event: dict = {"type": "parsed", "parsed": parsed_data}
@@ -1513,6 +1578,7 @@ async def search_flights(req: PromptRequest, request: Request):
         while True:
             if time.time() - scan_start > 300:
                 cancel.set()
+                _capture(_anon, "server_search_error", {"error_type": "timeout", "duration_ms": int((time.time() - _search_start) * 1000)})
                 yield f"data: {json.dumps({'type': 'error', 'detail': 'Search timed out after 5 minutes. Try a narrower search.'})}\n\n"
                 thread.join(timeout=5)
                 return
@@ -1531,6 +1597,7 @@ async def search_flights(req: PromptRequest, request: Request):
         if error_holder:
             error_id = str(uuid4())[:8]
             log.error("Search worker failed [%s]: %s", error_id, error_holder[0])
+            _capture(_anon, "server_search_error", {"error_type": "worker_error", "duration_ms": int((time.time() - _search_start) * 1000)})
             yield f"data: {json.dumps({'type': 'error', 'detail': f'Search failed. Reference: {error_id}'})}\n\n"
             return
 
@@ -1615,6 +1682,13 @@ async def search_flights(req: PromptRequest, request: Request):
             result_data["warning"] = return_date_warning
         if cache_age_seconds is not None:
             result_data["cache_age_seconds"] = cache_age_seconds
+
+        _capture(_anon, "server_search_results", {
+            "flight_count": result_data.get("count", 0),
+            "round_trip_count": len(result_data.get("round_trip_results", [])),
+            "safety_filtered_count": result_data.get("safety_filtered_count", 0),
+            "duration_ms": int((time.time() - _search_start) * 1000),
+        })
         yield f"data: {json.dumps(result_data)}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
@@ -1779,8 +1853,17 @@ async def expand_search(req: ExpandRequest, request: Request):
         ip = _get_client_ip(request)
         remaining = await _check_rate_limit(ip)
 
+    _expand_start = time.time()
+    _anon_expand = _anonymous_id(_get_client_ip(request))
+
     original = req.original_parsed
     expanded = await _expand_params(original, req.prompt)
+
+    _capture(_anon_expand, "server_expand_started", {
+        "origin_count": len(expanded.get("origins", [])),
+        "destination_count": len(expanded.get("destinations", [])),
+        "total_routes": len(expanded.get("origins", [])) * len(expanded.get("destinations", [])) * len(expanded.get("dates", [])),
+    })
 
     return_dates = expanded.get("return_dates", [])
     is_round_trip = len(return_dates) > 0
@@ -1922,6 +2005,10 @@ async def expand_search(req: ExpandRequest, request: Request):
                 "expansion_info": expansion_strategy,
             }
 
+        _capture(_anon_expand, "server_expand_results", {
+            "flight_count": result_data.get("count", 0),
+            "duration_ms": int((time.time() - _expand_start) * 1000),
+        })
         yield f"data: {json.dumps(result_data)}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
