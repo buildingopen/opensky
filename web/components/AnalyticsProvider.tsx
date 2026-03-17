@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+const GA_ID = (process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "").trim();
+const POSTHOG_KEY = (process.env.NEXT_PUBLIC_POSTHOG_KEY || "").trim();
 
 const STORAGE_KEY = "flyfast_consent";
 const EVENT_NAME = "flyfast_consent_change";
