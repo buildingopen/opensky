@@ -20,7 +20,8 @@
     "safety": "安全信息",
     "contact": "联系我们",
     "openMenu": "打开菜单",
-    "closeMenu": "关闭菜单"
+    "closeMenu": "关闭菜单",
+    "selectCurrency": "选择货币"
   },
   "footer": {
     "builtBy": "开发者",
@@ -80,6 +81,7 @@
       "business": "商务舱",
       "first": "头等舱",
       "maxPrice": "最高 ¥",
+      "maxPriceLabel": "最高",
       "maxPricePlaceholder": "不限"
     },
     "examples": [
@@ -208,7 +210,8 @@
       "flightsAdded": "+{count, plural, one {1个航班} other {{count}个航班}}来自附近机场",
       "limitReached": "搜索次数已达上限。请约{mins}分钟后重试。",
       "failed": "扩展搜索失败。请稍后重试。",
-      "couldNotReach": "无法连接搜索API。"
+      "couldNotReach": "无法连接搜索API。",
+      "noNewFlights": "未找到更多航班。试试更广泛的搜索。"
     },
     "parsed": {
       "safeOnly": "仅安全航线",
@@ -243,6 +246,7 @@
     },
     "countryNames": {
       "AE": "阿联酋",
+      "AF": "阿富汗",
       "AG": "安提瓜",
       "AL": "阿尔巴尼亚",
       "AM": "亚美尼亚",
@@ -274,6 +278,7 @@
       "EC": "厄瓜多尔",
       "EE": "爱沙尼亚",
       "EG": "埃及",
+      "ER": "厄立特里亚",
       "ES": "西班牙",
       "ET": "埃塞俄比亚",
       "FI": "芬兰",
@@ -294,6 +299,8 @@
       "IE": "爱尔兰",
       "IL": "以色列",
       "IN": "印度",
+      "IQ": "伊拉克",
+      "IR": "伊朗",
       "IS": "冰岛",
       "IT": "意大利",
       "JM": "牙买加",
@@ -301,6 +308,7 @@
       "JP": "日本",
       "KE": "肯尼亚",
       "KH": "柬埔寨",
+      "KP": "朝鲜",
       "KR": "韩国",
       "KW": "科威特",
       "KZ": "哈萨克斯坦",
@@ -310,7 +318,9 @@
       "LT": "立陶宛",
       "LU": "卢森堡",
       "LV": "拉脱维亚",
+      "LY": "利比亚",
       "MA": "摩洛哥",
+      "ML": "马里",
       "MM": "缅甸",
       "MN": "蒙古",
       "MO": "澳门",
@@ -320,6 +330,7 @@
       "MX": "墨西哥",
       "MY": "马来西亚",
       "MZ": "莫桑比克",
+      "NE": "尼日尔",
       "NG": "尼日利亚",
       "NL": "荷兰",
       "NO": "挪威",
@@ -341,12 +352,15 @@
       "RU": "俄罗斯",
       "SA": "沙特阿拉伯",
       "SC": "塞舌尔",
+      "SD": "苏丹",
       "SE": "瑞典",
       "SG": "新加坡",
       "SI": "斯洛文尼亚",
       "SK": "斯洛伐克",
       "SN": "塞内加尔",
+      "SO": "索马里",
       "SX": "圣马丁",
+      "SY": "叙利亚",
       "TH": "泰国",
       "TN": "突尼斯",
       "TR": "土耳其",
@@ -360,6 +374,7 @@
       "UZ": "乌兹别克斯坦",
       "VE": "委内瑞拉",
       "VN": "越南",
+      "YE": "也门",
       "ZA": "南非",
       "ZM": "赞比亚"
     },
@@ -383,7 +398,23 @@
     "description": "用自然语言描述你的行程。FlyFast搜索谷歌航班，过滤冲突区域，找到最安全、最便宜的航线。免费，无需登录。",
     "ogAlt": "FlyFast：描述你的行程，我们找到最佳航班",
     "flightTitle": "{route} 最低{price} - FlyFast",
-    "flightDescription": "找到{route}，最低{price}。已过滤冲突区域。在FlyFast上搜索你的航班。"
+    "flightDescription": "找到{route}，最低{price}。已过滤冲突区域。在FlyFast上搜索你的航班。",
+    "faq": {
+      "q1": "FlyFast 是如何工作的？",
+      "a1": "用自然语言描述你的行程，例如'下周从孟买到汉堡，预算¥2000以内'。FlyFast 搜索 Google Flights 上的所有航班，过滤冲突区域，并按价格、时长和航线安全性排序。你直接在航空公司官网预订。",
+      "q2": "FlyFast 免费吗？",
+      "a2": "是的。FlyFast 完全免费，无需登录。每小时可搜索10次。没有广告，也没有付费版本。",
+      "q3": "FlyFast 如何过滤冲突区域？",
+      "a3": "FlyFast 维护一个包含活跃冲突区域、受限空域和航空安全通告区域的数据集。每条航线都会与这些区域进行核对。高风险航线会从结果中移除。警告级别的航线会被标记，由你决定是否选择。数据会定期更新。",
+      "q4": "飞越冲突区域安全吗？",
+      "a4": "冲突区域上方的部分空域已被航空当局关闭或限制（NOTAMs）。航空公司会绕行这些区域，这可能增加飞行时间和费用。FlyFast 自动检查哪些航线穿越冲突空域，并进行过滤或标记。预订前请务必查看你所在国家政府的官方旅行建议。",
+      "q5": "如何找到避开冲突区域的便宜航班？",
+      "a5": "在 FlyFast 上输入自然语言查询，例如'从伦敦到曼谷最便宜的航班，避开冲突区域'。FlyFast 搜索 Google Flights 上的所有航班，移除经过高风险空域的航线，并按价格对剩余选项排序。你还可以指定灵活日期来找到最便宜的出行日。",
+      "q6": "FlyFast 搜索哪些航空公司？",
+      "a6": "FlyFast 搜索 Google Flights 上的所有航班，覆盖全球所有主要航空公司、廉价航空公司和多航空公司联程行程。",
+      "q7": "我可以搜索多城市或复杂航线吗？",
+      "a7": "可以。FlyFast 支持多城市搜索、灵活日期、附近机场和预算限制。它搜索所有出发地-目的地-日期组合，并排列出最佳选项。"
+    }
   },
   "privacy": {
     "title": "隐私政策 - FlyFast",
@@ -635,6 +666,32 @@
       "caution": "该区域内或附近的机场正常运营。你可能会看到经过该区域的航班标有「注意」标记。这意味着航线经过冲突区域附近但不直接受影响。预订前请查看你所在国家的旅行建议。",
       "safe": "无限制。正常飞行。"
     },
+    "clickToView": "点击查看详情",
+    "tapToView": "再次点击查看详情",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "resetZoom": "重置缩放",
+    "zoneNames": {
+      "ukraine": "乌克兰",
+      "iran": "伊朗",
+      "iraq": "伊拉克",
+      "syria": "叙利亚",
+      "israel": "以色列",
+      "lebanon": "黎巴嫩",
+      "yemen": "也门",
+      "libya": "利比亚",
+      "somalia": "索马里",
+      "afghanistan": "阿富汗",
+      "north_korea": "朝鲜",
+      "sudan": "苏丹",
+      "eritrea": "厄立特里亚",
+      "ethiopia_partial": "埃塞俄比亚（北部地区）",
+      "mali": "马里",
+      "niger": "尼日尔",
+      "gulf_states": "海湾国家（邻近警告）",
+      "pakistan_partial": "巴基斯坦（边境地区）",
+      "russia_partial": "俄罗斯（南部/西部边境）"
+    },
     "zone": {
       "currentStatus": "当前状态",
       "source": "来源",
@@ -647,7 +704,11 @@
       "searchAvoiding": "搜索避开{zone}的航班",
       "notFound": "未找到该区域 - FlyFast",
       "safeToFlyTitle": "飞越{zone}安全吗？ - FlyFast",
-      "safeToFlyDescription": "{details} 当前风险等级：{level}。更新于{updated}。"
+      "safeToFlyDescription": "{details} 当前风险等级：{level}。更新于{updated}。",
+      "faqQuestion": "飞越{zone}安全吗？",
+      "faqAnswer_do_not_fly": "不安全。{zone}空域被列为禁飞区。{details} 航空公司会自动绕开该区域。",
+      "faqAnswer_high_risk": "{zone}被列为高风险区域。{details} 大多数航空公司会避开该空域。",
+      "faqAnswer_caution": "{zone}被列为注意区域。{details} 机场正常运营，但航班可能会在冲突地区附近改道。"
     },
     "alerts": {
       "title": "风险等级变化时通知我",

@@ -20,7 +20,8 @@
     "safety": "Sicurezza",
     "contact": "Contatti",
     "openMenu": "Apri menu",
-    "closeMenu": "Chiudi menu"
+    "closeMenu": "Chiudi menu",
+    "selectCurrency": "Seleziona valuta"
   },
   "footer": {
     "builtBy": "Creato da",
@@ -80,6 +81,7 @@
       "business": "Business",
       "first": "First",
       "maxPrice": "Max €",
+      "maxPriceLabel": "Max",
       "maxPricePlaceholder": "qualsiasi"
     },
     "examples": [
@@ -208,7 +210,8 @@
       "flightsAdded": "+{count, plural, one {1 volo} other {{count} voli}} aggiunti da aeroporti vicini",
       "limitReached": "Limite ricerche raggiunto. Riprova tra circa {mins}m.",
       "failed": "Espansione fallita. Riprova più tardi.",
-      "couldNotReach": "Impossibile raggiungere l'API di ricerca."
+      "couldNotReach": "Impossibile raggiungere l'API di ricerca.",
+      "noNewFlights": "Nessun volo aggiuntivo trovato. Prova una ricerca più ampia."
     },
     "parsed": {
       "safeOnly": "Solo sicuri",
@@ -243,6 +246,7 @@
     },
     "countryNames": {
       "AE": "EAU",
+      "AF": "Afghanistan",
       "AG": "Antigua",
       "AL": "Albania",
       "AM": "Armenia",
@@ -274,6 +278,7 @@
       "EC": "Ecuador",
       "EE": "Estonia",
       "EG": "Egitto",
+      "ER": "Eritrea",
       "ES": "Spagna",
       "ET": "Etiopia",
       "FI": "Finlandia",
@@ -294,6 +299,8 @@
       "IE": "Irlanda",
       "IL": "Israele",
       "IN": "India",
+      "IQ": "Iraq",
+      "IR": "Iran",
       "IS": "Islanda",
       "IT": "Italia",
       "JM": "Giamaica",
@@ -301,6 +308,7 @@
       "JP": "Giappone",
       "KE": "Kenya",
       "KH": "Cambogia",
+      "KP": "Corea del Nord",
       "KR": "Corea del Sud",
       "KW": "Kuwait",
       "KZ": "Kazakistan",
@@ -310,7 +318,9 @@
       "LT": "Lituania",
       "LU": "Lussemburgo",
       "LV": "Lettonia",
+      "LY": "Libia",
       "MA": "Marocco",
+      "ML": "Mali",
       "MM": "Myanmar",
       "MN": "Mongolia",
       "MO": "Macao",
@@ -320,6 +330,7 @@
       "MX": "Messico",
       "MY": "Malesia",
       "MZ": "Mozambico",
+      "NE": "Niger",
       "NG": "Nigeria",
       "NL": "Paesi Bassi",
       "NO": "Norvegia",
@@ -341,12 +352,15 @@
       "RU": "Russia",
       "SA": "Arabia Saudita",
       "SC": "Seychelles",
+      "SD": "Sudan",
       "SE": "Svezia",
       "SG": "Singapore",
       "SI": "Slovenia",
       "SK": "Slovacchia",
       "SN": "Senegal",
+      "SO": "Somalia",
       "SX": "Sint Maarten",
+      "SY": "Siria",
       "TH": "Thailandia",
       "TN": "Tunisia",
       "TR": "Turchia",
@@ -360,6 +374,7 @@
       "UZ": "Uzbekistan",
       "VE": "Venezuela",
       "VN": "Vietnam",
+      "YE": "Yemen",
       "ZA": "Sudafrica",
       "ZM": "Zambia"
     },
@@ -383,7 +398,23 @@
     "description": "Descrivi il tuo viaggio in italiano. FlyFast cerca su Google Flights, filtra le zone di conflitto e trova la rotta più sicura e conveniente. Gratis, senza registrazione.",
     "ogAlt": "FlyFast: descrivi il tuo viaggio, troviamo il volo migliore",
     "flightTitle": "{route} da {price} - FlyFast",
-    "flightDescription": "Trovato {route} da {price}. Zone di conflitto filtrate. Cerca i tuoi voli su FlyFast."
+    "flightDescription": "Trovato {route} da {price}. Zone di conflitto filtrate. Cerca i tuoi voli su FlyFast.",
+    "faq": {
+      "q1": "Come funziona FlyFast?",
+      "a1": "Scrivi il tuo viaggio in linguaggio naturale, ad esempio 'Mumbai ad Amburgo la prossima settimana sotto i 300 €'. FlyFast cerca tutti i voli su Google Flights, filtra le zone di conflitto e ordina per prezzo, durata e sicurezza della rotta. Prenoti direttamente con la compagnia aerea.",
+      "q2": "FlyFast è gratuito?",
+      "a2": "Sì. FlyFast è completamente gratuito e non richiede registrazione. Hai 10 ricerche all'ora. Nessuna pubblicità e nessun piano premium.",
+      "q3": "Come filtra FlyFast le zone di conflitto?",
+      "a3": "FlyFast mantiene un dataset di zone di conflitto attive, spazio aereo ristretto e regioni con avvisi di aviazione. Ogni rotta di volo viene verificata rispetto a queste zone. Le rotte ad alto rischio vengono rimosse dai risultati. Le rotte con livello di cautela vengono segnalate per permetterti di decidere. I dati vengono aggiornati regolarmente.",
+      "q4": "È sicuro sorvolare le zone di conflitto?",
+      "a4": "Parte dello spazio aereo sopra le zone di conflitto è chiusa o soggetta a restrizioni da parte delle autorità aeronautiche (NOTAMs). Le compagnie aeree deviano intorno a queste aree, il che può aumentare il tempo di volo e i costi. FlyFast verifica automaticamente quali rotte attraversano spazio aereo in conflitto e le filtra o le segnala. Controlla sempre gli avvisi di viaggio ufficiali del tuo governo prima di prenotare.",
+      "q5": "Come trovo voli economici che evitano le zone di conflitto?",
+      "a5": "Su FlyFast, scrivi una ricerca in linguaggio naturale come 'volo più economico da Londra a Bangkok evitando le zone di conflitto'. FlyFast cerca tutti i voli su Google Flights, rimuove le rotte attraverso spazio aereo ad alto rischio e ordina le opzioni rimanenti per prezzo. Puoi anche indicare date flessibili per trovare il giorno più conveniente.",
+      "q6": "Quali compagnie aeree cerca FlyFast?",
+      "a6": "FlyFast cerca tutti i voli su Google Flights, includendo tutte le grandi compagnie, le compagnie low-cost e gli itinerari multi-compagnia in tutto il mondo.",
+      "q7": "Posso cercare rotte multi-città o complesse?",
+      "a7": "Sì. FlyFast gestisce ricerche multi-città, date flessibili, aeroporti vicini e vincoli di budget. Cerca tutte le combinazioni origine-destinazione-data e ordina le migliori opzioni."
+    }
   },
   "privacy": {
     "title": "Informativa sulla Privacy - FlyFast",
@@ -635,6 +666,32 @@
       "caution": "Gli aeroporti in questa zona o nelle vicinanze operano normalmente. Potresti vedere un badge di Attenzione sui voli che transitano in quest'area. Significa che la rotta passa vicino a una zona di conflitto ma non è direttamente interessata. Consulta gli avvisi di viaggio del tuo governo prima di prenotare.",
       "safe": "Nessuna restrizione. Vola normalmente."
     },
+    "clickToView": "Clicca per i dettagli",
+    "tapToView": "Tocca di nuovo per i dettagli",
+    "zoomIn": "Ingrandisci",
+    "zoomOut": "Riduci",
+    "resetZoom": "Reimposta zoom",
+    "zoneNames": {
+      "ukraine": "Ucraina",
+      "iran": "Iran",
+      "iraq": "Iraq",
+      "syria": "Siria",
+      "israel": "Israele",
+      "lebanon": "Libano",
+      "yemen": "Yemen",
+      "libya": "Libia",
+      "somalia": "Somalia",
+      "afghanistan": "Afghanistan",
+      "north_korea": "Corea del Nord",
+      "sudan": "Sudan",
+      "eritrea": "Eritrea",
+      "ethiopia_partial": "Etiopia (Regioni settentrionali)",
+      "mali": "Mali",
+      "niger": "Niger",
+      "gulf_states": "Stati del Golfo (Avviso di prossimità)",
+      "pakistan_partial": "Pakistan (Regioni di confine)",
+      "russia_partial": "Russia (Confine sud/occidentale)"
+    },
     "zone": {
       "currentStatus": "Stato attuale",
       "source": "Fonte",
@@ -647,7 +704,11 @@
       "searchAvoiding": "Cerca voli evitando {zone}",
       "notFound": "Zona non trovata - FlyFast",
       "safeToFlyTitle": "È sicuro volare sopra {zone}? - FlyFast",
-      "safeToFlyDescription": "{details} Livello di rischio attuale: {level}. Aggiornato il {updated}."
+      "safeToFlyDescription": "{details} Livello di rischio attuale: {level}. Aggiornato il {updated}.",
+      "faqQuestion": "È sicuro volare sopra {zone}?",
+      "faqAnswer_do_not_fly": "No. Lo spazio aereo di {zone} è classificato come Divieto di Volo. {details} Le compagnie aeree deviano automaticamente i voli intorno a questa zona.",
+      "faqAnswer_high_risk": "{zone} è classificato come Alto Rischio. {details} La maggior parte delle compagnie aeree evita questo spazio aereo.",
+      "faqAnswer_caution": "{zone} è classificato come Cautela. {details} Gli aeroporti operano normalmente, ma i voli possono essere deviati vicino alle zone di conflitto."
     },
     "alerts": {
       "title": "Ricevi notifiche quando i livelli di rischio cambiano",

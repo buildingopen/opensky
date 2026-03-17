@@ -20,7 +20,8 @@
     "safety": "Sicherheit",
     "contact": "Kontakt",
     "openMenu": "Menü öffnen",
-    "closeMenu": "Menü schließen"
+    "closeMenu": "Menü schließen",
+    "selectCurrency": "Währung wählen"
   },
   "footer": {
     "builtBy": "Entwickelt von",
@@ -80,6 +81,7 @@
       "business": "Business",
       "first": "First",
       "maxPrice": "Max €",
+      "maxPriceLabel": "Max",
       "maxPricePlaceholder": "beliebig"
     },
     "examples": [
@@ -208,7 +210,8 @@
       "flightsAdded": "+{count, plural, one {1 Flug} other {{count} Flüge}} von nahen Flughäfen hinzugefügt",
       "limitReached": "Suchlimit erreicht. Versuche es in ~{mins}m erneut.",
       "failed": "Erweiterung fehlgeschlagen. Versuche es später erneut.",
-      "couldNotReach": "Such-API nicht erreichbar."
+      "couldNotReach": "Such-API nicht erreichbar.",
+      "noNewFlights": "Keine zusätzlichen Flüge gefunden. Versuche eine breitere Suche."
     },
     "parsed": {
       "safeOnly": "Nur sicher",
@@ -243,6 +246,7 @@
     },
     "countryNames": {
       "AE": "VAE",
+      "AF": "Afghanistan",
       "AG": "Antigua",
       "AL": "Albanien",
       "AM": "Armenien",
@@ -274,6 +278,7 @@
       "EC": "Ecuador",
       "EE": "Estland",
       "EG": "Ägypten",
+      "ER": "Eritrea",
       "ES": "Spanien",
       "ET": "Äthiopien",
       "FI": "Finnland",
@@ -294,6 +299,8 @@
       "IE": "Irland",
       "IL": "Israel",
       "IN": "Indien",
+      "IQ": "Irak",
+      "IR": "Iran",
       "IS": "Island",
       "IT": "Italien",
       "JM": "Jamaika",
@@ -301,6 +308,7 @@
       "JP": "Japan",
       "KE": "Kenia",
       "KH": "Kambodscha",
+      "KP": "Nordkorea",
       "KR": "Südkorea",
       "KW": "Kuwait",
       "KZ": "Kasachstan",
@@ -310,7 +318,9 @@
       "LT": "Litauen",
       "LU": "Luxemburg",
       "LV": "Lettland",
+      "LY": "Libyen",
       "MA": "Marokko",
+      "ML": "Mali",
       "MM": "Myanmar",
       "MN": "Mongolei",
       "MO": "Macau",
@@ -320,6 +330,7 @@
       "MX": "Mexiko",
       "MY": "Malaysia",
       "MZ": "Mosambik",
+      "NE": "Niger",
       "NG": "Nigeria",
       "NL": "Niederlande",
       "NO": "Norwegen",
@@ -341,12 +352,15 @@
       "RU": "Russland",
       "SA": "Saudi-Arabien",
       "SC": "Seychellen",
+      "SD": "Sudan",
       "SE": "Schweden",
       "SG": "Singapur",
       "SI": "Slowenien",
       "SK": "Slowakei",
       "SN": "Senegal",
+      "SO": "Somalia",
       "SX": "St. Maarten",
+      "SY": "Syrien",
       "TH": "Thailand",
       "TN": "Tunesien",
       "TR": "Türkei",
@@ -360,6 +374,7 @@
       "UZ": "Usbekistan",
       "VE": "Venezuela",
       "VN": "Vietnam",
+      "YE": "Jemen",
       "ZA": "Südafrika",
       "ZM": "Sambia"
     },
@@ -383,7 +398,23 @@
     "description": "Beschreibe deine Reise in natürlicher Sprache. FlyFast durchsucht Google Flights, filtert Konfliktzonen und findet die sicherste, günstigste Route. Kostenlos, ohne Anmeldung.",
     "ogAlt": "FlyFast: Beschreibe deine Reise, wir finden den besten Flug",
     "flightTitle": "{route} ab {price} - FlyFast",
-    "flightDescription": "{route} ab {price} gefunden. Konfliktzonen gefiltert. Suche deine eigenen Flüge auf FlyFast."
+    "flightDescription": "{route} ab {price} gefunden. Konfliktzonen gefiltert. Suche deine eigenen Flüge auf FlyFast.",
+    "faq": {
+      "q1": "Wie funktioniert FlyFast?",
+      "a1": "Beschreibe deine Reise in natürlicher Sprache, z.B. 'Mumbai nach Hamburg nächste Woche unter 300 €'. FlyFast durchsucht alle Flüge auf Google Flights, filtert Konfliktzonen und sortiert nach Preis, Dauer und Routensicherheit. Du buchst direkt bei der Airline.",
+      "q2": "Ist FlyFast kostenlos?",
+      "a2": "Ja. FlyFast ist komplett kostenlos und ohne Anmeldung nutzbar. Du hast 10 Suchen pro Stunde. Es gibt keine Werbung und keinen Premium-Tarif.",
+      "q3": "Wie filtert FlyFast Konfliktzonen?",
+      "a3": "FlyFast pflegt einen Datensatz aktiver Konfliktzonen, gesperrten Luftraums und Regionen mit Luftfahrthinweisen. Jede Flugroute wird gegen diese Zonen geprüft. Hochrisiko-Routen werden aus den Ergebnissen entfernt. Routen mit Warnstufe werden markiert, damit du entscheiden kannst. Die Daten werden regelmäßig aktualisiert.",
+      "q4": "Ist es sicher, über Konfliktzonen zu fliegen?",
+      "a4": "Teile des Luftraums über Konfliktzonen sind von Luftfahrtbehörden gesperrt oder eingeschränkt (NOTAMs). Airlines fliegen Umwege um diese Gebiete, was Flugzeit und Kosten erhöhen kann. FlyFast prüft automatisch, welche Routen Konfliktluftgebiete kreuzen, und filtert oder markiert sie. Prüfe vor der Buchung immer die offiziellen Reisehinweise deiner Regierung.",
+      "q5": "Wie finde ich günstige Flüge, die Konfliktzonen meiden?",
+      "a5": "Gib bei FlyFast eine natürliche Suchanfrage ein, z.B. 'günstigster Flug von London nach Bangkok ohne Konfliktzonen'. FlyFast durchsucht alle Flüge auf Google Flights, entfernt Routen durch Hochrisiko-Luftraum und sortiert die verbleibenden Optionen nach Preis. Du kannst auch flexible Daten angeben, um den günstigsten Reisetag zu finden.",
+      "q6": "Welche Airlines durchsucht FlyFast?",
+      "a6": "FlyFast durchsucht alle Flüge auf Google Flights, einschließlich aller großen Fluggesellschaften, Billigairlines und Multi-Airline-Verbindungen weltweit.",
+      "q7": "Kann ich nach Multi-City oder komplexen Routen suchen?",
+      "a7": "Ja. FlyFast verarbeitet Multi-City-Suchen, flexible Daten, nahe gelegene Flughäfen und Budgetvorgaben. Es durchsucht alle Abflug-Ziel-Datum-Kombinationen und sortiert die besten Optionen."
+    }
   },
   "privacy": {
     "title": "Datenschutzrichtlinie - FlyFast",
@@ -635,6 +666,32 @@
       "caution": "Flughäfen in oder nahe dieser Zone arbeiten normal. Du siehst möglicherweise ein Vorsicht-Kennzeichen bei Flügen durch dieses Gebiet. Das bedeutet, die Route führt nahe an einer Konfliktzone vorbei, ist aber nicht direkt betroffen. Prüfe vor der Buchung die Reisehinweise deiner Regierung.",
       "safe": "Keine Einschränkungen. Normaler Flugbetrieb."
     },
+    "clickToView": "Klicken für Details",
+    "tapToView": "Erneut tippen für Details",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "resetZoom": "Zoom zurücksetzen",
+    "zoneNames": {
+      "ukraine": "Ukraine",
+      "iran": "Iran",
+      "iraq": "Irak",
+      "syria": "Syrien",
+      "israel": "Israel",
+      "lebanon": "Libanon",
+      "yemen": "Jemen",
+      "libya": "Libyen",
+      "somalia": "Somalia",
+      "afghanistan": "Afghanistan",
+      "north_korea": "Nordkorea",
+      "sudan": "Sudan",
+      "eritrea": "Eritrea",
+      "ethiopia_partial": "Äthiopien (Nördliche Regionen)",
+      "mali": "Mali",
+      "niger": "Niger",
+      "gulf_states": "Golfstaaten (Nähewarnung)",
+      "pakistan_partial": "Pakistan (Grenzregionen)",
+      "russia_partial": "Russland (Süd-/Westgrenze)"
+    },
     "zone": {
       "currentStatus": "Aktueller Status",
       "source": "Quelle",
@@ -647,7 +704,11 @@
       "searchAvoiding": "Flüge suchen, die {zone} meiden",
       "notFound": "Zone nicht gefunden - FlyFast",
       "safeToFlyTitle": "Ist es sicher, über {zone} zu fliegen? - FlyFast",
-      "safeToFlyDescription": "{details} Aktuelle Risikostufe: {level}. Aktualisiert {updated}."
+      "safeToFlyDescription": "{details} Aktuelle Risikostufe: {level}. Aktualisiert {updated}.",
+      "faqQuestion": "Ist es sicher, über {zone} zu fliegen?",
+      "faqAnswer_do_not_fly": "Nein. Der Luftraum über {zone} ist als Flugverbot eingestuft. {details} Fluggesellschaften leiten Flüge automatisch um diese Zone um.",
+      "faqAnswer_high_risk": "{zone} ist als Hochrisikogebiet eingestuft. {details} Die meisten Fluggesellschaften meiden diesen Luftraum.",
+      "faqAnswer_caution": "{zone} ist als Vorsichtsgebiet eingestuft. {details} Flughäfen operieren normal, aber Flüge können in der Nähe von Konfliktzonen umgeleitet werden."
     },
     "alerts": {
       "title": "Benachrichtigung bei Änderungen der Risikostufe",

@@ -20,7 +20,8 @@
     "safety": "Güvenlik",
     "contact": "İletişim",
     "openMenu": "Menüyü aç",
-    "closeMenu": "Menüyü kapat"
+    "closeMenu": "Menüyü kapat",
+    "selectCurrency": "Para birimi seçin"
   },
   "footer": {
     "builtBy": "Yapımcı",
@@ -80,6 +81,7 @@
       "business": "Business",
       "first": "First",
       "maxPrice": "Maks ₺",
+      "maxPriceLabel": "Maks",
       "maxPricePlaceholder": "fark etmez"
     },
     "examples": [
@@ -208,7 +210,8 @@
       "flightsAdded": "+{count, plural, one {1 uçuş} other {{count} uçuş}} yakın havalimanlarından eklendi",
       "limitReached": "Arama limiti doldu. Yaklaşık {mins} dk sonra tekrar deneyin.",
       "failed": "Genişletme başarısız oldu. Daha sonra tekrar deneyin.",
-      "couldNotReach": "Arama API'sine ulaşılamadı."
+      "couldNotReach": "Arama API'sine ulaşılamadı.",
+      "noNewFlights": "Ek uçuş bulunamadı. Daha geniş bir arama deneyin."
     },
     "parsed": {
       "safeOnly": "Sadece güvenli",
@@ -243,6 +246,7 @@
     },
     "countryNames": {
       "AE": "BAE",
+      "AF": "Afganistan",
       "AG": "Antigua",
       "AL": "Arnavutluk",
       "AM": "Ermenistan",
@@ -274,6 +278,7 @@
       "EC": "Ekvador",
       "EE": "Estonya",
       "EG": "Mısır",
+      "ER": "Eritre",
       "ES": "İspanya",
       "ET": "Etiyopya",
       "FI": "Finlandiya",
@@ -294,6 +299,8 @@
       "IE": "İrlanda",
       "IL": "İsrail",
       "IN": "Hindistan",
+      "IQ": "Irak",
+      "IR": "İran",
       "IS": "İzlanda",
       "IT": "İtalya",
       "JM": "Jamaika",
@@ -301,6 +308,7 @@
       "JP": "Japonya",
       "KE": "Kenya",
       "KH": "Kamboçya",
+      "KP": "Kuzey Kore",
       "KR": "Güney Kore",
       "KW": "Kuveyt",
       "KZ": "Kazakistan",
@@ -310,7 +318,9 @@
       "LT": "Litvanya",
       "LU": "Lüksemburg",
       "LV": "Letonya",
+      "LY": "Libya",
       "MA": "Fas",
+      "ML": "Mali",
       "MM": "Myanmar",
       "MN": "Moğolistan",
       "MO": "Makao",
@@ -320,6 +330,7 @@
       "MX": "Meksika",
       "MY": "Malezya",
       "MZ": "Mozambik",
+      "NE": "Nijer",
       "NG": "Nijerya",
       "NL": "Hollanda",
       "NO": "Norveç",
@@ -341,12 +352,15 @@
       "RU": "Rusya",
       "SA": "Suudi Arabistan",
       "SC": "Seyşeller",
+      "SD": "Sudan",
       "SE": "İsveç",
       "SG": "Singapur",
       "SI": "Slovenya",
       "SK": "Slovakya",
       "SN": "Senegal",
+      "SO": "Somali",
       "SX": "Sint Maarten",
+      "SY": "Suriye",
       "TH": "Tayland",
       "TN": "Tunus",
       "TR": "Türkiye",
@@ -360,6 +374,7 @@
       "UZ": "Özbekistan",
       "VE": "Venezuela",
       "VN": "Vietnam",
+      "YE": "Yemen",
       "ZA": "Güney Afrika",
       "ZM": "Zambiya"
     },
@@ -635,6 +650,32 @@
       "caution": "Bu bölgedeki veya yakınındaki havalimanları normal şekilde çalışmaktadır. Bu bölgeden geçen uçuşlarda Dikkat uyarısı görebilirsiniz. Bu, rotanın bir çatışma bölgesinin yakınından geçtiği ancak doğrudan etkilenmediği anlamına gelir. Rezervasyon yapmadan önce hükümetinizin seyahat uyarılarını kontrol edin.",
       "safe": "Kısıtlama yoktur. Normal şekilde uçabilirsiniz."
     },
+    "clickToView": "Ayrıntılar için tıklayın",
+    "tapToView": "Ayrıntılar için tekrar dokunun",
+    "zoomIn": "Yakınlaştır",
+    "zoomOut": "Uzaklaştır",
+    "resetZoom": "Yakınlaştırmayı sıfırla",
+    "zoneNames": {
+      "ukraine": "Ukrayna",
+      "iran": "İran",
+      "iraq": "Irak",
+      "syria": "Suriye",
+      "israel": "İsrail",
+      "lebanon": "Lübnan",
+      "yemen": "Yemen",
+      "libya": "Libya",
+      "somalia": "Somali",
+      "afghanistan": "Afganistan",
+      "north_korea": "Kuzey Kore",
+      "sudan": "Sudan",
+      "eritrea": "Eritre",
+      "ethiopia_partial": "Etiyopya (Kuzey Bölgeleri)",
+      "mali": "Mali",
+      "niger": "Nijer",
+      "gulf_states": "Körfez Ülkeleri (Yakınlık Uyarısı)",
+      "pakistan_partial": "Pakistan (Sınır Bölgeleri)",
+      "russia_partial": "Rusya (Güney/Batı Sınırı)"
+    },
     "zone": {
       "currentStatus": "Güncel durum",
       "source": "Kaynak",
@@ -647,7 +688,11 @@
       "searchAvoiding": "{zone} bölgesinden kaçınan uçuşları ara",
       "notFound": "Bölge Bulunamadı - FlyFast",
       "safeToFlyTitle": "{zone} üzerinden uçmak güvenli mi? - FlyFast",
-      "safeToFlyDescription": "{details} Güncel risk seviyesi: {level}. Güncelleme: {updated}."
+      "safeToFlyDescription": "{details} Güncel risk seviyesi: {level}. Güncelleme: {updated}.",
+      "faqQuestion": "{zone} üzerinden uçmak güvenli mi?",
+      "faqAnswer_do_not_fly": "Hayır. {zone} hava sahası Uçuş Yasağı olarak sınıflandırılmıştır. {details} Havayolları uçuşları otomatik olarak bu bölgenin etrafından yönlendirir.",
+      "faqAnswer_high_risk": "{zone} Yüksek Risk olarak sınıflandırılmıştır. {details} Çoğu havayolu bu hava sahasından kaçınır.",
+      "faqAnswer_caution": "{zone} Dikkat olarak sınıflandırılmıştır. {details} Havalimanları normal şekilde çalışır ancak uçuşlar çatışma bölgelerinin yakınında yönlendirilebilir."
     },
     "alerts": {
       "title": "Risk seviyeleri değiştiğinde bildirim alın",
