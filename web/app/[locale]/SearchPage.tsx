@@ -3104,12 +3104,16 @@ function HomePage() {
                 <div className="flex items-center gap-3">
                   {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/25 hidden sm:inline">{t("enterToSearch")}</span>}
                   <button
-                    onClick={() => search()}
+                    onClick={(e) => {
+                      const svg = e.currentTarget.querySelector("svg");
+                      if (svg) { svg.classList.remove("plane-takeoff"); void svg.getBoundingClientRect(); svg.classList.add("plane-takeoff"); }
+                      search();
+                    }}
                     disabled={!canSearch()}
                     aria-label={tc("searchFlights")}
                     className="px-5 py-2.5 btn-cta text-sm font-semibold rounded-xl disabled:opacity-25 disabled:cursor-not-allowed inline-flex items-center gap-2"
                   >
-                    <svg viewBox="0 0 20 20" className={`w-4 h-4 ${isLoading ? "plane-takeoff" : ""}`} fill="currentColor">
+                    <svg viewBox="0 0 20 20" className="w-4 h-4" fill="currentColor">
                       <path d="M2.94 3.34a1 1 0 0 1 1.1-.16l13 7a1 1 0 0 1 0 1.74l-13 7A1 1 0 0 1 2.5 18V12.48L9.5 10 2.5 7.52V2a1 1 0 0 1 .44-.66Z" />
                     </svg>
                     {tc("search")}
