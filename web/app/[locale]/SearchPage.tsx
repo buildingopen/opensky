@@ -585,7 +585,7 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
   const AR_FROM = "من";
   const AR_TO = "إلى|الى";
 
-  const NOISE = /^(?:(?:flights?|vuelos?|vols?|flüge?|voo?s?|cheapest|cheap|direct|nonstop|航班|フライト|항공편|رحلات|उड़ानें|i\s+want\s+(?:a\s+)?|find\s+(?:me\s+)?|search\s+(?:for\s+)?|show\s+(?:me\s+)?|get\s+(?:me\s+)?|book\s+(?:a\s+)?|looking\s+for\s+(?:a\s+)?|buscar?\s*|chercher?\s*|a\s+|the\s+|un\s+|una\s+|le\s+|la\s+|el\s+|los\s+|les\s+|il\s+|lo\s+|ein\s+|eine\s+)\s*)+/iu;
+  const NOISE = /^(?:(?:flights?|vuelos?|vols?|flüge?|voo?s?|cheapest|cheap|direct|nonstop|航班|フライト|항공편|رحلات|उड़ानें|i\s+want\s+(?:a\s+)?|find\s+(?:me\s+)?|search\s+(?:for\s+)?|show\s+(?:me\s+)?|get\s+(?:me\s+)?|book\s+(?:a\s+)?|looking\s+for\s+(?:a\s+)?|buscar?\s*|chercher?\s*|de\s+|a\s+|the\s+|un\s+|una\s+|le\s+|la\s+|el\s+|los\s+|les\s+|il\s+|lo\s+|ein\s+|eine\s+)\s*)+/iu;
 
   // Trim trailing words from a phrase until matchLocation succeeds.
   // "germany now today" -> try "germany now today", then "germany now", then "germany"
