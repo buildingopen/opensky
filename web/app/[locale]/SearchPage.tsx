@@ -271,6 +271,9 @@ for (const [alias, city] of Object.entries(CITY_ALIASES)) {
 }
 
 const AMBIGUOUS_CITIES = new Set(["nice", "mobile", "split", "reading", "bath", "chester", "orange"]);
+// Words that are common city-name prefixes but should NOT trigger prefix matching standalone
+// "west" → West Palm Beach, "san" → San Francisco, "new" → New York, etc.
+const PREFIX_BLOCKLIST = new Set(["west", "east", "north", "south", "new", "san", "los", "las", "fort", "saint", "port"]);
 const SKIP_REGIONS = new Set([
   "anywhere", "europe", "asia", "africa", "south america", "north america", "middle east",
   // Multilingual region names
@@ -574,8 +577,8 @@ function matchLocation(phrase: string, hasContext: boolean): PreviewLocInfo | nu
     const cnt = CITY_AIRPORT_COUNT.get(p) || 1;
     return { display: CITY_DISPLAY.get(p)!, count: cnt, airports: getAirportsForCity(p) };
   }
-  // Prefix matching (only if >= 4 chars to avoid false positives)
-  if (p.length >= 4) {
+  // Prefix matching (only if >= 4 chars and not a directional/common prefix word)
+  if (p.length >= 4 && !PREFIX_BLOCKLIST.has(p)) {
     const cityKey = prefixMatch(CITY_KEYS, p);
     if (cityKey) {
       if (AMBIGUOUS_CITIES.has(cityKey) && !hasContext) return null;
@@ -607,11 +610,14 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
 
   // Trim trailing words from a phrase until matchLocation succeeds.
   // Split on whitespace AND punctuation so "germany, next week" → ["germany", "next", "week"]
+  // Also tries later starting positions so "west coast USA" finds "USA" at word 2
   function trimToLocation(raw: string, hasContext: boolean): string {
     const words = raw.trim().split(/[\s,;.!?]+/).filter(Boolean);
-    for (let len = words.length; len >= 1; len--) {
-      const candidate = words.slice(0, len).join(" ");
-      if (matchLocation(candidate, hasContext)) return candidate;
+    for (let start = 0; start < words.length; start++) {
+      for (let len = words.length - start; len >= 1; len--) {
+        const candidate = words.slice(start, start + len).join(" ");
+        if (matchLocation(candidate, hasContext)) return candidate;
+      }
     }
     return raw.trim();
   }
@@ -3134,8 +3140,8 @@ function HomePage() {
                 </div>
               )}
 
-              <div className={`${searchMode === "structured" ? "mt-3" : "mt-1 pt-3 border-t border-white/[0.04]"} flex flex-wrap items-center justify-between gap-y-1`}>
-                <div className="flex items-center gap-3 min-w-0">
+              <div className={`${searchMode === "structured" ? "mt-3" : "mt-1 pt-3 border-t border-white/[0.04]"} flex items-center gap-3`}>
+                <div className="flex items-center gap-3 min-w-0 overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setSearchMode((m) => (m === "structured" ? "natural" : "structured"))}
@@ -3144,7 +3150,7 @@ function HomePage() {
                     {searchMode === "structured" ? t("describeTrip") : t("useForm")}
                   </button>
                   {searchMode === "natural" && !isLoading && queryPreview && (
-                    <p className="text-[12px] text-[var(--color-text-muted)]/70 transition-opacity duration-300 hidden sm:block">
+                    <p className="text-[12px] text-[var(--color-text-muted)]/70 transition-opacity duration-300 hidden sm:block truncate">
                       <span className="opacity-50">{t("preview")}</span>{" "}
                       <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
                       {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
@@ -3152,7 +3158,7 @@ function HomePage() {
                     </p>
                   )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 ml-auto shrink-0">
                   {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/25 hidden sm:inline">{t("enterToSearch")}</span>}
                   <button
                     onClick={(e) => {
@@ -3170,15 +3176,15 @@ function HomePage() {
                     {tc("search")}
                   </button>
                 </div>
-                {searchMode === "natural" && !isLoading && queryPreview && (
-                  <p className="w-full text-[11px] text-[var(--color-text-muted)]/60 sm:hidden">
-                    <span className="opacity-50">{t("preview")}</span>{" "}
-                    <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
-                    {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
-                    {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
-                  </p>
-                )}
               </div>
+              {searchMode === "natural" && !isLoading && queryPreview && (
+                <p className="mt-1 text-[11px] text-[var(--color-text-muted)]/60 sm:hidden">
+                  <span className="opacity-50">{t("preview")}</span>{" "}
+                  <PreviewLoc text={queryPreview.origin} airports={queryPreview.originAirports} />
+                  {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> <PreviewLoc text={queryPreview.dest} airports={queryPreview.destAirports} /></>}
+                  {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
+                </p>
+              )}
             </>
           )}
         </div>
