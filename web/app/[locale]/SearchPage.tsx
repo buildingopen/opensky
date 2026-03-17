@@ -882,13 +882,14 @@ function buildTextRuns(prompt: string, ranges: HighlightRange[]): TextRun[] {
 function InlineHighlight({ text, airports }: { text: string; airports: LocAirport[] }) {
   const [show, setShow] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
-  const tooltipRef = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const hasTooltip = airports.length > 1;
 
   useEffect(() => {
     if (!show) return;
     const handler = (e: MouseEvent | TouchEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setShow(false);
+      if (ref.current && !ref.current.contains(e.target as Node) &&
+          tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) setShow(false);
     };
     document.addEventListener("mousedown", handler);
     document.addEventListener("touchstart", handler);
@@ -902,34 +903,41 @@ function InlineHighlight({ text, airports }: { text: string; airports: LocAirpor
     }
   }, [show]);
 
+  // Position fixed tooltip below trigger element
   useEffect(() => {
-    if (!show || !tooltipRef.current) return;
-    const rect = tooltipRef.current.getBoundingClientRect();
-    if (rect.right > window.innerWidth - 8) {
-      tooltipRef.current.style.left = "auto";
-      tooltipRef.current.style.right = "0";
-    }
+    if (!show || !tooltipRef.current || !ref.current) return;
+    const triggerRect = ref.current.getBoundingClientRect();
+    const tt = tooltipRef.current;
+    tt.style.top = `${triggerRect.bottom + 6}px`;
+    tt.style.left = `${triggerRect.left}px`;
+    // Clamp to viewport right edge
+    requestAnimationFrame(() => {
+      const ttRect = tt.getBoundingClientRect();
+      if (ttRect.right > window.innerWidth - 8) {
+        tt.style.left = `${window.innerWidth - 8 - ttRect.width}px`;
+      }
+    });
   }, [show]);
 
   if (!hasTooltip) return <span className="text-[var(--color-safe)]">{text}</span>;
   return (
     <span
       ref={ref}
-      className="relative inline pointer-events-auto"
+      className="inline pointer-events-auto"
       onMouseEnter={() => setShow(true)}
       onMouseLeave={() => setShow(false)}
       onClick={(e) => { e.stopPropagation(); setShow(v => !v); }}
     >
       <span className="text-[var(--color-safe)] cursor-help border-b border-dotted border-[var(--color-safe)]/50">{text}</span>
       {show && (
-        <span ref={tooltipRef} className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
+        <div ref={tooltipRef} className="fixed z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
           {airports.map((a) => (
             <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap overflow-hidden text-ellipsis" style={{ maxWidth: 200 }}>
               <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
               <span className="text-[var(--color-text-muted)]">{a.city}</span>
             </span>
           ))}
-        </span>
+        </div>
       )}
     </span>
   );
