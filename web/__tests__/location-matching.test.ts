@@ -139,11 +139,14 @@ function testMatchExact(phrase: string, originalPhrase?: string): string | null 
 
 function scanPrompt(prompt: string): { token: string; match: string | null }[] {
   const lower = prompt.toLowerCase();
-  const re = /[\p{L}\p{N}\p{M}]+(?:['-][\p{L}\p{N}\p{M}]+)*/gu;
+  // Include curly apostrophes (\u2018 \u2019) alongside straight (') for pasted text
+  const re = /[\p{L}\p{N}\p{M}]+(?:['\u2018\u2019-][\p{L}\p{N}\p{M}]+)*/gu;
   const tokens: { word: string; original: string }[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(lower)) !== null) {
-    tokens.push({ word: m[0], original: prompt.slice(m.index, m.index + m[0].length) });
+    // Normalize curly apostrophes to straight for consistent matching
+    const word = m[0].replace(/[\u2018\u2019]/g, "'");
+    tokens.push({ word, original: prompt.slice(m.index, m.index + m[0].length) });
   }
   const results: { token: string; match: string | null }[] = [];
   let i = 0;
@@ -233,7 +236,12 @@ describe("LOCATION_SKIPWORDS safety", () => {
 });
 
 describe("IATA/skipword collisions tracked", () => {
-  const known = new Set(["LOS","LAS","DEL","SIN","DEN","EIN","AUS","PER","CAN","GOT"]);
+  const known = new Set([
+    // Original skipwords that collide with IATA
+    "LOS","LAS","DEL","SIN","DEN","EIN","AUS","PER","CAN","GOT",
+    // English words added as skipwords that are also IATA codes
+    "HAM","HER","MAD","MAN","PEN","PIT","SAT","SAW","SEA","DAD","ADD","REP","LED","FAT",
+  ]);
   it("collision set matches exactly", () => {
     const actual = new Set([...LOCATION_SKIPWORDS].map(s => s.toUpperCase()).filter(s => IATA_SET.has(s)));
     expect([...actual].sort()).toEqual([...known].sort());
@@ -1114,5 +1122,120 @@ describe("Adversarial stress tests", () => {
 
   it("emoji-heavy input doesn't crash", () => {
     expect(matches("✈️ 🌍 fly to London 🇬🇧")).toContain("city:london");
+  });
+});
+
+// ===================================================================
+// COMMON ENGLISH WORDS AS IATA CODES (must be blocked lowercase)
+// ===================================================================
+
+describe("Common English words that are IATA codes (blocked as skipwords)", () => {
+  it("'ham' (HAM=Hamburg) blocked lowercase, allowed uppercase", () => {
+    expect(matches("I love ham sandwiches")).toEqual([]);
+    expect(matches("fly to HAM")).toContain("IATA:HAM");
+  });
+
+  it("'her' (HER=Heraklion) blocked lowercase", () => {
+    expect(matches("tell her about the flight")).toEqual([]);
+    expect(matches("HER")).toContain("IATA:HER");
+  });
+
+  it("'mad' (MAD=Madrid) blocked lowercase", () => {
+    expect(matches("I'm mad about delays")).toEqual([]);
+    expect(matches("MAD")).toContain("IATA:MAD");
+  });
+
+  it("'man' (MAN=Manchester) blocked lowercase", () => {
+    expect(matches("that man is flying")).toEqual([]);
+    expect(matches("MAN")).toContain("IATA:MAN");
+  });
+
+  it("'pen' (PEN=Penang) blocked lowercase", () => {
+    expect(matches("get a pen and paper")).toEqual([]);
+    expect(matches("PEN")).toContain("IATA:PEN");
+  });
+
+  it("'pit' (PIT=Pittsburgh) blocked lowercase", () => {
+    expect(matches("olive pit")).toEqual([]);
+    expect(matches("PIT")).toContain("IATA:PIT");
+  });
+
+  it("'sat' (SAT=San Antonio) blocked lowercase", () => {
+    expect(matches("I sat down")).toEqual([]);
+    expect(matches("SAT")).toContain("IATA:SAT");
+  });
+
+  it("'saw' (SAW=Istanbul Sabiha) blocked lowercase", () => {
+    expect(matches("I saw a bird")).toEqual([]);
+    expect(matches("SAW")).toContain("IATA:SAW");
+  });
+
+  it("'sea' (SEA=Seattle) blocked lowercase", () => {
+    expect(matches("by the sea")).toEqual([]);
+    expect(matches("SEA")).toContain("IATA:SEA");
+  });
+
+  it("'dad' (DAD=Da Nang) blocked lowercase", () => {
+    expect(matches("my dad travels")).toEqual([]);
+    expect(matches("DAD")).toContain("IATA:DAD");
+  });
+
+  it("'add' (ADD=Addis Ababa) blocked lowercase", () => {
+    expect(matches("please add luggage")).toEqual([]);
+    expect(matches("ADD")).toContain("IATA:ADD");
+  });
+
+  it("'rep' (REP=Siem Reap) blocked lowercase", () => {
+    expect(matches("sales rep meeting")).toEqual([]);
+    expect(matches("REP")).toContain("IATA:REP");
+  });
+
+  it("'led' (LED=St. Petersburg) blocked lowercase", () => {
+    expect(matches("she led the way")).toEqual([]);
+    expect(matches("LED")).toContain("IATA:LED");
+  });
+
+  it("'fat' (FAT=Fresno) blocked lowercase", () => {
+    expect(matches("low fat diet")).toEqual([]);
+    expect(matches("FAT")).toContain("IATA:FAT");
+  });
+
+  it("sentence with multiple IATA-word skipwords produces no false positives", () => {
+    expect(matches("my dad saw her man add the ham and sat by the sea with a pen")).toEqual([]);
+  });
+
+  it("sentence mixing IATA skipwords with real cities still matches cities", () => {
+    const m = matches("my dad saw Paris and her man flew to London by the sea");
+    expect(m).toContain("city:paris");
+    expect(m).toContain("city:london");
+    expect(nonMatches("my dad saw Paris and her man flew to London by the sea")).toContain("dad");
+    expect(nonMatches("my dad saw Paris and her man flew to London by the sea")).toContain("saw");
+    expect(nonMatches("my dad saw Paris and her man flew to London by the sea")).toContain("her");
+    expect(nonMatches("my dad saw Paris and her man flew to London by the sea")).toContain("man");
+    expect(nonMatches("my dad saw Paris and her man flew to London by the sea")).toContain("sea");
+  });
+});
+
+// ===================================================================
+// CURLY APOSTROPHE SUPPORT (pasted text from Word/Google Docs)
+// ===================================================================
+
+describe("Curly apostrophe support", () => {
+  it("St. John\u2019s with curly apostrophe matches alias", () => {
+    // U+2019 RIGHT SINGLE QUOTATION MARK (most common curly apostrophe)
+    expect(matches("fly to St. John\u2019s")).toContain("alias:st. john's");
+  });
+
+  it("Xi\u2019an with curly apostrophe matches city", () => {
+    expect(matches("fly to Xi\u2019an")).toContain("city:xi'an");
+  });
+
+  it("Moskova\u2019dan with curly apostrophe matches via Turkish fallback", () => {
+    const m = matches("Moskova\u2019dan");
+    expect(m).toContain("alias:moscow");
+  });
+
+  it("left curly apostrophe U+2018 also works", () => {
+    expect(matches("fly to Xi\u2018an")).toContain("city:xi'an");
   });
 });

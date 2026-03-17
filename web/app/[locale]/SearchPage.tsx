@@ -1,5 +1,21 @@
 "use client";
 
+// Web Speech API types (not in all TS libs)
+interface SpeechRecognitionResult { readonly length: number; readonly isFinal: boolean; [index: number]: { transcript: string; confidence: number }; }
+interface SpeechRecognitionResultList { readonly length: number; [index: number]: SpeechRecognitionResult; }
+interface SpeechRecognitionEvent extends Event { readonly resultIndex: number; readonly results: SpeechRecognitionResultList; }
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean; interimResults: boolean; lang: string;
+  onresult: ((ev: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((ev: Event) => void) | null;
+  start(): void; stop(): void; abort(): void;
+}
+interface SpeechRecognitionConstructor { new(): SpeechRecognitionInstance; }
+declare global {
+  interface Window { SpeechRecognition: SpeechRecognitionConstructor; webkitSpeechRecognition: SpeechRecognitionConstructor; }
+}
+
 import React, { Component, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations, useLocale, useFormatter } from "next-intl";
 import { Link } from "../../i18n/navigation";
@@ -332,6 +348,10 @@ const LOCATION_SKIPWORDS = new Set([
   "bir", "ile", "var", "ben", "sen",
   // English function words that match IATA
   "can", "hat", "was", "had", "may", "has", "got",
+  // Common English nouns/verbs/adjectives that are also IATA codes
+  // (uppercase bypasses skipwords: HAM, SEA, etc.)
+  "ham", "her", "mad", "man", "pen", "pit", "sat", "saw", "sea",
+  "dad", "add", "rep", "led", "fat",
 ]);
 const SKIP_REGIONS = new Set([
   "anywhere", "europe", "asia", "africa", "south america", "north america", "middle east",
@@ -542,10 +562,13 @@ function scanLocations(prompt: string): ScannedLoc[] {
   // Tokenize into words with character positions (lowercase for matching)
   const tokens: Array<{ word: string; original: string; start: number; end: number }> = [];
   // \p{M} includes combining marks needed for Indic scripts (anusvara ं, virama ्, etc.)
-  const re = /[\p{L}\p{N}\p{M}]+(?:['-][\p{L}\p{N}\p{M}]+)*/gu;
+  // Include curly apostrophes (\u2018 \u2019) alongside straight (') for pasted text
+  const re = /[\p{L}\p{N}\p{M}]+(?:['\u2018\u2019-][\p{L}\p{N}\p{M}]+)*/gu;
   let m: RegExpExecArray | null;
   while ((m = re.exec(lower)) !== null) {
-    tokens.push({ word: m[0], original: prompt.slice(m.index, m.index + m[0].length), start: m.index, end: m.index + m[0].length });
+    // Normalize curly apostrophes to straight for consistent matching
+    const word = m[0].replace(/[\u2018\u2019]/g, "'");
+    tokens.push({ word, original: prompt.slice(m.index, m.index + m[0].length), start: m.index, end: m.index + m[0].length });
   }
 
   // Exact-only match: no prefix matching, skip ambiguous cities
@@ -2174,6 +2197,7 @@ function HomePage() {
   const [isPartial, setIsPartial] = useState(false);
   const [previewFlights, setPreviewFlights] = useState<FlightOut[]>([]);
   const [tripTab, setTripTab] = useState<"roundtrip" | "oneway">("roundtrip");
+  const [moreSortKey, setMoreSortKey] = useState<SortKey>("score");
   const [rtShowCount, setRtShowCount] = useState(5);
   const [rateLimitReset, setRateLimitReset] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
@@ -2191,6 +2215,9 @@ function HomePage() {
   const expandAbortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [hasSpeechAPI, setHasSpeechAPI] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const savedSearches = useSavedSearches();
   const [minutesSaved, setMinutesSaved] = useState(0);
@@ -2203,6 +2230,42 @@ function HomePage() {
   useEffect(() => {
     if (searchMode === "natural") inputRef.current?.focus();
   }, [searchMode]);
+
+  useEffect(() => {
+    setHasSpeechAPI(!!(window.SpeechRecognition || window.webkitSpeechRecognition));
+  }, []);
+
+  const toggleVoice = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    const recognition = new SR();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = locale === "de" ? "de-DE" : locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR"
+      : locale === "it" ? "it-IT" : locale === "pt" ? "pt-BR" : locale === "tr" ? "tr-TR"
+      : locale === "ja" ? "ja-JP" : locale === "ko" ? "ko-KR" : locale === "zh" ? "zh-CN"
+      : locale === "hi" ? "hi-IN" : locale === "ar" ? "ar-SA" : "en-US";
+    let finalTranscript = "";
+    recognition.onresult = (e: SpeechRecognitionEvent) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript;
+        else interim += e.results[i][0].transcript;
+      }
+      setPrompt(finalTranscript + interim);
+    };
+    recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };
+    recognition.onerror = () => { setIsListening(false); recognitionRef.current = null; };
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+    setSearchMode("natural");
+  }, [isListening, locale, setPrompt, setSearchMode]);
 
   useEffect(() => {
     try { setMinutesSaved(parseInt(localStorage.getItem("flyfast_minutes_saved") || "0", 10)); } catch {}
@@ -2954,6 +3017,24 @@ function HomePage() {
                 </div>
                 <div className="flex items-center gap-3 ml-auto shrink-0">
                   {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/25 hidden sm:inline">{t("enterToSearch")}</span>}
+                  {searchMode === "natural" && hasSpeechAPI && (
+                    <button
+                      type="button"
+                      onClick={toggleVoice}
+                      aria-label={isListening ? "Stop listening" : "Voice input"}
+                      className={`p-2 rounded-lg transition-colors ${
+                        isListening
+                          ? "text-red-500 bg-red-500/10 animate-pulse"
+                          : "text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)]"
+                      }`}
+                    >
+                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" y1="19" x2="12" y2="22" />
+                      </svg>
+                    </button>
+                  )}
                   <button
                     onClick={(e) => {
                       const svg = e.currentTarget.querySelector("svg");
@@ -3304,13 +3385,39 @@ function HomePage() {
                     {/* More flights */}
                     {(() => {
                       const recKeys = new Set(recs.map((r) => `${r.flight.route}|${r.flight.date}|${r.flight.provider}`));
-                      const moreFlights = sortFlights(pricedFlights.length > 0 ? pricedFlights : flights, "score").filter(
-                        (f) => !recKeys.has(`${f.route}|${f.date}|${f.provider}`)
+                      const moreFlights = sortFlights(
+                        (pricedFlights.length > 0 ? pricedFlights : flights).filter(
+                          (f) => !recKeys.has(`${f.route}|${f.date}|${f.provider}`)
+                        ),
+                        moreSortKey
                       );
                       if (moreFlights.length === 0) return null;
+                      const sortOptions: { key: SortKey; label: string }[] = [
+                        { key: "score", label: t("results.sortRecommended") },
+                        { key: "price", label: t("results.sortCheapest") },
+                        { key: "duration", label: t("results.sortFastest") },
+                        { key: "stops", label: t("results.sortFewestStops") },
+                      ];
                       return (
                         <div className="mt-10 space-y-4">
-                          <h3 className="text-base font-semibold text-[var(--color-text-muted)] mb-4">{t("results.moreFlights")}</h3>
+                          <div className="flex items-center justify-between gap-3 mb-4">
+                            <h3 className="text-base font-semibold text-[var(--color-text-muted)]">{t("results.moreFlights")}</h3>
+                            <div className="flex items-center gap-1.5 overflow-x-auto">
+                              {sortOptions.map((opt) => (
+                                <button
+                                  key={opt.key}
+                                  onClick={() => setMoreSortKey(opt.key)}
+                                  className={`text-xs px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
+                                    moreSortKey === opt.key
+                                      ? "bg-[var(--color-interactive)] text-white font-medium"
+                                      : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)]/80"
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                           {moreFlights.slice(0, 6).map((f, i) => (
                             <div key={`more-${i}`} className="animate-fade-up" style={{ animationDelay: `${(i + 4) * 60}ms` }}>
                             <FlightCard
