@@ -685,7 +685,7 @@ function detectDate(lower: string): { text: string; start: number; end: number; 
 // ---------------------------------------------------------------------------
 // Inline Prompt Highlighting
 // ---------------------------------------------------------------------------
-interface HighlightRange { start: number; end: number; type: "origin" | "dest" | "date" | "qualifier"; airports: LocAirport[]; resolvedDate?: string }
+interface HighlightRange { start: number; end: number; type: "origin" | "dest" | "date" | "qualifier"; airports: LocAirport[]; resolvedDate?: string; tooltip?: string }
 
 function useHighlightRanges(prompt: string): HighlightRange[] {
   return useMemo(() => {
@@ -707,96 +707,106 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
     }
 
     // Qualifier detection: safe routes, budget, class, etc. (all 12 languages)
-    const qualifierPats: RegExp[] = [
-      // Safe routes / safe only (en, de, es, fr, it, pt, tr, zh, ja, ko, hi, ar)
-      /\b(safe\s+routes?\s*(?:only)?|safe\s+only|safe\b|avoid\s+conflict\s+zones?)\b/i,
-      /(nur\s+sicher(?:e\s+routen)?)/i, // de
-      /(solo\s+(?:rutas?\s+)?segur[ao]s?)/i, // es
-      /((?:routes?\s+)?s[uû]r(?:e?s)?\s+uniquement|s[uû]rs?\s+uniquement)/i, // fr
-      /(solo\s+(?:rotte?\s+)?sicur[ei])/i, // it
-      /(somente\s+(?:rotas?\s+)?segur[ao]s?)/i, // pt
-      /(sadece\s+güvenli(?:\s+rotalar)?)/i, // tr
-      /(仅安全航线|安全航线)/i, // zh
-      /(安全ルートのみ|安全のみ)/i, // ja
-      /(안전\s*노선만)/i, // ko
-      /(केवल\s+सुरक्षित(?:\s+मार्ग)?)/i, // hi
-      /(مسارات?\s+آمنة?\s+فقط|آمنة?\s+فقط)/i, // ar
-      // Direct / nonstop (en, de, es, fr, it, pt, tr, zh, ja, ko, hi, ar)
-      /\b(nonstop|non-stop|direct\s+(?:flights?\s*)?only|direct(?:\s+flights?)?)\b/i,
-      /(nur\s+direkt(?:flüge)?|nonstop)/i, // de
-      /(solo\s+directo)/i, // es
-      /((?:vols?\s+)?directs?\s+uniquement)/i, // fr
-      /(solo\s+dirett[io])/i, // it
-      /(somente\s+diretos)/i, // pt
-      /(sadece\s+direkt)/i, // tr
-      /(仅直飞)/i, // zh
-      /(直行便のみ)/i, // ja
-      /(직항만)/i, // ko
-      /(केवल\s+सीधी(?:\s+फ़?्लाइट)?)/i, // hi
-      /(مباشر\s+فقط)/i, // ar
-      // Business class (all languages)
-      /\b(business\s+class)\b/i,
-      /(classe?\s+affaires?)/i, // fr
-      /(clase\s+business)/i, // es
-      /(ビジネスクラス)/i, // ja
-      /(비즈니스\s*클래스)/i, // ko
-      /(商务舱)/i, // zh
-      /(बिज़नेस\s+क्लास)/i, // hi
-      /(درجة\s+رجال\s+الأعمال)/i, // ar
-      /(classe?\s+executiva)/i, // pt
-      // First class (all languages)
-      /\b(first\s+class)\b/i,
-      /(première\s+classe?)/i, // fr
-      /(primera\s+clase)/i, // es
-      /(ファーストクラス)/i, // ja
-      /(퍼스트\s*클래스)/i, // ko
-      /(头等舱)/i, // zh
-      /(फ़र्स्ट\s+क्लास)/i, // hi
-      /(الدرجة\s+الأولى)/i, // ar
-      /(primeira\s+classe?)/i, // pt
+    // Each entry: [pattern, tooltip label shown on hover]
+    const qualifierPats: [RegExp, string][] = [
+      // Safe routes / safe only
+      [/\b(safe\s+routes?\s*(?:only)?|safe\s+only|safe\b|avoid\s+conflict\s+zones?)\b/i, "Safe routes only"],
+      [/(nur\s+sicher(?:e\s+routen)?)/i, "Safe routes only"],
+      [/(solo\s+(?:rutas?\s+)?segur[ao]s?)/i, "Safe routes only"],
+      [/((?:routes?\s+)?s[uû]r(?:e?s)?\s+uniquement|s[uû]rs?\s+uniquement)/i, "Safe routes only"],
+      [/(solo\s+(?:rotte?\s+)?sicur[ei])/i, "Safe routes only"],
+      [/(somente\s+(?:rotas?\s+)?segur[ao]s?)/i, "Safe routes only"],
+      [/(sadece\s+güvenli(?:\s+rotalar)?)/i, "Safe routes only"],
+      [/(仅安全航线|安全航线)/i, "Safe routes only"],
+      [/(安全ルートのみ|安全のみ)/i, "Safe routes only"],
+      [/(안전\s*노선만)/i, "Safe routes only"],
+      [/(केवल\s+सुरक्षित(?:\s+मार्ग)?)/i, "Safe routes only"],
+      [/(مسارات?\s+آمنة?\s+فقط|آمنة?\s+فقط)/i, "Safe routes only"],
+      // Direct / nonstop
+      [/\b(nonstop|non-stop|direct\s+(?:flights?\s*)?only|direct(?:\s+flights?)?)\b/i, "Direct flights only"],
+      [/(nur\s+direkt(?:flüge)?|nonstop)/i, "Direct flights only"],
+      [/(solo\s+directo)/i, "Direct flights only"],
+      [/((?:vols?\s+)?directs?\s+uniquement)/i, "Direct flights only"],
+      [/(solo\s+dirett[io])/i, "Direct flights only"],
+      [/(somente\s+diretos)/i, "Direct flights only"],
+      [/(sadece\s+direkt)/i, "Direct flights only"],
+      [/(仅直飞)/i, "Direct flights only"],
+      [/(直行便のみ)/i, "Direct flights only"],
+      [/(직항만)/i, "Direct flights only"],
+      [/(केवल\s+सीधी(?:\s+फ़?्लाइट)?)/i, "Direct flights only"],
+      [/(مباشر\s+فقط)/i, "Direct flights only"],
+      // Business class
+      [/\b(business\s+class)\b/i, "Business class"],
+      [/(classe?\s+affaires?)/i, "Business class"],
+      [/(clase\s+business)/i, "Business class"],
+      [/(ビジネスクラス)/i, "Business class"],
+      [/(비즈니스\s*클래스)/i, "Business class"],
+      [/(商务舱)/i, "Business class"],
+      [/(बिज़नेस\s+क्लास)/i, "Business class"],
+      [/(درجة\s+رجال\s+الأعمال)/i, "Business class"],
+      [/(classe?\s+executiva)/i, "Business class"],
+      // First class
+      [/\b(first\s+class)\b/i, "First class"],
+      [/(première\s+classe?)/i, "First class"],
+      [/(primera\s+clase)/i, "First class"],
+      [/(ファーストクラス)/i, "First class"],
+      [/(퍼스트\s*클래스)/i, "First class"],
+      [/(头等舱)/i, "First class"],
+      [/(फ़र्स्ट\s+क्लास)/i, "First class"],
+      [/(الدرجة\s+الأولى)/i, "First class"],
+      [/(primeira\s+classe?)/i, "First class"],
       // Premium economy
-      /\b(premium\s+economy)\b/i,
-      /(超级经济舱)/i, // zh
-      /(اقتصادية\s+مميزة)/i, // ar
-      /(turista\s+premium)/i, // es
-      // Economy (all languages, word-boundary sensitive)
-      /\b(economy)\b/i,
-      /(économique)/i, // fr
-      /(经济舱)/i, // zh
-      /(エコノミー)/i, // ja
-      /(이코노미)/i, // ko
-      /(इकॉनमी)/i, // hi
-      /(اقتصادية)/i, // ar
-      /\b(econômica)\b/i, // pt
-      /\b(turista)\b/i, // es
-      // Standalone qualifier words (single-word, after multi-word patterns so longer matches win)
-      /\b(seguro|segura)\b/i,     // es: safe
-      /\b(sicher|sichere)\b/i,    // de: safe
-      /\b(sicuro|sicura)\b/i,     // it: safe
-      /\b(güvenli)\b/i,           // tr: safe
-      /\b(directo|directa)\b/i,   // es: direct
-      /\b(direkt)\b/i,            // de: direct
-      /\b(diretto|diretta)\b/i,   // it: direct
-      /\b(direto|direta)\b/i,     // pt: direct
-      // Budget: under/less than + currency + amount (all languages)
-      /\b(under\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, // en: "under $500" or "under 500$"
-      /\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, // en
-      /(unter\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, // de: "unter 500€"
-      /(menos\s+de\s+[\$\u20ac\u00a3R]?\$?\s*\d[\d.,]*)/i, // es/pt: "menos de 500€"
-      /(meno\s+di\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, // it: "meno di 500€"
-      /(moins\s+de\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, // fr: "moins de 500€"
-      /(\d[\d.,]*\s*(?:TL|₺)\s*altında)/i, // tr: "15000 TL altında"
-      /(\d[\d.,]*\s*(?:元|美元)以[内下])/i, // zh: "3000元以内"
-      /(\d[\d.,]*\s*(?:万?円)以[内下])/i, // ja: "5万円以内"
-      /(\d[\d.,]*\s*(?:만?원)\s*이하)/i, // ko: "50만원 이하"
-      /([\$\u20ac\u00a3\u20b9]?\s*\d[\d,]*\s*से\s*कम)/i, // hi: "₹40000 से कम"
-      /(أقل\s+من\s+\d[\d.,]*)/i, // ar: "أقل من 2000"
+      [/\b(premium\s+economy)\b/i, "Premium economy"],
+      [/(超级经济舱)/i, "Premium economy"],
+      [/(اقتصادية\s+مميزة)/i, "Premium economy"],
+      [/(turista\s+premium)/i, "Premium economy"],
+      // Economy
+      [/\b(economy)\b/i, "Economy class"],
+      [/(économique)/i, "Economy class"],
+      [/(经济舱)/i, "Economy class"],
+      [/(エコノミー)/i, "Economy class"],
+      [/(이코노미)/i, "Economy class"],
+      [/(इकॉनमी)/i, "Economy class"],
+      [/(اقتصادية)/i, "Economy class"],
+      [/\b(econômica)\b/i, "Economy class"],
+      [/\b(turista)\b/i, "Economy class"],
+      // Standalone qualifier words
+      [/\b(seguro|segura)\b/i, "Safe routes only"],
+      [/\b(sicher|sichere)\b/i, "Safe routes only"],
+      [/\b(sicuro|sicura)\b/i, "Safe routes only"],
+      [/\b(güvenli)\b/i, "Safe routes only"],
+      [/\b(directo|directa)\b/i, "Direct flights only"],
+      [/\b(direkt)\b/i, "Direct flights only"],
+      [/\b(diretto|diretta)\b/i, "Direct flights only"],
+      [/\b(direto|direta)\b/i, "Direct flights only"],
+      // Budget: under/less than + currency + amount
+      [/\b(under\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, "budget"],
+      [/\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, "budget"],
+      [/(unter\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, "budget"],
+      [/(menos\s+de\s+[\$\u20ac\u00a3R]?\$?\s*\d[\d.,]*)/i, "budget"],
+      [/(meno\s+di\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, "budget"],
+      [/(moins\s+de\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, "budget"],
+      [/(\d[\d.,]*\s*(?:TL|₺)\s*altında)/i, "budget"],
+      [/(\d[\d.,]*\s*(?:元|美元)以[内下])/i, "budget"],
+      [/(\d[\d.,]*\s*(?:万?円)以[内下])/i, "budget"],
+      [/(\d[\d.,]*\s*(?:만?원)\s*이하)/i, "budget"],
+      [/([\$\u20ac\u00a3\u20b9]?\s*\d[\d,]*\s*से\s*कम)/i, "budget"],
+      [/(أقل\s+من\s+\d[\d.,]*)/i, "budget"],
     ];
-    for (const pat of qualifierPats) {
+    for (const [pat, label] of qualifierPats) {
       const m = pat.exec(lower);
       if (m && m.index !== undefined) {
         const overlaps = ranges.some((r) => m.index! < r.end && m.index! + m[0].length > r.start);
-        if (!overlaps) ranges.push({ start: m.index, end: m.index + m[0].length, type: "qualifier", airports: [] });
+        if (!overlaps) {
+          // For budget patterns, extract the amount and build a "<$500" style tooltip
+          let tooltip = label;
+          if (label === "budget") {
+            const numMatch = m[0].match(/\d[\d.,]*/);
+            const sym = m[0].match(/[\$\u20ac\u00a3\u20b9\u00a5₺]/)?.[0] || "$";
+            tooltip = numMatch ? `< ${sym}${numMatch[0].replace(/[.,]$/,"")}` : "Budget limit";
+          }
+          ranges.push({ start: m.index, end: m.index + m[0].length, type: "qualifier", airports: [], tooltip });
+        }
       }
     }
 
@@ -814,7 +824,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
   }, [prompt]);
 }
 
-interface TextRun { type: "plain" | "highlight"; text: string; segType?: "origin" | "dest" | "date" | "qualifier"; airports?: LocAirport[]; resolvedDate?: string }
+interface TextRun { type: "plain" | "highlight"; text: string; segType?: "origin" | "dest" | "date" | "qualifier"; airports?: LocAirport[]; resolvedDate?: string; tooltip?: string }
 
 function buildTextRuns(prompt: string, ranges: HighlightRange[]): TextRun[] {
   if (!ranges.length) return [{ type: "plain", text: prompt }];
@@ -822,7 +832,7 @@ function buildTextRuns(prompt: string, ranges: HighlightRange[]): TextRun[] {
   let cursor = 0;
   for (const r of ranges) {
     if (r.start > cursor) runs.push({ type: "plain", text: prompt.slice(cursor, r.start) });
-    runs.push({ type: "highlight", text: prompt.slice(r.start, r.end), segType: r.type, airports: r.airports, resolvedDate: r.resolvedDate });
+    runs.push({ type: "highlight", text: prompt.slice(r.start, r.end), segType: r.type, airports: r.airports, resolvedDate: r.resolvedDate, tooltip: r.tooltip });
     cursor = r.end;
   }
   if (cursor < prompt.length) runs.push({ type: "plain", text: prompt.slice(cursor) });
@@ -832,11 +842,11 @@ function buildTextRuns(prompt: string, ranges: HighlightRange[]): TextRun[] {
 // Shared ref: closing one tooltip closes any other open tooltip
 const activeTooltipClose = { current: null as (() => void) | null };
 
-function InlineHighlight({ text, airports, resolvedDate }: { text: string; airports: LocAirport[]; resolvedDate?: string }) {
+function InlineHighlight({ text, airports, resolvedDate, tooltip }: { text: string; airports: LocAirport[]; resolvedDate?: string; tooltip?: string }) {
   const [show, setShow] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const hasTooltip = airports.length > 0 || !!resolvedDate;
+  const hasContent = airports.length > 0 || !!resolvedDate || !!tooltip;
 
   useEffect(() => {
     if (!show) return;
@@ -863,7 +873,6 @@ function InlineHighlight({ text, airports, resolvedDate }: { text: string; airpo
     const tt = tooltipRef.current;
     tt.style.top = `${triggerRect.bottom + 6}px`;
     tt.style.left = `${triggerRect.left}px`;
-    // Clamp to viewport right edge
     requestAnimationFrame(() => {
       const ttRect = tt.getBoundingClientRect();
       if (ttRect.right > window.innerWidth - 8) {
@@ -872,7 +881,7 @@ function InlineHighlight({ text, airports, resolvedDate }: { text: string; airpo
     });
   }, [show]);
 
-  if (!hasTooltip) return <span className="text-[var(--color-interactive)]">{text}</span>;
+  if (!hasContent) return <span className="text-[var(--color-interactive)]">{text}</span>;
   return (
     <span
       ref={ref}
@@ -884,7 +893,9 @@ function InlineHighlight({ text, airports, resolvedDate }: { text: string; airpo
       <span className="text-[var(--color-interactive)] cursor-help border-b border-dotted border-[var(--color-interactive)]/50">{text}</span>
       {show && (
         <div ref={tooltipRef} className="fixed z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
-          {resolvedDate ? (
+          {tooltip ? (
+            <span className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap">{tooltip}</span>
+          ) : resolvedDate ? (
             <span className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap">{resolvedDate}</span>
           ) : (
             airports.map((a) => (
@@ -910,7 +921,7 @@ function HighlightOverlay({ prompt, ranges }: { prompt: string; ranges: Highligh
       {runs.map((run, i) =>
         run.type === "plain"
           ? <span key={i} className="text-[var(--color-text)]">{run.text}</span>
-          : <InlineHighlight key={i} text={run.text} airports={run.airports || []} resolvedDate={run.resolvedDate} />
+          : <InlineHighlight key={i} text={run.text} airports={run.airports || []} resolvedDate={run.resolvedDate} tooltip={run.tooltip} />
       )}
     </div>
   );
@@ -2871,7 +2882,7 @@ function HomePage() {
                     ? buildTextRuns(prompt, highlightRanges).map((run, i) =>
                         run.type === "plain"
                           ? <span key={i}>{run.text}</span>
-                          : <InlineHighlight key={i} text={run.text} airports={run.airports || []} resolvedDate={run.resolvedDate} />
+                          : <InlineHighlight key={i} text={run.text} airports={run.airports || []} resolvedDate={run.resolvedDate} tooltip={run.tooltip} />
                       )
                     : prompt}
                 </div>
