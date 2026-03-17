@@ -104,6 +104,36 @@ const COUNTRY_ALIAS_ENTRIES: [string, string][] = [
   ["isviçre","CH"],["hollanda","NL"],["birleşik krallık","GB"],
   ["amerika birleşik devletleri","US"],["isveç","SE"],["norveç","NO"],
   ["polonya","PL"],["macaristan","HU"],["romanya","RO"],["hırvatistan","HR"],["mısır","EG"],
+  // Chinese
+  ["德国","DE"],["法国","FR"],["意大利","IT"],["西班牙","ES"],["英国","GB"],
+  ["美国","US"],["日本","JP"],["中国","CN"],["印度","IN"],["韩国","KR"],
+  ["土耳其","TR"],["希腊","GR"],["奥地利","AT"],["瑞士","CH"],["荷兰","NL"],
+  ["瑞典","SE"],["挪威","NO"],["丹麦","DK"],["波兰","PL"],["匈牙利","HU"],
+  ["泰国","TH"],["新加坡","SG"],["马来西亚","MY"],["澳大利亚","AU"],["埃及","EG"],
+  // Japanese
+  ["ドイツ","DE"],["フランス","FR"],["イタリア","IT"],["スペイン","ES"],["イギリス","GB"],
+  ["アメリカ","US"],["日本","JP"],["中国","CN"],["インド","IN"],["韓国","KR"],
+  ["トルコ","TR"],["ギリシャ","GR"],["オーストリア","AT"],["スイス","CH"],["オランダ","NL"],
+  ["スウェーデン","SE"],["ノルウェー","NO"],["デンマーク","DK"],["ポーランド","PL"],
+  ["タイ","TH"],["シンガポール","SG"],["マレーシア","MY"],["オーストラリア","AU"],["エジプト","EG"],
+  // Korean
+  ["독일","DE"],["프랑스","FR"],["이탈리아","IT"],["스페인","ES"],["영국","GB"],
+  ["미국","US"],["일본","JP"],["중국","CN"],["인도","IN"],["한국","KR"],
+  ["터키","TR"],["그리스","GR"],["오스트리아","AT"],["스위스","CH"],["네덜란드","NL"],
+  ["스웨덴","SE"],["노르웨이","NO"],["덴마크","DK"],["폴란드","PL"],
+  ["태국","TH"],["싱가포르","SG"],["말레이시아","MY"],["호주","AU"],["이집트","EG"],
+  // Arabic
+  ["ألمانيا","DE"],["فرنسا","FR"],["إيطاليا","IT"],["إسبانيا","ES"],["بريطانيا","GB"],
+  ["أمريكا","US"],["اليابان","JP"],["الصين","CN"],["الهند","IN"],["كوريا","KR"],
+  ["تركيا","TR"],["اليونان","GR"],["النمسا","AT"],["سويسرا","CH"],["هولندا","NL"],
+  ["السويد","SE"],["النرويج","NO"],["الدنمارك","DK"],["بولندا","PL"],
+  ["تايلاند","TH"],["سنغافورة","SG"],["ماليزيا","MY"],["أستراليا","AU"],["مصر","EG"],
+  // Hindi
+  ["जर्मनी","DE"],["फ्रांस","FR"],["इटली","IT"],["स्पेन","ES"],["ब्रिटेन","GB"],
+  ["अमेरिका","US"],["जापान","JP"],["चीन","CN"],["भारत","IN"],["कोरिया","KR"],
+  ["तुर्की","TR"],["ग्रीस","GR"],["ऑस्ट्रिया","AT"],["स्विट्जरलैंड","CH"],
+  ["नीदरलैंड","NL"],["स्वीडन","SE"],["नॉर्वे","NO"],["डेनमार्क","DK"],["पोलैंड","PL"],
+  ["थाईलैंड","TH"],["सिंगापुर","SG"],["मलेशिया","MY"],["ऑस्ट्रेलिया","AU"],["मिस्र","EG"],
 ];
 for (const [alias, code] of COUNTRY_ALIAS_ENTRIES) {
   const name = COUNTRY_NAMES[code];
@@ -158,6 +188,58 @@ const CITY_ALIASES_ENTRIES: [string, string][] = [
   // Turkish city names
   ["münih", "munich"], ["viyana", "vienna"], ["cenevre", "geneva"],
   ["zürih", "zurich"], ["lizbon", "lisbon"], ["atina", "athens"], ["kahire", "cairo"],
+  // Chinese city names
+  ["伦敦", "london"], ["巴黎", "paris"], ["纽约", "new york"], ["东京", "tokyo"],
+  ["北京", "beijing"], ["慕尼黑", "munich"], ["米兰", "milan"], ["罗马", "rome"],
+  ["维也纳", "vienna"], ["布鲁塞尔", "brussels"], ["日内瓦", "geneva"],
+  ["苏黎世", "zurich"], ["伊斯坦布尔", "istanbul"], ["雅典", "athens"],
+  ["华沙", "warsaw"], ["哥本哈根", "copenhagen"], ["斯德哥尔摩", "stockholm"],
+  ["布拉格", "prague"], ["开罗", "cairo"], ["莫斯科", "moscow"], ["里斯本", "lisbon"],
+  ["柏林", "berlin"], ["汉堡", "hamburg"], ["法兰克福", "frankfurt"],
+  ["上海", "shanghai"], ["香港", "hong kong"], ["新加坡", "singapore"],
+  ["曼谷", "bangkok"], ["首尔", "seoul"], ["孟买", "mumbai"], ["新德里", "new delhi"],
+  // Japanese city names (kanji + katakana)
+  ["東京", "tokyo"], ["大阪", "osaka"], ["京都", "kyoto"], ["名古屋", "nagoya"],
+  ["福岡", "fukuoka"], ["札幌", "sapporo"],
+  ["ロンドン", "london"], ["パリ", "paris"], ["ニューヨーク", "new york"],
+  ["ミュンヘン", "munich"], ["ミラノ", "milan"], ["ローマ", "rome"],
+  ["ウィーン", "vienna"], ["ブリュッセル", "brussels"], ["ジュネーブ", "geneva"],
+  ["チューリッヒ", "zurich"], ["イスタンブール", "istanbul"], ["アテネ", "athens"],
+  ["ワルシャワ", "warsaw"], ["コペンハーゲン", "copenhagen"],
+  ["ストックホルム", "stockholm"], ["プラハ", "prague"], ["カイロ", "cairo"],
+  ["モスクワ", "moscow"], ["リスボン", "lisbon"], ["ベルリン", "berlin"],
+  ["フランクフルト", "frankfurt"], ["バンコク", "bangkok"], ["ソウル", "seoul"],
+  ["ムンバイ", "mumbai"], ["シンガポール", "singapore"],
+  // Korean city names
+  ["런던", "london"], ["파리", "paris"], ["뉴욕", "new york"], ["도쿄", "tokyo"],
+  ["베이징", "beijing"], ["뮌헨", "munich"], ["밀라노", "milan"], ["로마", "rome"],
+  ["빈", "vienna"], ["브뤼셀", "brussels"], ["제네바", "geneva"],
+  ["취리히", "zurich"], ["이스탄불", "istanbul"], ["아테네", "athens"],
+  ["바르샤바", "warsaw"], ["코펜하겐", "copenhagen"], ["스톡홀름", "stockholm"],
+  ["프라하", "prague"], ["카이로", "cairo"], ["모스크바", "moscow"],
+  ["리스본", "lisbon"], ["베를린", "berlin"], ["프랑크푸르트", "frankfurt"],
+  ["방콕", "bangkok"], ["서울", "seoul"], ["뭄바이", "mumbai"], ["싱가포르", "singapore"],
+  // Arabic city names
+  ["لندن", "london"], ["باريس", "paris"], ["نيويورك", "new york"],
+  ["طوكيو", "tokyo"], ["بكين", "beijing"], ["ميونخ", "munich"],
+  ["ميلانو", "milan"], ["روما", "rome"], ["فيينا", "vienna"],
+  ["بروكسل", "brussels"], ["جنيف", "geneva"], ["زيوريخ", "zurich"],
+  ["إسطنبول", "istanbul"], ["أثينا", "athens"], ["وارسو", "warsaw"],
+  ["كوبنهاغن", "copenhagen"], ["ستوكهولم", "stockholm"], ["براغ", "prague"],
+  ["القاهرة", "cairo"], ["موسكو", "moscow"], ["لشبونة", "lisbon"],
+  ["برلين", "berlin"], ["فرانكفورت", "frankfurt"], ["بانكوك", "bangkok"],
+  ["سيول", "seoul"], ["مومباي", "mumbai"], ["سنغافورة", "singapore"],
+  // Hindi city names
+  ["लंदन", "london"], ["पेरिस", "paris"], ["न्यूयॉर्क", "new york"],
+  ["टोक्यो", "tokyo"], ["बीजिंग", "beijing"], ["म्यूनिख", "munich"],
+  ["मिलान", "milan"], ["रोम", "rome"], ["वियना", "vienna"],
+  ["ब्रसेल्स", "brussels"], ["जिनेवा", "geneva"], ["ज्यूरिख", "zurich"],
+  ["इस्तांबुल", "istanbul"], ["एथेंस", "athens"], ["वॉरसॉ", "warsaw"],
+  ["कोपेनहेगन", "copenhagen"], ["स्टॉकहोम", "stockholm"], ["प्राग", "prague"],
+  ["काहिरा", "cairo"], ["मॉस्को", "moscow"], ["लिस्बन", "lisbon"],
+  ["बर्लिन", "berlin"], ["फ्रैंकफर्ट", "frankfurt"], ["बैंकॉक", "bangkok"],
+  ["सियोल", "seoul"], ["मुंबई", "mumbai"], ["सिंगापुर", "singapore"],
+  ["दिल्ली", "new delhi"], ["कोलकाता", "kolkata"], ["चेन्नई", "chennai"],
 ];
 const CITY_ALIASES: Record<string, string> = {};
 for (const [alias, city] of CITY_ALIASES_ENTRIES) {
@@ -179,6 +261,12 @@ const SKIP_REGIONS = new Set([
   "n'importe où", "asie", "afrique", "amérique du sud", "amérique du nord",
   "ovunque", "europa", "asia", "africa", "sud america", "nord america",
   "qualquer lugar", "ásia", "áfrica", "américa do sul", "américa do norte",
+  // CJK/Arabic/Hindi
+  "任何地方", "欧洲", "亚洲", "非洲", "南美洲", "北美洲",
+  "どこでも", "ヨーロッパ", "アジア", "アフリカ",
+  "어디든", "유럽", "아시아", "아프리카",
+  "أي مكان", "أوروبا", "آسيا", "أفريقيا",
+  "कहीं भी", "यूरोप", "एशिया", "अफ्रीका",
 ]);
 
 const MONTH_NAMES = ["january","february","march","april","may","june","july","august","september","october","november","december"];
@@ -200,6 +288,15 @@ const MONTH_I18N: [string, number][] = [
   ["janeiro",0],["fevereiro",1],["março",2],["abril",3],["maio",4],["junho",5],["julho",6],["agosto",7],["setembro",8],["outubro",9],["novembro",10],["dezembro",11],
   // Turkish
   ["ocak",0],["şubat",1],["mart",2],["nisan",3],["mayıs",4],["haziran",5],["temmuz",6],["ağustos",7],["eylül",8],["ekim",9],["kasım",10],["aralık",11],
+  // Chinese
+  ["一月",0],["二月",1],["三月",2],["四月",3],["五月",4],["六月",5],["七月",6],["八月",7],["九月",8],["十月",9],["十一月",10],["十二月",11],
+  // Japanese (same kanji as Chinese)
+  // Korean
+  ["1월",0],["2월",1],["3월",2],["4월",3],["5월",4],["6월",5],["7월",6],["8월",7],["9월",8],["10월",9],["11월",10],["12월",11],
+  // Arabic
+  ["يناير",0],["فبراير",1],["مارس",2],["أبريل",3],["مايو",4],["يونيو",5],["يوليو",6],["أغسطس",7],["سبتمبر",8],["أكتوبر",9],["نوفمبر",10],["ديسمبر",11],
+  // Hindi
+  ["जनवरी",0],["फरवरी",1],["मार्च",2],["अप्रैल",3],["मई",4],["जून",5],["जुलाई",6],["अगस्त",7],["सितंबर",8],["अक्टूबर",9],["नवंबर",10],["दिसंबर",11],
 ];
 for (const [name, idx] of MONTH_I18N) I18N_MONTHS[name] = idx;
 // Also include English
@@ -221,6 +318,17 @@ const DAY_I18N: [string, number][] = [
   ["domingo",0],["segunda",1],["terça",2],["quarta",3],["quinta",4],["sexta",5],["sábado",6],
   // Turkish
   ["pazar",0],["pazartesi",1],["salı",2],["çarşamba",3],["perşembe",4],["cuma",5],["cumartesi",6],
+  // Chinese
+  ["星期日",0],["星期一",1],["星期二",2],["星期三",3],["星期四",4],["星期五",5],["星期六",6],
+  ["周日",0],["周一",1],["周二",2],["周三",3],["周四",4],["周五",5],["周六",6],
+  // Japanese
+  ["日曜日",0],["月曜日",1],["火曜日",2],["水曜日",3],["木曜日",4],["金曜日",5],["土曜日",6],
+  // Korean
+  ["일요일",0],["월요일",1],["화요일",2],["수요일",3],["목요일",4],["금요일",5],["토요일",6],
+  // Arabic
+  ["الأحد",0],["الإثنين",1],["الثلاثاء",2],["الأربعاء",3],["الخميس",4],["الجمعة",5],["السبت",6],
+  // Hindi
+  ["रविवार",0],["सोमवार",1],["मंगलवार",2],["बुधवार",3],["गुरुवार",4],["शुक्रवार",5],["शनिवार",6],
 ];
 for (const [name, idx] of DAY_I18N) I18N_DAYS[name] = idx;
 for (let i = 0; i < DAY_NAMES.length; i++) I18N_DAYS[DAY_NAMES[i]] = i;
@@ -239,6 +347,21 @@ const I18N_TEMPORAL: Record<string, string> = {
   "nächstes wochenende": "next weekend", "próximo fin de semana": "next weekend", "prochain week-end": "next weekend", "prochain weekend": "next weekend", "prossimo fine settimana": "next weekend", "próximo fim de semana": "next weekend", "gelecek hafta sonu": "next weekend",
   // "next month"
   "nächsten monat": "next month", "próximo mes": "next month", "proximo mes": "next month", "le mois prochain": "next month", "mois prochain": "next month", "prossimo mese": "next month", "próximo mês": "next month", "gelecek ay": "next month",
+  // Chinese
+  "明天": "tomorrow", "今天": "today", "下周": "next week", "下個星期": "next week", "下个星期": "next week",
+  "这个周末": "this weekend", "這個週末": "this weekend", "下个周末": "next weekend", "下個週末": "next weekend", "下个月": "next month", "下個月": "next month",
+  // Japanese
+  "明日": "tomorrow", "あした": "tomorrow", "今日": "today", "きょう": "today",
+  "来週": "next week", "らいしゅう": "next week", "今週末": "this weekend", "来週末": "next weekend", "来月": "next month",
+  // Korean
+  "내일": "tomorrow", "오늘": "today", "다음주": "next week", "다음 주": "next week",
+  "이번 주말": "this weekend", "다음 주말": "next weekend", "다음달": "next month", "다음 달": "next month",
+  // Arabic
+  "غدا": "tomorrow", "غداً": "tomorrow", "اليوم": "today", "الأسبوع القادم": "next week", "الاسبوع القادم": "next week",
+  "نهاية الأسبوع": "this weekend", "الشهر القادم": "next month",
+  // Hindi
+  "कल": "tomorrow", "आज": "today", "अगले हफ्ते": "next week", "अगला हफ्ता": "next week",
+  "इस सप्ताहांत": "this weekend", "अगले महीने": "next month",
 };
 
 function resolveDate(phrase: string): string | null {
@@ -379,21 +502,22 @@ function formatLocationDisplay(loc: { display: string; count: number }): string 
 }
 
 function extractOriginDest(lower: string): { originPhrase: string; destPhrase: string } | null {
-  // Multilingual "from" and "to" prepositions
-  // to: to, nach, a, à, para, 에, 로, ye, ya
-  // from: from, von, de, da, di, depuis, 에서, den, dan
+  // Unicode-aware character class for location names (covers Latin, CJK, Arabic, Devanagari, etc.)
+  const W = "[\\p{L}\\p{N}\\s/.'-]";
+  // Latin prepositions
   const TO = "to|nach|para|vers|hacia";
   const FROM = "from|von|depuis|desde";
-  // "a" and "à" handled separately since they're single chars and could false-match
   const TO_SHORT = "a|à";
+  // Arabic prepositions (من = from, إلى/الى = to)
+  const AR_FROM = "من";
+  const AR_TO = "إلى|الى";
 
-  const NOISE = /^(?:(?:flights?|vuelos?|vols?|flüge?|voo?s?|cheapest|cheap|direct|nonstop|i\s+want\s+(?:a\s+)?|find\s+(?:me\s+)?|search\s+(?:for\s+)?|show\s+(?:me\s+)?|get\s+(?:me\s+)?|book\s+(?:a\s+)?|looking\s+for\s+(?:a\s+)?|buscar?\s*|chercher?\s*|a\s+|the\s+|un\s+|una\s+|le\s+|la\s+|el\s+|los\s+|les\s+|il\s+|lo\s+|ein\s+|eine\s+)\s*)+/i;
+  const NOISE = /^(?:(?:flights?|vuelos?|vols?|flüge?|voo?s?|cheapest|cheap|direct|nonstop|航班|フライト|항공편|رحلات|उड़ानें|i\s+want\s+(?:a\s+)?|find\s+(?:me\s+)?|search\s+(?:for\s+)?|show\s+(?:me\s+)?|get\s+(?:me\s+)?|book\s+(?:a\s+)?|looking\s+for\s+(?:a\s+)?|buscar?\s*|chercher?\s*|a\s+|the\s+|un\s+|una\s+|le\s+|la\s+|el\s+|los\s+|les\s+|il\s+|lo\s+|ein\s+|eine\s+)\s*)+/iu;
 
-  // Multilingual stop words for trimming trailing modifiers
-  const TRAIL = "in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium|menos|unter|moins|meno|sotto|bajo|debajo|billig|barato|económico|günstig|nächste|próxima|proxima|prochaine|prossima|la|el|le|die|der|den|das|il|los|les|ida|vuelta|aller|retour|andata|ritorno|hin|rück|semana|woche|mois|mes|mese|settimana|hoy|heute|morgen|mañana|demain|domani|amanhã";
+  const TRAIL = "in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium|safe|only|route|routes|menos|unter|moins|meno|sotto|bajo|debajo|billig|barato|económico|günstig|nächste|próxima|proxima|prochaine|prossima|la|el|le|die|der|den|das|il|los|les|ida|vuelta|aller|retour|andata|ritorno|hin|rück|semana|woche|mois|mes|mese|settimana|hoy|heute|morgen|mañana|demain|domani|amanhã";
 
-  // Pattern 1: explicit "from X to Y" (multilingual)
-  const fromToRe = new RegExp(`\\b(?:${FROM})\\s+([\\w\\s/.'-]+?)\\s+(?:${TO}|${TO_SHORT})\\s+([\\w\\s/.'-]+?)(?:\\s+(?:${TRAIL}|\\d|€|\\$|£|,).*)?$`);
+  // Pattern 1: explicit "from X to Y" (Latin + Arabic)
+  const fromToRe = new RegExp(`(?:^|\\s)(?:${FROM}|${AR_FROM})\\s+(${W}+?)\\s+(?:${TO}|${TO_SHORT}|${AR_TO})\\s+(${W}+?)(?:[,،\\s]+(?:${TRAIL}|\\d|€|\\$|£).*)?$`, "iu");
   const fromTo = lower.match(fromToRe);
   if (fromTo) {
     const orig = fromTo[1].replace(NOISE, "").trim();
@@ -402,8 +526,8 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
     if (orig && dest) return { originPhrase: orig, destPhrase: dest };
   }
 
-  // Pattern 2: "X to Y" with full "to" words (not single-char)
-  const simpleToRe = new RegExp(`([\\w\\s/.'-]+?)\\s+(?:${TO})\\s+([\\w\\s/.'-]+?)(?:\\s+(?:${TRAIL}|\\d|€|\\$|£|,).*)?$`);
+  // Pattern 2: "X to Y" with full "to" words (Latin)
+  const simpleToRe = new RegExp(`(${W}+?)\\s+(?:${TO})\\s+(${W}+?)(?:[,\\s]+(?:${TRAIL}|\\d|€|\\$|£).*)?$`, "iu");
   const simpleTo = lower.match(simpleToRe);
   if (simpleTo) {
     const orig = simpleTo[1].replace(NOISE, "").trim();
@@ -412,16 +536,50 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
     if (orig && dest) return { originPhrase: orig, destPhrase: dest };
   }
 
-  // Pattern 3: "X a Y" / "X à Y" (short preposition, require comma or known trailing word)
-  // Only match if followed by comma+modifier or end-of-string, to avoid false positives
-  const shortToRe = new RegExp(`([\\w\\s/.'-]+?)\\s+(?:${TO_SHORT})\\s+([\\w\\s/.'-]+?)(?:\\s*,\\s*.*|\\s+(?:${TRAIL}|\\d|€|\\$|£).*)?$`);
+  // Pattern 3: "X a Y" / "X à Y" (short preposition, require comma or trailing word)
+  const shortToRe = new RegExp(`(${W}+?)\\s+(?:${TO_SHORT})\\s+(${W}+?)(?:\\s*,\\s*.*|\\s+(?:${TRAIL}|\\d|€|\\$|£).*)?$`, "iu");
   const shortTo = lower.match(shortToRe);
   if (shortTo) {
     const orig = shortTo[1].replace(NOISE, "").trim();
     let dest = shortTo[2].trim();
     dest = dest.replace(new RegExp(`\\s+(?:${TRAIL})$`, "i"), "").trim();
-    // Avoid very short false matches
     if (orig.length >= 2 && dest.length >= 2) return { originPhrase: orig, destPhrase: dest };
+  }
+
+  // Pattern 4: Chinese 从X到Y / X到Y (no spaces)
+  const zhRe = /(?:从)(.+?)(?:到)(.+?)(?:[,，、\s]|$)/u;
+  const zhM = lower.match(zhRe);
+  if (zhM) {
+    const orig = zhM[1].trim();
+    const dest = zhM[2].trim();
+    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
+  }
+
+  // Pattern 5: Japanese XからYへ/まで (no spaces)
+  const jaRe = /(.+?)(?:から)(.+?)(?:へ|まで)(?:[,、\s]|$)/u;
+  const jaM = lower.match(jaRe);
+  if (jaM) {
+    const orig = jaM[1].trim();
+    const dest = jaM[2].trim();
+    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
+  }
+
+  // Pattern 6: Korean X에서 Y로/까지
+  const koRe = /(.+?)에서\s*(.+?)(?:로|까지)(?:[,\s]|$)/u;
+  const koM = lower.match(koRe);
+  if (koM) {
+    const orig = koM[1].trim();
+    const dest = koM[2].trim();
+    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
+  }
+
+  // Pattern 7: Hindi X से Y (space-separated)
+  const hiRe = new RegExp(`([\\p{Script=Devanagari}\\p{L}\\p{N}\\s]+?)\\s+से\\s+([\\p{Script=Devanagari}\\p{L}\\p{N}\\s]+?)(?:[,\\s]+|$)`, "u");
+  const hiM = lower.match(hiRe);
+  if (hiM) {
+    const orig = hiM[1].trim();
+    const dest = hiM[2].trim();
+    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
   }
 
   return null;
@@ -889,7 +1047,7 @@ function FlightCard({
     }`}>
       {label && (
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wider">{trec(label as "recommended")}</span>
+          <span className="text-xs font-semibold text-[var(--color-interactive)] uppercase tracking-wider">{trec(label as "recommended")}</span>
           {reason && <span className="text-xs text-[var(--color-text-muted)]">{reason}</span>}
         </div>
       )}
@@ -2507,8 +2665,8 @@ function HomePage() {
                       <input type="checkbox" checked={form.directOnly} onChange={(e) => setForm((f) => ({ ...f, directOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-interactive)]" />
                       {t("form.directOnly")}
                     </label>
-                    <label className="flex items-center gap-2 text-sm text-[var(--color-accent)] cursor-pointer select-none" title={t("risk.safeTooltip")}>
-                      <input type="checkbox" checked={form.safeOnly} onChange={(e) => setForm((f) => ({ ...f, safeOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-accent)]" />
+                    <label className="flex items-center gap-2 text-sm text-[var(--color-safe)] cursor-pointer select-none" title={t("risk.safeTooltip")}>
+                      <input type="checkbox" checked={form.safeOnly} onChange={(e) => setForm((f) => ({ ...f, safeOnly: e.target.checked }))} disabled={isLoading} className="rounded accent-[var(--color-safe)]" />
                       {t("form.safeRoutesOnly")}
                     </label>
                     <div className="flex items-center gap-2">
@@ -2590,7 +2748,10 @@ function HomePage() {
         {/* Example prompts */}
         {phase === "idle" && flights.length === 0 && (
           <div className="mt-5 flex flex-wrap justify-center gap-2">
-            {(t.raw("examples") as string[]).map((ex, i) => (
+            {(t.raw("examples") as string[]).map((rawEx, i) => {
+              const sym = currencySymbol(userCurrency);
+              const ex = rawEx.replace(/\$/g, sym);
+              return (
               <button
                 key={i}
                 onClick={() => {
@@ -2603,7 +2764,8 @@ function HomePage() {
               >
                 {ex}
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -2741,8 +2903,8 @@ function HomePage() {
 
             {/* Round-trip total */}
             {roundTripTotal != null && (
-              <div className="mt-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-lg px-4 py-3 text-sm">
-                <span className="text-[var(--color-accent)] font-semibold">{t("results.roundTripFrom", { price: `${currencySymbol(parsed.currency)}${Math.round(roundTripTotal)}` })}</span>
+              <div className="mt-4 bg-[var(--color-interactive)]/10 border border-[var(--color-interactive)]/20 rounded-lg px-4 py-3 text-sm">
+                <span className="text-[var(--color-interactive)] font-semibold">{t("results.roundTripFrom", { price: `${currencySymbol(parsed.currency)}${Math.round(roundTripTotal)}` })}</span>
               </div>
             )}
 
@@ -3010,7 +3172,7 @@ function HomePage() {
                     )}
                     {expandPhase === "done" && !expandError && expandCount > 0 && (
                       <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
-                        <span className="text-[var(--color-accent)]">{t("expand.flightsAdded", { count: expandCount })}</span>
+                        <span className="text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount })}</span>
                       </div>
                     )}
                   </div>
@@ -3136,7 +3298,7 @@ function HomePage() {
             </button>
           </div>
           {popupStatus === "success" ? (
-            <p className="text-sm text-[var(--color-accent)]">
+            <p className="text-sm text-[var(--color-interactive)]">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block me-1 -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
               {t("priceAlert.alertSet")}
             </p>
