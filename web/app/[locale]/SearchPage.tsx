@@ -271,9 +271,6 @@ for (const [alias, city] of Object.entries(CITY_ALIASES)) {
 }
 
 const AMBIGUOUS_CITIES = new Set(["nice", "mobile", "split", "reading", "bath", "chester", "orange"]);
-// Words that are common city-name prefixes but should NOT trigger prefix matching standalone
-// "west" → West Palm Beach, "san" → San Francisco, "new" → New York, etc.
-const PREFIX_BLOCKLIST = new Set(["west", "east", "north", "south", "new", "san", "los", "las", "fort", "saint", "port"]);
 const SKIP_REGIONS = new Set([
   "anywhere", "europe", "asia", "africa", "south america", "north america", "middle east",
   // Multilingual region names
@@ -539,241 +536,122 @@ function PreviewLoc({ text, airports }: { text: string; airports: LocAirport[] }
   );
 }
 
-// Pre-sorted arrays for prefix search (built once)
-const CITY_KEYS = Array.from(CITY_DISPLAY.keys()).sort();
-const COUNTRY_KEYS = Object.keys(COUNTRY_LOOKUP).sort();
 
-function prefixMatch(keys: string[], prefix: string): string | null {
-  // Binary search for first key starting with prefix
-  let lo = 0, hi = keys.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (keys[mid] < prefix) lo = mid + 1; else hi = mid;
-  }
-  if (lo >= keys.length || !keys[lo].startsWith(prefix)) return null;
-  // Only return if unique match (next key doesn't also start with prefix)
-  if (lo + 1 < keys.length && keys[lo + 1].startsWith(prefix)) return null;
-  return keys[lo];
-}
+// ---------------------------------------------------------------------------
+// Scan-based location detection: find all known locations in the prompt
+// by checking every word and multi-word combination against the location DB.
+// No regex patterns, no "to" dependency, no prefix matching. Exact matches only.
+// ---------------------------------------------------------------------------
+interface ScannedLoc { start: number; end: number; loc: PreviewLocInfo }
 
-function matchLocation(phrase: string, hasContext: boolean): PreviewLocInfo | null {
-  const p = norm(phrase.toLowerCase().trim());
-  if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
-  // IATA code (3 uppercase letters)
-  const upper = phrase.trim().toUpperCase();
-  if (upper.length === 3 && IATA_SET.has(upper)) {
-    const ap = AIRPORTS.find(a => a.iata === upper);
-    return { display: upper, count: 1, airports: ap ? [{ iata: ap.iata, city: ap.city }] : [] };
+function scanLocations(prompt: string): ScannedLoc[] {
+  const lower = prompt.toLowerCase();
+  // Tokenize into words with character positions
+  const tokens: Array<{ word: string; start: number; end: number }> = [];
+  const re = /[\p{L}\p{N}]+(?:['-][\p{L}\p{N}]+)*/gu;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(lower)) !== null) {
+    tokens.push({ word: m[0], start: m.index, end: m.index + m[0].length });
   }
-  // Country (exact)
-  const country = COUNTRY_LOOKUP[p];
-  if (country) {
-    const cnt = COUNTRY_AIRPORT_COUNT.get(country.code) || 0;
-    return { display: country.name, count: cnt, airports: getAirportsForCountry(country.code) };
-  }
-  // City (exact)
-  if (CITY_DISPLAY.has(p)) {
-    if (AMBIGUOUS_CITIES.has(p) && !hasContext) return null;
-    const cnt = CITY_AIRPORT_COUNT.get(p) || 1;
-    return { display: CITY_DISPLAY.get(p)!, count: cnt, airports: getAirportsForCity(p) };
-  }
-  // Prefix matching (only if >= 4 chars and not a directional/common prefix word)
-  if (p.length >= 4 && !PREFIX_BLOCKLIST.has(p)) {
-    const cityKey = prefixMatch(CITY_KEYS, p);
-    if (cityKey) {
-      if (AMBIGUOUS_CITIES.has(cityKey) && !hasContext) return null;
-      const cnt = CITY_AIRPORT_COUNT.get(cityKey) || 1;
-      return { display: CITY_DISPLAY.get(cityKey)!, count: cnt, airports: getAirportsForCity(cityKey) };
+
+  // Exact-only match: no prefix matching, skip ambiguous cities
+  function matchExact(phrase: string): PreviewLocInfo | null {
+    const p = norm(phrase);
+    if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
+    const upper = phrase.toUpperCase();
+    if (upper.length === 3 && IATA_SET.has(upper)) {
+      const ap = AIRPORTS.find(a => a.iata === upper);
+      return { display: upper, count: 1, airports: ap ? [{ iata: ap.iata, city: ap.city }] : [] };
     }
-    const countryKey = prefixMatch(COUNTRY_KEYS, p);
-    if (countryKey) {
-      const c = COUNTRY_LOOKUP[countryKey];
-      const cnt = COUNTRY_AIRPORT_COUNT.get(c.code) || 0;
-      return { display: c.name, count: cnt, airports: getAirportsForCountry(c.code) };
+    const country = COUNTRY_LOOKUP[p];
+    if (country) {
+      const cnt = COUNTRY_AIRPORT_COUNT.get(country.code) || 0;
+      return { display: country.name, count: cnt, airports: getAirportsForCountry(country.code) };
     }
+    if (CITY_DISPLAY.has(p) && !AMBIGUOUS_CITIES.has(p)) {
+      const cnt = CITY_AIRPORT_COUNT.get(p) || 1;
+      return { display: CITY_DISPLAY.get(p)!, count: cnt, airports: getAirportsForCity(p) };
+    }
+    return null;
   }
-  return null;
-}
 
-function extractOriginDest(lower: string): { originPhrase: string; destPhrase: string } | null {
-  // Unicode-aware character class for location names (covers Latin, CJK, Arabic, Devanagari, etc.)
-  const W = "[\\p{L}\\p{N}\\s/.'-]";
-  // Latin prepositions
-  const TO = "to|nach|para|vers|hacia";
-  const FROM = "from|von|depuis|desde";
-  const TO_SHORT = "a|à";
-  // Arabic prepositions (من = from, إلى/الى = to)
-  const AR_FROM = "من";
-  const AR_TO = "إلى|الى";
-
-  const NOISE = /^(?:(?:flights?|vuelos?|vols?|flüge?|voo?s?|cheapest|cheap|direct|nonstop|航班|フライト|항공편|رحلات|उड़ानें|i\s+want\s+(?:a\s+)?|find\s+(?:me\s+)?|search\s+(?:for\s+)?|show\s+(?:me\s+)?|get\s+(?:me\s+)?|book\s+(?:a\s+)?|looking\s+for\s+(?:a\s+)?|buscar?\s*|chercher?\s*|de\s+|a\s+|the\s+|un\s+|una\s+|le\s+|la\s+|el\s+|los\s+|les\s+|il\s+|lo\s+|ein\s+|eine\s+)\s*)+/iu;
-
-  // Trim trailing words from a phrase until matchLocation succeeds.
-  // Split on whitespace AND punctuation so "germany, next week" → ["germany", "next", "week"]
-  // Also tries later starting positions so "west coast USA" finds "USA" at word 2
-  function trimToLocation(raw: string, hasContext: boolean): string {
-    const words = raw.trim().split(/[\s,;.!?]+/).filter(Boolean);
-    for (let start = 0; start < words.length; start++) {
-      for (let len = words.length - start; len >= 1; len--) {
-        const candidate = words.slice(start, start + len).join(" ");
-        if (matchLocation(candidate, hasContext)) return candidate;
+  const results: ScannedLoc[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    let matched = false;
+    // Try longest combination first (up to 4 words: "united arab emirates", "new york city")
+    for (let len = Math.min(4, tokens.length - i); len >= 1; len--) {
+      const phrase = tokens.slice(i, i + len).map(t => t.word).join(" ");
+      const loc = matchExact(phrase);
+      if (loc) {
+        results.push({ start: tokens[i].start, end: tokens[i + len - 1].end, loc });
+        i += len;
+        matched = true;
+        break;
       }
     }
-    return raw.trim();
+    if (!matched) i++;
   }
+  return results;
+}
 
-  // Pattern 1: explicit "from X to Y" (Latin + Arabic) - greedy dest capture
-  // Dest group uses (.+)$ instead of (W+)$ to handle currency symbols ($, €, £) and other special chars;
-  // trimToLocation() handles trimming to valid location
-  const fromToRe = new RegExp(`(?:^|\\s)(?:${FROM}|${AR_FROM})\\s+(${W}+?)\\s+(?:${TO}|${TO_SHORT}|${AR_TO})\\s+(.+)$`, "iu");
-  const fromTo = lower.match(fromToRe);
-  if (fromTo) {
-    const orig = fromTo[1].replace(NOISE, "").trim();
-    const dest = trimToLocation(fromTo[2], true);
-    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
+// ---------------------------------------------------------------------------
+// Shared date detection helper (used by both useQueryPreview and useHighlightRanges)
+// ---------------------------------------------------------------------------
+function detectDate(lower: string): { text: string; start: number; end: number; resolved: string | undefined } | null {
+  const allTemporalKeys = Object.keys(I18N_TEMPORAL);
+  const allMonthNamesStr = Object.keys(I18N_MONTHS).join("|");
+  const allDayNamesStr = Object.keys(I18N_DAYS).join("|");
+  // 1. Multilingual temporal phrases (longest first)
+  const sorted = allTemporalKeys.slice().sort((a, b) => b.length - a.length);
+  for (const phrase of sorted) {
+    const idx = lower.indexOf(phrase);
+    if (idx >= 0) return { text: phrase, start: idx, end: idx + phrase.length, resolved: resolveDate(phrase) || undefined };
   }
-
-  // Pattern 2: "X to Y" with full "to" words (Latin) - greedy dest capture
-  const simpleToRe = new RegExp(`(${W}+?)\\s+(?:${TO})\\s+(.+)$`, "iu");
-  const simpleTo = lower.match(simpleToRe);
-  if (simpleTo) {
-    const orig = simpleTo[1].replace(NOISE, "").trim();
-    const dest = trimToLocation(simpleTo[2], true);
-    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
+  // 2. English temporal
+  const enPats = [/\b(tomorrow|today)\b/i, /\b(next week)\b/i, /\b(next weekend)\b/i, /\b(this weekend)\b/i, /\b(next month)\b/i];
+  for (const pat of enPats) {
+    const m = pat.exec(lower);
+    if (m && m.index !== undefined) return { text: m[0], start: m.index, end: m.index + m[0].length, resolved: resolveDate(m[0]) || undefined };
   }
-
-  // Pattern 3: "X a Y" / "X à Y" (short preposition) - greedy dest capture
-  const shortToRe = new RegExp(`(${W}+?)\\s+(?:${TO_SHORT})\\s+(.+)$`, "iu");
-  const shortTo = lower.match(shortToRe);
-  if (shortTo) {
-    const orig = shortTo[1].replace(NOISE, "").trim();
-    const dest = trimToLocation(shortTo[2], true);
-    if (orig.length >= 2 && dest.length >= 2) return { originPhrase: orig, destPhrase: dest };
-  }
-
-  // Pattern 4: Chinese 从X到Y / X到Y (no spaces)
-  const zhRe = /(?:从)(.+?)(?:到)(.+?)(?:[,，、\s]|$)/u;
-  const zhM = lower.match(zhRe);
-  if (zhM) {
-    const orig = zhM[1].trim();
-    const dest = zhM[2].trim();
-    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
-  }
-
-  // Pattern 5: Japanese XからYへ/まで (no spaces)
-  const jaRe = /(.+?)(?:から)(.+?)(?:へ|まで)(?:[,、\s]|$)/u;
-  const jaM = lower.match(jaRe);
-  if (jaM) {
-    const orig = jaM[1].trim();
-    const dest = jaM[2].trim();
-    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
-  }
-
-  // Pattern 6: Korean X에서 Y로/까지
-  const koRe = /(.+?)에서\s*(.+?)(?:로|까지)(?:[,\s]|$)/u;
-  const koM = lower.match(koRe);
-  if (koM) {
-    const orig = koM[1].trim();
-    const dest = koM[2].trim();
-    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
-  }
-
-  // Pattern 7: Hindi X से Y (space-separated)
-  const hiRe = new RegExp(`([\\p{Script=Devanagari}\\p{L}\\p{N}\\s]+?)\\s+से\\s+([\\p{Script=Devanagari}\\p{L}\\p{N}\\s]+?)(?:[,\\s]+|$)`, "u");
-  const hiM = lower.match(hiRe);
-  if (hiM) {
-    const orig = hiM[1].trim();
-    const dest = hiM[2].trim();
-    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
-  }
-
+  // 3. Day names
+  const dayRe = new RegExp(`\\b(${allDayNamesStr})\\b`, "i");
+  const dayM = dayRe.exec(lower);
+  if (dayM && dayM.index !== undefined) return { text: dayM[0], start: dayM.index, end: dayM.index + dayM[0].length, resolved: resolveDate(dayM[0]) || undefined };
+  // 4. Month + day
+  const mdRe = new RegExp(`\\b(${allMonthNamesStr})\\s+\\d{1,2}\\b`, "i");
+  const mdM = mdRe.exec(lower);
+  if (mdM && mdM.index !== undefined) return { text: mdM[0], start: mdM.index, end: mdM.index + mdM[0].length, resolved: resolveDate(mdM[0]) || undefined };
+  const dmRe = new RegExp(`\\b\\d{1,2}\\s+(${allMonthNamesStr})\\b`, "i");
+  const dmM = dmRe.exec(lower);
+  if (dmM && dmM.index !== undefined) return { text: dmM[0], start: dmM.index, end: dmM.index + dmM[0].length, resolved: resolveDate(dmM[0]) || undefined };
+  // 5. Standalone month
+  const inMonthRe = new RegExp(`\\b(?:in|en|im|em|nel)\\s+(${allMonthNamesStr})\\b`, "i");
+  const inM = inMonthRe.exec(lower);
+  if (inM && inM.index !== undefined) return { text: inM[0], start: inM.index, end: inM.index + inM[0].length, resolved: resolveDate(inM[0]) || undefined };
+  const monthRe = new RegExp(`\\b(${allMonthNamesStr})\\b`, "i");
+  const moM = monthRe.exec(lower);
+  if (moM && moM.index !== undefined) return { text: moM[0], start: moM.index, end: moM.index + moM[0].length, resolved: resolveDate(moM[0]) || undefined };
   return null;
 }
 
 function useQueryPreview(prompt: string, fmtLoc?: (loc: { display: string; count: number }) => string): QueryPreview | null {
   return useMemo(() => {
     if (!prompt || prompt.length < 5) return null;
-    const lower = prompt.toLowerCase();
-
-    const extracted = extractOriginDest(lower);
-    if (!extracted) return null;
-    const { originPhrase, destPhrase } = extracted;
-
-    // Handle "X or/o/ou/oder Y to Z" pattern for multiple origins (multilingual "or")
-    const orParts = originPhrase.split(/\s+(?:or|o|ou|oder|oppure)\s+/);
-    const origins: PreviewLocInfo[] = [];
-    for (const part of orParts) {
-      const loc = matchLocation(part.trim(), orParts.length > 1 || !!destPhrase);
-      if (loc) origins.push(loc);
-    }
-    if (origins.length === 0) return null;
-
-    const dest = matchLocation(destPhrase, true);
-    if (!dest) return null;
+    const locs = scanLocations(prompt);
+    if (locs.length === 0) return null;
 
     const fmt = fmtLoc || ((loc: { display: string; count: number }) => loc.count > 1 ? `${loc.display} (${loc.count} airports)` : loc.display);
-    const originStr = origins.map(fmt).join(", ");
-    const destStr = fmt(dest);
-    const originAirports = origins.flatMap(o => o.airports);
-    const destAirports = dest.airports;
+    const origin = locs[0].loc;
+    const dest = locs.length > 1 ? locs[locs.length - 1].loc : null;
+    const originStr = fmt(origin);
+    const destStr = dest ? fmt(dest) : "";
+    const originAirports = origin.airports;
+    const destAirports = dest?.airports || [];
 
-    // Date detection (multilingual)
-    let date: string | null = null;
-    const allMonthNamesStr = Object.keys(I18N_MONTHS).join("|");
-    const allTemporalKeys = Object.keys(I18N_TEMPORAL);
-    const allDayNamesStr = Object.keys(I18N_DAYS).join("|");
+    const dateMatch = detectDate(prompt.toLowerCase());
 
-    // 1. Check multilingual temporal phrases first (multi-word: "próxima semana", "nächste woche")
-    for (const phrase of allTemporalKeys) {
-      if (lower.includes(phrase)) {
-        date = resolveDate(phrase);
-        if (date) break;
-      }
-    }
-    // 2. English temporal phrases
-    if (!date) {
-      const enTemporalPats = [
-        /\b(tomorrow|today)\b/i,
-        /\b(next week)\b/i,
-        /\b(next weekend)\b/i,
-        /\b(this weekend)\b/i,
-        /\b(next month)\b/i,
-      ];
-      for (const pat of enTemporalPats) {
-        const m = lower.match(pat);
-        if (m) { date = resolveDate(m[1]); if (date) break; }
-      }
-    }
-    // 3. Day names (multilingual)
-    if (!date) {
-      const dayRe = new RegExp(`\\b(${allDayNamesStr})\\b`, "i");
-      const dayM = lower.match(dayRe);
-      if (dayM) date = resolveDate(dayM[1]);
-    }
-    // 4. Month + day: "march 15", "15 marzo", "julio 5"
-    if (!date) {
-      const mdRe = new RegExp(`\\b(${allMonthNamesStr})\\s+(\\d{1,2})\\b`, "i");
-      const mdM = lower.match(mdRe);
-      if (mdM) date = resolveDate(mdM[0]);
-    }
-    if (!date) {
-      const dmRe = new RegExp(`\\b(\\d{1,2})\\s+(${allMonthNamesStr})\\b`, "i");
-      const dmM = lower.match(dmRe);
-      if (dmM) date = resolveDate(dmM[0]);
-    }
-    // 5. Standalone month names (multilingual): "in julio", "en mars", "im juli"
-    if (!date) {
-      const inMonthRe = new RegExp(`\\b(?:in|en|im|em|nel)\\s+(${allMonthNamesStr})\\b`, "i");
-      const inM = lower.match(inMonthRe);
-      if (inM) date = resolveDate(inM[1]);
-    }
-    if (!date) {
-      const monthRe = new RegExp(`\\b(${allMonthNamesStr})\\b`, "i");
-      const moM = lower.match(monthRe);
-      if (moM) date = resolveDate(moM[1]);
-    }
-
-    return { origin: originStr, dest: destStr, date, originAirports, destAirports };
+    return { origin: originStr, dest: destStr || null!, date: dateMatch?.resolved || null, originAirports, destAirports };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prompt, fmtLoc]);
 }
@@ -789,113 +667,17 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
     const lower = prompt.toLowerCase();
     const ranges: HighlightRange[] = [];
 
-    const extracted = extractOriginDest(lower);
-    if (extracted) {
-      const { originPhrase, destPhrase } = extracted;
-      // Handle "X or/o/ou/oder Y" multi-origin patterns (same as useQueryPreview)
-      const orParts = originPhrase.split(/\s+(?:or|o|ou|oder|oppure)\s+/);
-      let lastOriginEnd = 0;
-      if (orParts.length > 1) {
-        // Multi-origin: find and highlight each part separately
-        let searchFrom = lower.indexOf(originPhrase);
-        if (searchFrom < 0) searchFrom = 0;
-        for (const part of orParts) {
-          const pi = lower.indexOf(part.trim(), searchFrom);
-          if (pi >= 0) {
-            const loc = matchLocation(part.trim(), true);
-            if (loc) ranges.push({ start: pi, end: pi + part.trim().length, type: "origin", airports: loc.airports });
-            searchFrom = pi + part.trim().length;
-            lastOriginEnd = searchFrom;
-          }
-        }
-      } else {
-        // Single origin
-        const oi = lower.indexOf(originPhrase);
-        if (oi >= 0) {
-          const loc = matchLocation(originPhrase, !!destPhrase);
-          if (loc) ranges.push({ start: oi, end: oi + originPhrase.length, type: "origin", airports: loc.airports });
-          lastOriginEnd = oi + originPhrase.length;
-        }
-      }
-      // Find dest position
-      if (destPhrase) {
-        const di = lower.indexOf(destPhrase, lastOriginEnd);
-        if (di >= 0) {
-          const loc = matchLocation(destPhrase, true);
-          if (loc) ranges.push({ start: di, end: di + destPhrase.length, type: "dest", airports: loc.airports });
-        }
-      }
+    // Location scan: first match = origin, rest = dest
+    const locs = scanLocations(prompt);
+    for (let li = 0; li < locs.length; li++) {
+      const s = locs[li];
+      ranges.push({ start: s.start, end: s.end, type: li === 0 ? "origin" : "dest", airports: s.loc.airports });
     }
 
-    // Date detection: find position in prompt
-    const allTemporalKeys = Object.keys(I18N_TEMPORAL);
-    const allMonthNamesStr = Object.keys(I18N_MONTHS).join("|");
-    const allDayNamesStr = Object.keys(I18N_DAYS).join("|");
-    let dateFound = false;
-
-    // 1. Multilingual temporal phrases (multi-word first, sorted longest-first)
-    const sortedTemporal = allTemporalKeys.slice().sort((a, b) => b.length - a.length);
-    for (const phrase of sortedTemporal) {
-      const idx = lower.indexOf(phrase);
-      if (idx >= 0) {
-        ranges.push({ start: idx, end: idx + phrase.length, type: "date", airports: [], resolvedDate: resolveDate(phrase) || undefined });
-        dateFound = true;
-        break;
-      }
-    }
-    // 2. English temporal
-    if (!dateFound) {
-      const enPats = [/\b(tomorrow|today)\b/i, /\b(next week)\b/i, /\b(next weekend)\b/i, /\b(this weekend)\b/i, /\b(next month)\b/i];
-      for (const pat of enPats) {
-        const m = pat.exec(lower);
-        if (m && m.index !== undefined) {
-          ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
-          dateFound = true;
-          break;
-        }
-      }
-    }
-    // 3. Day names
-    if (!dateFound) {
-      const dayRe = new RegExp(`\\b(${allDayNamesStr})\\b`, "i");
-      const m = dayRe.exec(lower);
-      if (m && m.index !== undefined) {
-        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
-        dateFound = true;
-      }
-    }
-    // 4. Month + day
-    if (!dateFound) {
-      const mdRe = new RegExp(`\\b(${allMonthNamesStr})\\s+\\d{1,2}\\b`, "i");
-      const m = mdRe.exec(lower);
-      if (m && m.index !== undefined) {
-        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
-        dateFound = true;
-      }
-    }
-    if (!dateFound) {
-      const dmRe = new RegExp(`\\b\\d{1,2}\\s+(${allMonthNamesStr})\\b`, "i");
-      const m = dmRe.exec(lower);
-      if (m && m.index !== undefined) {
-        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
-        dateFound = true;
-      }
-    }
-    // 5. Standalone month
-    if (!dateFound) {
-      const inMonthRe = new RegExp(`\\b(?:in|en|im|em|nel)\\s+(${allMonthNamesStr})\\b`, "i");
-      const m = inMonthRe.exec(lower);
-      if (m && m.index !== undefined) {
-        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
-        dateFound = true;
-      }
-    }
-    if (!dateFound) {
-      const monthRe = new RegExp(`\\b(${allMonthNamesStr})\\b`, "i");
-      const m = monthRe.exec(lower);
-      if (m && m.index !== undefined) {
-        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [], resolvedDate: resolveDate(m[0]) || undefined });
-      }
+    // Date detection
+    const dateMatch = detectDate(lower);
+    if (dateMatch) {
+      ranges.push({ start: dateMatch.start, end: dateMatch.end, type: "date", airports: [], resolvedDate: dateMatch.resolved });
     }
 
     // Qualifier detection: safe routes, budget, class, etc. (all 12 languages)
