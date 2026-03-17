@@ -2151,8 +2151,10 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
   const isRoundTrip = return_dates && return_dates.length > 0;
   const [datesExpanded, setDatesExpanded] = useState(false);
 
-  const originLabel = origins.map((o) => airport_names?.[o] ? `${airport_names[o]} (${o})` : o).join(", ");
-  const destLabel = destinations.map((d) => airport_names?.[d] ? `${airport_names[d]} (${d})` : d).join(", ");
+  const originItems = origins.map((o) => airport_names?.[o] ? `${airport_names[o]} (${o})` : o);
+  const originLabel = originItems.length <= 2 ? originItems.join(", ") : `${originItems.slice(0, 2).join(", ")} +${originItems.length - 2}`;
+  const destItems = destinations.map((d) => airport_names?.[d] ? `${airport_names[d]} (${d})` : d);
+  const destLabel = destItems.length <= 2 ? destItems.join(", ") : `${destItems.slice(0, 2).join(", ")} +${destItems.length - 2}`;
 
   const collapsedDates = dates.length <= 2 ? dates.map((d) => formatDate(d, locale)).join(", ") : `${formatDate(dates[0], locale)} + ${t("parsed.moreDates", { count: dates.length - 1 })}`;
   const canExpandDates = dates.length > 2;
