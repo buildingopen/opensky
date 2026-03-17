@@ -748,6 +748,209 @@ function useQueryPreview(prompt: string): QueryPreview | null {
   }, [prompt]);
 }
 
+// ---------------------------------------------------------------------------
+// Inline Prompt Highlighting
+// ---------------------------------------------------------------------------
+interface HighlightRange { start: number; end: number; type: "origin" | "dest" | "date"; airports: LocAirport[] }
+
+function useHighlightRanges(prompt: string): HighlightRange[] {
+  return useMemo(() => {
+    if (!prompt || prompt.length < 5) return [];
+    const lower = prompt.toLowerCase();
+    const ranges: HighlightRange[] = [];
+
+    const extracted = extractOriginDest(lower);
+    if (extracted) {
+      const { originPhrase, destPhrase } = extracted;
+      // Find origin position in original (case-insensitive)
+      const oi = lower.indexOf(originPhrase);
+      if (oi >= 0) {
+        const loc = matchLocation(originPhrase, !!destPhrase);
+        if (loc) ranges.push({ start: oi, end: oi + originPhrase.length, type: "origin", airports: loc.airports });
+      }
+      // Find dest position
+      if (destPhrase) {
+        // Search after origin to avoid overlap
+        const di = lower.indexOf(destPhrase, oi >= 0 ? oi + originPhrase.length : 0);
+        if (di >= 0) {
+          const loc = matchLocation(destPhrase, true);
+          if (loc) ranges.push({ start: di, end: di + destPhrase.length, type: "dest", airports: loc.airports });
+        }
+      }
+    }
+
+    // Date detection: find position in prompt
+    const allTemporalKeys = Object.keys(I18N_TEMPORAL);
+    const allMonthNamesStr = Object.keys(I18N_MONTHS).join("|");
+    const allDayNamesStr = Object.keys(I18N_DAYS).join("|");
+    let dateFound = false;
+
+    // 1. Multilingual temporal phrases (multi-word first, sorted longest-first)
+    const sortedTemporal = allTemporalKeys.slice().sort((a, b) => b.length - a.length);
+    for (const phrase of sortedTemporal) {
+      const idx = lower.indexOf(phrase);
+      if (idx >= 0) {
+        ranges.push({ start: idx, end: idx + phrase.length, type: "date", airports: [] });
+        dateFound = true;
+        break;
+      }
+    }
+    // 2. English temporal
+    if (!dateFound) {
+      const enPats = [/\b(tomorrow|today)\b/i, /\b(next week)\b/i, /\b(next weekend)\b/i, /\b(this weekend)\b/i, /\b(next month)\b/i];
+      for (const pat of enPats) {
+        const m = pat.exec(lower);
+        if (m && m.index !== undefined) {
+          ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+          dateFound = true;
+          break;
+        }
+      }
+    }
+    // 3. Day names
+    if (!dateFound) {
+      const dayRe = new RegExp(`\\b(${allDayNamesStr})\\b`, "i");
+      const m = dayRe.exec(lower);
+      if (m && m.index !== undefined) {
+        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+        dateFound = true;
+      }
+    }
+    // 4. Month + day
+    if (!dateFound) {
+      const mdRe = new RegExp(`\\b(${allMonthNamesStr})\\s+\\d{1,2}\\b`, "i");
+      const m = mdRe.exec(lower);
+      if (m && m.index !== undefined) {
+        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+        dateFound = true;
+      }
+    }
+    if (!dateFound) {
+      const dmRe = new RegExp(`\\b\\d{1,2}\\s+(${allMonthNamesStr})\\b`, "i");
+      const m = dmRe.exec(lower);
+      if (m && m.index !== undefined) {
+        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+        dateFound = true;
+      }
+    }
+    // 5. Standalone month
+    if (!dateFound) {
+      const inMonthRe = new RegExp(`\\b(?:in|en|im|em|nel)\\s+(${allMonthNamesStr})\\b`, "i");
+      const m = inMonthRe.exec(lower);
+      if (m && m.index !== undefined) {
+        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+        dateFound = true;
+      }
+    }
+    if (!dateFound) {
+      const monthRe = new RegExp(`\\b(${allMonthNamesStr})\\b`, "i");
+      const m = monthRe.exec(lower);
+      if (m && m.index !== undefined) {
+        ranges.push({ start: m.index, end: m.index + m[0].length, type: "date", airports: [] });
+      }
+    }
+
+    // Sort by start, skip overlaps
+    ranges.sort((a, b) => a.start - b.start);
+    const clean: HighlightRange[] = [];
+    let cursor = 0;
+    for (const r of ranges) {
+      if (r.start >= cursor) {
+        clean.push(r);
+        cursor = r.end;
+      }
+    }
+    return clean;
+  }, [prompt]);
+}
+
+interface TextRun { type: "plain" | "highlight"; text: string; segType?: "origin" | "dest" | "date"; airports?: LocAirport[] }
+
+function buildTextRuns(prompt: string, ranges: HighlightRange[]): TextRun[] {
+  if (!ranges.length) return [{ type: "plain", text: prompt }];
+  const runs: TextRun[] = [];
+  let cursor = 0;
+  for (const r of ranges) {
+    if (r.start > cursor) runs.push({ type: "plain", text: prompt.slice(cursor, r.start) });
+    runs.push({ type: "highlight", text: prompt.slice(r.start, r.end), segType: r.type, airports: r.airports });
+    cursor = r.end;
+  }
+  if (cursor < prompt.length) runs.push({ type: "plain", text: prompt.slice(cursor) });
+  return runs;
+}
+
+function InlineHighlight({ text, airports }: { text: string; airports: LocAirport[] }) {
+  const [show, setShow] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLSpanElement>(null);
+  const hasTooltip = airports.length > 1;
+
+  useEffect(() => {
+    if (!show) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setShow(false);
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => { document.removeEventListener("mousedown", handler); document.removeEventListener("touchstart", handler); };
+  }, [show]);
+
+  useEffect(() => {
+    if (show) {
+      activeTooltipClose.current?.();
+      activeTooltipClose.current = () => setShow(false);
+    }
+  }, [show]);
+
+  useEffect(() => {
+    if (!show || !tooltipRef.current) return;
+    const rect = tooltipRef.current.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) {
+      tooltipRef.current.style.left = "auto";
+      tooltipRef.current.style.right = "0";
+    }
+  }, [show]);
+
+  if (!hasTooltip) return <span className="text-[var(--color-safe)]">{text}</span>;
+  return (
+    <span
+      ref={ref}
+      className="relative inline pointer-events-auto"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onClick={(e) => { e.stopPropagation(); setShow(v => !v); }}
+    >
+      <span className="text-[var(--color-safe)] cursor-help border-b border-dotted border-[var(--color-safe)]/50">{text}</span>
+      {show && (
+        <span ref={tooltipRef} className="absolute top-full left-0 mt-1.5 z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
+          {airports.map((a) => (
+            <span key={a.iata} className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap overflow-hidden text-ellipsis" style={{ maxWidth: 200 }}>
+              <span className="font-mono text-[var(--color-accent)] font-semibold">{a.iata}</span>{" "}
+              <span className="text-[var(--color-text-muted)]">{a.city}</span>
+            </span>
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function HighlightOverlay({ prompt, ranges }: { prompt: string; ranges: HighlightRange[] }) {
+  const runs = buildTextRuns(prompt, ranges);
+  return (
+    <div
+      className="absolute inset-0 px-1 py-2 text-base leading-relaxed whitespace-pre-wrap break-words overflow-hidden pointer-events-none"
+      aria-hidden="true"
+    >
+      {runs.map((run, i) =>
+        run.type === "plain"
+          ? <span key={i} className="text-[var(--color-text)]">{run.text}</span>
+          : <InlineHighlight key={i} text={run.text} airports={run.airports || []} />
+      )}
+    </div>
+  );
+}
+
 // Context for airport country codes (avoids prop drilling for flags)
 const AirportCountriesCtx = createContext<Record<string, string>>({});
 const useAirportCountries = () => useContext(AirportCountriesCtx);
@@ -2543,6 +2746,7 @@ function HomePage() {
 
   const isLoading = phase === "parsing" || phase === "searching";
   const queryPreview = useQueryPreview(prompt);
+  const highlightRanges = useHighlightRanges(prompt);
 
   // Airline filter (post-results)
   const airlineFilter = useAirlineFilter(flights);
@@ -2634,7 +2838,7 @@ function HomePage() {
         ) : (
           <h1 className={`font-bold tracking-tighter leading-tight transition-all duration-300 ${hasResults ? "text-2xl" : "text-5xl sm:text-6xl"}`}>
             {t("heroTitle")}{" "}
-            <span className="text-[var(--color-interactive)]">{t("heroTitleAccent")}</span>
+            <span className="text-[var(--color-accent)]">{t("heroTitleAccent")}</span>
           </h1>
         )}
         {!hasResults && (
@@ -2760,7 +2964,8 @@ function HomePage() {
                   </div>
                 </div>
               ) : (
-                <div>
+                <div className="relative">
+                  {prompt && highlightRanges.length > 0 && <HighlightOverlay prompt={prompt} ranges={highlightRanges} />}
                   <textarea
                     ref={inputRef}
                     value={prompt}
@@ -2769,7 +2974,9 @@ function HomePage() {
                     placeholder={t("placeholder")}
                     disabled={isLoading}
                     rows={2}
-                    className="w-full bg-transparent border-none px-1 py-2 text-base leading-relaxed text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]/40 focus:outline-none resize-none"
+                    spellCheck={false}
+                    className="w-full bg-transparent border-none px-1 py-2 text-base leading-relaxed placeholder:text-[var(--color-text-muted)]/40 focus:outline-none resize-none relative z-10"
+                    style={{ color: prompt && highlightRanges.length > 0 ? "transparent" : undefined, caretColor: "var(--color-text)" }}
                     aria-label={t("ariaLabel")}
                   />
                 </div>
