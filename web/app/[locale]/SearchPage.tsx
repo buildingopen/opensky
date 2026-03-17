@@ -109,17 +109,77 @@ const MONTH_NAMES = ["january","february","march","april","may","june","july","a
 const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const DAY_NAMES = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
 
+// Multilingual month names -> English index
+const I18N_MONTHS: Record<string, number> = {};
+const MONTH_I18N: [string, number][] = [
+  // German
+  ["januar",0],["februar",1],["märz",2],["april",3],["mai",4],["juni",5],["juli",6],["august",7],["september",8],["oktober",9],["november",10],["dezember",11],
+  // Spanish
+  ["enero",0],["febrero",1],["marzo",2],["abril",3],["mayo",4],["junio",5],["julio",6],["agosto",7],["septiembre",8],["octubre",9],["noviembre",10],["diciembre",11],
+  // French
+  ["janvier",0],["février",1],["mars",2],["avril",3],["mai",4],["juin",5],["juillet",6],["août",7],["septembre",8],["octobre",9],["novembre",10],["décembre",11],
+  // Italian
+  ["gennaio",0],["febbraio",1],["marzo",2],["aprile",3],["maggio",4],["giugno",5],["luglio",6],["agosto",7],["settembre",8],["ottobre",9],["novembre",10],["dicembre",11],
+  // Portuguese
+  ["janeiro",0],["fevereiro",1],["março",2],["abril",3],["maio",4],["junho",5],["julho",6],["agosto",7],["setembro",8],["outubro",9],["novembro",10],["dezembro",11],
+  // Turkish
+  ["ocak",0],["şubat",1],["mart",2],["nisan",3],["mayıs",4],["haziran",5],["temmuz",6],["ağustos",7],["eylül",8],["ekim",9],["kasım",10],["aralık",11],
+];
+for (const [name, idx] of MONTH_I18N) I18N_MONTHS[name] = idx;
+// Also include English
+for (let i = 0; i < MONTH_NAMES.length; i++) I18N_MONTHS[MONTH_NAMES[i]] = i;
+
+// Multilingual day names -> JS day index (0=Sun)
+const I18N_DAYS: Record<string, number> = {};
+const DAY_I18N: [string, number][] = [
+  // English already in DAY_NAMES
+  // German
+  ["sonntag",0],["montag",1],["dienstag",2],["mittwoch",3],["donnerstag",4],["freitag",5],["samstag",6],
+  // Spanish
+  ["domingo",0],["lunes",1],["martes",2],["miércoles",3],["jueves",4],["viernes",5],["sábado",6],
+  // French
+  ["dimanche",0],["lundi",1],["mardi",2],["mercredi",3],["jeudi",4],["vendredi",5],["samedi",6],
+  // Italian
+  ["domenica",0],["lunedì",1],["martedì",2],["mercoledì",3],["giovedì",4],["venerdì",5],["sabato",6],
+  // Portuguese
+  ["domingo",0],["segunda",1],["terça",2],["quarta",3],["quinta",4],["sexta",5],["sábado",6],
+  // Turkish
+  ["pazar",0],["pazartesi",1],["salı",2],["çarşamba",3],["perşembe",4],["cuma",5],["cumartesi",6],
+];
+for (const [name, idx] of DAY_I18N) I18N_DAYS[name] = idx;
+for (let i = 0; i < DAY_NAMES.length; i++) I18N_DAYS[DAY_NAMES[i]] = i;
+
+// Multilingual temporal phrases -> English equivalent for resolveDate
+const I18N_TEMPORAL: Record<string, string> = {
+  // "tomorrow"
+  "morgen": "tomorrow", "mañana": "tomorrow", "demain": "tomorrow", "domani": "tomorrow", "amanhã": "tomorrow", "yarın": "tomorrow",
+  // "today"
+  "heute": "today", "hoy": "today", "aujourd'hui": "today", "oggi": "today", "hoje": "today", "bugün": "today",
+  // "next week"
+  "nächste woche": "next week", "próxima semana": "next week", "proxima semana": "next week", "la semaine prochaine": "next week", "semaine prochaine": "next week", "prossima settimana": "next week", "gelecek hafta": "next week", "la proxima semana": "next week",
+  // "this weekend"
+  "dieses wochenende": "this weekend", "este fin de semana": "this weekend", "ce week-end": "this weekend", "ce weekend": "this weekend", "questo fine settimana": "this weekend", "este fim de semana": "this weekend", "bu hafta sonu": "this weekend",
+  // "next weekend"
+  "nächstes wochenende": "next weekend", "próximo fin de semana": "next weekend", "prochain week-end": "next weekend", "prochain weekend": "next weekend", "prossimo fine settimana": "next weekend", "próximo fim de semana": "next weekend", "gelecek hafta sonu": "next weekend",
+  // "next month"
+  "nächsten monat": "next month", "próximo mes": "next month", "proximo mes": "next month", "le mois prochain": "next month", "mois prochain": "next month", "prossimo mese": "next month", "próximo mês": "next month", "gelecek ay": "next month",
+};
+
 function resolveDate(phrase: string): string | null {
   const now = new Date();
   const p = phrase.toLowerCase().trim();
-  if (p === "tomorrow") {
+
+  // Normalize multilingual temporal phrases to English
+  const normalized = I18N_TEMPORAL[p] || p;
+
+  if (normalized === "tomorrow") {
     const d = new Date(now); d.setDate(d.getDate() + 1);
     return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`;
   }
-  if (p === "today") {
+  if (normalized === "today") {
     return `${MONTH_SHORT[now.getMonth()]} ${now.getDate()}`;
   }
-  if (p === "next week") {
+  if (normalized === "next week") {
     const d = new Date(now);
     const dayOfWeek = d.getDay(); // 0=Sun
     const daysUntilMon = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
@@ -129,7 +189,7 @@ function resolveDate(phrase: string): string | null {
     if (mon.getMonth() === sun.getMonth()) return `${MONTH_SHORT[mon.getMonth()]} ${mon.getDate()}-${sun.getDate()}`;
     return `${MONTH_SHORT[mon.getMonth()]} ${mon.getDate()} - ${MONTH_SHORT[sun.getMonth()]} ${sun.getDate()}`;
   }
-  if (p === "this weekend") {
+  if (normalized === "this weekend") {
     const d = new Date(now);
     const dayOfWeek = d.getDay();
     const daysUntilSat = dayOfWeek === 6 ? 0 : (6 - dayOfWeek);
@@ -139,10 +199,9 @@ function resolveDate(phrase: string): string | null {
     if (sat.getMonth() === sun.getMonth()) return `${MONTH_SHORT[sat.getMonth()]} ${sat.getDate()}-${sun.getDate()}`;
     return `${MONTH_SHORT[sat.getMonth()]} ${sat.getDate()} - ${MONTH_SHORT[sun.getMonth()]} ${sun.getDate()}`;
   }
-  if (p === "next weekend") {
+  if (normalized === "next weekend") {
     const d = new Date(now);
     const dayOfWeek = d.getDay();
-    // Next Saturday (skip this weekend)
     const daysUntilNextSat = dayOfWeek === 6 ? 7 : (6 - dayOfWeek + 7);
     d.setDate(d.getDate() + daysUntilNextSat);
     const sat = new Date(d);
@@ -150,13 +209,13 @@ function resolveDate(phrase: string): string | null {
     if (sat.getMonth() === sun.getMonth()) return `${MONTH_SHORT[sat.getMonth()]} ${sat.getDate()}-${sun.getDate()}`;
     return `${MONTH_SHORT[sat.getMonth()]} ${sat.getDate()} - ${MONTH_SHORT[sun.getMonth()]} ${sun.getDate()}`;
   }
-  if (p === "next month") {
+  if (normalized === "next month") {
     const m = (now.getMonth() + 1) % 12;
     const y = m === 0 ? now.getFullYear() + 1 : (now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear());
     return `${MONTH_SHORT[m]} ${y}`;
   }
-  // Day names: "monday", "tuesday", etc.
-  const dayIdx = DAY_NAMES.indexOf(p);
+  // Day names (multilingual): "monday", "lunes", "montag", etc.
+  const dayIdx = I18N_DAYS[normalized] ?? -1;
   if (dayIdx >= 0) {
     const d = new Date(now);
     let diff = dayIdx - d.getDay();
@@ -164,18 +223,19 @@ function resolveDate(phrase: string): string | null {
     d.setDate(d.getDate() + diff);
     return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`;
   }
-  // Month names: "july" -> "Jul 2026", "in july" already stripped
-  const monthIdx = MONTH_NAMES.indexOf(p);
+  // Month names (multilingual): "july", "julio", "juli", etc.
+  const monthIdx = I18N_MONTHS[normalized] ?? -1;
   if (monthIdx >= 0) {
     const y = monthIdx < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
     return `${MONTH_SHORT[monthIdx]} ${y}`;
   }
-  // "march 15" or "15 march"
-  for (let mi = 0; mi < MONTH_NAMES.length; mi++) {
-    const mn = MONTH_NAMES[mi];
-    const m1 = p.match(new RegExp(`^${mn}\\s+(\\d{1,2})$`));
+  // "march 15", "15 march", "marzo 15", "15 marzo", etc.
+  const allMonthNames = Object.keys(I18N_MONTHS);
+  for (const mn of allMonthNames) {
+    const mi = I18N_MONTHS[mn];
+    const m1 = normalized.match(new RegExp(`^${mn}\\s+(\\d{1,2})$`));
     if (m1) return `${MONTH_SHORT[mi]} ${parseInt(m1[1])}`;
-    const m2 = p.match(new RegExp(`^(\\d{1,2})\\s+${mn}$`));
+    const m2 = normalized.match(new RegExp(`^(\\d{1,2})\\s+${mn}$`));
     if (m2) return `${MONTH_SHORT[mi]} ${parseInt(m2[1])}`;
   }
   return null;
@@ -243,35 +303,49 @@ function formatLocationDisplay(loc: { display: string; count: number }): string 
 }
 
 function extractOriginDest(lower: string): { originPhrase: string; destPhrase: string } | null {
-  // Strategy: find "from" and "to" anchors, extract phrases between them.
-  // Handles: "from X to Y", "X to Y", "to Y from X", "flights from X to Y",
-  // "I want a cheap flight from Berlin to Tokyo next week", etc.
-  const NOISE = /^(?:(?:flights?|cheapest|cheap|direct|nonstop|i\s+want\s+(?:a\s+)?|find\s+(?:me\s+)?|search\s+(?:for\s+)?|show\s+(?:me\s+)?|get\s+(?:me\s+)?|book\s+(?:a\s+)?|looking\s+for\s+(?:a\s+)?|a\s+|the\s+)\s*)+/i;
+  // Multilingual "from" and "to" prepositions
+  // to: to, nach, a, à, para, 에, 로, ye, ya
+  // from: from, von, de, da, di, depuis, 에서, den, dan
+  const TO = "to|nach|para|vers|hacia";
+  const FROM = "from|von|depuis|desde";
+  // "a" and "à" handled separately since they're single chars and could false-match
+  const TO_SHORT = "a|à";
 
-  // Pattern 1: explicit "from X to Y"
-  const fromTo = lower.match(/\bfrom\s+([\w\s/.'-]+?)\s+to\s+([\w\s/.'-]+?)(?:\s+(?:in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium|\d|€|\$|£).*)?$/);
+  const NOISE = /^(?:(?:flights?|vuelos?|vols?|flüge?|voo?s?|cheapest|cheap|direct|nonstop|i\s+want\s+(?:a\s+)?|find\s+(?:me\s+)?|search\s+(?:for\s+)?|show\s+(?:me\s+)?|get\s+(?:me\s+)?|book\s+(?:a\s+)?|looking\s+for\s+(?:a\s+)?|buscar?\s*|chercher?\s*|a\s+|the\s+|un\s+|una\s+|le\s+|la\s+|el\s+|los\s+|les\s+|il\s+|lo\s+|ein\s+|eine\s+)\s*)+/i;
+
+  // Multilingual stop words for trimming trailing modifiers
+  const TRAIL = "in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium|menos|unter|moins|meno|sotto|bajo|debajo|billig|barato|económico|günstig|nächste|próxima|proxima|prochaine|prossima|la|el|le|die|der|den|das|il|los|les|ida|vuelta|aller|retour|andata|ritorno|hin|rück|semana|woche|mois|mes|mese|settimana|hoy|heute|morgen|mañana|demain|domani|amanhã";
+
+  // Pattern 1: explicit "from X to Y" (multilingual)
+  const fromToRe = new RegExp(`\\b(?:${FROM})\\s+([\\w\\s/.'-]+?)\\s+(?:${TO}|${TO_SHORT})\\s+([\\w\\s/.'-]+?)(?:\\s+(?:${TRAIL}|\\d|€|\\$|£|,).*)?$`);
+  const fromTo = lower.match(fromToRe);
   if (fromTo) {
     const orig = fromTo[1].replace(NOISE, "").trim();
     let dest = fromTo[2].trim();
-    dest = dest.replace(/\s+(?:in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium)$/i, "").trim();
+    dest = dest.replace(new RegExp(`\\s+(?:${TRAIL})$`, "i"), "").trim();
     if (orig && dest) return { originPhrase: orig, destPhrase: dest };
   }
 
-  // Pattern 2: "to Y from X"
-  const toFrom = lower.match(/\bto\s+([\w\s/.'-]+?)\s+from\s+([\w\s/.'-]+?)(?:\s+(?:in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium|\d|€|\$|£).*)?$/);
-  if (toFrom) {
-    const dest = toFrom[1].trim();
-    const orig = toFrom[2].replace(NOISE, "").trim();
+  // Pattern 2: "X to Y" with full "to" words (not single-char)
+  const simpleToRe = new RegExp(`([\\w\\s/.'-]+?)\\s+(?:${TO})\\s+([\\w\\s/.'-]+?)(?:\\s+(?:${TRAIL}|\\d|€|\\$|£|,).*)?$`);
+  const simpleTo = lower.match(simpleToRe);
+  if (simpleTo) {
+    const orig = simpleTo[1].replace(NOISE, "").trim();
+    let dest = simpleTo[2].trim();
+    dest = dest.replace(new RegExp(`\\s+(?:${TRAIL})$`, "i"), "").trim();
     if (orig && dest) return { originPhrase: orig, destPhrase: dest };
   }
 
-  // Pattern 3: simple "X to Y" (no "from" keyword)
-  const simple = lower.match(/([\w\s/.'-]+?)\s+to\s+([\w\s/.'-]+?)(?:\s+(?:in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium|\d|€|\$|£).*)?$/);
-  if (simple) {
-    const orig = simple[1].replace(NOISE, "").trim();
-    let dest = simple[2].trim();
-    dest = dest.replace(/\s+(?:in|on|next|this|tomorrow|today|under|below|around|for|with|during|before|after|cheap|cheapest|direct|nonstop|non-stop|business|first|economy|premium)$/i, "").trim();
-    if (orig && dest) return { originPhrase: orig, destPhrase: dest };
+  // Pattern 3: "X a Y" / "X à Y" (short preposition, require comma or known trailing word)
+  // Only match if followed by comma+modifier or end-of-string, to avoid false positives
+  const shortToRe = new RegExp(`([\\w\\s/.'-]+?)\\s+(?:${TO_SHORT})\\s+([\\w\\s/.'-]+?)(?:\\s*,\\s*.*|\\s+(?:${TRAIL}|\\d|€|\\$|£).*)?$`);
+  const shortTo = lower.match(shortToRe);
+  if (shortTo) {
+    const orig = shortTo[1].replace(NOISE, "").trim();
+    let dest = shortTo[2].trim();
+    dest = dest.replace(new RegExp(`\\s+(?:${TRAIL})$`, "i"), "").trim();
+    // Avoid very short false matches
+    if (orig.length >= 2 && dest.length >= 2) return { originPhrase: orig, destPhrase: dest };
   }
 
   return null;
@@ -286,8 +360,8 @@ function useQueryPreview(prompt: string): QueryPreview | null {
     if (!extracted) return null;
     const { originPhrase, destPhrase } = extracted;
 
-    // Handle "X or Y to Z" pattern for multiple origins
-    const orParts = originPhrase.split(/\s+or\s+/);
+    // Handle "X or/o/ou/oder Y to Z" pattern for multiple origins (multilingual "or")
+    const orParts = originPhrase.split(/\s+(?:or|o|ou|oder|oppure)\s+/);
     const origins: { display: string; count: number }[] = [];
     for (const part of orParts) {
       const loc = matchLocation(part.trim(), orParts.length > 1 || !!destPhrase);
@@ -301,37 +375,60 @@ function useQueryPreview(prompt: string): QueryPreview | null {
     const originStr = origins.map(formatLocationDisplay).join(", ");
     const destStr = formatLocationDisplay(dest);
 
-    // Date detection
+    // Date detection (multilingual)
     let date: string | null = null;
-    const datePatterns = [
-      /\b(tomorrow|today)\b/i,
-      /\b(next week)\b/i,
-      /\b(next weekend)\b/i,
-      /\b(this weekend)\b/i,
-      /\b(next month)\b/i,
-      /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
-      /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})\b/i,
-      /\b(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
-      /\bin\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
-      /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
-    ];
-    for (const pat of datePatterns) {
-      const m = lower.match(pat);
-      if (m) {
-        // For "in july" pattern, extract just the month
-        if (pat.source.startsWith("\\bin\\s+")) {
-          date = resolveDate(m[1]);
-        } else if (m[2] && /^\d+$/.test(m[2])) {
-          // "march 15"
-          date = resolveDate(m[0]);
-        } else if (m[2] && MONTH_NAMES.includes(m[2].toLowerCase())) {
-          // "15 march"
-          date = resolveDate(m[0]);
-        } else {
-          date = resolveDate(m[1] || m[0]);
-        }
+    const allMonthNamesStr = Object.keys(I18N_MONTHS).join("|");
+    const allTemporalKeys = Object.keys(I18N_TEMPORAL);
+    const allDayNamesStr = Object.keys(I18N_DAYS).join("|");
+
+    // 1. Check multilingual temporal phrases first (multi-word: "próxima semana", "nächste woche")
+    for (const phrase of allTemporalKeys) {
+      if (lower.includes(phrase)) {
+        date = resolveDate(phrase);
         if (date) break;
       }
+    }
+    // 2. English temporal phrases
+    if (!date) {
+      const enTemporalPats = [
+        /\b(tomorrow|today)\b/i,
+        /\b(next week)\b/i,
+        /\b(next weekend)\b/i,
+        /\b(this weekend)\b/i,
+        /\b(next month)\b/i,
+      ];
+      for (const pat of enTemporalPats) {
+        const m = lower.match(pat);
+        if (m) { date = resolveDate(m[1]); if (date) break; }
+      }
+    }
+    // 3. Day names (multilingual)
+    if (!date) {
+      const dayRe = new RegExp(`\\b(${allDayNamesStr})\\b`, "i");
+      const dayM = lower.match(dayRe);
+      if (dayM) date = resolveDate(dayM[1]);
+    }
+    // 4. Month + day: "march 15", "15 marzo", "julio 5"
+    if (!date) {
+      const mdRe = new RegExp(`\\b(${allMonthNamesStr})\\s+(\\d{1,2})\\b`, "i");
+      const mdM = lower.match(mdRe);
+      if (mdM) date = resolveDate(mdM[0]);
+    }
+    if (!date) {
+      const dmRe = new RegExp(`\\b(\\d{1,2})\\s+(${allMonthNamesStr})\\b`, "i");
+      const dmM = lower.match(dmRe);
+      if (dmM) date = resolveDate(dmM[0]);
+    }
+    // 5. Standalone month names (multilingual): "in julio", "en mars", "im juli"
+    if (!date) {
+      const inMonthRe = new RegExp(`\\b(?:in|en|im|em|nel)\\s+(${allMonthNamesStr})\\b`, "i");
+      const inM = lower.match(inMonthRe);
+      if (inM) date = resolveDate(inM[1]);
+    }
+    if (!date) {
+      const monthRe = new RegExp(`\\b(${allMonthNamesStr})\\b`, "i");
+      const moM = lower.match(monthRe);
+      if (moM) date = resolveDate(moM[1]);
     }
 
     return { origin: originStr, dest: destStr, date };
@@ -1470,7 +1567,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
             {t("parsed.roundTripReturn")} → {return_dates.length <= 2 ? return_dates.map((d: string) => formatDate(d, locale)).join(", ") : `${formatDate(return_dates[0], locale)} + ${t("parsed.moreReturnDates", { count: return_dates.length - 1 })}`}
           </span>
         )}
-        {cabin && <span className="capitalize">{cabin.replace(/_/g, " ")}</span>}
+        {cabin && <span>{t(`form.${cabin === "premium_economy" ? "premiumEconomy" : cabin}` as "form.economy")}</span>}
         {stops && stops !== "any" && (
           <span>{stops === "non_stop" ? t("parsed.directOnly") : stops === "one_stop_or_fewer" ? t("parsed.oneStopMax") : t("parsed.twoStopsMax")}</span>
         )}
@@ -1548,7 +1645,7 @@ interface SearchFormState {
   safeOnly: boolean;
 }
 
-function buildPromptFromForm(f: SearchFormState): string {
+function buildPromptFromForm(f: SearchFormState, sym = "$"): string {
   const parts: string[] = [];
   parts.push(`${f.from.trim()} to ${f.to.trim()}`);
   if (f.roundTrip && f.returnDate) {
@@ -1558,7 +1655,7 @@ function buildPromptFromForm(f: SearchFormState): string {
   }
   if (f.flexibleDates) parts.push("flexible +/- 3 days");
   if (f.cabin && f.cabin !== "economy") parts.push(f.cabin.replace("_", " "));
-  if (f.maxPrice && parseInt(f.maxPrice, 10) > 0) parts.push(`under $${f.maxPrice}`);
+  if (f.maxPrice && parseInt(f.maxPrice, 10) > 0) parts.push(`under ${sym}${f.maxPrice}`);
   if (f.directOnly) parts.push("direct only");
   if (f.safeOnly) parts.push("safe routes only");
   return parts.join(", ");
@@ -1734,7 +1831,7 @@ function HomePage() {
 
   const getSearchPrompt = (): string => {
     if (searchMode === "natural") return prompt.trim();
-    return buildPromptFromForm(form);
+    return buildPromptFromForm(form, currencySymbol(userCurrency));
   };
 
   const returnDateInvalid = form.roundTrip && form.returnDate && form.depart && form.returnDate < form.depart;
@@ -2242,8 +2339,19 @@ function HomePage() {
         {/* Search surface */}
         <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-white/[0.06] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
           {hasResults ? (
-            /* Compact mode: modify search action */
-            <div className="flex items-center justify-end gap-3">
+            /* Compact mode: query preview + modify search action */
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[12px] text-[var(--color-text-muted)]/70 truncate min-w-0">
+                {queryPreview ? (
+                  <>
+                    {queryPreview.origin}
+                    {queryPreview.dest && <> <span className="opacity-60">{"\u2192"}</span> {queryPreview.dest}</>}
+                    {queryPreview.date && <> <span className="opacity-40">{"\u00B7"}</span> {queryPreview.date}</>}
+                  </>
+                ) : prompt ? (
+                  <span className="opacity-60">{prompt}</span>
+                ) : null}
+              </p>
               {isLoading ? (
                 <button
                   onClick={cancelSearch}
@@ -2341,7 +2449,7 @@ function HomePage() {
                       </select>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <label htmlFor="maxPrice" className="text-sm text-[var(--color-text-muted)]">{t("form.maxPrice")}</label>
+                      <label htmlFor="maxPrice" className="text-sm text-[var(--color-text-muted)]">{t("form.maxPriceLabel")} {currencySymbol(userCurrency)}</label>
                       <input
                         id="maxPrice"
                         type="number"
