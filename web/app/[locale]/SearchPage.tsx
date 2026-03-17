@@ -588,9 +588,9 @@ function extractOriginDest(lower: string): { originPhrase: string; destPhrase: s
   const NOISE = /^(?:(?:flights?|vuelos?|vols?|flüge?|voo?s?|cheapest|cheap|direct|nonstop|航班|フライト|항공편|رحلات|उड़ानें|i\s+want\s+(?:a\s+)?|find\s+(?:me\s+)?|search\s+(?:for\s+)?|show\s+(?:me\s+)?|get\s+(?:me\s+)?|book\s+(?:a\s+)?|looking\s+for\s+(?:a\s+)?|buscar?\s*|chercher?\s*|de\s+|a\s+|the\s+|un\s+|una\s+|le\s+|la\s+|el\s+|los\s+|les\s+|il\s+|lo\s+|ein\s+|eine\s+)\s*)+/iu;
 
   // Trim trailing words from a phrase until matchLocation succeeds.
-  // "germany now today" -> try "germany now today", then "germany now", then "germany"
+  // Split on whitespace AND punctuation so "germany, next week" → ["germany", "next", "week"]
   function trimToLocation(raw: string, hasContext: boolean): string {
-    const words = raw.trim().split(/\s+/);
+    const words = raw.trim().split(/[\s,;.!?]+/).filter(Boolean);
     for (let len = words.length; len >= 1; len--) {
       const candidate = words.slice(0, len).join(" ");
       if (matchLocation(candidate, hasContext)) return candidate;
