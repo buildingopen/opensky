@@ -2,11 +2,11 @@
 
 @theme inline {
   --color-background: #070b14;
-  --color-surface: #141414;
-  --color-surface-2: #1c1c1c;
-  --color-border: #2a2a2a;
+  --color-surface: #0f1523;
+  --color-surface-2: #161d2d;
+  --color-border: #1e2a3c;
   --color-text: #e4e4e7;
-  --color-text-muted: #a1a1aa;
+  --color-text-muted: #94a3b8;
   --color-accent: #22c55e;
   --color-accent-hover: #16a34a;
   --color-safe: #6b7280;
@@ -19,46 +19,46 @@
 
 /* Extended tokens: shadows, clouds, map colors (dark defaults) */
 :root {
-  --shadow-card: 0 2px 16px -4px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
-  --shadow-surface: 0 2px 20px -6px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  --shadow-card: 0 2px 16px -4px rgba(0,0,0,0.3), 0 0 0 1px rgba(96,165,250,0.06);
+  --shadow-surface: 0 2px 20px -6px rgba(0,0,0,0.5), 0 0 0 1px rgba(96,165,250,0.06);
   --shadow-surface-focus: 0 4px 40px -8px rgba(34,197,94,0.07), 0 4px 24px -6px rgba(0,0,0,0.5);
   --shadow-sticky: 2px 0 4px -2px rgba(0,0,0,0.15);
   --shadow-cta: 0 0 20px rgba(34,197,94,0.2), 0 2px 8px rgba(0,0,0,0.3);
   --shadow-cta-hover: 0 0 32px rgba(34,197,94,0.35), 0 4px 12px rgba(0,0,0,0.4);
   --glass-fallback: rgba(7,11,20,0.5);
   --sky-gradient: linear-gradient(180deg, #070b14 0%, #0c1220 50%, #111827 100%);
-  --cloud-white-start: rgba(120,160,255,0.12);
-  --cloud-white-end: rgba(120,160,255,0.04);
-  --cloud-green-start: rgba(34,197,94,0.12);
-  --cloud-green-end: rgba(34,197,94,0.04);
-  --color-geo-stroke: #141414;
-  --color-geo-default: #2a2a2a;
-  --color-geo-hover: #3f3f46;
+  --cloud-white-start: rgba(100,150,255,0.14);
+  --cloud-white-end: rgba(100,150,255,0.05);
+  --cloud-green-start: rgba(34,197,94,0.10);
+  --cloud-green-end: rgba(34,197,94,0.03);
+  --color-geo-stroke: #0f1523;
+  --color-geo-default: #1e2a3c;
+  --color-geo-hover: #2a3a52;
 }
 
 /* Light mode overrides */
 :root.light {
   --color-background: #f8faff;
   --color-surface: #ffffff;
-  --color-surface-2: #f4f4f5;
-  --color-border: #e4e4e7;
+  --color-surface-2: #f0f4ff;
+  --color-border: #dce5f5;
   --color-text: #18181b;
-  --color-text-muted: #71717a;
-  --shadow-card: 0 2px 16px -4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05);
-  --shadow-surface: 0 2px 20px -6px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
+  --color-text-muted: #64748b;
+  --shadow-card: 0 2px 16px -4px rgba(0,0,0,0.08), 0 0 0 1px rgba(59,130,246,0.04);
+  --shadow-surface: 0 2px 20px -6px rgba(0,0,0,0.1), 0 0 0 1px rgba(59,130,246,0.05);
   --shadow-surface-focus: 0 4px 40px -8px rgba(34,197,94,0.1), 0 4px 24px -6px rgba(0,0,0,0.08);
   --shadow-sticky: 2px 0 4px -2px rgba(0,0,0,0.06);
   --shadow-cta: 0 0 20px rgba(34,197,94,0.15), 0 2px 8px rgba(0,0,0,0.08);
   --shadow-cta-hover: 0 0 32px rgba(34,197,94,0.25), 0 4px 12px rgba(0,0,0,0.12);
-  --glass-fallback: rgba(248,250,255,0.8);
-  --sky-gradient: linear-gradient(180deg, #dbeafe 0%, #eff4ff 40%, #ffffff 100%);
-  --cloud-white-start: rgba(255,255,255,0.5);
-  --cloud-white-end: rgba(255,255,255,0.2);
-  --cloud-green-start: rgba(34,197,94,0.08);
-  --cloud-green-end: rgba(34,197,94,0.03);
-  --color-geo-stroke: #e4e4e7;
-  --color-geo-default: #f4f4f5;
-  --color-geo-hover: #e4e4e7;
+  --glass-fallback: rgba(248,250,255,0.95);
+  --sky-gradient: linear-gradient(180deg, #7ab8f5 0%, #93c5fd 10%, #bfdbfe 25%, #dbeafe 40%, #e8f0fe 55%, #f0f4ff 75%, #f8faff 100%);
+  --cloud-white-start: rgba(255,255,255,0.65);
+  --cloud-white-end: rgba(255,255,255,0.25);
+  --cloud-green-start: rgba(34,197,94,0.06);
+  --cloud-green-end: rgba(34,197,94,0.02);
+  --color-geo-stroke: #dce5f5;
+  --color-geo-default: #e8edf5;
+  --color-geo-hover: #dce5f5;
 }
 
 body {

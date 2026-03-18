@@ -40,12 +40,12 @@ function StarsLayer() {
 function CloudOrbs() {
   return (
     <>
-      {/* Primary cloud mass - upper left, white */}
+      {/* Primary cloud mass - upper left */}
       <div
         className="cloud-orb absolute rounded-full"
         style={{
-          width: "600px",
-          height: "350px",
+          width: "650px",
+          height: "380px",
           top: "-100px",
           left: "-120px",
           background: "radial-gradient(ellipse, var(--cloud-white-start) 0%, var(--cloud-white-end) 40%, transparent 70%)",
@@ -57,22 +57,22 @@ function CloudOrbs() {
       <div
         className="cloud-orb absolute rounded-full"
         style={{
-          width: "500px",
-          height: "300px",
+          width: "550px",
+          height: "320px",
           top: "-50px",
           right: "-80px",
           background: "radial-gradient(ellipse, var(--cloud-green-start) 0%, var(--cloud-green-end) 40%, transparent 70%)",
-          filter: "blur(50px)",
+          filter: "blur(45px)",
           animationDelay: "-3s",
           animationDuration: "12s",
         }}
       />
-      {/* Mid-left wisp, white */}
+      {/* Mid-left wisp */}
       <div
         className="cloud-orb absolute rounded-full"
         style={{
-          width: "450px",
-          height: "220px",
+          width: "500px",
+          height: "260px",
           top: "28%",
           left: "-60px",
           background: "radial-gradient(ellipse, var(--cloud-white-start) 0%, var(--cloud-white-end) 45%, transparent 70%)",
@@ -81,14 +81,14 @@ function CloudOrbs() {
           animationDuration: "13s",
         }}
       />
-      {/* Center-right, larger, subtle white */}
+      {/* Center-right, larger */}
       <div
         className="cloud-orb absolute rounded-full"
         style={{
           width: "700px",
-          height: "350px",
+          height: "380px",
           top: "18%",
-          right: "-180px",
+          right: "-150px",
           background: "radial-gradient(ellipse, var(--cloud-white-start) 0%, var(--cloud-white-end) 45%, transparent 65%)",
           filter: "blur(45px)",
           animationDelay: "-7s",
@@ -99,8 +99,8 @@ function CloudOrbs() {
       <div
         className="cloud-orb absolute rounded-full"
         style={{
-          width: "500px",
-          height: "260px",
+          width: "550px",
+          height: "280px",
           bottom: "12%",
           left: "8%",
           background: "radial-gradient(ellipse, var(--cloud-green-start) 0%, var(--cloud-green-end) 40%, transparent 70%)",
@@ -109,12 +109,12 @@ function CloudOrbs() {
           animationDuration: "11s",
         }}
       />
-      {/* Bottom right, white */}
+      {/* Bottom right */}
       <div
         className="cloud-orb absolute rounded-full"
         style={{
-          width: "550px",
-          height: "300px",
+          width: "600px",
+          height: "320px",
           bottom: "-80px",
           right: "3%",
           background: "radial-gradient(ellipse, var(--cloud-white-start) 0%, var(--cloud-white-end) 40%, transparent 70%)",

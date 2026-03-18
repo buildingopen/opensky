@@ -107,8 +107,8 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
   const zoneMap = useMemo(() => new Map(zones.map((z) => [z.id, z])), [zones]);
 
   const getFill = (geoId: string) => {
-    const base = colorMap[geoId] || "#2a2a2a";
-    if (dimmedSet.has(geoId)) return "#2a2a2a";
+    const base = colorMap[geoId] || "var(--color-geo-default)";
+    if (dimmedSet.has(geoId)) return "var(--color-geo-default)";
     return base;
   };
 
@@ -259,13 +259,13 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
                       key={geo.rsmKey}
                       geography={geo}
                       fill={fill}
-                      stroke="#141414"
+                      stroke="var(--color-geo-stroke)"
                       strokeWidth={0.5}
                       style={{
                         default: { outline: "none", cursor: isZoneCountry ? "pointer" : "default" },
                         hover: {
                           outline: "none",
-                          fill: isZoneCountry ? fill : fill === "#2a2a2a" ? "#3f3f46" : fill,
+                          fill: isZoneCountry ? fill : fill === "var(--color-geo-default)" ? "var(--color-geo-hover)" : fill,
                           opacity: isZoneCountry ? 0.8 : 1,
                           cursor: isZoneCountry ? "pointer" : "default",
                         },
