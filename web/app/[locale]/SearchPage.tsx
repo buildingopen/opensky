@@ -846,6 +846,8 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/\b(direkt)\b/i, "Direct flights only"],
       [/\b(diretto|diretta)\b/i, "Direct flights only"],
       [/\b(direto|direta)\b/i, "Direct flights only"],
+      [/(सीधी(?:\s+(?:उड़ान|फ़?्लाइट))?)/i, "Direct flights only"],
+      [/(مباشر(?:ة)?)/i, "Direct flights only"],
       // One-way
       [/\b(one[\s-]?way(?:\s+(?:flights?|tickets?))?)\b/i, "One-way"],
       [/\b(nur\s+hinflug|nur\s+hin|einfach(?:er?\s+flug)?)\b/i, "One-way"],
