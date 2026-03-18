@@ -937,6 +937,35 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/(직항)/i, "Direct flights only"],
       [/(مباشر)/i, "Direct flights only"],
       [/(直行便)/i, "Direct flights only"],
+      // Seasons
+      [/\b((?:in\s+)?(?:the\s+)?(?:spring|summer|fall|autumn|winter))\b/i, "season"],
+      [/\b((?:im\s+)?(?:Fr[uü]e?hling|Sommer|Herbst|Winter))\b/i, "season"],
+      [/\b((?:en\s+)?(?:primavera|verano|oto[ñn]o|invierno))\b/i, "season"],
+      [/\b((?:(?:au|en)\s+)?(?:printemps|[eé]t[eé]|automne|hiver))\b/i, "season"],
+      [/\b((?:in\s+)?(?:primavera|estate|autunno|inverno))\b/i, "season"],
+      [/\b((?:(?:na|no)\s+)?(?:primavera|ver[aã]o|outono|inverno))\b/i, "season"],
+      [/\b((?:ilkbahar|yaz|sonbahar|k[iı]ş)(?:(?:\s+d[oö]e?nemi)?|(?:ın))?\b)/i, "season"],
+      [/(春[天季]?|夏[天季]?|秋[天季]?|冬[天季]?)/i, "season"],
+      [/(봄|여름|가을|겨울)/i, "season"],
+      [/(春|夏|秋|冬)/i, "season"],
+      [/(बसंत|गर्मी|पतझड़|सर्दी)/i, "season"],
+      [/(ربيع|صيف|خريف|شتاء)/i, "season"],
+      // Luggage / bags
+      [/\b((?:with|checked|carry[\s-]?on)\s+(?:luggage|bags?|baggage)|(?:checked\s+)?bags?\s+included)\b/i, "Luggage included"],
+      [/\b(mit\s+(?:Gep[aä]e?ck|Koffer)|Freigep[aä]e?ck|Handgep[aä]e?ck)\b/i, "Luggage included"],
+      [/\b(con\s+(?:equipaje|maletas?)|equipaje\s+(?:facturado|incluido))\b/i, "Luggage included"],
+      [/\b(avec\s+(?:bagages?|valises?)|bagages?\s+(?:inclus|enregistr[eé]s?))\b/i, "Luggage included"],
+      [/\b(con\s+(?:bagagli[oa]?|valigia)|bagagli[oa]?\s+(?:inclus[oa]|registrat[oa]))\b/i, "Luggage included"],
+      [/\b(com\s+(?:bagagem|malas?)|bagagem\s+(?:inclu[ií]da|despachada))\b/i, "Luggage included"],
+      [/\b(bagaj\s+(?:dahil|d[aâ]hil))\b/i, "Luggage included"],
+      // Overnight / red-eye
+      [/\b(red[\s-]?eye|overnight(?:\s+flights?)?)\b/i, "Overnight flight"],
+      [/\b(Nachtflug|[uü]e?bernachtflug)\b/i, "Overnight flight"],
+      [/\b(vuelo\s+nocturno)\b/i, "Overnight flight"],
+      [/\b(vol\s+(?:de\s+)?nuit)\b/i, "Overnight flight"],
+      [/\b(volo\s+notturno)\b/i, "Overnight flight"],
+      [/\b(voo\s+noturno)\b/i, "Overnight flight"],
+      [/\b(gece\s+u[cç]u[sş]u)\b/i, "Overnight flight"],
       // Budget: under/less than + currency + amount
       [/\b(under\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, "budget"],
       [/\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, "budget"],
@@ -962,6 +991,16 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
             const numMatch = m[0].match(/\d[\d.,]*/);
             const sym = m[0].match(/[\$\u20ac\u00a3\u20b9\u00a5₺]/)?.[0] || "$";
             tooltip = numMatch ? `< ${sym}${numMatch[0].replace(/[.,]$/,"")}` : "Budget limit";
+          } else if (label === "season") {
+            const sl = m[0].toLowerCase();
+            const seasonMap: Record<string, string> = {
+              spring: "Mar-May", frühling: "Mar-May", fruehling: "Mar-May", primavera: "Mar-May", printemps: "Mar-May", ilkbahar: "Mar-May",
+              summer: "Jun-Aug", sommer: "Jun-Aug", verano: "Jun-Aug", été: "Jun-Aug", ete: "Jun-Aug", estate: "Jun-Aug", "verão": "Jun-Aug", verao: "Jun-Aug", yaz: "Jun-Aug",
+              fall: "Sep-Nov", autumn: "Sep-Nov", herbst: "Sep-Nov", "otoño": "Sep-Nov", otono: "Sep-Nov", automne: "Sep-Nov", autunno: "Sep-Nov", outono: "Sep-Nov", sonbahar: "Sep-Nov",
+              winter: "Dec-Feb", hiver: "Dec-Feb", inverno: "Dec-Feb", invierno: "Dec-Feb", "kış": "Dec-Feb", kis: "Dec-Feb",
+            };
+            const words = sl.replace(/^(?:in|im|en|au|na|no)\s+(?:the\s+)?/, "").trim();
+            tooltip = seasonMap[words] || label;
           }
           ranges.push({ start: m.index, end: m.index + m[0].length, type: "qualifier", airports: [], tooltip });
         }
