@@ -348,21 +348,62 @@ const LOCATION_SKIPWORDS = new Set([
   "san", // prefix alone without city -> SAN (San Diego)
   "sub", // EN prefix -> SUB (Surabaya)
 ]);
-const SKIP_REGIONS = new Set([
-  "anywhere", "europe", "asia", "africa", "south america", "north america", "middle east",
-  // Multilingual region names
-  "cualquier lugar", "europa", "asia", "áfrica", "sudamérica", "norteamérica",
-  "überall", "asien", "afrika", "südamerika", "nordamerika",
-  "n'importe où", "asie", "afrique", "amérique du sud", "amérique du nord",
-  "ovunque", "europa", "asia", "africa", "sud america", "nord america",
-  "qualquer lugar", "ásia", "áfrica", "américa do sul", "américa do norte",
-  // CJK/Arabic/Hindi
-  "任何地方", "欧洲", "亚洲", "非洲", "南美洲", "北美洲",
-  "どこでも", "ヨーロッパ", "アジア", "アフリカ",
-  "어디든", "유럽", "아시아", "아프리카",
-  "أي مكان", "أوروبا", "آسيا", "أفريقيا",
-  "कहीं भी", "यूरोप", "एशिया", "अफ्रीका",
-]);
+// Region names -> display label for tooltip. Matched as locations with region tooltip.
+const REGION_LABELS: Record<string, string> = Object.fromEntries([
+  // English
+  ["anywhere", "Anywhere"], ["europe", "Europe"], ["asia", "Asia"],
+  ["africa", "Africa"], ["south america", "South America"], ["north america", "North America"],
+  ["middle east", "Middle East"], ["southeast asia", "Southeast Asia"], ["central america", "Central America"],
+  ["caribbean", "Caribbean"], ["scandinavia", "Scandinavia"], ["mediterranean", "Mediterranean"],
+  ["oceania", "Oceania"], ["south asia", "South Asia"], ["east asia", "East Asia"],
+  ["central asia", "Central Asia"], ["western europe", "Western Europe"], ["eastern europe", "Eastern Europe"],
+  ["latin america", "Latin America"], ["pacific islands", "Pacific Islands"],
+  // Spanish
+  ["cualquier lugar", "Anywhere"], ["europa", "Europe"], ["sudamérica", "South America"],
+  ["norteamérica", "North America"], ["sudeste asiático", "Southeast Asia"],
+  ["centroamérica", "Central America"], ["caribe", "Caribbean"], ["escandinavia", "Scandinavia"],
+  ["mediterráneo", "Mediterranean"], ["oceanía", "Oceania"], ["oriente medio", "Middle East"],
+  // German
+  ["überall", "Anywhere"], ["asien", "Asia"], ["afrika", "Africa"],
+  ["südamerika", "South America"], ["nordamerika", "North America"],
+  ["südostasien", "Southeast Asia"], ["zentralamerika", "Central America"],
+  ["karibik", "Caribbean"], ["skandinavien", "Scandinavia"], ["mittelmeer", "Mediterranean"],
+  ["naher osten", "Middle East"], ["ozeanien", "Oceania"],
+  // French
+  ["n'importe où", "Anywhere"], ["asie", "Asia"], ["afrique", "Africa"],
+  ["amérique du sud", "South America"], ["amérique du nord", "North America"],
+  ["asie du sud-est", "Southeast Asia"], ["amérique centrale", "Central America"],
+  ["caraïbes", "Caribbean"], ["scandinavie", "Scandinavia"], ["méditerranée", "Mediterranean"],
+  ["moyen-orient", "Middle East"], ["océanie", "Oceania"],
+  // Italian
+  ["ovunque", "Anywhere"], ["sud america", "South America"], ["nord america", "North America"],
+  ["sud-est asiatico", "Southeast Asia"], ["america centrale", "Central America"],
+  ["caraibi", "Caribbean"], ["medio oriente", "Middle East"],
+  // Portuguese
+  ["qualquer lugar", "Anywhere"], ["ásia", "Asia"], ["américa do sul", "South America"],
+  ["américa do norte", "North America"], ["sudeste asiático", "Southeast Asia"],
+  ["américa central", "Central America"], ["médio oriente", "Middle East"],
+  // Turkish
+  ["her yer", "Anywhere"], ["avrupa", "Europe"], ["asya", "Asia"],
+  ["güneydoğu asya", "Southeast Asia"], ["karayipler", "Caribbean"],
+  ["orta doğu", "Middle East"], ["iskandinavya", "Scandinavia"],
+  // CJK
+  ["任何地方", "Anywhere"], ["欧洲", "Europe"], ["亚洲", "Asia"], ["非洲", "Africa"],
+  ["南美洲", "South America"], ["北美洲", "North America"], ["东南亚", "Southeast Asia"],
+  ["中东", "Middle East"], ["加勒比", "Caribbean"],
+  ["どこでも", "Anywhere"], ["ヨーロッパ", "Europe"], ["アジア", "Asia"], ["アフリカ", "Africa"],
+  ["東南アジア", "Southeast Asia"], ["中東", "Middle East"],
+  ["어디든", "Anywhere"], ["유럽", "Europe"], ["아시아", "Asia"], ["아프리카", "Africa"],
+  ["동남아시아", "Southeast Asia"], ["중동", "Middle East"],
+  // Arabic
+  ["أي مكان", "Anywhere"], ["أوروبا", "Europe"], ["آسيا", "Asia"], ["أفريقيا", "Africa"],
+  ["جنوب شرق آسيا", "Southeast Asia"], ["الشرق الأوسط", "Middle East"],
+  // Hindi
+  ["कहीं भी", "Anywhere"], ["यूरोप", "Europe"], ["एशिया", "Asia"], ["अफ्रीका", "Africa"],
+  ["दक्षिण पूर्व एशिया", "Southeast Asia"], ["मध्य पूर्व", "Middle East"],
+].map(([k, v]) => [k, v]));
+// Also keep "africa" etc. that are shared across languages (IT "africa" = Africa)
+for (const k of ["africa", "asia", "europa"]) if (!REGION_LABELS[k]) REGION_LABELS[k] = k.charAt(0).toUpperCase() + k.slice(1);
 
 const MONTH_NAMES = ["january","february","march","april","may","june","july","august","september","october","november","december"];
 const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -570,7 +611,10 @@ function scanLocations(prompt: string): ScannedLoc[] {
   // originalPhrase preserves case from user input to distinguish "SIN" (IATA) from "sin" (Spanish word)
   function matchExact(phrase: string, originalPhrase?: string): PreviewLocInfo | null {
     const p = norm(phrase);
-    if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
+    if (!p || p.length < 2) return null;
+    // Regions: return as a match with display label (no airports, tooltip only)
+    const regionLabel = REGION_LABELS[p];
+    if (regionLabel) return { display: regionLabel, count: 0, airports: [] };
     // Skipword check: only block if the user typed lowercase. If they typed
     // all-uppercase (e.g. "SIN", "DEN"), they likely mean the IATA code.
     const orig = originalPhrase || phrase;
@@ -692,7 +736,9 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
     const locs = scanLocations(prompt);
     for (let li = 0; li < locs.length; li++) {
       const s = locs[li];
-      ranges.push({ start: s.start, end: s.end, type: li === 0 ? "origin" : "dest", airports: s.loc.airports });
+      // Regions have no airports but a display label; use it as tooltip
+      const regionTooltip = s.loc.airports.length === 0 && s.loc.display ? `Region: ${s.loc.display}` : undefined;
+      ranges.push({ start: s.start, end: s.end, type: li === 0 ? "origin" : "dest", airports: s.loc.airports, tooltip: regionTooltip });
     }
 
     // Date detection

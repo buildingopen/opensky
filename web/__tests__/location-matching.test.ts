@@ -45,7 +45,15 @@ const CITY_SET = new Set(AIRPORTS.map((a) => a.city.toLowerCase()));
 const IATA_SET = new Set(AIRPORTS.map((a) => a.iata));
 const LOCATION_SKIPWORDS = extractSet("LOCATION_SKIPWORDS");
 const AMBIGUOUS_CITIES = extractSet("AMBIGUOUS_CITIES");
-const SKIP_REGIONS = extractSet("SKIP_REGIONS");
+// Extract REGION_LABELS keys from the Object.fromEntries([...]) pattern
+const REGION_LABELS_KEYS: Set<string> = (() => {
+  const re = /const REGION_LABELS[^=]*=\s*Object\.fromEntries\(\[([\s\S]*?)\]\.map/m;
+  const m = SEARCH_PAGE_SRC.match(re);
+  if (!m) throw new Error("Could not find REGION_LABELS in SearchPage.tsx");
+  const keys = new Set<string>();
+  for (const match of m[1].matchAll(/\["([^"]+)",\s*"[^"]+"\]/g)) keys.add(match[1]);
+  return keys;
+})();
 const ALIAS_ENTRIES = extractAliasEntries();
 const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -108,7 +116,9 @@ for (const a of AIRPORTS) {
 // ---------------------------------------------------------------------------
 function testMatchExact(phrase: string, originalPhrase?: string): string | null {
   const p = norm(phrase.toLowerCase());
-  if (!p || p.length < 2 || SKIP_REGIONS.has(p)) return null;
+  if (!p || p.length < 2) return null;
+  // Regions: return as a region match (mirrors SearchPage REGION_LABELS logic)
+  if (REGION_LABELS_KEYS.has(p)) return `region:${p}`;
   const orig = originalPhrase || phrase;
   // Skipword: block if user typed lowercase; allow if all-uppercase (IATA intent)
   if (LOCATION_SKIPWORDS.has(p) && orig !== orig.toUpperCase()) return null;
@@ -836,22 +846,30 @@ describe("Bug fix: GOA IATA vs Goa city priority", () => {
 });
 
 // ===================================================================
-// SKIP_REGIONS TESTS
+// REGION HIGHLIGHT TESTS
 // ===================================================================
 
-describe("SKIP_REGIONS are not matched", () => {
-  it("'europe' is a region, not a city", () => {
-    expect(matches("anywhere in europe")).toEqual([]);
+describe("Regions are highlighted with region tag", () => {
+  it("'europe' is highlighted as a region", () => {
+    expect(matches("anywhere in europe")).toContain("region:europe");
   });
 
-  it("'asia' is a region", () => {
-    expect(matches("flights to asia")).toEqual([]);
+  it("'asia' is highlighted as a region", () => {
+    expect(matches("flights to asia")).toContain("region:asia");
   });
 
-  it("multilingual regions blocked: europa, asie, asien", () => {
-    expect(matches("vuelo a europa")).toEqual([]);
-    expect(matches("vol vers asie")).toEqual([]);
-    expect(matches("Flug nach asien")).toEqual([]);
+  it("multilingual regions highlighted: europa, asie, asien", () => {
+    expect(matches("vuelo a europa")).toContain("region:europa");
+    expect(matches("vol vers asie")).toContain("region:asie");
+    expect(matches("Flug nach asien")).toContain("region:asien");
+  });
+
+  it("'southeast asia' is highlighted as a region", () => {
+    expect(matches("flights to southeast asia")).toContain("region:southeast asia");
+  });
+
+  it("'anywhere' is highlighted as a region", () => {
+    expect(matches("fly anywhere cheap")).toContain("region:anywhere");
   });
 });
 
