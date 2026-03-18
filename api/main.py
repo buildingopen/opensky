@@ -103,7 +103,9 @@ API_KEY_QUOTA = int(os.environ.get("API_KEY_QUOTA", "100"))
 REDIS_URL = os.environ.get("REDIS_URL", "").strip()
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_FALLBACK_MODEL = "gemini-2.0-flash"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+GEMINI_FALLBACK_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_FALLBACK_MODEL}:generateContent"
 GEMINI_TIMEOUT_SECONDS = float(os.environ.get("GEMINI_TIMEOUT_SECONDS", "10"))
 GEMINI_MAX_RETRIES = int(os.environ.get("GEMINI_MAX_RETRIES", "2"))
 PROXY = os.environ.get("SKYROUTE_PROXY")
@@ -1768,10 +1770,12 @@ async def _expand_params(original: dict, prompt: str) -> dict:
     })
 
     for attempt in range(GEMINI_MAX_RETRIES + 1):
+        # Use fallback model on retries (primary may be overloaded)
+        url = GEMINI_URL if attempt == 0 else GEMINI_FALLBACK_URL
         try:
             async with httpx.AsyncClient(timeout=GEMINI_TIMEOUT_SECONDS) as client:
                 resp = await client.post(
-                    GEMINI_URL,
+                    url,
                     params={"key": GEMINI_KEY},
                     json={
                         "contents": [{"parts": [{"text": user_msg}]}],
@@ -1783,6 +1787,7 @@ async def _expand_params(original: dict, prompt: str) -> dict:
                     },
                 )
             if resp.status_code != 200:
+                log.error("Expand Gemini HTTP %d (model=%s): %s", resp.status_code, "primary" if attempt == 0 else "fallback", resp.text[:200])
                 if attempt < GEMINI_MAX_RETRIES:
                     await asyncio.sleep(1)
                     continue
@@ -1831,7 +1836,8 @@ async def _expand_params(original: dict, prompt: str) -> dict:
             raise HTTPException(status_code=502, detail="Failed to parse expansion response.")
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
+            log.error("Expand attempt %d failed: %s", attempt, e)
             if attempt < GEMINI_MAX_RETRIES:
                 await asyncio.sleep(1)
                 continue

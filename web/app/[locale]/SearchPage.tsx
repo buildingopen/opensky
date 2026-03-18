@@ -2903,7 +2903,8 @@ function HomePage() {
                   const mergedDates = [...new Set([...prev.dates, ...exp.dates])].sort();
                   const mergedReturnDates = [...new Set([...(prev.return_dates || []), ...(exp.return_dates || [])])].sort();
                   const mergedNames = { ...prev.airport_names, ...exp.airport_names };
-                  return { ...prev, origins: mergedOrigins, destinations: mergedDests, dates: mergedDates, return_dates: mergedReturnDates, airport_names: mergedNames };
+                  const mergedTotalRoutes = mergedOrigins.length * mergedDests.length * mergedDates.length;
+                  return { ...prev, origins: mergedOrigins, destinations: mergedDests, dates: mergedDates, return_dates: mergedReturnDates, airport_names: mergedNames, total_routes: mergedTotalRoutes };
                 });
                 expandParsedRef.current = null;
               }
