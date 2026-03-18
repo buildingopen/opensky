@@ -1989,10 +1989,10 @@ function ScanSummaryExpanded({
         {t("compare.hideComparison")}
       </button>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
-        <span><span className="text-[var(--color-text)] font-semibold">{stats.total_flights}</span> {t("compare.flights")}</span>
-        <span><span className="text-[var(--color-text)] font-semibold">{stats.destinations}</span> {t("compare.destinations")}</span>
+        <span><span className="text-[var(--color-text)] font-semibold">{flights.length > stats.total_flights ? flights.length : stats.total_flights}</span> {t("compare.flights")}</span>
+        <span><span className="text-[var(--color-text)] font-semibold">{flights.length > 0 ? new Set(flights.map(f => f.destination)).size : stats.destinations}</span> {t("compare.destinations")}</span>
         {stats.min_price > 0 && (
-          <span>{sym}{Math.round(stats.min_price)} – {sym}{Math.round(stats.max_price)}</span>
+          <span>{sym}{Math.round(flights.length > 0 ? Math.min(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.min_price)} – {sym}{Math.round(flights.length > 0 ? Math.max(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.max_price)}</span>
         )}
       </div>
 
