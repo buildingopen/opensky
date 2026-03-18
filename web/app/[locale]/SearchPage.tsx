@@ -2796,8 +2796,8 @@ function HomePage() {
     setExpandError(null);
     setExpansionInfo(null);
     setExpandProgress(null);
-    // Scroll to top so user sees the progress bar
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Scroll to top so user sees the progress bar (defer to next frame for Safari)
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
     trackEvent("expand_search_clicked", { original_results: flights.length });
 
     const controller = new AbortController();
