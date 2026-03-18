@@ -1778,9 +1778,7 @@ interface ProgressInfo {
 function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSearch | null; progress: ProgressInfo | null; filteredCount: number }) {
   const t = useTranslations("search");
   const pct = progress?.total ? (progress.done / progress.total) * 100 : 0;
-  const [showDetails, setShowDetails] = useState(false);
 
-  // Rotate through friendly messages based on progress %
   const message = !parsed
     ? t("loading.understanding")
     : pct < 30
@@ -1790,11 +1788,17 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
         : t("loading.almostReady");
 
   return (
-    <div className="text-center py-10">
-      <p className="text-base text-[var(--color-text)]">{message}</p>
+    <div className="py-10 space-y-6">
+      <div className="flex flex-col items-center gap-3">
+        {/* Animated plane icon */}
+        <svg viewBox="0 0 24 24" className="w-8 h-8 text-[var(--color-interactive)] animate-pulse" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+        </svg>
+        <p className="text-base text-[var(--color-text)]">{message}</p>
+      </div>
 
       {/* Smooth progress bar */}
-      <div className="mt-4 mx-auto max-w-sm h-1.5 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+      <div className="mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
         {parsed && progress ? (
           <div
             className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-500 ease-out"
@@ -1805,25 +1809,26 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
         )}
       </div>
 
-      {/* Safety filtered notice */}
-      {filteredCount > 0 && (
-        <p className="text-xs text-[var(--color-caution)] mt-3">
-          {t("loading.safetyFiltered", { count: filteredCount })}
-        </p>
+      {/* Skeleton preview cards */}
+      {parsed && (
+        <div className="max-w-2xl mx-auto space-y-3 opacity-40">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-4 animate-pulse" style={{ animationDelay: `${i * 150}ms` }}>
+              <div className="flex items-center justify-between">
+                <div className="space-y-2 flex-1">
+                  <div className="h-3 bg-[var(--color-surface-2)] rounded w-2/3" />
+                  <div className="h-2.5 bg-[var(--color-surface-2)] rounded w-1/3" />
+                </div>
+                <div className="h-5 bg-[var(--color-surface-2)] rounded w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
-      {/* Optional details toggle for power users */}
-      {parsed && progress && (
-        <button
-          onClick={() => setShowDetails(v => !v)}
-          className="text-[11px] text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)] mt-3 transition-colors"
-        >
-          {showDetails ? t("loading.hideDetails") : t("loading.showDetails")}
-        </button>
-      )}
-      {showDetails && progress && (
-        <p className="text-[11px] text-[var(--color-text-muted)] mt-1 tabular-nums">
-          {t("loading.checked", { done: progress.done, total: progress.total })}
+      {filteredCount > 0 && (
+        <p className="text-xs text-[var(--color-caution)] text-center">
+          {t("loading.safetyFiltered", { count: filteredCount })}
         </p>
       )}
     </div>
@@ -3079,7 +3084,7 @@ function HomePage() {
         )}
 
         {/* Search surface */}
-        <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-white/[0.06] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
+        <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
           {hasResults ? (
             /* Compact mode: original prompt + action */
             <div className="flex items-center justify-between gap-3">
@@ -3098,7 +3103,7 @@ function HomePage() {
                 <button
                   onClick={cancelSearch}
                   aria-label={tc("cancel")}
-                  className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-white/[0.08] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-white/[0.15] transition-all duration-200"
+                  className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-text-muted)]/30 transition-all duration-200"
                 >
                   {tc("cancel")}
                 </button>
@@ -3106,7 +3111,7 @@ function HomePage() {
                 <button
                   onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 0); }}
                   aria-label={tc("newSearch")}
-                  className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-white/[0.08] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-white/[0.15] transition-all duration-200"
+                  className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-text-muted)]/30 transition-all duration-200"
                 >
                   {tc("newSearch")}
                 </button>
@@ -3223,7 +3228,7 @@ function HomePage() {
                 </div>
               )}
 
-              <div className={`${searchMode === "structured" ? "mt-3" : "mt-1 pt-3 border-t border-white/[0.04]"} flex items-center gap-3`}>
+              <div className={`${searchMode === "structured" ? "mt-3" : "mt-1 pt-3 border-t border-[var(--color-border)]/50"} flex items-center gap-3`}>
                 <div className="flex items-center gap-3 min-w-0 overflow-hidden">
                   <button
                     type="button"
@@ -3385,25 +3390,7 @@ function HomePage() {
               return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} />;
             })()}
 
-            {/* Expand search progress (shown at top of results) */}
-            {expandPhase === "expanding" && (
-              <div className="mt-3 w-full bg-[var(--color-surface)] border border-[var(--color-interactive)]/30 rounded-lg px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 border-2 border-[var(--color-interactive)] border-t-transparent rounded-full animate-spin shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm text-[var(--color-text)]">{expansionInfo ? t("expand.expandingInfo", { info: expansionInfo }) : `${t("expand.expanding")}...`}</span>
-                    {expandProgress && (
-                      <div className="mt-1.5 h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-300"
-                          style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Expand search progress removed */}
 
             {/* Fix 5: Show warning if return date was before departure */}
             {searchWarning && (
@@ -3685,46 +3672,7 @@ function HomePage() {
                 )}
 
 
-                {/* Expand search - single container, content swaps */}
-                {parsed && phase === "done" && flights.length > 0 && expandPhase !== "expanding" && (
-                  <div className="mt-6">
-                    <button
-                      onClick={expandPhase === "idle" ? expandSearch : undefined}
-                      disabled={expandPhase !== "idle"}
-                      className={`w-full flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 transition-colors ${
-                        expandPhase === "idle" ? "hover:border-[var(--color-interactive)]/40 cursor-pointer group" : "cursor-default"
-                      }`}
-                    >
-                      <div className="text-start">
-                        {expandPhase === "idle" && (
-                          <>
-                            <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-interactive)] transition-colors">{t("expand.expandSearch")}</span>
-                            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{t("expand.findMore")}</p>
-                          </>
-                        )}
-                        {expandPhase === "done" && expandError && (
-                          <span className="text-sm text-[var(--color-caution)]">{expandError}</span>
-                        )}
-                        {expandPhase === "done" && !expandError && expandCount > 0 && (
-                          <span className="text-sm text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount })}</span>
-                        )}
-                        {expandPhase === "done" && !expandError && expandCount === 0 && (
-                          <span className="text-sm text-[var(--color-text-muted)]">{t("expand.noNewFlights")}</span>
-                        )}
-                      </div>
-                      {expandPhase === "idle" && (
-                        <svg viewBox="0 0 20 20" className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-interactive)] transition-colors shrink-0" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                      {expandPhase === "done" && !expandError && expandCount > 0 && (
-                        <svg viewBox="0 0 20 20" className="w-4 h-4 text-[var(--color-interactive)] shrink-0" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                )}
+                {/* Expand search removed - keeping original results as-is */}
 
 
                 {/* Price alert */}
