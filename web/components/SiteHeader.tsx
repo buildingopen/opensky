@@ -5,6 +5,27 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "../i18n/navigation";
 import { locales } from "../i18n/config";
 import { useCurrency, CURRENCIES, CURRENCY_SYMBOLS } from "./CurrencyProvider";
+import { ThemeToggle } from "./ThemeToggle";
+import { useTheme } from "./ThemeProvider";
+
+function MobileThemeSelect() {
+  const { mode, setMode } = useTheme();
+  const t = useTranslations("header");
+  return (
+    <div>
+      <label className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]/60 mb-1 block">{t("theme")}</label>
+      <select
+        value={mode}
+        onChange={(e) => setMode(e.target.value as "light" | "dark" | "system")}
+        className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-md px-2 py-1.5 text-sm text-[var(--color-text)]"
+      >
+        <option value="system">{t("themeSystem")}</option>
+        <option value="light">{t("themeLight")}</option>
+        <option value="dark">{t("themeDark")}</option>
+      </select>
+    </div>
+  );
+}
 
 export function SiteHeader() {
   const t = useTranslations("header");
@@ -12,20 +33,10 @@ export function SiteHeader() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const [gitHubStars, setGitHubStars] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [localePickerOpen, setLocalePickerOpen] = useState(false);
   const [currencyPickerOpen, setCurrencyPickerOpen] = useState(false);
   const { currency, setCurrency } = useCurrency();
-
-  useEffect(() => {
-    fetch("/api/github-stars")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d?.stars != null) setGitHubStars(d.stars);
-      })
-      .catch(() => {});
-  }, []);
 
   // Lock body scroll when menu open
   useEffect(() => {
@@ -101,18 +112,12 @@ export function SiteHeader() {
             href="https://github.com/buildingopen/opensky"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors inline-flex items-center gap-1.5"
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
           >
             GitHub
-            {gitHubStars !== null && (
-              <span className="inline-flex items-center gap-1 text-[11px] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-1.5 py-0.5 rounded-full tabular-nums text-[var(--color-text-muted)]">
-                <svg viewBox="0 0 16 16" className="w-3 h-3 fill-[var(--color-text-muted)]">
-                  <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25z" />
-                </svg>
-                {gitHubStars}
-              </span>
-            )}
           </a>
+
+          <ThemeToggle />
 
           {/* Locale picker */}
           <div className="relative" data-locale-picker>
@@ -176,6 +181,8 @@ export function SiteHeader() {
 
         {/* Mobile hamburger button */}
         <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle />
+
           {/* Mobile locale picker */}
           <div className="relative" data-locale-picker>
             <button
@@ -318,42 +325,37 @@ export function SiteHeader() {
             >
               <svg viewBox="0 0 16 16" className="w-4 h-4 shrink-0 fill-current"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
               GitHub
-              {gitHubStars !== null && (
-                <span className="inline-flex items-center gap-1 text-[11px] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-1.5 py-0.5 rounded-full tabular-nums text-[var(--color-text-muted)]">
-                  <svg viewBox="0 0 16 16" className="w-3 h-3 fill-[var(--color-text-muted)]">
-                    <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25z" />
-                  </svg>
-                  {gitHubStars}
-                </span>
-              )}
             </a>
 
-            {/* Locale & Currency pickers inside panel */}
-            <div className="mt-auto px-5 py-4 border-t border-[var(--color-border)] flex items-center gap-3">
-              <div className="flex-1">
-                <label className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]/60 mb-1 block">{tLocale("switchLanguage")}</label>
-                <select
-                  value={locale}
-                  onChange={(e) => switchLocale(e.target.value)}
-                  className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-md px-2 py-1.5 text-sm text-[var(--color-text)]"
-                >
-                  {locales.map((loc) => (
-                    <option key={loc} value={loc}>{tLocale(loc)}</option>
-                  ))}
-                </select>
+            {/* Locale, Currency & Theme pickers inside panel */}
+            <div className="mt-auto px-5 py-4 border-t border-[var(--color-border)] flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <label className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]/60 mb-1 block">{tLocale("switchLanguage")}</label>
+                  <select
+                    value={locale}
+                    onChange={(e) => switchLocale(e.target.value)}
+                    className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-md px-2 py-1.5 text-sm text-[var(--color-text)]"
+                  >
+                    {locales.map((loc) => (
+                      <option key={loc} value={loc}>{tLocale(loc)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]/60 mb-1 block">{t("selectCurrency")}</label>
+                  <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-md px-2 py-1.5 text-sm text-[var(--color-text)]"
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c} value={c}>{CURRENCY_SYMBOLS[c] || ""} {c}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div className="flex-1">
-                <label className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]/60 mb-1 block">{t("selectCurrency")}</label>
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-md px-2 py-1.5 text-sm text-[var(--color-text)]"
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>{CURRENCY_SYMBOLS[c] || ""} {c}</option>
-                  ))}
-                </select>
-              </div>
+              <MobileThemeSelect />
             </div>
           </nav>
         </div>

@@ -22,7 +22,11 @@
     "contact": "تواصل معنا",
     "openMenu": "فتح القائمة",
     "closeMenu": "إغلاق القائمة",
-    "selectCurrency": "اختر العملة"
+    "selectCurrency": "اختر العملة",
+    "theme": "المظهر",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
+    "themeSystem": "النظام"
   },
   "footer": {
     "builtBy": "بناء",
@@ -103,6 +107,11 @@
       "agentsChecking": "{workers} وكيل يتحقق من {total} خيار على Google Flights",
       "checkingRoute": "{route} في {date}",
       "checked": "تم التحقق من {done}/{total}",
+      "findingFlights": "جارٍ البحث عن رحلاتك...",
+      "comparingPrices": "مقارنة الأسعار بين شركات الطيران...",
+      "almostReady": "جاهز تقريبًا...",
+      "showDetails": "عرض التفاصيل",
+      "hideDetails": "إخفاء التفاصيل",
       "almostDone": "على وشك الانتهاء...",
       "remaining": "~{seconds} ثانية متبقية",
       "savingYou": "نوفر لك ~{time} من البحث اليدوي",

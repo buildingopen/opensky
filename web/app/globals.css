@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #0a0a0a;
+  --color-background: #070b14;
   --color-surface: #141414;
   --color-surface-2: #1c1c1c;
   --color-border: #2a2a2a;
@@ -17,8 +17,52 @@
   --color-danger: #b85c5c;
 }
 
+/* Extended tokens: shadows, clouds, map colors (dark defaults) */
+:root {
+  --shadow-card: 0 2px 16px -4px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
+  --shadow-surface: 0 2px 20px -6px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  --shadow-surface-focus: 0 4px 40px -8px rgba(34,197,94,0.07), 0 4px 24px -6px rgba(0,0,0,0.5);
+  --shadow-sticky: 2px 0 4px -2px rgba(0,0,0,0.15);
+  --shadow-cta: 0 0 20px rgba(34,197,94,0.2), 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-cta-hover: 0 0 32px rgba(34,197,94,0.35), 0 4px 12px rgba(0,0,0,0.4);
+  --glass-fallback: rgba(7,11,20,0.5);
+  --sky-gradient: linear-gradient(180deg, #070b14 0%, #0c1220 50%, #111827 100%);
+  --cloud-white-start: rgba(120,160,255,0.12);
+  --cloud-white-end: rgba(120,160,255,0.04);
+  --cloud-green-start: rgba(34,197,94,0.12);
+  --cloud-green-end: rgba(34,197,94,0.04);
+  --color-geo-stroke: #141414;
+  --color-geo-default: #2a2a2a;
+  --color-geo-hover: #3f3f46;
+}
+
+/* Light mode overrides */
+:root.light {
+  --color-background: #f8faff;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f4f5;
+  --color-border: #e4e4e7;
+  --color-text: #18181b;
+  --color-text-muted: #71717a;
+  --shadow-card: 0 2px 16px -4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05);
+  --shadow-surface: 0 2px 20px -6px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
+  --shadow-surface-focus: 0 4px 40px -8px rgba(34,197,94,0.1), 0 4px 24px -6px rgba(0,0,0,0.08);
+  --shadow-sticky: 2px 0 4px -2px rgba(0,0,0,0.06);
+  --shadow-cta: 0 0 20px rgba(34,197,94,0.15), 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-cta-hover: 0 0 32px rgba(34,197,94,0.25), 0 4px 12px rgba(0,0,0,0.12);
+  --glass-fallback: rgba(248,250,255,0.8);
+  --sky-gradient: linear-gradient(180deg, #dbeafe 0%, #eff4ff 40%, #ffffff 100%);
+  --cloud-white-start: rgba(255,255,255,0.5);
+  --cloud-white-end: rgba(255,255,255,0.2);
+  --cloud-green-start: rgba(34,197,94,0.08);
+  --cloud-green-end: rgba(34,197,94,0.03);
+  --color-geo-stroke: #e4e4e7;
+  --color-geo-default: #f4f4f5;
+  --color-geo-hover: #e4e4e7;
+}
+
 body {
-  background: var(--color-background);
+  background: var(--sky-gradient) fixed, var(--color-background);
   color: var(--color-text);
   font-family: var(--font-sans);
 }
@@ -59,12 +103,12 @@ body {
 
 /* Search surface */
 .search-surface {
-  box-shadow: 0 2px 20px -6px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  box-shadow: var(--shadow-surface);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 .search-surface:focus-within {
   border-color: rgba(34, 197, 94, 0.15);
-  box-shadow: 0 4px 40px -8px rgba(34, 197, 94, 0.07), 0 4px 24px -6px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-surface-focus);
 }
 
 /* Pulse animation for loading */
@@ -113,6 +157,15 @@ body {
   animation: slideInLeft 0.2s ease-out;
 }
 
+/* Star twinkle animation */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.star-slow { animation: twinkle 7s ease-in-out infinite; }
+.star-med  { animation: twinkle 5s ease-in-out infinite; }
+.star-fast { animation: twinkle 3s ease-in-out infinite; }
+
 /* Cloud orb drift - large atmospheric movement */
 @keyframes cloud-drift {
   0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
@@ -142,12 +195,12 @@ body {
 .btn-cta {
   background: var(--color-interactive);
   color: white;
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2), 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-cta);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .btn-cta:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 0 32px rgba(34, 197, 94, 0.35), 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-cta-hover);
 }
 .btn-cta:active:not(:disabled) {
   transform: translateY(0);
@@ -155,7 +208,15 @@ body {
 
 /* iOS Safari fallback for sticky glass header */
 @supports not (backdrop-filter: blur(1px)) {
-  .glass-header { background: rgba(10, 10, 10, 0.5) !important; }
+  .glass-header { background: var(--glass-fallback) !important; }
+}
+
+/* Card elevation */
+.card-surface {
+  box-shadow: var(--shadow-card);
+}
+.sticky-shadow {
+  box-shadow: var(--shadow-sticky);
 }
 
 /* Staggered card entry */

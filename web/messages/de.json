@@ -22,7 +22,11 @@
     "contact": "Kontakt",
     "openMenu": "Menü öffnen",
     "closeMenu": "Menü schließen",
-    "selectCurrency": "Währung wählen"
+    "selectCurrency": "Währung wählen",
+    "theme": "Design",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel",
+    "themeSystem": "System"
   },
   "footer": {
     "builtBy": "Entwickelt von",
@@ -103,6 +107,11 @@
       "agentsChecking": "{workers} Agenten prüfen {total} Kombinationen auf Google Flights",
       "checkingRoute": "{route} am {date}",
       "checked": "{done}/{total} geprüft",
+      "findingFlights": "Flüge werden gesucht...",
+      "comparingPrices": "Preise werden verglichen...",
+      "almostReady": "Fast fertig...",
+      "showDetails": "Details anzeigen",
+      "hideDetails": "Details ausblenden",
       "almostDone": "Fast fertig...",
       "remaining": "~{seconds}s verbleibend",
       "savingYou": "Spart dir ~{time} manuelle Suche",

@@ -8,9 +8,11 @@ import { isRtl } from "../../i18n/config";
 import { AnalyticsProvider } from "../../components/AnalyticsProvider";
 import { CloudsBackground } from "../../components/CloudsBackground";
 import { CurrencyProvider } from "../../components/CurrencyProvider";
+import { ThemeProvider } from "../../components/ThemeProvider";
 import { SiteHeader } from "../../components/SiteHeader";
 import { SiteFooter } from "../../components/SiteFooter";
 import { CookieConsent } from "../../components/CookieConsent";
+import { themeScript } from "../../lib/theme-script";
 import "../globals.css";
 
 const inter = Inter({
@@ -81,8 +83,9 @@ export default async function RootLayout({
   const dir = isRtl(locale) ? "rtl" : "ltr";
 
   return (
-    <html lang={locale} dir={dir}>
+    <html lang={locale} dir={dir} suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="icon" href="/favicon.ico" sizes="48x48" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -146,6 +149,7 @@ export default async function RootLayout({
       </head>
       <body className={`${inter.variable} ${jetbrains.variable} ${spaceGrotesk.variable} antialiased min-h-screen flex flex-col`}>
         <NextIntlClientProvider messages={messages}>
+          <ThemeProvider>
           <CurrencyProvider>
           <AnalyticsProvider />
           <CloudsBackground />
@@ -157,6 +161,7 @@ export default async function RootLayout({
           <SiteFooter />
           <CookieConsent />
           </CurrencyProvider>
+          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

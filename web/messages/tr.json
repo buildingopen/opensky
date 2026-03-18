@@ -22,7 +22,11 @@
     "contact": "İletişim",
     "openMenu": "Menüyü aç",
     "closeMenu": "Menüyü kapat",
-    "selectCurrency": "Para birimi seçin"
+    "selectCurrency": "Para birimi seçin",
+    "theme": "Tema",
+    "themeLight": "Açık",
+    "themeDark": "Koyu",
+    "themeSystem": "Sistem"
   },
   "footer": {
     "builtBy": "Yapımcı",
@@ -103,6 +107,11 @@
       "agentsChecking": "{workers} ajan, Google Flights'ta {total} kombinasyonu kontrol ediyor",
       "checkingRoute": "{date} tarihinde {route}",
       "checked": "{done}/{total} kontrol edildi",
+      "findingFlights": "Uçuşlarınız aranıyor...",
+      "comparingPrices": "Havayolları arasında fiyatlar karşılaştırılıyor...",
+      "almostReady": "Neredeyse hazır...",
+      "showDetails": "Ayrıntıları göster",
+      "hideDetails": "Ayrıntıları gizle",
       "almostDone": "Neredeyse bitti...",
       "remaining": "~{seconds}sn kaldı",
       "savingYou": "Size yaklaşık {time} manuel arama süresinden tasarruf ettiriyoruz",

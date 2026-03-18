@@ -22,7 +22,11 @@
     "contact": "문의",
     "openMenu": "메뉴 열기",
     "closeMenu": "메뉴 닫기",
-    "selectCurrency": "통화 선택"
+    "selectCurrency": "통화 선택",
+    "theme": "테마",
+    "themeLight": "라이트",
+    "themeDark": "다크",
+    "themeSystem": "시스템"
   },
   "footer": {
     "builtBy": "만든 이",
@@ -103,6 +107,11 @@
       "agentsChecking": "{workers}개 에이전트가 구글 플라이트에서 {total}개 조합을 확인 중",
       "checkingRoute": "{date}의 {route} 확인 중",
       "checked": "{done}/{total} 확인 완료",
+      "findingFlights": "항공편을 찾고 있습니다...",
+      "comparingPrices": "항공사 간 가격을 비교하고 있습니다...",
+      "almostReady": "거의 완료...",
+      "showDetails": "세부 정보 표시",
+      "hideDetails": "세부 정보 숨기기",
       "almostDone": "거의 완료되었습니다...",
       "remaining": "약 {seconds}초 남음",
       "savingYou": "수동 검색 대비 약 {time}을 절약해 드리고 있습니다",

@@ -22,7 +22,11 @@
     "contact": "お問い合わせ",
     "openMenu": "メニューを開く",
     "closeMenu": "メニューを閉じる",
-    "selectCurrency": "通貨を選択"
+    "selectCurrency": "通貨を選択",
+    "theme": "テーマ",
+    "themeLight": "ライト",
+    "themeDark": "ダーク",
+    "themeSystem": "システム"
   },
   "footer": {
     "builtBy": "開発",
@@ -103,6 +107,11 @@
       "agentsChecking": "{workers}つのエージェントがGoogle Flightsで{total}の組み合わせを確認中",
       "checkingRoute": "{date}の{route}を確認中",
       "checked": "{done}/{total} 確認済み",
+      "findingFlights": "フライトを検索中...",
+      "comparingPrices": "航空会社間の料金を比較中...",
+      "almostReady": "もうすぐ完了...",
+      "showDetails": "詳細を表示",
+      "hideDetails": "詳細を非表示",
       "almostDone": "まもなく完了...",
       "remaining": "残り約{seconds}秒",
       "savingYou": "手動検索の約{time}を節約中",

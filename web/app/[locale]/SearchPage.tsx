@@ -1513,7 +1513,7 @@ function FlightCard({
     attributionParams
   );
   return (
-    <div className={`bg-[var(--color-surface)] border rounded-2xl p-5 sm:p-6 hover:border-[var(--color-interactive)]/30 hover:-translate-y-0.5 transition-all duration-200 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.04)] ${
+    <div className={`bg-[var(--color-surface)] border rounded-2xl p-5 sm:p-6 hover:border-[var(--color-interactive)]/30 hover:-translate-y-0.5 transition-all duration-200 card-surface ${
       label === "recommended"
         ? "border-[var(--color-interactive)]/40 ring-1 ring-[var(--color-interactive)]/20"
         : "border-[var(--color-border)]"
@@ -1733,7 +1733,7 @@ function RoundTripCard({
   const { outbound, inbound, total_price, currency, risk_level } = result;
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 hover:border-[var(--color-interactive)]/30 hover:-translate-y-0.5 transition-all duration-200 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.04)]">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 hover:border-[var(--color-interactive)]/30 hover:-translate-y-0.5 transition-all duration-200 card-surface">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <div className="flex gap-3">
@@ -1777,72 +1777,54 @@ interface ProgressInfo {
 
 function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSearch | null; progress: ProgressInfo | null; filteredCount: number }) {
   const t = useTranslations("search");
-  const locale = useLocale();
-  const totalRoutes = progress?.total ?? parsed?.total_routes ?? 0;
-  const workers = Math.min(16, totalRoutes);
-  const manualMinutes = Math.ceil(totalRoutes * 2.5);
-  const manualLabel = manualMinutes >= 60
-    ? `${Math.floor(manualMinutes / 60)}h ${manualMinutes % 60}min`
-    : `${manualMinutes} min`;
+  const pct = progress?.total ? (progress.done / progress.total) * 100 : 0;
+  const [showDetails, setShowDetails] = useState(false);
 
-  const estimateSeconds = progress && progress.total > 0
-    ? Math.ceil((progress.total - progress.done) / 3)
-    : totalRoutes
-      ? Math.ceil(totalRoutes / 3)
-      : null;
-
-  const timeLabel = estimateSeconds != null
-    ? estimateSeconds < 5
-      ? t("loading.almostDone")
-      : t("loading.remaining", { seconds: estimateSeconds })
-    : null;
+  // Rotate through friendly messages based on progress %
+  const message = !parsed
+    ? t("loading.understanding")
+    : pct < 30
+      ? t("loading.findingFlights")
+      : pct < 70
+        ? t("loading.comparingPrices")
+        : t("loading.almostReady");
 
   return (
-    <div className="text-center py-12">
-      <div className="inline-flex items-center gap-3 mb-4">
-        <div className="w-2 h-2 rounded-full bg-[var(--color-interactive)] animate-pulse" />
-        <div className="w-2 h-2 rounded-full bg-[var(--color-interactive)] animate-pulse" style={{ animationDelay: "0.3s" }} />
-        <div className="w-2 h-2 rounded-full bg-[var(--color-interactive)] animate-pulse" style={{ animationDelay: "0.6s" }} />
+    <div className="text-center py-10">
+      <p className="text-base text-[var(--color-text)]">{message}</p>
+
+      {/* Smooth progress bar */}
+      <div className="mt-4 mx-auto max-w-sm h-1.5 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+        {parsed && progress ? (
+          <div
+            className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${pct}%` }}
+          />
+        ) : (
+          <div className="h-full bg-[var(--color-interactive)] opacity-60 rounded-full shimmer-bar" />
+        )}
       </div>
-      {progress && parsed ? (
-        <>
-          <p className="text-base font-medium text-[var(--color-text)]">
-            {t("loading.agentsChecking", { workers, total: progress.total })}
-          </p>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1 font-mono">{t("loading.checkingRoute", { route: progress.route, date: formatDate(progress.date, locale) })}</p>
-          <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-            <div className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-300" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
-          </div>
-          <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
-            {t("loading.checked", { done: progress.done, total: progress.total })} {timeLabel ? `· ${timeLabel}` : ""}
-          </p>
-          {manualMinutes >= 2 && (
-            <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
-              {t("loading.savingYou", { time: manualLabel })}
-            </p>
-          )}
-          {filteredCount > 0 && (
-            <p className="text-[11px] text-[var(--color-caution)] mt-1">{t("loading.safetyFiltered", { count: filteredCount })}</p>
-          )}
-        </>
-      ) : parsed ? (
-        <>
-          <p className="text-base font-medium text-[var(--color-text)]">
-            {t("loading.agentsChecking", { workers, total: totalRoutes })}
-          </p>
-          <p className="text-sm text-[var(--color-text-muted)] mt-2">
-            {manualMinutes >= 2
-              ? t("loading.wouldTake", { time: manualLabel })
-              : t("loading.fetchingPrices")}
-          </p>
-        </>
-      ) : (
-        <>
-          <p className="text-[var(--color-text-muted)]">{t("loading.understanding")}</p>
-          <div className="mt-4 mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-            <div className="h-full bg-[var(--color-interactive)] opacity-60 rounded-full shimmer-bar" />
-          </div>
-        </>
+
+      {/* Safety filtered notice */}
+      {filteredCount > 0 && (
+        <p className="text-xs text-[var(--color-caution)] mt-3">
+          {t("loading.safetyFiltered", { count: filteredCount })}
+        </p>
+      )}
+
+      {/* Optional details toggle for power users */}
+      {parsed && progress && (
+        <button
+          onClick={() => setShowDetails(v => !v)}
+          className="text-[11px] text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)] mt-3 transition-colors"
+        >
+          {showDetails ? t("loading.hideDetails") : t("loading.showDetails")}
+        </button>
+      )}
+      {showDetails && progress && (
+        <p className="text-[11px] text-[var(--color-text-muted)] mt-1 tabular-nums">
+          {t("loading.checked", { done: progress.done, total: progress.total })}
+        </p>
       )}
     </div>
   );
@@ -2075,7 +2057,7 @@ function ScanSummaryExpanded({
                     {routeRows
                       ? routeRows.map((row) => (
                           <tr key={`${row.origin}-${row.dest}`}>
-                            <td className="px-3 py-1.5 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
+                            <td className="px-3 py-1.5 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] sticky-shadow">
                               {row.origin} → {row.dest} <span className="font-sans text-[var(--color-text-muted)] hidden sm:inline">{airportNames[row.dest] || ""}</span>
                             </td>
                             {price_matrix.dates.map((dt) => {
@@ -2099,7 +2081,7 @@ function ScanSummaryExpanded({
                         ))
                       : price_matrix.destinations.map((dest) => (
                           <tr key={dest}>
-                            <td className="px-3 py-1.5 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
+                            <td className="px-3 py-1.5 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] sticky-shadow">
                               {dest} <span className="font-sans text-[var(--color-text-muted)] hidden sm:inline">{airportNames[dest] || ""}</span>
                             </td>
                             {price_matrix.dates.map((dt) => {
@@ -2129,7 +2111,7 @@ function ScanSummaryExpanded({
           {/* Color legend */}
           <div className="px-4 py-2.5 border-t border-[var(--color-border)] flex items-center gap-2">
             <span className="text-xs text-[var(--color-text-muted)]">{t("compare.cheapest")}</span>
-            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgba(34,197,94,0.9), rgba(54,117,54,0.55))" }} />
+            <div className="flex-1 h-2 rounded-full" style={{ background: "linear-gradient(to right, var(--color-interactive), var(--color-interactive-hover))" }} />
             <span className="text-xs text-[var(--color-text-muted)]">{t("compare.mostExpensive")}</span>
           </div>
         </div>
@@ -3322,7 +3304,7 @@ function HomePage() {
             <div className="bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/30 rounded-lg px-4 py-3 text-sm text-[var(--color-danger)]">
               {error}
               {rateLimitCountdown > 0 && (
-                <span className="block mt-1 text-xs font-mono">
+                <span className="block mt-1 text-xs tabular-nums">
                   {t("rateLimit.countdown", { minutes: Math.floor(rateLimitCountdown / 60), seconds: String(rateLimitCountdown % 60).padStart(2, "0") })}
                 </span>
               )}

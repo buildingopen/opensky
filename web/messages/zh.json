@@ -22,7 +22,11 @@
     "contact": "联系我们",
     "openMenu": "打开菜单",
     "closeMenu": "关闭菜单",
-    "selectCurrency": "选择货币"
+    "selectCurrency": "选择货币",
+    "theme": "主题",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeSystem": "跟随系统"
   },
   "footer": {
     "builtBy": "开发者",
@@ -103,6 +107,11 @@
       "agentsChecking": "{workers}个智能体正在谷歌航班上检查{total}个组合",
       "checkingRoute": "正在查询{date}的{route}",
       "checked": "已查询 {done}/{total}",
+      "findingFlights": "正在搜索航班...",
+      "comparingPrices": "正在比较各航空公司的价格...",
+      "almostReady": "即将完成...",
+      "showDetails": "显示详情",
+      "hideDetails": "隐藏详情",
       "almostDone": "即将完成...",
       "remaining": "剩余约{seconds}秒",
       "savingYou": "为你节省约{time}的手动搜索时间",

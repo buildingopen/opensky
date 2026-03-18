@@ -22,7 +22,11 @@
     "contact": "संपर्क",
     "openMenu": "मेनू खोलें",
     "closeMenu": "मेनू बंद करें",
-    "selectCurrency": "मुद्रा चुनें"
+    "selectCurrency": "मुद्रा चुनें",
+    "theme": "थीम",
+    "themeLight": "लाइट",
+    "themeDark": "डार्क",
+    "themeSystem": "सिस्टम"
   },
   "footer": {
     "builtBy": "निर्माता",
@@ -103,6 +107,11 @@
       "agentsChecking": "{workers} एजेंट Google Flights पर {total} कॉम्बिनेशन जांच रहे हैं",
       "checkingRoute": "{date} पर {route}",
       "checked": "{done}/{total} जांचे गए",
+      "findingFlights": "आपकी उड़ानें खोज रहे हैं...",
+      "comparingPrices": "एयरलाइनों में कीमतों की तुलना कर रहे हैं...",
+      "almostReady": "लगभग तैयार...",
+      "showDetails": "विवरण दिखाएं",
+      "hideDetails": "विवरण छिपाएं",
       "almostDone": "लगभग हो गया...",
       "remaining": "~{seconds}s शेष",
       "savingYou": "आपकी ~{time} की मैन्युअल खोज बचा रहे हैं",
