@@ -1790,8 +1790,8 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
   return (
     <div className="py-10 space-y-6">
       <div className="flex flex-col items-center gap-3">
-        {/* Animated plane icon */}
-        <svg viewBox="0 0 24 24" className="w-8 h-8 text-[var(--color-interactive)] animate-pulse" fill="none" stroke="currentColor" strokeWidth="1.5">
+        {/* Floating plane icon */}
+        <svg viewBox="0 0 24 24" className="w-8 h-8 text-[var(--color-interactive)] plane-float" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
         </svg>
         <p className="text-base text-[var(--color-text)]">{message}</p>
@@ -1809,22 +1809,20 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
         )}
       </div>
 
-      {/* Skeleton preview cards */}
-      {parsed && (
-        <div className="max-w-2xl mx-auto space-y-3 opacity-40">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-4 animate-pulse" style={{ animationDelay: `${i * 150}ms` }}>
-              <div className="flex items-center justify-between">
-                <div className="space-y-2 flex-1">
-                  <div className="h-3 bg-[var(--color-surface-2)] rounded w-2/3" />
-                  <div className="h-2.5 bg-[var(--color-surface-2)] rounded w-1/3" />
-                </div>
-                <div className="h-5 bg-[var(--color-surface-2)] rounded w-16" />
+      {/* Skeleton preview cards - always visible for instant feedback */}
+      <div className="max-w-2xl mx-auto space-y-3 opacity-30">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-4 card-surface animate-pulse" style={{ animationDelay: `${i * 200}ms` }}>
+            <div className="flex items-center justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="h-3 bg-[var(--color-surface-2)] rounded w-2/3" />
+                <div className="h-2.5 bg-[var(--color-surface-2)] rounded w-1/3" />
               </div>
+              <div className="h-5 bg-[var(--color-surface-2)] rounded w-16" />
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
 
       {filteredCount > 0 && (
         <p className="text-xs text-[var(--color-caution)] text-center">
@@ -3276,7 +3274,7 @@ function HomePage() {
                   trackEvent("example_prompt_clicked", { prompt: ex });
                   setTimeout(() => inputRef.current?.focus(), 0);
                 }}
-                className="text-[13px] px-4 py-2 rounded-full border border-[var(--color-interactive)]/20 bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] hover:border-[var(--color-interactive)]/40 transition-all duration-200 whitespace-nowrap hover:-translate-y-px"
+                className="text-[13px] px-4 py-2 rounded-full bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] transition-all duration-200 whitespace-nowrap hover:-translate-y-px card-surface"
               >
                 {ex}
               </button>

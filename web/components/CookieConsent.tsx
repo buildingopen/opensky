@@ -31,7 +31,7 @@ export function CookieConsent() {
   };
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-50 p-4 bg-[var(--color-surface)] border-t border-[var(--color-border)] shadow-lg">
+    <div className="fixed bottom-0 inset-x-0 z-50 p-4 bg-[var(--color-surface)] border-t border-[var(--color-border)] shadow-lg card-surface">
       <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-3 text-sm text-[var(--color-text-muted)]">
         <p className="flex-1">{t("message")}</p>
         <div className="flex gap-2 shrink-0">
