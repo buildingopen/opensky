@@ -2259,6 +2259,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
 
   const collapsedDates = dates.length <= 2 ? dates.map((d) => formatDate(d, locale)).join(", ") : `${formatDate(dates[0], locale)} + ${t("parsed.moreDates", { count: dates.length - 1 })}`;
   const canExpandDates = dates.length > 2;
+  const routeCount = parsed.total_routes || origins.length * destinations.length * dates.length;
 
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 space-y-2">
@@ -2305,6 +2306,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
         {parsed.safe_only && (
           <span className="px-1.5 py-0.5 rounded bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 text-[var(--color-safe)] font-medium">{t("parsed.safeOnly")}</span>
         )}
+        {routeCount > 1 && <span>{t("parsed.combinations", { count: routeCount })}</span>}
         {totalCount != null && totalCount > 0 && !parsed.safe_only && (
           <span className={`px-1.5 py-0.5 rounded font-medium ${
             safeCount === totalCount
@@ -3119,7 +3121,7 @@ function HomePage() {
                 </button>
               ) : (
                 <button
-                  onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setPrompt(""); setTimeout(() => inputRef.current?.focus(), 0); }}
+                  onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 0); }}
                   aria-label={tc("newSearch")}
                   className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-white/[0.08] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-white/[0.15] transition-all duration-200"
                 >
@@ -3805,7 +3807,6 @@ function HomePage() {
               onClick={() => {
                 trackEvent("new_search_clicked", { previous_results: flights.length });
                 setPhase("idle");
-                setPrompt("");
                 setFlights([]);
                 setReturnFlights(null);
                 setRoundTripResults(null);
@@ -3814,6 +3815,7 @@ function HomePage() {
                 setForm({ from: "", to: "", depart: "", returnDate: "", roundTrip: false, flexibleDates: false, maxPrice: "", directOnly: false, cabin: "economy", safeOnly: true });
                 setAttributionParams((prev) => ({ ...prev, ref: "organic", utm_source: undefined }));
                 window.scrollTo({ top: 0, behavior: "smooth" });
+                setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 100);
               }}
               className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-interactive)] transition-colors"
             >

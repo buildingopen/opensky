@@ -236,7 +236,8 @@
       "moreDates": "+ {count} dates supplémentaires",
       "roundTripReturn": "Aller-retour",
       "moreReturnDates": "+ {count} de plus",
-      "airportCount": "{count, plural, one {# aéroport} other {# aéroports}}"
+      "airportCount": "{count, plural, one {# aéroport} other {# aéroports}}",
+      "combinations": "{count, plural, one {# combinaison} other {# combinaisons}} recherchées"
     },
     "compare": {
       "compareAll": "Comparer toutes les options ({flights, plural, one {1 vol} other {{flights} vols}}, {destinations, plural, one {1 destination} other {{destinations} destinations}})",

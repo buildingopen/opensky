@@ -236,7 +236,8 @@
       "moreDates": "+ {count}개 추가 날짜",
       "roundTripReturn": "왕복",
       "moreReturnDates": "+ {count}개 더",
-      "airportCount": "{count, plural, one {#개 공항} other {#개 공항}}"
+      "airportCount": "{count, plural, one {#개 공항} other {#개 공항}}",
+      "combinations": "{count}개 조합 검색됨"
     },
     "compare": {
       "compareAll": "모든 옵션 비교 ({flights, plural, one {1개 항공편} other {{flights}개 항공편}}, {destinations, plural, one {1개 목적지} other {{destinations}개 목적지}})",
