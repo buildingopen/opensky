@@ -382,17 +382,21 @@ const REGION_LABELS: Record<string, string> = Object.fromEntries([
   ["caraïbes", "Caribbean"], ["scandinavie", "Scandinavia"], ["méditerranée", "Mediterranean"],
   ["moyen-orient", "Middle East"], ["océanie", "Oceania"],
   // Italian
-  ["ovunque", "Anywhere"], ["sud america", "South America"], ["nord america", "North America"],
+  ["ovunque", "Anywhere"], ["europa", "Europe"], ["asia", "Asia"], ["africa", "Africa"],
+  ["sud america", "South America"], ["nord america", "North America"],
   ["sud-est asiatico", "Southeast Asia"], ["america centrale", "Central America"],
-  ["caraibi", "Caribbean"], ["medio oriente", "Middle East"],
+  ["caraibi", "Caribbean"], ["scandinavia", "Scandinavia"], ["mediterraneo", "Mediterranean"],
+  ["medio oriente", "Middle East"], ["oceania", "Oceania"],
   // Portuguese
-  ["qualquer lugar", "Anywhere"], ["ásia", "Asia"], ["américa do sul", "South America"],
-  ["américa do norte", "North America"], ["sudeste asiático", "Southeast Asia"],
-  ["américa central", "Central America"], ["médio oriente", "Middle East"],
+  ["qualquer lugar", "Anywhere"], ["ásia", "Asia"], ["áfrica", "Africa"],
+  ["américa do sul", "South America"], ["américa do norte", "North America"],
+  ["sudeste asiático", "Southeast Asia"], ["américa central", "Central America"],
+  ["caribe", "Caribbean"], ["escandinávia", "Scandinavia"], ["mediterrâneo", "Mediterranean"],
+  ["médio oriente", "Middle East"], ["oceânia", "Oceania"],
   // Turkish
-  ["her yer", "Anywhere"], ["avrupa", "Europe"], ["asya", "Asia"],
+  ["her yer", "Anywhere"], ["avrupa", "Europe"], ["asya", "Asia"], ["afrika", "Africa"],
   ["güneydoğu asya", "Southeast Asia"], ["karayipler", "Caribbean"],
-  ["orta doğu", "Middle East"], ["iskandinavya", "Scandinavia"],
+  ["orta doğu", "Middle East"], ["iskandinavya", "Scandinavia"], ["akdeniz", "Mediterranean"],
   // CJK
   ["任何地方", "Anywhere"], ["欧洲", "Europe"], ["亚洲", "Asia"], ["非洲", "Africa"],
   ["南美洲", "South America"], ["北美洲", "North America"], ["东南亚", "Southeast Asia"],

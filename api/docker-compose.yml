@@ -1,0 +1,25 @@
+services:
+  api:
+    build: .
+    container_name: opensky-api
+    restart: always
+    ports:
+      - "127.0.0.1:8090:8090"
+    volumes:
+      - /opt/opensky/alerts.db:/data/alerts.db
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SKYROUTE_DUFFEL_TOKEN=${SKYROUTE_DUFFEL_TOKEN}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RATE_LIMIT_PER_HOUR=${RATE_LIMIT_PER_HOUR:-10}
+      - RATE_LIMIT_WHITELIST=${RATE_LIMIT_WHITELIST}
+      - SKYROUTE_PROXY=${SKYROUTE_PROXY}
+      - ALERTS_DB_PATH=/data/alerts.db
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          memory: 256M
