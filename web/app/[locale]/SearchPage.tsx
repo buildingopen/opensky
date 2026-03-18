@@ -743,7 +743,8 @@ function detectDate(lower: string): { text: string; start: number; end: number; 
   if (inM && inM.index !== undefined) return { text: inM[0], start: inM.index, end: inM.index + inM[0].length, resolved: resolveDate(inM[0]) || undefined };
   const monthRe = new RegExp(`\\b(${allMonthNamesStr})\\b`, "i");
   const moM = monthRe.exec(lower);
-  if (moM && moM.index !== undefined) return { text: moM[0], start: moM.index, end: moM.index + moM[0].length, resolved: resolveDate(moM[0]) || undefined };
+  // Skip ambiguous standalone "may" (too common as English verb); compound "in may" / "may 15" handled above
+  if (moM && moM.index !== undefined && moM[0].toLowerCase() !== "may") return { text: moM[0], start: moM.index, end: moM.index + moM[0].length, resolved: resolveDate(moM[0]) || undefined };
   return null;
 }
 
@@ -842,10 +843,10 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/\b(sicher|sichere)\b/i, "Safe routes only"],
       [/\b(sicuro|sicura)\b/i, "Safe routes only"],
       [/\b(güvenli)\b/i, "Safe routes only"],
-      [/\b(directo|directa)\b/i, "Direct flights only"],
+      [/\b(directos?|directas?)\b/i, "Direct flights only"],
       [/\b(direkt)\b/i, "Direct flights only"],
-      [/\b(diretto|diretta)\b/i, "Direct flights only"],
-      [/\b(direto|direta)\b/i, "Direct flights only"],
+      [/\b(dirett[oaie])\b/i, "Direct flights only"],
+      [/\b(diretos?|diretas?)\b/i, "Direct flights only"],
       [/(सीधी(?:\s+(?:उड़ान|फ़?्लाइट))?)/i, "Direct flights only"],
       [/(مباشر(?:ة)?)/i, "Direct flights only"],
       // One-way
