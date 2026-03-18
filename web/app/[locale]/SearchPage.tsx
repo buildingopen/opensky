@@ -1051,6 +1051,7 @@ function InlineHighlight({ text, airports, resolvedDate, tooltip }: { text: stri
   const [show, setShow] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const isTouching = useRef(false);
   const hasContent = airports.length > 0 || !!resolvedDate || !!tooltip;
 
   useEffect(() => {
@@ -1091,9 +1092,12 @@ function InlineHighlight({ text, airports, resolvedDate, tooltip }: { text: stri
     <span
       ref={ref}
       className="inline pointer-events-auto"
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onClick={(e) => { e.stopPropagation(); setShow(v => !v); }}
+      onTouchStart={() => { isTouching.current = true; }}
+      onTouchEnd={(e) => { e.preventDefault(); isTouching.current = false; setShow(v => !v); }}
+      onTouchCancel={() => { isTouching.current = false; }}
+      onMouseEnter={() => { if (!isTouching.current) setShow(true); }}
+      onMouseLeave={() => { if (!isTouching.current) setShow(false); }}
+      onClick={(e) => { e.stopPropagation(); }}
     >
       <span className="text-[var(--color-interactive)] cursor-help border-b border-dotted border-[var(--color-interactive)]/50">{text}</span>
       {show && (
@@ -1248,12 +1252,16 @@ function flightDisplayDate(flight: FlightOut): string {
 function priceToColor(price: number | null, min: number, max: number): string {
   if (price == null || min === max) return "transparent";
   const ratio = Math.min(1, Math.max(0, (price - min) / (max - min)));
-  // Monochromatic green scale: bright green (cheap) -> muted green (expensive)
-  const r = Math.round(34 + ratio * 20);
-  const g = Math.round(197 - ratio * 80);
-  const b = Math.round(94 - ratio * 40);
-  const a = 0.9 - ratio * 0.35;
-  return `rgba(${r},${g},${b},${a})`;
+  // Green (cheap) -> Yellow (mid) -> Amber (expensive)
+  const r = Math.round(34 + ratio * 191);
+  const g = Math.round(197 - ratio * 38);
+  const b = Math.round(94 - ratio * 73);
+  return `rgba(${r},${g},${b},0.85)`;
+}
+function priceTextColor(_price: number | null, _min: number, _max: number): string {
+  // Dark text passes WCAG AA (5.2-5.7:1) on all cells in the green-to-amber range;
+  // white text fails (3.1-3.4:1) regardless of ratio.
+  return "#1a1a1a";
 }
 
 function safeUrl(url: string): string | null {
@@ -1996,6 +2004,7 @@ function ScanSummaryExpanded({
             {sortedDests.map((f, i) => {
               const pct = Math.max(8, (f.price / barMax) * 100);
               const barColor = priceToColor(f.price, sortedDests[0].price, barMax);
+              const barTextColor = priceTextColor(f.price, sortedDests[0].price, barMax);
               const gfUrl = safeUrl(googleFlightsUrl(f.origin, f.destination, f.date, f.currency, cabin, f.legs));
               return (
                 <div key={i} className="flex items-center gap-3 text-sm">
@@ -2005,7 +2014,7 @@ function ScanSummaryExpanded({
                   <span className="text-[var(--color-text-muted)] text-xs truncate hidden sm:inline w-24 shrink-0">{airportNames[f.destination] || ""}</span>
                   <div className="flex-1 min-w-0">
                     <div className="h-5 rounded" style={{ width: `${pct}%`, backgroundColor: barColor, minWidth: "2rem" }}>
-                      <span className="px-1.5 text-xs font-semibold text-white leading-5 whitespace-nowrap">{sym}{Math.round(f.price)}</span>
+                      <span className="px-1.5 text-xs font-semibold leading-5 whitespace-nowrap" style={{ color: barTextColor }}>{sym}{Math.round(f.price)}</span>
                     </div>
                   </div>
                   <span className="text-[var(--color-text-muted)] text-xs shrink-0">{formatDate(f.date)}</span>
@@ -2072,11 +2081,12 @@ function ScanSummaryExpanded({
                             {price_matrix.dates.map((dt) => {
                               const price = row.byDate[dt] ?? null;
                               const bg = priceToColor(price, globalMin, globalMax);
+                              const fg = priceTextColor(price, globalMin, globalMax);
                               const gfLink = `https://www.google.com/travel/flights?q=flights+from+${row.origin}+to+${row.dest}+on+${dt}`;
                               return (
                                 <td key={dt} className="px-1 py-1">
                                   {price != null ? (
-                                    <a href={gfLink} target="_blank" rel="noopener noreferrer" className="block px-2 py-1.5 text-center text-xs font-mono font-semibold rounded-md transition-opacity hover:opacity-80" style={{ backgroundColor: bg, color: "#fff" }}>
+                                    <a href={gfLink} target="_blank" rel="noopener noreferrer" className="block px-2 py-1.5 text-center text-xs font-mono font-semibold rounded-md transition-opacity hover:opacity-80" style={{ backgroundColor: bg, color: fg }}>
                                       {sym}{Math.round(price)}
                                     </a>
                                   ) : (
@@ -2095,11 +2105,12 @@ function ScanSummaryExpanded({
                             {price_matrix.dates.map((dt) => {
                               const price = price_matrix.prices[`${dest}|${dt}`];
                               const bg = priceToColor(price, globalMin, globalMax);
+                              const fg = priceTextColor(price, globalMin, globalMax);
                               const gfLink = `https://www.google.com/travel/flights?q=flights+from+${best_destinations.find((d) => d.destination === dest)?.origin || ""}+to+${dest}+on+${dt}`;
                               return (
                                 <td key={dt} className="px-1 py-1">
                                   {price != null ? (
-                                    <a href={gfLink} target="_blank" rel="noopener noreferrer" className="block px-2 py-1.5 text-center text-xs font-mono font-semibold rounded-md transition-opacity hover:opacity-80" style={{ backgroundColor: bg, color: "#fff" }}>
+                                    <a href={gfLink} target="_blank" rel="noopener noreferrer" className="block px-2 py-1.5 text-center text-xs font-mono font-semibold rounded-md transition-opacity hover:opacity-80" style={{ backgroundColor: bg, color: fg }}>
                                       {sym}{Math.round(price)}
                                     </a>
                                   ) : (
@@ -2236,21 +2247,39 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
   const sym = currencySymbol(currency);
   const isRoundTrip = return_dates && return_dates.length > 0;
   const [datesExpanded, setDatesExpanded] = useState(false);
+  const [originsExpanded, setOriginsExpanded] = useState(false);
+  const [destsExpanded, setDestsExpanded] = useState(false);
 
   const originItems = origins.map((o) => airport_names?.[o] ? `${airport_names[o]} (${o})` : o);
-  const originLabel = originItems.length <= 2 ? originItems.join(", ") : `${originItems.slice(0, 2).join(", ")} +${originItems.length - 2}`;
+  const canExpandOrigins = originItems.length > 2;
+  const originLabel = originsExpanded || originItems.length <= 2 ? originItems.join(", ") : `${originItems.slice(0, 2).join(", ")} +${originItems.length - 2}`;
   const destItems = destinations.map((d) => airport_names?.[d] ? `${airport_names[d]} (${d})` : d);
-  const destLabel = destItems.length <= 2 ? destItems.join(", ") : `${destItems.slice(0, 2).join(", ")} +${destItems.length - 2}`;
+  const canExpandDests = destItems.length > 2;
+  const destLabel = destsExpanded || destItems.length <= 2 ? destItems.join(", ") : `${destItems.slice(0, 2).join(", ")} +${destItems.length - 2}`;
 
   const collapsedDates = dates.length <= 2 ? dates.map((d) => formatDate(d, locale)).join(", ") : `${formatDate(dates[0], locale)} + ${t("parsed.moreDates", { count: dates.length - 1 })}`;
   const canExpandDates = dates.length > 2;
 
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 space-y-2">
-      <div className="flex items-center gap-2 text-sm">
-        <span className="font-medium text-[var(--color-text)]">{originLabel}</span>
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        {canExpandOrigins ? (
+          <button onClick={() => setOriginsExpanded(!originsExpanded)} className="font-medium text-[var(--color-text)] hover:text-[var(--color-interactive)] transition-colors cursor-pointer inline-flex items-center gap-1.5">
+            {originsExpanded ? originItems.join(", ") : originItems.slice(0, 2).join(", ")}
+            {!originsExpanded && <span className="text-xs px-1.5 py-0.5 rounded-full bg-[var(--color-interactive)]/15 text-[var(--color-interactive)]">+{originItems.length - 2}</span>}
+          </button>
+        ) : (
+          <span className="font-medium text-[var(--color-text)]">{originLabel}</span>
+        )}
         <span className="text-[var(--color-text-muted)]">→</span>
-        <span className="font-medium text-[var(--color-text)]">{destLabel}</span>
+        {canExpandDests ? (
+          <button onClick={() => setDestsExpanded(!destsExpanded)} className="font-medium text-[var(--color-text)] hover:text-[var(--color-interactive)] transition-colors cursor-pointer inline-flex items-center gap-1.5">
+            {destsExpanded ? destItems.join(", ") : destItems.slice(0, 2).join(", ")}
+            {!destsExpanded && <span className="text-xs px-1.5 py-0.5 rounded-full bg-[var(--color-interactive)]/15 text-[var(--color-interactive)]">+{destItems.length - 2}</span>}
+          </button>
+        ) : (
+          <span className="font-medium text-[var(--color-text)]">{destLabel}</span>
+        )}
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
         {canExpandDates ? (
@@ -2417,7 +2446,6 @@ function HomePage() {
   const [rtShowCount, setRtShowCount] = useState(5);
   const [rateLimitReset, setRateLimitReset] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
-  const [shareCTADismissed, setShareCTADismissed] = useState(false);
   const [showAlertPopup, setShowAlertPopup] = useState(false);
   const [alertPopupDismissed, setAlertPopupDismissed] = useState(false);
   const [popupEmail, setPopupEmail] = useState("");
@@ -2429,11 +2457,19 @@ function HomePage() {
   const [expansionInfo, setExpansionInfo] = useState<string | null>(null);
   const [expandProgress, setExpandProgress] = useState<{ done: number; total: number } | null>(null);
   const expandAbortRef = useRef<AbortController | null>(null);
+  const expandParsedRef = useRef<ParsedSearch | null>(null);
+  // Auto-dismiss expand result banner after 5s
+  useEffect(() => {
+    if (expandPhase !== "done") return;
+    const timer = setTimeout(() => setExpandPhase("idle"), 5000);
+    return () => clearTimeout(timer);
+  }, [expandPhase]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const savedSearches = useSavedSearches();
   const [minutesSaved, setMinutesSaved] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   const hasResults = phase === "done" || phase === "searching" || phase === "parsing";
   const [extraAirportNames, setExtraAirportNames] = useState<Record<string, string>>({});
@@ -2445,6 +2481,7 @@ function HomePage() {
   }, [searchMode]);
 
 
+  useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
     try { setMinutesSaved(parseInt(localStorage.getItem("flyfast_minutes_saved") || "0", 10)); } catch {}
   }, []);
@@ -2587,6 +2624,7 @@ function HomePage() {
     setExpansionInfo(null);
     setExpandProgress(null);
     expandAbortRef.current?.abort();
+    expandParsedRef.current = null;
     setRtShowCount(5);
 
     // Update browser URL so refresh/back restores the search (C6)
@@ -2756,8 +2794,8 @@ function HomePage() {
     setExpandError(null);
     setExpansionInfo(null);
     setExpandProgress(null);
-    // Scroll to top of results so user sees the progress bar
-    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Scroll to top so user sees the progress bar
+    window.scrollTo({ top: 0, behavior: "smooth" });
     trackEvent("expand_search_clicked", { original_results: flights.length });
 
     const controller = new AbortController();
@@ -2815,6 +2853,7 @@ function HomePage() {
             const msg = JSON.parse(line.slice(6));
             if (msg.type === "parsed") {
               if (msg.expansion_info) setExpansionInfo(msg.expansion_info);
+              if (msg.parsed) expandParsedRef.current = msg.parsed as ParsedSearch;
             } else if (msg.type === "progress") {
               setExpandProgress({ done: msg.done, total: msg.total });
             } else if (msg.type === "results") {
@@ -2852,6 +2891,21 @@ function HomePage() {
               }
 
               setExpandPhase("done");
+              // Merge expanded airports/dates into parsed config header
+              if (expandParsedRef.current) {
+                const exp = expandParsedRef.current;
+                setParsed(prev => {
+                  if (!prev) return exp;
+                  const mergedOrigins = [...new Set([...prev.origins, ...exp.origins])];
+                  const mergedDests = [...new Set([...prev.destinations, ...exp.destinations])];
+                  const mergedDates = [...new Set([...prev.dates, ...exp.dates])].sort();
+                  const mergedReturnDates = [...new Set([...(prev.return_dates || []), ...(exp.return_dates || [])])].sort();
+                  const mergedNames = { ...prev.airport_names, ...exp.airport_names };
+                  return { ...prev, origins: mergedOrigins, destinations: mergedDests, dates: mergedDates, return_dates: mergedReturnDates, airport_names: mergedNames };
+                });
+                expandParsedRef.current = null;
+              }
+              window.scrollTo({ top: 0, behavior: "smooth" });
               trackEvent("expand_search_results", { new_flights: expandedFlights.length, new_rt: expandedRT.length });
             } else if (msg.type === "error") {
               setExpandError(msg.detail || t("expand.failed"));
@@ -3251,7 +3305,7 @@ function HomePage() {
         )}
 
         {/* Time saved */}
-        {phase === "idle" && flights.length === 0 && minutesSaved > 0 && (
+        {phase === "idle" && flights.length === 0 && mounted && minutesSaved > 0 && (
           <p className="text-[11px] text-[var(--color-text-muted)]/50 mt-3 text-center">
             {t("timeSaved", { time: minutesSaved >= 60 ? `${Math.floor(minutesSaved / 60)}h ${minutesSaved % 60}m` : `${minutesSaved} min` })}
           </p>
@@ -3646,38 +3700,44 @@ function HomePage() {
                 )}
 
 
-                {/* Expand search */}
-                {parsed && phase === "done" && flights.length > 0 && (
+                {/* Expand search - single container, content swaps */}
+                {parsed && phase === "done" && flights.length > 0 && expandPhase !== "expanding" && (
                   <div className="mt-6">
-                    {expandPhase === "idle" && (
-                      <button
-                        onClick={expandSearch}
-                        className="w-full flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 hover:border-[var(--color-interactive)]/40 transition-colors group"
-                      >
-                        <div className="text-start">
-                          <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-interactive)] transition-colors">{t("expand.expandSearch")}</span>
-                          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{t("expand.findMore")}</p>
-                        </div>
+                    <button
+                      onClick={expandPhase === "idle" ? expandSearch : undefined}
+                      disabled={expandPhase !== "idle"}
+                      className={`w-full flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 transition-colors ${
+                        expandPhase === "idle" ? "hover:border-[var(--color-interactive)]/40 cursor-pointer group" : "cursor-default"
+                      }`}
+                    >
+                      <div className="text-start">
+                        {expandPhase === "idle" && (
+                          <>
+                            <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-interactive)] transition-colors">{t("expand.expandSearch")}</span>
+                            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{t("expand.findMore")}</p>
+                          </>
+                        )}
+                        {expandPhase === "done" && expandError && (
+                          <span className="text-sm text-[var(--color-caution)]">{expandError}</span>
+                        )}
+                        {expandPhase === "done" && !expandError && expandCount > 0 && (
+                          <span className="text-sm text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount })}</span>
+                        )}
+                        {expandPhase === "done" && !expandError && expandCount === 0 && (
+                          <span className="text-sm text-[var(--color-text-muted)]">{t("expand.noNewFlights")}</span>
+                        )}
+                      </div>
+                      {expandPhase === "idle" && (
                         <svg viewBox="0 0 20 20" className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-interactive)] transition-colors shrink-0" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
                         </svg>
-                      </button>
-                    )}
-                    {expandPhase === "done" && expandError && (
-                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
-                        <span className="text-[var(--color-caution)]">{expandError}</span>
-                      </div>
-                    )}
-                    {expandPhase === "done" && !expandError && expandCount > 0 && (
-                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
-                        <span className="text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount })}</span>
-                      </div>
-                    )}
-                    {expandPhase === "done" && !expandError && expandCount === 0 && (
-                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
-                        <span className="text-[var(--color-text-muted)]">{t("expand.noNewFlights")}</span>
-                      </div>
-                    )}
+                      )}
+                      {expandPhase === "done" && !expandError && expandCount > 0 && (
+                        <svg viewBox="0 0 20 20" className="w-4 h-4 text-[var(--color-interactive)] shrink-0" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 )}
 
@@ -3686,25 +3746,6 @@ function HomePage() {
                 {parsed && phase === "done" && flights.length > 0 && (
                   <PriceAlertSection parsed={parsed} cheapestPrice={summary?.stats?.min_price || flights[0]?.price || 0} />
                 )}
-
-                {/* Share CTA - show once per session after results */}
-                {parsed && phase === "done" && flights.length > 0 && !shareCTADismissed && (() => {
-                  const destCode = summary?.best_destinations?.[0]?.destination || flights[0]?.destination;
-                  const destName = destCode ? (airportNames[destCode] || destCode) : null;
-                  return (
-                    <div className="mt-4 flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5">
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        {destName ? t("shareCTA", { destination: destName }) : t("shareCTAGeneric")}{" "}
-                        <button onClick={() => { handleShare(); setShareCTADismissed(true); }} className="text-[var(--color-interactive)] hover:underline font-medium">
-                          {t("shareTheseResults")}
-                        </button>
-                      </p>
-                      <button onClick={() => setShareCTADismissed(true)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] shrink-0" aria-label={tc("dismiss")}>
-                        <svg viewBox="0 0 16 16" className="w-4 h-4" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"/></svg>
-                      </button>
-                    </div>
-                  );
-                })()}
 
                 {/* Bottom bar: share + trust */}
                 <div className="mt-8 pt-5 border-t border-[var(--color-border)]/50 flex flex-wrap items-center justify-between gap-3">

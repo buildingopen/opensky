@@ -281,24 +281,42 @@ export function SiteHeader() {
               </svg>
             </button>
           </div>
-          <nav className="flex flex-col py-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className="px-4 py-3 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
+          <nav className="flex flex-col py-2 flex-1">
+            {navLinks.map((link) => {
+              const icons = {
+                "/methodology": <svg viewBox="0 0 20 20" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M10 1a.75.75 0 01.75.75v1.5a3.5 3.5 0 01-1.072 2.524l-.678.633A1.5 1.5 0 008.5 7.5v.5a.75.75 0 00.75.75h1.5a.75.75 0 00.75-.75v-.5a1.5 1.5 0 00-.5-1.093l-.678-.633A3.5 3.5 0 019.25 3.25v-1.5A.75.75 0 0110 1zM8.5 10.75a.75.75 0 00-.75.75v1a.75.75 0 00.75.75h3a.75.75 0 00.75-.75v-1a.75.75 0 00-.75-.75h-3zM8.75 15a.75.75 0 000 1.5h2.5a.75.75 0 000-1.5h-2.5z"/></svg>,
+                "/safety": <svg viewBox="0 0 20 20" className="w-4 h-4 shrink-0" fill="currentColor"><path fillRule="evenodd" d="M9.661 2.237a.75.75 0 01.678 0 12.2 12.2 0 006.024 2.193.75.75 0 01.665.734c.066 2.416-.46 4.678-1.45 6.434-1.003 1.778-2.539 3.14-4.508 3.47a.75.75 0 01-.24 0c-1.97-.33-3.506-1.692-4.509-3.47C5.33 9.862 4.805 7.6 4.872 5.164a.75.75 0 01.665-.734 12.2 12.2 0 006.024-2.193zM10 6.5a.75.75 0 01.75.75v2a.75.75 0 01-1.5 0v-2A.75.75 0 0110 6.5zm.75 5.75a.75.75 0 00-1.5 0v.01a.75.75 0 001.5 0v-.01z" clipRule="evenodd"/></svg>,
+                "/contact": <svg viewBox="0 0 20 20" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.161V6a2 2 0 00-2-2H3z"/><path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z"/></svg>,
+              };
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`px-5 py-3.5 text-sm transition-colors inline-flex items-center gap-3 ${
+                    isActive
+                      ? "text-[var(--color-interactive)] bg-[var(--color-interactive)]/10 border-s-2 border-[var(--color-interactive)]"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] border-s-2 border-transparent"
+                  }`}
+                >
+                  {icons[link.href] || null}
+                  {link.label}
+                </Link>
+              );
+            })}
+
+            {/* Separator */}
+            <div className="mx-4 my-2 border-t border-[var(--color-border)]" />
+
             <a
               href="https://github.com/buildingopen/opensky"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMenuOpen(false)}
-              className="px-4 py-3 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors inline-flex items-center gap-1.5"
+              className="px-5 py-3.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors inline-flex items-center gap-3 border-s-2 border-transparent"
             >
+              <svg viewBox="0 0 16 16" className="w-4 h-4 shrink-0 fill-current"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
               GitHub
               {gitHubStars !== null && (
                 <span className="inline-flex items-center gap-1 text-[11px] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-1.5 py-0.5 rounded-full tabular-nums text-[var(--color-text-muted)]">
@@ -309,6 +327,34 @@ export function SiteHeader() {
                 </span>
               )}
             </a>
+
+            {/* Locale & Currency pickers inside panel */}
+            <div className="mt-auto px-5 py-4 border-t border-[var(--color-border)] flex items-center gap-3">
+              <div className="flex-1">
+                <label className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]/60 mb-1 block">{tLocale("switchLanguage")}</label>
+                <select
+                  value={locale}
+                  onChange={(e) => switchLocale(e.target.value)}
+                  className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-md px-2 py-1.5 text-sm text-[var(--color-text)]"
+                >
+                  {locales.map((loc) => (
+                    <option key={loc} value={loc}>{tLocale(loc)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]/60 mb-1 block">{t("selectCurrency")}</label>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-md px-2 py-1.5 text-sm text-[var(--color-text)]"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c}>{CURRENCY_SYMBOLS[c] || ""} {c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </nav>
         </div>
       </div>
