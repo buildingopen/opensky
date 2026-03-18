@@ -791,7 +791,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/(مسارات?\s+آمنة?\s+فقط|آمنة?\s+فقط)/i, "Safe routes only"],
       // Direct / nonstop
       [/\b(nonstop|non-stop|direct\s+(?:flights?\s*)?only|direct(?:\s+flights?)?)\b/i, "Direct flights only"],
-      [/(nur\s+direkt(?:fl[uü]e?ge)?|nonstop)/i, "Direct flights only"],
+      [/(nur\s+direkt(?:fl[uü]e?ge)?|direktfl[uü]e?ge?|nonstop)/i, "Direct flights only"],
       [/(solo\s+directo)/i, "Direct flights only"],
       [/((?:vols?\s+)?directs?\s+uniquement)/i, "Direct flights only"],
       [/(solo\s+dirett[io])/i, "Direct flights only"],
