@@ -3070,7 +3070,7 @@ function HomePage() {
       })()}
 
       {/* Hero - outcome-focused */}
-      <section className={`max-w-3xl mx-auto px-4 w-full transition-all duration-300 ${hasResults ? "pt-6 pb-4 text-start" : "pt-16 sm:pt-24 pb-6 text-center"}`}>
+      <section className={`max-w-3xl mx-auto px-4 w-full transition-all duration-300 ${hasResults ? "pt-6 pb-4 text-start" : "pt-10 sm:pt-16 pb-4 text-center"}`}>
         {!hasResults && (
           <h1 className="font-bold tracking-tighter leading-tight text-5xl sm:text-6xl">
             {t("heroTitle")}{" "}
@@ -3390,7 +3390,20 @@ function HomePage() {
               return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} />;
             })()}
 
-            {/* Expand search progress removed */}
+            {/* Expand search progress (inline bar, no spinner) */}
+            {expandPhase === "expanding" && (
+              <div className="mt-3 w-full rounded-lg px-4 py-3 bg-[var(--color-interactive)]/5 border border-[var(--color-interactive)]/20">
+                <span className="text-sm text-[var(--color-text)]">{expansionInfo ? t("expand.expandingInfo", { info: expansionInfo }) : t("loading.comparingPrices")}</span>
+                {expandProgress && (
+                  <div className="mt-2 h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Fix 5: Show warning if return date was before departure */}
             {searchWarning && (
@@ -3672,8 +3685,46 @@ function HomePage() {
                 )}
 
 
-                {/* Expand search removed - keeping original results as-is */}
-
+                {/* Expand search */}
+                {parsed && phase === "done" && flights.length > 0 && expandPhase !== "expanding" && (
+                  <div className="mt-6">
+                    <button
+                      onClick={expandPhase === "idle" ? expandSearch : undefined}
+                      disabled={expandPhase !== "idle"}
+                      className={`w-full flex items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 transition-colors ${
+                        expandPhase === "idle" ? "hover:border-[var(--color-interactive)]/40 cursor-pointer group" : "cursor-default"
+                      }`}
+                    >
+                      <div className="text-start">
+                        {expandPhase === "idle" && (
+                          <>
+                            <span className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-interactive)] transition-colors">{t("expand.expandSearch")}</span>
+                            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{t("expand.findMore")}</p>
+                          </>
+                        )}
+                        {expandPhase === "done" && expandError && (
+                          <span className="text-sm text-[var(--color-caution)]">{expandError}</span>
+                        )}
+                        {expandPhase === "done" && !expandError && expandCount > 0 && (
+                          <span className="text-sm text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount })}</span>
+                        )}
+                        {expandPhase === "done" && !expandError && expandCount === 0 && (
+                          <span className="text-sm text-[var(--color-text-muted)]">{t("expand.noNewFlights")}</span>
+                        )}
+                      </div>
+                      {expandPhase === "idle" && (
+                        <svg viewBox="0 0 20 20" className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-interactive)] transition-colors shrink-0" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      {expandPhase === "done" && !expandError && expandCount > 0 && (
+                        <svg viewBox="0 0 20 20" className="w-4 h-4 text-[var(--color-interactive)] shrink-0" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                )}
 
                 {/* Price alert */}
                 {parsed && phase === "done" && flights.length > 0 && (

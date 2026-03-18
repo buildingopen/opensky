@@ -39,8 +39,8 @@
 /* Light mode overrides */
 :root.light {
   --color-background: #f8faff;
-  --color-surface: #ffffff;
-  --color-surface-2: #f0f4ff;
+  --color-surface: rgba(255,255,255,0.55);
+  --color-surface-2: rgba(240,244,255,0.55);
   --color-border: #dce5f5;
   --color-text: #1e293b;
   --color-text-muted: #64748b;
@@ -52,8 +52,8 @@
   --shadow-cta-hover: 0 0 32px rgba(34,197,94,0.25), 0 4px 12px rgba(0,0,0,0.12);
   --glass-fallback: rgba(248,250,255,0.95);
   --sky-gradient: linear-gradient(180deg, #7ab8f5 0%, #93c5fd 10%, #bfdbfe 25%, #dbeafe 40%, #e8f0fe 55%, #f0f4ff 75%, #f8faff 100%);
-  --cloud-white-start: rgba(180,210,255,0.35);
-  --cloud-white-end: rgba(180,210,255,0.12);
+  --cloud-white-start: rgba(180,210,255,0.5);
+  --cloud-white-end: rgba(180,210,255,0.2);
   --cloud-green-start: rgba(34,197,94,0.08);
   --cloud-green-end: rgba(34,197,94,0.03);
   --color-geo-stroke: #dce5f5;
@@ -109,6 +109,13 @@ body {
 .search-surface:focus-within {
   border-color: rgba(34, 197, 94, 0.15);
   box-shadow: var(--shadow-surface-focus);
+}
+
+/* Glass blur for light mode surfaces */
+:root.light .search-surface,
+:root.light .card-surface {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 /* Pulse animation for loading */
