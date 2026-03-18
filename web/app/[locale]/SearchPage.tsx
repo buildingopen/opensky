@@ -358,7 +358,12 @@ const REGION_LABELS: Record<string, string> = Object.fromEntries([
   ["caribbean", "Caribbean"], ["scandinavia", "Scandinavia"], ["mediterranean", "Mediterranean"],
   ["oceania", "Oceania"], ["south asia", "South Asia"], ["east asia", "East Asia"],
   ["central asia", "Central Asia"], ["western europe", "Western Europe"], ["eastern europe", "Eastern Europe"],
+  ["central europe", "Central Europe"], ["southern europe", "Southern Europe"], ["northern europe", "Northern Europe"],
   ["latin america", "Latin America"], ["pacific islands", "Pacific Islands"],
+  ["balkans", "Balkans"], ["balkan", "Balkans"], ["nordic", "Nordic"], ["nordic countries", "Nordic"],
+  ["north africa", "North Africa"], ["west africa", "West Africa"], ["east africa", "East Africa"],
+  ["southern africa", "Southern Africa"], ["sub-saharan africa", "Sub-Saharan Africa"],
+  ["everywhere", "Everywhere"],
   // Spanish
   ["cualquier lugar", "Anywhere"], ["europa", "Europe"], ["sudamérica", "South America"],
   ["norteamérica", "North America"], ["sudeste asiático", "Southeast Asia"],
@@ -482,23 +487,27 @@ const I18N_TEMPORAL: Record<string, string> = {
   "dieses wochenende": "this weekend", "este fin de semana": "this weekend", "ce week-end": "this weekend", "ce weekend": "this weekend", "questo fine settimana": "this weekend", "este fim de semana": "this weekend", "bu hafta sonu": "this weekend",
   // "next weekend"
   "nächstes wochenende": "next weekend", "próximo fin de semana": "next weekend", "prochain week-end": "next weekend", "prochain weekend": "next weekend", "prossimo fine settimana": "next weekend", "próximo fim de semana": "next weekend", "gelecek hafta sonu": "next weekend",
+  // "this week"
+  "diese woche": "this week", "esta semana": "this week", "cette semaine": "this week", "questa settimana": "this week", "bu hafta": "this week",
+  // "this month"
+  "diesen monat": "this month", "dieses monats": "this month", "este mes": "this month", "ce mois-ci": "this month", "ce mois": "this month", "questo mese": "this month", "este mês": "this month", "bu ay": "this month",
   // "next month"
   "nächsten monat": "next month", "próximo mes": "next month", "proximo mes": "next month", "le mois prochain": "next month", "mois prochain": "next month", "prossimo mese": "next month", "próximo mês": "next month", "gelecek ay": "next month",
   // Chinese
   "明天": "tomorrow", "今天": "today", "下周": "next week", "下個星期": "next week", "下个星期": "next week",
-  "这个周末": "this weekend", "這個週末": "this weekend", "下个周末": "next weekend", "下個週末": "next weekend", "下个月": "next month", "下個月": "next month",
+  "这周": "this week", "這週": "this week", "这个周末": "this weekend", "這個週末": "this weekend", "下个周末": "next weekend", "下個週末": "next weekend", "这个月": "this month", "這個月": "this month", "下个月": "next month", "下個月": "next month",
   // Japanese
   "明日": "tomorrow", "あした": "tomorrow", "今日": "today", "きょう": "today",
-  "来週": "next week", "らいしゅう": "next week", "今週末": "this weekend", "来週末": "next weekend", "来月": "next month",
+  "今週": "this week", "来週": "next week", "らいしゅう": "next week", "今週末": "this weekend", "来週末": "next weekend", "今月": "this month", "来月": "next month",
   // Korean
   "내일": "tomorrow", "오늘": "today", "다음주": "next week", "다음 주": "next week",
-  "이번 주말": "this weekend", "다음 주말": "next weekend", "다음달": "next month", "다음 달": "next month",
+  "이번주": "this week", "이번 주": "this week", "이번 주말": "this weekend", "다음 주말": "next weekend", "이번달": "this month", "이번 달": "this month", "다음달": "next month", "다음 달": "next month",
   // Arabic
   "غدا": "tomorrow", "غداً": "tomorrow", "اليوم": "today", "الأسبوع القادم": "next week", "الاسبوع القادم": "next week",
-  "نهاية الأسبوع": "this weekend", "الشهر القادم": "next month",
+  "هذا الأسبوع": "this week", "نهاية الأسبوع": "this weekend", "هذا الشهر": "this month", "الشهر القادم": "next month",
   // Hindi
   "कल": "tomorrow", "आज": "today", "अगले हफ्ते": "next week", "अगला हफ्ता": "next week",
-  "इस सप्ताहांत": "this weekend", "अगले महीने": "next month",
+  "इस हफ्ते": "this week", "इस सप्ताह": "this week", "इस सप्ताहांत": "this weekend", "इस महीने": "this month", "अगले महीने": "next month",
 };
 
 function resolveDate(phrase: string): string | null {
@@ -514,6 +523,15 @@ function resolveDate(phrase: string): string | null {
   }
   if (normalized === "today") {
     return `${MONTH_SHORT[now.getMonth()]} ${now.getDate()}`;
+  }
+  if (normalized === "this week") {
+    const d = new Date(now);
+    const dayOfWeek = d.getDay();
+    const daysUntilMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const mon = new Date(d); mon.setDate(mon.getDate() + daysUntilMon);
+    const sun = new Date(mon); sun.setDate(sun.getDate() + 6);
+    if (mon.getMonth() === sun.getMonth()) return `${MONTH_SHORT[mon.getMonth()]} ${mon.getDate()}-${sun.getDate()}`;
+    return `${MONTH_SHORT[mon.getMonth()]} ${mon.getDate()} - ${MONTH_SHORT[sun.getMonth()]} ${sun.getDate()}`;
   }
   if (normalized === "next week") {
     const d = new Date(now);
@@ -544,6 +562,9 @@ function resolveDate(phrase: string): string | null {
     const sun = new Date(d); sun.setDate(sun.getDate() + 1);
     if (sat.getMonth() === sun.getMonth()) return `${MONTH_SHORT[sat.getMonth()]} ${sat.getDate()}-${sun.getDate()}`;
     return `${MONTH_SHORT[sat.getMonth()]} ${sat.getDate()} - ${MONTH_SHORT[sun.getMonth()]} ${sun.getDate()}`;
+  }
+  if (normalized === "this month") {
+    return `${MONTH_SHORT[now.getMonth()]} ${now.getFullYear()}`;
   }
   if (normalized === "next month") {
     const m = (now.getMonth() + 1) % 12;
@@ -696,7 +717,7 @@ function detectDate(lower: string): { text: string; start: number; end: number; 
     if (idx >= 0) return { text: phrase, start: idx, end: idx + phrase.length, resolved: resolveDate(phrase) || undefined };
   }
   // 2. English temporal
-  const enPats = [/\b(tomorrow|today)\b/i, /\b(next week)\b/i, /\b(next weekend)\b/i, /\b(this weekend)\b/i, /\b(next month)\b/i];
+  const enPats = [/\b(tomorrow|today)\b/i, /\b(next week)\b/i, /\b(this week)\b/i, /\b(next weekend)\b/i, /\b(this weekend)\b/i, /\b(next month)\b/i, /\b(this month)\b/i];
   for (const pat of enPats) {
     const m = pat.exec(lower);
     if (m && m.index !== undefined) return { text: m[0], start: m.index, end: m.index + m[0].length, resolved: resolveDate(m[0]) || undefined };
@@ -886,6 +907,36 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/(환승\s*없[이는])/i, "No layovers"],
       [/(बिना\s+रुक[ेे])/i, "No layovers"],
       [/(بدون\s+توقف)/i, "No layovers"],
+      // Flexible dates
+      [/\b(flexible?\s+(?:dates?|schedule|timing)|flex(?:ible)?\s+dates?)\b/i, "Flexible dates"],
+      [/\b(flexible\s+(?:Termine|Daten|Reisedaten)|flexibel)\b/i, "Flexible dates"],
+      [/\b(fechas?\s+flexibles?)\b/i, "Flexible dates"],
+      [/\b(dates?\s+flexibles?)\b/i, "Flexible dates"],
+      [/\b(date?\s+flessibil[ie])\b/i, "Flexible dates"],
+      [/\b(datas?\s+flex[ií]veis)\b/i, "Flexible dates"],
+      [/\b(esnek\s+tarih(?:ler)?)\b/i, "Flexible dates"],
+      [/(日程灵活|灵活日期)/i, "Flexible dates"],
+      [/(日程柔軟)/i, "Flexible dates"],
+      [/(유연한?\s*날짜|유연한?\s*일정)/i, "Flexible dates"],
+      [/(लचीली?\s+(?:तारीख|तिथि))/i, "Flexible dates"],
+      [/(تواريخ\s+مرنة)/i, "Flexible dates"],
+      // Refundable
+      [/\b(refundable)\b/i, "Refundable"],
+      [/\b(erstattbar|erstattungsfähig)\b/i, "Refundable"],
+      [/\b(reembolsable)\b/i, "Refundable"],
+      [/\b(remboursable)\b/i, "Refundable"],
+      [/\b(rimborsabile)\b/i, "Refundable"],
+      [/\b(reembolsável)\b/i, "Refundable"],
+      [/\b(iade\s+edilebilir)\b/i, "Refundable"],
+      // German class names
+      [/\b(erste\s+klasse)\b/i, "First class"],
+      [/\b(business[\s-]?klasse|geschäftsklasse)\b/i, "Business class"],
+      [/\b(premium\s+economy[\s-]?klasse)\b/i, "Premium economy"],
+      // CJK/AR standalone direct/nonstop
+      [/(直飞|直达)/i, "Direct flights only"],
+      [/(직항)/i, "Direct flights only"],
+      [/(مباشر)/i, "Direct flights only"],
+      [/(直行便)/i, "Direct flights only"],
       // Budget: under/less than + currency + amount
       [/\b(under\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, "budget"],
       [/\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, "budget"],
