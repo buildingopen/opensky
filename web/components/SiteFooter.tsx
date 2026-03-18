@@ -18,12 +18,17 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-[var(--color-border)] mt-auto">
       <div className="max-w-[min(64rem,92vw)] mx-auto px-4 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-[var(--color-text-muted)]">
-        <span>
-          {t("builtBy")}{" "}
-          <a href="https://buildingopen.org" className="text-[var(--color-text)] hover:text-[var(--color-interactive)]">
-            Building Open
-          </a>
-        </span>
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-semibold tracking-tighter font-[family-name:var(--font-brand)]">
+            <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
+          </span>
+          <span>
+            {t("builtBy")}{" "}
+            <a href="https://buildingopen.org" className="text-[var(--color-text)] hover:text-[var(--color-interactive)]">
+              Building Open
+            </a>
+          </span>
+        </div>
         <div className="flex flex-col sm:items-end gap-2">
           <span>{t("zonesUpdated", { date: getLocalizedDate(locale) })}</span>
           <span className="flex flex-wrap justify-center gap-3">

@@ -86,15 +86,12 @@ export function SiteHeader() {
     <>
     <header className="sticky top-0 z-40 bg-transparent backdrop-blur-md [transform:translateZ(0)]">
       <div className="max-w-[min(64rem,92vw)] mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+        <Link href="/" className="flex items-center" aria-label="FlyFast home">
+          <svg viewBox="0 0 32 32" className="w-6 h-6" fill="none">
             <path d="M9 27V11L15 4" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" strokeLinejoin="miter" />
             <path d="M19 27V11L25 4" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" strokeLinejoin="miter" />
             <line x1="4" y1="15" x2="26" y2="15" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" />
           </svg>
-          <span className="text-lg font-semibold tracking-tighter font-[family-name:var(--font-brand)]">
-            <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
-          </span>
         </Link>
 
         {/* Desktop nav */}
@@ -268,15 +265,12 @@ export function SiteHeader() {
         {/* Panel */}
         <div className="absolute end-0 top-0 h-full w-64 bg-[var(--color-surface)] border-s border-[var(--color-border)] shadow-xl flex flex-col animate-slide-in-right">
           <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--color-border)]">
-            <div className="flex items-center gap-2">
-              <svg viewBox="0 0 32 32" className="w-5 h-5" fill="none">
+            <div className="flex items-center">
+              <svg viewBox="0 0 32 32" className="w-6 h-6" fill="none">
                 <path d="M9 27V11L15 4" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" strokeLinejoin="miter" />
                 <path d="M19 27V11L25 4" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" strokeLinejoin="miter" />
                 <line x1="4" y1="15" x2="26" y2="15" stroke="var(--color-accent)" strokeWidth="2.8" strokeLinecap="square" />
               </svg>
-              <span className="text-lg font-semibold tracking-tighter font-[family-name:var(--font-brand)]">
-                <span className="text-[var(--color-accent)]">fly</span><span className="text-[var(--color-text)]">fast</span>
-              </span>
             </div>
             <button
               onClick={() => setMenuOpen(false)}

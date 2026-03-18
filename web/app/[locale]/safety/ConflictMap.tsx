@@ -233,7 +233,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden h-[350px] lg:h-[600px]">
+      <div className="border border-[var(--color-border)] rounded-xl overflow-hidden h-[350px] lg:h-[600px]">
         <ComposableMap
           projection="geoMercator"
           projectionConfig={{ scale: 140, center: [30, 25] }}
