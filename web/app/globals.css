@@ -42,7 +42,7 @@
   --color-surface: #ffffff;
   --color-surface-2: #f0f4ff;
   --color-border: #dce5f5;
-  --color-text: #18181b;
+  --color-text: #1e293b;
   --color-text-muted: #64748b;
   --shadow-card: 0 2px 16px -4px rgba(0,0,0,0.08), 0 0 0 1px rgba(59,130,246,0.04);
   --shadow-surface: 0 2px 20px -6px rgba(0,0,0,0.1), 0 0 0 1px rgba(59,130,246,0.05);
@@ -52,10 +52,10 @@
   --shadow-cta-hover: 0 0 32px rgba(34,197,94,0.25), 0 4px 12px rgba(0,0,0,0.12);
   --glass-fallback: rgba(248,250,255,0.95);
   --sky-gradient: linear-gradient(180deg, #7ab8f5 0%, #93c5fd 10%, #bfdbfe 25%, #dbeafe 40%, #e8f0fe 55%, #f0f4ff 75%, #f8faff 100%);
-  --cloud-white-start: rgba(255,255,255,0.65);
-  --cloud-white-end: rgba(255,255,255,0.25);
-  --cloud-green-start: rgba(34,197,94,0.06);
-  --cloud-green-end: rgba(34,197,94,0.02);
+  --cloud-white-start: rgba(180,210,255,0.35);
+  --cloud-white-end: rgba(180,210,255,0.12);
+  --cloud-green-start: rgba(34,197,94,0.08);
+  --cloud-green-end: rgba(34,197,94,0.03);
   --color-geo-stroke: #dce5f5;
   --color-geo-default: #e8edf5;
   --color-geo-hover: #dce5f5;
