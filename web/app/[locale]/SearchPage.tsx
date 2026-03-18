@@ -353,7 +353,8 @@ const REGION_LABELS: Record<string, string> = Object.fromEntries([
   // English
   ["anywhere", "Anywhere"], ["europe", "Europe"], ["asia", "Asia"],
   ["africa", "Africa"], ["south america", "South America"], ["north america", "North America"],
-  ["middle east", "Middle East"], ["southeast asia", "Southeast Asia"], ["central america", "Central America"],
+  ["middle east", "Middle East"], ["southeast asia", "Southeast Asia"], ["south east asia", "Southeast Asia"],
+  ["central america", "Central America"],
   ["caribbean", "Caribbean"], ["scandinavia", "Scandinavia"], ["mediterranean", "Mediterranean"],
   ["oceania", "Oceania"], ["south asia", "South Asia"], ["east asia", "East Asia"],
   ["central asia", "Central Asia"], ["western europe", "Western Europe"], ["eastern europe", "Eastern Europe"],
