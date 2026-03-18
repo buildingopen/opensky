@@ -948,7 +948,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/\b((?:(?:au|en)\s+)?(?:printemps|[eé]t[eé]|automne|hiver))\b/i, "season"],
       [/\b((?:in\s+)?(?:primavera|estate|autunno|inverno))\b/i, "season"],
       [/\b((?:(?:na|no)\s+)?(?:primavera|ver[aã]o|outono|inverno))\b/i, "season"],
-      [/\b((?:ilkbahar|yaz|sonbahar|k[iı]ş)(?:(?:\s+d[oö]e?nemi)?|(?:ın))?\b)/i, "season"],
+      [/\b((?:ilkbahar|yaz|sonbahar|k[iı][sş])(?:(?:\s+d[oö]e?nemi)?|(?:[iı]n))?\b)/i, "season"],
       [/(春[天季]?|夏[天季]?|秋[天季]?|冬[天季]?)/i, "season"],
       [/(봄|여름|가을|겨울)/i, "season"],
       [/(春|夏|秋|冬)/i, "season"],
@@ -977,7 +977,8 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/(menos\s+de\s+[\$\u20ac\u00a3R]?\$?\s*\d[\d.,]*)/i, "budget"],
       [/(meno\s+di\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, "budget"],
       [/(moins\s+de\s+\d[\d.,]*\s*[\$\u20ac\u00a3]?)/i, "budget"],
-      [/(\d[\d.,]*\s*(?:TL|₺)\s*altında)/i, "budget"],
+      [/(\d[\d.,]*\s*(?:TL|₺)\s*alt[iı]nda)/i, "budget"],
+      [/(\d[\d.,]*'?den\s+az)/i, "budget"],
       [/(\d[\d.,]*\s*(?:元|美元)以[内下])/i, "budget"],
       [/(\d[\d.,]*\s*(?:万?円)以[内下])/i, "budget"],
       [/(\d[\d.,]*\s*(?:만?원)\s*이하)/i, "budget"],
@@ -999,7 +1000,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
             const sl = m[0].toLowerCase();
             const seasonMap: Record<string, string> = {
               spring: "Mar-May", frühling: "Mar-May", fruehling: "Mar-May", primavera: "Mar-May", printemps: "Mar-May", ilkbahar: "Mar-May",
-              summer: "Jun-Aug", sommer: "Jun-Aug", verano: "Jun-Aug", été: "Jun-Aug", ete: "Jun-Aug", estate: "Jun-Aug", "verão": "Jun-Aug", verao: "Jun-Aug", yaz: "Jun-Aug",
+              summer: "Jun-Aug", sommer: "Jun-Aug", verano: "Jun-Aug", été: "Jun-Aug", ete: "Jun-Aug", estate: "Jun-Aug", "verão": "Jun-Aug", verao: "Jun-Aug", yaz: "Jun-Aug", yazin: "Jun-Aug", "yazın": "Jun-Aug",
               fall: "Sep-Nov", autumn: "Sep-Nov", herbst: "Sep-Nov", "otoño": "Sep-Nov", otono: "Sep-Nov", automne: "Sep-Nov", autunno: "Sep-Nov", outono: "Sep-Nov", sonbahar: "Sep-Nov",
               winter: "Dec-Feb", hiver: "Dec-Feb", inverno: "Dec-Feb", invierno: "Dec-Feb", "kış": "Dec-Feb", kis: "Dec-Feb",
             };
