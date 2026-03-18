@@ -241,6 +241,8 @@ describe("IATA/skipword collisions tracked", () => {
     "LOS","LAS","DEL","SIN","DEN","EIN","AUS","PER","CAN","GOT",
     // English words added as skipwords that are also IATA codes
     "HAM","HER","MAD","MAN","PEN","PIT","SAT","SAW","SEA","DAD","ADD","REP","LED","FAT",
+    // Cross-language verbs/adjectives that collide with IATA
+    "IST","FRA","BOM","ONT","DAR","TUN","DUR","VIE","SAN","SUB",
   ]);
   it("collision set matches exactly", () => {
     const actual = new Set([...LOCATION_SKIPWORDS].map(s => s.toUpperCase()).filter(s => IATA_SET.has(s)));
@@ -1213,6 +1215,81 @@ describe("Common English words that are IATA codes (blocked as skipwords)", () =
     expect(nonMatches("my dad saw Paris and her man flew to London by the sea")).toContain("her");
     expect(nonMatches("my dad saw Paris and her man flew to London by the sea")).toContain("man");
     expect(nonMatches("my dad saw Paris and her man flew to London by the sea")).toContain("sea");
+  });
+});
+
+describe("Cross-language skipwords (common verbs/adjectives that are IATA codes)", () => {
+  it("'ist' (DE: is) blocked, IST (Istanbul) allowed uppercase", () => {
+    expect(matches("der Flug ist billig")).toEqual([]);
+    expect(matches("IST")).toContain("IATA:IST");
+  });
+
+  it("'fra' (IT: between) blocked, FRA (Frankfurt) allowed uppercase", () => {
+    expect(matches("fra Roma e Milano")).toContain("alias:rome");
+    expect(matches("fra Roma e Milano")).toContain("alias:milan");
+    expect(nonMatches("fra Roma e Milano")).toContain("fra");
+    expect(matches("FRA")).toContain("IATA:FRA");
+  });
+
+  it("'bom' (PT: good) blocked, BOM (Mumbai) allowed uppercase", () => {
+    expect(matches("bom dia, voo para Londres")).toContain("alias:london");
+    expect(nonMatches("bom dia, voo para Londres")).toContain("bom");
+    expect(matches("BOM")).toContain("IATA:BOM");
+  });
+
+  it("'ont' (FR: have 3pl) blocked, ONT (Ontario) allowed uppercase", () => {
+    expect(matches("ils ont trouve un vol")).toEqual([]);
+    expect(matches("ONT")).toContain("IATA:ONT");
+  });
+
+  it("'dar' (ES: to give) blocked, DAR (Dar es Salaam) allowed uppercase", () => {
+    expect(matches("me puedes dar el precio")).toEqual([]);
+    expect(matches("DAR")).toContain("IATA:DAR");
+  });
+
+  it("'tun' (DE: to do) blocked, TUN (Tunis) allowed uppercase", () => {
+    expect(matches("was soll ich tun")).toEqual([]);
+    expect(matches("TUN")).toContain("IATA:TUN");
+  });
+
+  it("'dur' (FR: hard) blocked, DUR (Durban) allowed uppercase", () => {
+    expect(matches("le vol est trop dur")).toEqual([]);
+    expect(matches("DUR")).toContain("IATA:DUR");
+  });
+
+  it("'vie' (FR: life) blocked, VIE (Vienna) allowed uppercase", () => {
+    expect(matches("la vie est belle")).toEqual([]);
+    expect(matches("VIE")).toContain("IATA:VIE");
+  });
+
+  it("'san' alone blocked (SAN=San Diego), but 'San Francisco' still matches", () => {
+    expect(matches("el san es bonito")).toEqual([]);
+    expect(matches("SAN")).toContain("IATA:SAN");
+    expect(matches("fly to San Francisco")).toContain("city:san francisco");
+  });
+
+  it("'sub' blocked (SUB=Surabaya), allowed uppercase", () => {
+    expect(matches("sub 500 dollars")).toEqual([]);
+    expect(matches("SUB")).toContain("IATA:SUB");
+  });
+
+  it("German sentence: 'Wann ist der Flug am günstigsten' - no false IST highlight", () => {
+    expect(nonMatches("Wann ist der Flug am günstigsten")).toContain("ist");
+    expect(nonMatches("Wann ist der Flug am günstigsten")).toContain("der");
+  });
+
+  it("Italian sentence: 'scegliere fra voli da Roma a Parigi' - no false FRA highlight", () => {
+    const m = matches("scegliere fra voli da Roma a Parigi");
+    expect(m).toContain("alias:rome");
+    expect(m).toContain("alias:paris");
+    expect(nonMatches("scegliere fra voli da Roma a Parigi")).toContain("fra");
+  });
+
+  it("Portuguese sentence: 'bom preço de São Paulo a Lisboa' - no false BOM highlight", () => {
+    const m = matches("bom preço de São Paulo a Lisboa");
+    expect(m).toContain("city:sao paulo");
+    expect(m).toContain("alias:lisbon");
+    expect(nonMatches("bom preço de São Paulo a Lisboa")).toContain("bom");
   });
 });
 

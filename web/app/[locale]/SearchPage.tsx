@@ -220,7 +220,7 @@ const CITY_ALIASES_ENTRIES: [string, string][] = [
   ["varsavia", "warsaw"], ["copenaghen", "copenhagen"], ["stoccolma", "stockholm"],
   ["il cairo", "cairo"], ["mosca", "moscow"], ["francoforte", "frankfurt"],
   ["pechino", "beijing"], ["berlino", "berlin"],
-  ["amburgo", "hamburg"], ["firenze", "florence"], ["napoli", "naples"],
+  ["amburgo", "hamburg"], ["milano", "milan"], ["firenze", "florence"], ["napoli", "naples"],
   ["marsiglia", "marseille"], ["siviglia", "seville"], ["nuova delhi", "new delhi"],
   // Portuguese city names (shared keys with es/it noted)
   ["nova iorque", "new york"], ["nova york", "new york"], ["munique", "munich"],
@@ -352,6 +352,17 @@ const LOCATION_SKIPWORDS = new Set([
   // (uppercase bypasses skipwords: HAM, SEA, etc.)
   "ham", "her", "mad", "man", "pen", "pit", "sat", "saw", "sea",
   "dad", "add", "rep", "led", "fat",
+  // Cross-language high-frequency verbs/adjectives that collide with IATA
+  "ist", // DE "is" -> IST (Istanbul)
+  "fra", // IT "between" -> FRA (Frankfurt)
+  "bom", // PT "good" -> BOM (Mumbai)
+  "ont", // FR "have" (3pl) -> ONT (Ontario)
+  "dar", // ES/PT "to give" -> DAR (Dar es Salaam)
+  "tun", // DE "to do" -> TUN (Tunis)
+  "dur", // FR "hard" -> DUR (Durban)
+  "vie", // FR "life" -> VIE (Vienna)
+  "san", // prefix alone without city -> SAN (San Diego)
+  "sub", // EN prefix -> SUB (Surabaya)
 ]);
 const SKIP_REGIONS = new Set([
   "anywhere", "europe", "asia", "africa", "south america", "north america", "middle east",
@@ -779,6 +790,71 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/\b(direkt)\b/i, "Direct flights only"],
       [/\b(diretto|diretta)\b/i, "Direct flights only"],
       [/\b(direto|direta)\b/i, "Direct flights only"],
+      // One-way
+      [/\b(one[\s-]?way(?:\s+(?:flights?|tickets?))?)\b/i, "One-way"],
+      [/\b(nur\s+hinflug|nur\s+hin|einfach(?:er?\s+flug)?)\b/i, "One-way"],
+      [/\b(solo\s+ida|ida\s+simple)\b/i, "One-way"],
+      [/\b(aller\s+simple)\b/i, "One-way"],
+      [/\b(solo\s+andata)\b/i, "One-way"],
+      [/\b(somente?\s+ida)\b/i, "One-way"],
+      [/\b(sadece\s+gidiş)\b/i, "One-way"],
+      [/(单程(?:票|航班)?)/i, "One-way"],
+      [/(片道(?:便)?)/i, "One-way"],
+      [/(편도)/i, "One-way"],
+      [/(एकतरफ़?ा)/i, "One-way"],
+      [/(ذهاب\s+فقط)/i, "One-way"],
+      // Round trip / return
+      [/\b(round[\s-]?trip|return\s+(?:flights?|tickets?|trip))\b/i, "Round trip"],
+      [/\b(hin\s*(?:und|&|-)\s*rück(?:flug)?)\b/i, "Round trip"],
+      [/\b(ida\s+y\s+vuelta)\b/i, "Round trip"],
+      [/\b(aller[\s-]retour)\b/i, "Round trip"],
+      [/\b(andata\s+e\s+ritorno)\b/i, "Round trip"],
+      [/\b(ida\s+e\s+volta)\b/i, "Round trip"],
+      [/\b(gidiş[\s-]dönüş)\b/i, "Round trip"],
+      [/(往返(?:票|航班)?)/i, "Round trip"],
+      [/(往復(?:便)?)/i, "Round trip"],
+      [/(왕복)/i, "Round trip"],
+      [/(राउंड\s*ट्रिप)/i, "Round trip"],
+      [/(ذهاب\s+و\s*إياب)/i, "Round trip"],
+      // Cheapest / lowest price
+      [/\b(cheapest(?:\s+(?:flights?|fares?))?|lowest\s+(?:price|fare))\b/i, "Cheapest"],
+      [/\b((?:am\s+)?günstigst(?:e[nrs]?)?|billigst(?:e[nrs]?)?)\b/i, "Cheapest"],
+      [/\b((?:(?:el|lo)\s+)?m[aá]s\s+barat[oa])\b/i, "Cheapest"],
+      [/\b((?:le\s+)?moins\s+cher)\b/i, "Cheapest"],
+      [/\b((?:il\s+)?pi[uù]\s+economico)\b/i, "Cheapest"],
+      [/\b((?:o\s+)?mais\s+barat[oa])\b/i, "Cheapest"],
+      [/\b(en\s+ucuz)\b/i, "Cheapest"],
+      [/(最便宜)/i, "Cheapest"],
+      [/(最安値?)/i, "Cheapest"],
+      [/(최저가)/i, "Cheapest"],
+      [/(सबसे\s+सस्त[ाीे])/i, "Cheapest"],
+      [/(أرخص)/i, "Cheapest"],
+      // Fastest / quickest
+      [/\b(fastest|quickest|shortest(?:\s+(?:flights?|route)))\b/i, "Fastest"],
+      [/\b((?:am\s+)?schnellst(?:e[nrs]?)?)\b/i, "Fastest"],
+      [/\b((?:el|lo)\s+m[aá]s\s+r[aá]pido)\b/i, "Fastest"],
+      [/\b((?:le\s+)?plus\s+rapide)\b/i, "Fastest"],
+      [/\b((?:il\s+)?pi[uù]\s+veloce)\b/i, "Fastest"],
+      [/\b((?:o\s+)?mais\s+r[aá]pido)\b/i, "Fastest"],
+      [/\b(en\s+hızlı)\b/i, "Fastest"],
+      [/(最快)/i, "Fastest"],
+      [/(最速)/i, "Fastest"],
+      [/(가장\s*빠른?)/i, "Fastest"],
+      [/(سبسے\s+تیز)/i, "Fastest"],
+      [/(أسرع)/i, "Fastest"],
+      // No layovers / without stops (negative phrasing of "direct")
+      [/\b(no\s+(?:layovers?|stops?|stopovers?)|without\s+(?:layovers?|stops?))\b/i, "No layovers"],
+      [/\b(ohne\s+(?:umsteig(?:en)?|zwischenstopp?))\b/i, "No layovers"],
+      [/\b(sin\s+escalas?)\b/i, "No layovers"],
+      [/\b(sans\s+escales?)\b/i, "No layovers"],
+      [/\b(senza\s+scal[oie])\b/i, "No layovers"],
+      [/\b(sem\s+escalas?)\b/i, "No layovers"],
+      [/\b(aktarmasız)\b/i, "No layovers"],
+      [/(不转机|不中转)/i, "No layovers"],
+      [/(乗り継ぎなし)/i, "No layovers"],
+      [/(환승\s*없[이는])/i, "No layovers"],
+      [/(बिना\s+रुक[ेे])/i, "No layovers"],
+      [/(بدون\s+توقف)/i, "No layovers"],
       // Budget: under/less than + currency + amount
       [/\b(under\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, "budget"],
       [/\b(max(?:imum)?\s+[\$\u20ac\u00a3\u20b9\u00a5]?\s*\d[\d,]*\s*[\$\u20ac\u00a3\u20b9\u00a5]?)\b/i, "budget"],
@@ -1199,10 +1275,10 @@ const GoogleIcon = () => (
 
 function sortFlights(flights: FlightOut[], key: SortKey): FlightOut[] {
   return [...flights].sort((a, b) => {
-    if (key === "price") return (a.price || Infinity) - (b.price || Infinity);
-    if (key === "duration") return a.duration_minutes - b.duration_minutes;
+    if (key === "price") return (a.price || Infinity) - (b.price || Infinity) || a.duration_minutes - b.duration_minutes;
+    if (key === "duration") return a.duration_minutes - b.duration_minutes || (a.price || Infinity) - (b.price || Infinity);
     if (key === "stops") return a.stops - b.stops || (a.price || Infinity) - (b.price || Infinity);
-    return a.score - b.score;
+    return a.score - b.score || (a.price || Infinity) - (b.price || Infinity);
   });
 }
 
@@ -2246,7 +2322,9 @@ function HomePage() {
     setHasSpeechAPI(!!(window.SpeechRecognition || window.webkitSpeechRecognition));
   }, []);
 
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const toggleVoice = useCallback(() => {
+    setVoiceError(null);
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
@@ -2261,6 +2339,8 @@ function HomePage() {
       : locale === "it" ? "it-IT" : locale === "pt" ? "pt-BR" : locale === "tr" ? "tr-TR"
       : locale === "ja" ? "ja-JP" : locale === "ko" ? "ko-KR" : locale === "zh" ? "zh-CN"
       : locale === "hi" ? "hi-IN" : locale === "ar" ? "ar-SA" : "en-US";
+    // Capture existing text so voice appends instead of replacing
+    const existingText = prompt ? prompt.trimEnd() + " " : "";
     let finalTranscript = "";
     recognition.onresult = (e: SpeechRecognitionEvent) => {
       let interim = "";
@@ -2268,15 +2348,26 @@ function HomePage() {
         if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript;
         else interim += e.results[i][0].transcript;
       }
-      setPrompt(finalTranscript + interim);
+      setPrompt(existingText + finalTranscript + interim);
     };
     recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };
-    recognition.onerror = () => { setIsListening(false); recognitionRef.current = null; };
+    recognition.onerror = (ev: Event) => {
+      setIsListening(false);
+      recognitionRef.current = null;
+      const errCode = (ev as Event & { error?: string }).error;
+      if (errCode === "not-allowed") setVoiceError(t("voiceMicBlocked") || "Microphone access denied");
+      else if (errCode === "no-speech") setVoiceError(t("voiceNoSpeech") || "No speech detected");
+    };
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
     setSearchMode("natural");
-  }, [isListening, locale, setPrompt, setSearchMode]);
+  }, [isListening, locale, prompt, setPrompt, setSearchMode, t]);
+
+  // Cleanup speech recognition on unmount
+  useEffect(() => {
+    return () => { recognitionRef.current?.abort(); };
+  }, []);
 
   useEffect(() => {
     try { setMinutesSaved(parseInt(localStorage.getItem("flyfast_minutes_saved") || "0", 10)); } catch {}
@@ -2401,6 +2492,7 @@ function HomePage() {
     setParsed(null);
     setProgress(null);
     setFlights([]);
+    setMoreSortKey("score");
     setReturnFlights(null);
     setRoundTripResults(null);
     setZonesWarning(null);
@@ -3029,22 +3121,30 @@ function HomePage() {
                 <div className="flex items-center gap-3 ml-auto shrink-0">
                   {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/25 hidden sm:inline">{t("enterToSearch")}</span>}
                   {searchMode === "natural" && hasSpeechAPI && (
-                    <button
-                      type="button"
-                      onClick={toggleVoice}
-                      aria-label={isListening ? "Stop listening" : "Voice input"}
-                      className={`p-2 rounded-lg transition-colors ${
-                        isListening
-                          ? "text-[var(--color-interactive)] bg-[var(--color-interactive)]/10"
-                          : "text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)]"
-                      }`}
-                    >
-                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                        <line x1="12" y1="19" x2="12" y2="22" />
-                      </svg>
-                    </button>
+                    <span className="relative">
+                      <button
+                        type="button"
+                        onClick={toggleVoice}
+                        aria-label={isListening ? t("voiceStopListening") || "Stop listening" : t("voiceInput") || "Voice input"}
+                        aria-pressed={isListening}
+                        className={`p-2 rounded-lg transition-colors ${
+                          isListening
+                            ? "text-[var(--color-interactive)] bg-[var(--color-interactive)]/10 animate-pulse"
+                            : "text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)]"
+                        }`}
+                      >
+                        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                          <line x1="12" y1="19" x2="12" y2="22" />
+                        </svg>
+                      </button>
+                      {voiceError && (
+                        <div className="absolute bottom-full right-0 mb-1 px-2 py-1 text-[10px] text-red-400 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg whitespace-nowrap shadow-lg">
+                          {voiceError}
+                        </div>
+                      )}
+                    </span>
                   )}
                   <button
                     onClick={(e) => {
