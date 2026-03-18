@@ -1,21 +1,5 @@
 "use client";
 
-// Web Speech API types (not in all TS libs)
-interface SpeechRecognitionResult { readonly length: number; readonly isFinal: boolean; [index: number]: { transcript: string; confidence: number }; }
-interface SpeechRecognitionResultList { readonly length: number; [index: number]: SpeechRecognitionResult; }
-interface SpeechRecognitionEvent extends Event { readonly resultIndex: number; readonly results: SpeechRecognitionResultList; }
-interface SpeechRecognitionInstance extends EventTarget {
-  continuous: boolean; interimResults: boolean; lang: string;
-  onresult: ((ev: SpeechRecognitionEvent) => void) | null;
-  onend: (() => void) | null;
-  onerror: ((ev: Event) => void) | null;
-  start(): void; stop(): void; abort(): void;
-}
-interface SpeechRecognitionConstructor { new(): SpeechRecognitionInstance; }
-declare global {
-  interface Window { SpeechRecognition: SpeechRecognitionConstructor; webkitSpeechRecognition: SpeechRecognitionConstructor; }
-}
-
 import React, { Component, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations, useLocale, useFormatter } from "next-intl";
 import { Link } from "../../i18n/navigation";
@@ -2302,9 +2286,6 @@ function HomePage() {
   const expandAbortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
-  const [isListening, setIsListening] = useState(false);
-  const [hasSpeechAPI, setHasSpeechAPI] = useState(false);
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const savedSearches = useSavedSearches();
   const [minutesSaved, setMinutesSaved] = useState(0);
@@ -2318,56 +2299,6 @@ function HomePage() {
     if (searchMode === "natural") inputRef.current?.focus();
   }, [searchMode]);
 
-  useEffect(() => {
-    setHasSpeechAPI(!!(window.SpeechRecognition || window.webkitSpeechRecognition));
-  }, []);
-
-  const [voiceError, setVoiceError] = useState<string | null>(null);
-  const toggleVoice = useCallback(() => {
-    setVoiceError(null);
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return;
-    const recognition = new SR();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = locale === "de" ? "de-DE" : locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR"
-      : locale === "it" ? "it-IT" : locale === "pt" ? "pt-BR" : locale === "tr" ? "tr-TR"
-      : locale === "ja" ? "ja-JP" : locale === "ko" ? "ko-KR" : locale === "zh" ? "zh-CN"
-      : locale === "hi" ? "hi-IN" : locale === "ar" ? "ar-SA" : "en-US";
-    // Capture existing text so voice appends instead of replacing
-    const existingText = prompt ? prompt.trimEnd() + " " : "";
-    let finalTranscript = "";
-    recognition.onresult = (e: SpeechRecognitionEvent) => {
-      let interim = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript;
-        else interim += e.results[i][0].transcript;
-      }
-      setPrompt(existingText + finalTranscript + interim);
-    };
-    recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };
-    recognition.onerror = (ev: Event) => {
-      setIsListening(false);
-      recognitionRef.current = null;
-      const errCode = (ev as Event & { error?: string }).error;
-      if (errCode === "not-allowed") setVoiceError(t("voiceMicBlocked") || "Microphone access denied");
-      else if (errCode === "no-speech") setVoiceError(t("voiceNoSpeech") || "No speech detected");
-    };
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-    setSearchMode("natural");
-  }, [isListening, locale, prompt, setPrompt, setSearchMode, t]);
-
-  // Cleanup speech recognition on unmount
-  useEffect(() => {
-    return () => { recognitionRef.current?.abort(); };
-  }, []);
 
   useEffect(() => {
     try { setMinutesSaved(parseInt(localStorage.getItem("flyfast_minutes_saved") || "0", 10)); } catch {}
@@ -3120,32 +3051,6 @@ function HomePage() {
                 </div>
                 <div className="flex items-center gap-3 ml-auto shrink-0">
                   {searchMode === "natural" && !isLoading && <span className="text-[11px] text-[var(--color-text-muted)]/25 hidden sm:inline">{t("enterToSearch")}</span>}
-                  {searchMode === "natural" && hasSpeechAPI && (
-                    <span className="relative">
-                      <button
-                        type="button"
-                        onClick={toggleVoice}
-                        aria-label={isListening ? t("voiceStopListening") || "Stop listening" : t("voiceInput") || "Voice input"}
-                        aria-pressed={isListening}
-                        className={`p-2 rounded-lg transition-colors ${
-                          isListening
-                            ? "text-[var(--color-interactive)] bg-[var(--color-interactive)]/10 animate-pulse"
-                            : "text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)]"
-                        }`}
-                      >
-                        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                          <line x1="12" y1="19" x2="12" y2="22" />
-                        </svg>
-                      </button>
-                      {voiceError && (
-                        <div className="absolute bottom-full right-0 mb-1 px-2 py-1 text-[10px] text-red-400 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg whitespace-nowrap shadow-lg">
-                          {voiceError}
-                        </div>
-                      )}
-                    </span>
-                  )}
                   <button
                     onClick={(e) => {
                       const svg = e.currentTarget.querySelector("svg");
