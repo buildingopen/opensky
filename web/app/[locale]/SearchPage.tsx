@@ -787,7 +787,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/(مسارات?\s+آمنة?\s+فقط|آمنة?\s+فقط)/i, "Safe routes only"],
       // Direct / nonstop
       [/\b(nonstop|non-stop|direct\s+(?:flights?\s*)?only|direct(?:\s+flights?)?)\b/i, "Direct flights only"],
-      [/(nur\s+direkt(?:flüge)?|nonstop)/i, "Direct flights only"],
+      [/(nur\s+direkt(?:fl[uü]e?ge)?|nonstop)/i, "Direct flights only"],
       [/(solo\s+directo)/i, "Direct flights only"],
       [/((?:vols?\s+)?directs?\s+uniquement)/i, "Direct flights only"],
       [/(solo\s+dirett[io])/i, "Direct flights only"],
@@ -857,7 +857,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/(ذهاب\s+فقط)/i, "One-way"],
       // Round trip / return
       [/\b(round[\s-]?trip|return\s+(?:flights?|tickets?|trip))\b/i, "Round trip"],
-      [/\b(hin\s*(?:und|&|-)\s*rück(?:flug)?)\b/i, "Round trip"],
+      [/\b(hin\s*(?:und|&|-)\s*r[uü]e?ck(?:flug)?)\b/i, "Round trip"],
       [/\b(ida\s+y\s+vuelta)\b/i, "Round trip"],
       [/\b(aller[\s-]retour)\b/i, "Round trip"],
       [/\b(andata\s+e\s+ritorno)\b/i, "Round trip"],
@@ -870,7 +870,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/(ذهاب\s+و\s*إياب)/i, "Round trip"],
       // Cheap / cheapest / low-cost (adjective + superlative)
       [/\b(cheap(?:est)?(?:\s+(?:flights?|fares?|tickets?))?|lowest\s+(?:price|fare)|low[\s-]cost(?:\s+(?:flights?|fares?))?)\b/i, "Cheap flights"],
-      [/\b((?:am\s+)?günstigst(?:e[nrs]?)?|billigst(?:e[nrs]?)?|günstig(?:e[nrs]?)?|billig(?:e[nrs]?)?)\b/i, "Cheap flights"],
+      [/\b((?:am\s+)?g[uü]e?nstigst(?:e[nrs]?)?|billigst(?:e[nrs]?)?|g[uü]e?nstig(?:e[nrs]?)?|billig(?:e[nrs]?)?)\b/i, "Cheap flights"],
       [/\b((?:(?:el|lo)\s+)?m[aá]s\s+barat[oa]|barat[oa]s?)\b/i, "Cheap flights"],
       [/\b((?:le\s+)?moins\s+cher|pas\s+cher|bon\s+march[eé])\b/i, "Cheap flights"],
       [/\b((?:il\s+)?pi[uù]\s+economico|economic[oia])\b/i, "Cheap flights"],
@@ -922,7 +922,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/(تواريخ\s+مرنة)/i, "Flexible dates"],
       // Refundable
       [/\b(refundable)\b/i, "Refundable"],
-      [/\b(erstattbar|erstattungsfähig)\b/i, "Refundable"],
+      [/\b(erstattbar|erstattungsf[aä]e?hig)\b/i, "Refundable"],
       [/\b(reembolsable)\b/i, "Refundable"],
       [/\b(remboursable)\b/i, "Refundable"],
       [/\b(rimborsabile)\b/i, "Refundable"],
@@ -930,7 +930,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/\b(iade\s+edilebilir)\b/i, "Refundable"],
       // German class names
       [/\b(erste\s+klasse)\b/i, "First class"],
-      [/\b(business[\s-]?klasse|geschäftsklasse)\b/i, "Business class"],
+      [/\b(business[\s-]?klasse|gesch[aä]e?ftsklasse)\b/i, "Business class"],
       [/\b(premium\s+economy[\s-]?klasse)\b/i, "Premium economy"],
       // CJK/AR standalone direct/nonstop
       [/(直飞|直达)/i, "Direct flights only"],
