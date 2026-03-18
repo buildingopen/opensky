@@ -2267,7 +2267,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
         {canExpandOrigins ? (
           <button onClick={() => setOriginsExpanded(!originsExpanded)} className="font-medium text-[var(--color-text)] hover:text-[var(--color-interactive)] transition-colors cursor-pointer inline-flex items-center gap-1.5">
             {originsExpanded ? originItems.join(", ") : originItems.slice(0, 2).join(", ")}
-            {!originsExpanded && <span className="text-xs px-1.5 py-0.5 rounded-full bg-[var(--color-interactive)]/15 text-[var(--color-interactive)]">+{originItems.length - 2}</span>}
+            {!originsExpanded && <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/10 text-[var(--color-text-muted)]">+{originItems.length - 2}</span>}
           </button>
         ) : (
           <span className="font-medium text-[var(--color-text)]">{originLabel}</span>
@@ -2276,7 +2276,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
         {canExpandDests ? (
           <button onClick={() => setDestsExpanded(!destsExpanded)} className="font-medium text-[var(--color-text)] hover:text-[var(--color-interactive)] transition-colors cursor-pointer inline-flex items-center gap-1.5">
             {destsExpanded ? destItems.join(", ") : destItems.slice(0, 2).join(", ")}
-            {!destsExpanded && <span className="text-xs px-1.5 py-0.5 rounded-full bg-[var(--color-interactive)]/15 text-[var(--color-interactive)]">+{destItems.length - 2}</span>}
+            {!destsExpanded && <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/10 text-[var(--color-text-muted)]">+{destItems.length - 2}</span>}
           </button>
         ) : (
           <span className="font-medium text-[var(--color-text)]">{destLabel}</span>
