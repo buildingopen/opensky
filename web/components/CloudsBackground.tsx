@@ -132,9 +132,7 @@ function CloudOrbs() {
 export function CloudsBackground() {
   const { theme } = useTheme();
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-      {/* Sky gradient base */}
-      <div className="absolute inset-0" style={{ background: "var(--sky-gradient)" }} />
+    <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
       {/* Stars (dark only) */}
       {theme === "dark" && <StarsLayer />}
       {/* Cloud orbs (both themes) */}
