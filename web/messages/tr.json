@@ -741,7 +741,6 @@
       "whatThisMeans": "Yolcular için ne anlama geliyor",
       "lastChecked": "Son kontrol",
       "dataRefreshed": "Veriler EASA, FAA ve safeairspace.net'ten günlük olarak yenilenir.",
-      "searchAvoiding": "{zone} bölgesinden kaçınan uçuşları ara",
       "searchSafe": "Güvenli uçuşları ara",
       "notFound": "Bölge Bulunamadı - FlyFast",
       "safeToFlyTitle": "{zone} üzerinden uçmak güvenli mi? - FlyFast",

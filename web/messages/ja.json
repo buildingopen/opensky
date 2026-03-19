@@ -741,7 +741,6 @@
       "whatThisMeans": "旅行者への影響",
       "lastChecked": "最終確認",
       "dataRefreshed": "データはEASA、FAA、safeairspace.netから毎日更新されます。",
-      "searchAvoiding": "{zone}を回避するフライトを検索",
       "searchSafe": "安全なフライトを検索",
       "notFound": "ゾーンが見つかりません - FlyFast",
       "safeToFlyTitle": "{zone}上空は安全ですか？ - FlyFast",

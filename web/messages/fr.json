@@ -741,7 +741,6 @@
       "whatThisMeans": "Ce que cela signifie pour les voyageurs",
       "lastChecked": "Dernière vérification",
       "dataRefreshed": "Données actualisées quotidiennement depuis l'EASA, la FAA et safeairspace.net.",
-      "searchAvoiding": "Rechercher des vols évitant {zone}",
       "searchSafe": "Rechercher des vols sûrs",
       "notFound": "Zone introuvable - FlyFast",
       "safeToFlyTitle": "Est-il sûr de survoler {zone} ? - FlyFast",

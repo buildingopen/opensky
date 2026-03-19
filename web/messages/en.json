@@ -746,7 +746,6 @@
       "whatThisMeans": "What this means for travelers",
       "lastChecked": "Last checked",
       "dataRefreshed": "Data refreshed daily from EASA, FAA, and safeairspace.net.",
-      "searchAvoiding": "Search flights avoiding {zone}",
       "searchSafe": "Search safe flights",
       "notFound": "Zone Not Found - FlyFast",
       "safeToFlyTitle": "Is it safe to fly over {zone}? - FlyFast",

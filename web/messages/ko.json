@@ -741,7 +741,6 @@
       "whatThisMeans": "여행자에게 미치는 영향",
       "lastChecked": "최종 확인",
       "dataRefreshed": "EASA, FAA, safeairspace.net에서 매일 데이터 갱신.",
-      "searchAvoiding": "{zone}을(를) 우회하는 항공편 검색",
       "searchSafe": "안전한 항공편 검색",
       "notFound": "구역을 찾을 수 없음 - FlyFast",
       "safeToFlyTitle": "{zone} 상공 비행이 안전한가요? - FlyFast",

@@ -32,7 +32,7 @@
 ### Safety zone CTA fixed
 - **Status**: FIXED
 - **Date**: 2026-03-19
-- **Description**: Changed broken `/?q=flights avoiding {zone}` (unparseable, no origin/dates) to `/?q=safe+routes` which pre-fills the search with "safe routes" qualifier. Updated CTA text to "Search safe flights" (`searchSafe` key) in all 12 locales.
+- **Description**: Changed broken `/?q=flights avoiding {zone}` (unparseable, no origin/dates) to `href="/"` (home page). Initial fix used `/?q=safe+routes` but that auto-triggered a failing search. Updated CTA text to "Search safe flights" (`searchSafe` key) in all 12 locales. Removed dead `searchAvoiding` key.
 - **Files**: `web/app/[locale]/safety/[zone]/page.tsx`, `web/messages/*.json`
 
 ### Logo redesigned with split-arrow mark
