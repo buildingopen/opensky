@@ -416,6 +416,35 @@ const REGION_LABELS: Record<string, string> = Object.fromEntries([
 // Also keep "africa" etc. that are shared across languages (IT "africa" = Africa)
 for (const k of ["africa", "asia", "europa"]) if (!REGION_LABELS[k]) REGION_LABELS[k] = k.charAt(0).toUpperCase() + k.slice(1);
 
+// Representative airports per region for client-side fallback when Gemini fails
+const REGION_AIRPORTS: Record<string, string[]> = {
+  "Europe": ["LHR","CDG","FCO","BER","AMS","ATH","BCN","LIS","VIE","PRG"],
+  "Asia": ["NRT","ICN","BKK","SIN","HKG","DEL","KUL","PVG"],
+  "Southeast Asia": ["BKK","SIN","KUL","MNL","CGK","DAD","HAN","SGN"],
+  "South Asia": ["DEL","BOM","CMB","KTM","DAC"],
+  "East Asia": ["NRT","ICN","PVG","HKG","TPE"],
+  "Africa": ["JNB","CPT","NBO","ADD","CMN","CAI"],
+  "North Africa": ["CMN","CAI","TUN","ALG"],
+  "South America": ["GRU","EZE","BOG","LIM","SCL","GIG"],
+  "Latin America": ["GRU","EZE","BOG","LIM","MEX","SCL","CUN"],
+  "North America": ["JFK","LAX","ORD","MIA","YYZ","SFO","YVR"],
+  "Central America": ["MEX","SJO","PTY","GUA"],
+  "Middle East": ["DXB","DOH","IST","TLV","AMM"],
+  "Caribbean": ["SJU","NAS","BGI","MBJ","PUJ"],
+  "Scandinavia": ["ARN","CPH","OSL","HEL"],
+  "Nordic": ["ARN","CPH","OSL","HEL","KEF"],
+  "Mediterranean": ["ATH","BCN","FCO","PMI","AGP","SPU"],
+  "Oceania": ["SYD","MEL","AKL","BNE"],
+  "Western Europe": ["LHR","CDG","AMS","BRU","DUB","LIS"],
+  "Eastern Europe": ["WAW","PRG","BUD","OTP","SOF"],
+  "Central Europe": ["BER","VIE","PRG","ZRH","MUC"],
+  "Southern Europe": ["FCO","BCN","ATH","LIS","PMI"],
+  "Northern Europe": ["ARN","CPH","OSL","HEL","DUB"],
+  "Balkans": ["ATH","SOF","BEG","ZAG","SPU"],
+  "Anywhere": ["LHR","CDG","FCO","JFK","BKK","NRT","DXB","SYD","GRU","SIN"],
+  "Everywhere": ["LHR","CDG","FCO","JFK","BKK","NRT","DXB","SYD","GRU","SIN"],
+};
+
 const MONTH_NAMES = ["january","february","march","april","may","june","july","august","september","october","november","december"];
 const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const DAY_NAMES = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
@@ -685,7 +714,13 @@ function scanLocations(prompt: string): ScannedLoc[] {
     if (!p || p.length < 2) return null;
     // Regions: return as a match with display label (no airports, tooltip only)
     const regionLabel = REGION_LABELS[p];
-    if (regionLabel) return { display: regionLabel, count: 0, airports: [] };
+    if (regionLabel) {
+      const regionAirports = (REGION_AIRPORTS[regionLabel] || []).map(iata => {
+        const ap = AIRPORTS.find(a => a.iata === iata);
+        return ap ? { iata: ap.iata, city: ap.city } : { iata, city: iata };
+      });
+      return { display: regionLabel, count: regionAirports.length, airports: regionAirports };
+    }
     // Skipword check: only block if the user typed lowercase. If they typed
     // all-uppercase (e.g. "SIN", "DEN"), they likely mean the IATA code.
     const orig = originalPhrase || phrase;
