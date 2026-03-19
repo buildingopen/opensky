@@ -3418,45 +3418,25 @@ function HomePage() {
               <ParsedConfig parsed={parsed} cacheAgeSeconds={null} onRefresh={() => search()} />
             )}
             <SearchingState parsed={parsed} progress={progress} filteredCount={safetyFilteredCount} />
-            <div className="mt-6 space-y-4">
-              {previewFlights.length > 0 ? (
-                <div className="animate-[fadeIn_0.3s_ease-in]">
-                  <p className="text-xs text-[var(--color-text-muted)] text-center mb-3">{t("loading.bestSoFar")}</p>
-                  {previewFlights.map((f: FlightOut & { _isRoundTripPrice?: boolean }, i: number) => (
-                    <div key={`preview-${i}`} className="opacity-70 pointer-events-none mb-4 relative">
-                      <FlightCard
-                        flight={f}
-                        airportNames={airportNames}
-                        attributionParams={attributionParams}
-                        onOutboundClick={() => {}}
-                        cabin={parsed?.cabin}
-                      />
-                      {f._isRoundTripPrice && (
-                        <span className="absolute top-3 end-3 text-[10px] text-[var(--color-text-muted)]">{t("loading.roundTrip")}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="overflow-hidden space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 overflow-hidden">
-                      <div className="flex justify-between gap-4">
-                        <div className="flex-1 space-y-3">
-                          <div className="h-4 skeleton-shimmer w-3/4" />
-                          <div className="h-3 skeleton-shimmer w-1/3" />
-                          <div className="h-3 skeleton-shimmer w-1/2" />
-                        </div>
-                        <div className="space-y-2 w-24">
-                          <div className="h-7 skeleton-shimmer" />
-                          <div className="h-9 skeleton-shimmer" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            {previewFlights.length > 0 && (
+              <div className="mt-6 space-y-4 animate-[fadeIn_0.3s_ease-in]">
+                <p className="text-xs text-[var(--color-text-muted)] text-center mb-3">{t("loading.bestSoFar")}</p>
+                {previewFlights.map((f: FlightOut & { _isRoundTripPrice?: boolean }, i: number) => (
+                  <div key={`preview-${i}`} className="opacity-70 pointer-events-none mb-4 relative">
+                    <FlightCard
+                      flight={f}
+                      airportNames={airportNames}
+                      attributionParams={attributionParams}
+                      onOutboundClick={() => {}}
+                      cabin={parsed?.cabin}
+                    />
+                    {f._isRoundTripPrice && (
+                      <span className="absolute top-3 end-3 text-[10px] text-[var(--color-text-muted)]">{t("loading.roundTrip")}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
 
