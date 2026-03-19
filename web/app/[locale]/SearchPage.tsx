@@ -3121,7 +3121,7 @@ function HomePage() {
       {/* Hero - outcome-focused */}
       <section className={`max-w-3xl mx-auto px-4 w-full transition-all duration-300 ${hasResults ? "pt-6 pb-4 text-start" : "pt-10 sm:pt-16 pb-4 text-center"}`}>
         {!hasResults && (
-          <h1 className="font-bold tracking-tighter leading-tight text-5xl sm:text-6xl">
+          <h1 className="font-bold tracking-tighter leading-tight text-5xl sm:text-6xl text-[var(--color-heading)]">
             {t("heroTitle")}{" "}
             <span className="text-[var(--color-accent)]">{t("heroTitleAccent")}</span>
           </h1>

@@ -6,6 +6,7 @@
   --color-surface-2: #161d2d;
   --color-border: #1e2a3c;
   --color-text: #e4e4e7;
+  --color-heading: #e4e4e7;
   --color-text-muted: #94a3b8;
   --color-accent: #22c55e;
   --color-accent-hover: #16a34a;
@@ -47,6 +48,7 @@
   --color-surface-2: rgba(240,244,255,0.55);
   --color-border: #dce5f5;
   --color-text: #1e293b;
+  --color-heading: #334155;
   --color-text-muted: #64748b;
   --shadow-card: 0 2px 16px -4px rgba(0,0,0,0.08), 0 0 0 1px rgba(59,130,246,0.04);
   --shadow-surface: 0 2px 20px -6px rgba(0,0,0,0.1), 0 0 0 1px rgba(59,130,246,0.05);
