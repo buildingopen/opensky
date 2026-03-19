@@ -1553,7 +1553,7 @@ function PriceAlertSection({
 // ---------------------------------------------------------------------------
 // Fix 2: Parsed Config chips
 // ---------------------------------------------------------------------------
-function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number }) {
+function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount, expandPhase, expandProgress, expansionInfo }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number; expandPhase?: "idle" | "expanding" | "done"; expandProgress?: { done: number; total: number } | null; expansionInfo?: string | null }) {
   const { origins, destinations, dates, return_dates, max_price, currency, cabin, stops, airport_names } = parsed;
   const sym = currencySymbol(currency);
   const isRoundTrip = return_dates && return_dates.length > 0;
@@ -1614,6 +1614,19 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
           </>
         )}
       </div>
+      {expandPhase === "expanding" && (
+        <div className="pt-1 space-y-1.5">
+          <span className="text-xs text-[var(--color-interactive)]">{expansionInfo ? `Expanding search: ${expansionInfo}` : "Expanding search"}</span>
+          {expandProgress && (
+            <div className="h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -2650,32 +2663,12 @@ function HomePage() {
 
         {phase === "done" && parsed && (
           <>
-            {/* Fix 2: Parsed config chips */}
+            {/* Parsed config chips + expand progress inside */}
             {(() => {
               const items = (tripTab === "roundtrip" && roundTripResults?.length) ? roundTripResults : flights;
               const safeCount = items.filter((f: any) => f.risk_level === "safe").length;
-              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} />;
+              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} expandPhase={expandPhase} expandProgress={expandProgress} expansionInfo={expansionInfo} />;
             })()}
-
-            {/* Expand search progress (shown at top of results) */}
-            {expandPhase === "expanding" && (
-              <div className="mt-3 w-full bg-[var(--color-surface)] border border-[var(--color-interactive)]/30 rounded-lg px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 border-2 border-[var(--color-interactive)] border-t-transparent rounded-full animate-spin shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm text-[var(--color-text)]">Expanding search{expansionInfo ? `: ${expansionInfo}` : "..."}</span>
-                    {expandProgress && (
-                      <div className="mt-1.5 h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-300"
-                          style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Fix 5: Show warning if return date was before departure */}
             {searchWarning && (

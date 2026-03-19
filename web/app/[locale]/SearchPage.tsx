@@ -2260,7 +2260,7 @@ function PriceAlertSection({
 // ---------------------------------------------------------------------------
 // Fix 2: Parsed Config chips
 // ---------------------------------------------------------------------------
-function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number }) {
+function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount, expandPhase, expandProgress, expansionInfo }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number; expandPhase?: "idle" | "expanding" | "done"; expandProgress?: { done: number; total: number } | null; expansionInfo?: string | null }) {
   const t = useTranslations("search");
   const tc = useTranslations("common");
   const locale = useLocale();
@@ -2346,6 +2346,19 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
           </>
         )}
       </div>
+      {expandPhase === "expanding" && (
+        <div className="pt-1 space-y-1.5">
+          <span className="text-xs text-[var(--color-interactive)]">{expansionInfo ? t("expand.expandingInfo", { info: expansionInfo }) : t("expand.expanding")}</span>
+          {expandProgress && (
+            <div className="h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -3436,27 +3449,12 @@ function HomePage() {
 
         {phase === "done" && parsed && (
           <>
-            {/* Fix 2: Parsed config chips */}
+            {/* Parsed config chips + expand progress inside */}
             {(() => {
               const items = (tripTab === "roundtrip" && roundTripResults?.length) ? roundTripResults : flights;
               const safeCount = items.filter((f: any) => f.risk_level === "safe").length;
-              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} />;
+              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} expandPhase={expandPhase} expandProgress={expandProgress} expansionInfo={expansionInfo} />;
             })()}
-
-            {/* Expand search progress (inline bar, no spinner) */}
-            {expandPhase === "expanding" && (
-              <div className="mt-3 w-full rounded-lg px-4 py-3 bg-[var(--color-interactive)]/5 border border-[var(--color-interactive)]/20">
-                <span className="text-sm text-[var(--color-text)]">{expansionInfo ? t("expand.expandingInfo", { info: expansionInfo }) : t("expand.expanding")}</span>
-                {expandProgress && (
-                  <div className="mt-2 h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Fix 5: Show warning if return date was before departure */}
             {searchWarning && (
