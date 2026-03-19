@@ -1626,14 +1626,16 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
       {expandPhase === "expanding" && (
         <div className="pt-1 space-y-1.5">
           <span className="text-xs text-[var(--color-interactive)]">{expansionInfo ? `Expanding search: ${expansionInfo}` : "Expanding search"}</span>
-          {expandProgress && (
-            <div className="h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+          <div className="h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+            {expandProgress ? (
               <div
                 className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
               />
-            </div>
-          )}
+            ) : (
+              <div className="h-full bg-[var(--color-interactive)] opacity-60 rounded-full shimmer-bar" />
+            )}
+          </div>
         </div>
       )}
       {showExpandDone && (

@@ -1821,7 +1821,7 @@ interface ProgressInfo {
   date: string;
 }
 
-function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSearch | null; progress: ProgressInfo | null; filteredCount: number }) {
+function SearchingState({ parsed, progress, filteredCount, workers }: { parsed: ParsedSearch | null; progress: ProgressInfo | null; filteredCount: number; workers: number }) {
   const t = useTranslations("search");
   const pct = progress?.total ? (progress.done / progress.total) * 100 : 0;
   const routesChecked = progress?.done ?? 0;
@@ -1829,10 +1829,10 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
 
   const message = !parsed
     ? t("loading.understanding")
-    : pct < 30
-      ? t("loading.findingFlights")
+    : totalRoutes === 0
+      ? t("loading.agentsChecking", { workers: workers || 16, total: parsed.total_routes })
       : pct < 70
-        ? t("loading.comparingPrices")
+        ? t("loading.agentsChecking", { workers: workers || 16, total: totalRoutes })
         : t("loading.checkingRemaining", { done: routesChecked, total: totalRoutes });
 
   // Derive route summary from parsed data
@@ -2402,14 +2402,16 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
       {expandPhase === "expanding" && (
         <div className="pt-1 space-y-1.5">
           <span className="text-xs text-[var(--color-interactive)]">{expansionInfo ? t("expand.expandingInfo", { info: expansionInfo }) : t("expand.expanding")}</span>
-          {expandProgress && (
-            <div className="h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+          <div className="h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+            {expandProgress ? (
               <div
                 className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${Math.round((expandProgress.done / expandProgress.total) * 100)}%` }}
               />
-            </div>
-          )}
+            ) : (
+              <div className="h-full bg-[var(--color-interactive)] opacity-60 rounded-full shimmer-bar" />
+            )}
+          </div>
         </div>
       )}
       {showExpandDone && (
@@ -2521,6 +2523,7 @@ function HomePage() {
   const [suggestions, setSuggestions] = useState<string[] | null>(null);
   const [parsed, setParsed] = useState<ParsedSearch | null>(null);
   const [progress, setProgress] = useState<ProgressInfo | null>(null);
+  const [workers, setWorkers] = useState(0);
   const [flights, setFlights] = useState<FlightOut[]>([]);
   const [returnFlights, setReturnFlights] = useState<FlightOut[] | null>(null);
   const [roundTripResults, setRoundTripResults] = useState<RoundTripOut[] | null>(null);
@@ -2701,6 +2704,7 @@ function HomePage() {
     setSuggestions(null);
     setParsed(null);
     setProgress(null);
+    setWorkers(0);
     setFlights([]);
     setMoreSortKey("score");
     setReturnFlights(null);
@@ -2805,6 +2809,7 @@ function HomePage() {
             const msg = JSON.parse(line.slice(6));
             if (msg.type === "parsed") {
               setParsed(msg.parsed);
+              if (msg.workers) setWorkers(msg.workers);
               if (msg.warning) setSearchWarning(msg.warning);
               setPhase("searching");
             } else if (msg.type === "progress") {
@@ -3491,7 +3496,7 @@ function HomePage() {
             {parsed && (
               <ParsedConfig parsed={parsed} cacheAgeSeconds={null} onRefresh={() => search()} />
             )}
-            <SearchingState parsed={parsed} progress={progress} filteredCount={safetyFilteredCount} />
+            <SearchingState parsed={parsed} progress={progress} filteredCount={safetyFilteredCount} workers={workers} />
             {previewFlights.length > 0 && (
               <div className="mt-6 space-y-4 animate-[fadeIn_0.3s_ease-in]">
                 <p className="text-xs text-[var(--color-text-muted)] text-center mb-3">{t("loading.bestSoFar")}</p>

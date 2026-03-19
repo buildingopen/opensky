@@ -102,7 +102,7 @@ API_KEYS = set(k.strip() for k in os.environ.get("API_KEYS", "").split(",") if k
 API_KEY_QUOTA = int(os.environ.get("API_KEY_QUOTA", "100"))
 REDIS_URL = os.environ.get("REDIS_URL", "").strip()
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_MODEL = "gemini-3-flash-preview"
+GEMINI_MODEL = "gemini-2.5-flash-lite"
 GEMINI_FALLBACK_MODEL = "gemini-2.5-flash"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 GEMINI_FALLBACK_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_FALLBACK_MODEL}:generateContent"
@@ -472,7 +472,7 @@ async def parse_prompt(prompt: str) -> dict:
                     },
                 )
         except httpx.RequestError as exc:
-            log.warning("Gemini request failed (attempt %s): %s", attempt + 1, exc)
+            log.warning("Gemini request failed (attempt %s): %s: %s", attempt + 1, type(exc).__name__, exc)
             if attempt < GEMINI_MAX_RETRIES:
                 await asyncio.sleep((0.25 * (2**attempt)) + random.uniform(0, 0.15))
                 continue
@@ -1527,7 +1527,7 @@ async def search_flights(req: PromptRequest, request: Request):
             _capture(_anon, "server_search_error", {"error_type": "parse_failure", "duration_ms": int((time.time() - _search_start) * 1000)})
             yield f"data: {json.dumps({'type': 'error', 'detail': 'Internal error preparing search.'})}\n\n"
             return
-        parsed_event: dict = {"type": "parsed", "parsed": parsed_data}
+        parsed_event: dict = {"type": "parsed", "parsed": parsed_data, "workers": min(16, combined_total)}
         if return_date_warning:
             parsed_event["warning"] = return_date_warning
         yield f"data: {json.dumps(parsed_event)}\n\n"
