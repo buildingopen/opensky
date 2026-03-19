@@ -355,17 +355,22 @@ Rules:
 - "next [weekday]": count forward day by day from today until you reach that weekday. Example: today=Saturday 2026-03-14, "next Friday" → count 1(Sun Mar15), 2(Mon), 3(Tue), 4(Wed), 5(Thu), 6(Fri Mar20) → return 2026-03-20. NEVER jump to the following week's occurrence.
 - "this weekend": if today IS Saturday → return today + tomorrow (Sunday). If today IS Sunday → return today only. If today is Mon–Fri → return the nearest upcoming Saturday + Sunday.
 - If no dates specified, use next 7 days from today.
-- return_dates: list of return dates for round trips. Empty list [] for one-way trips.
-  - Set return_dates (non-empty) when the query contains ANY of these round trip indicators:
-    English: "round trip", "return", "returning on", "back on", "come back", "both ways"
-    German: "hin und zurück", "hin- und rückflug", "rückflug", "zurück", "retour", "rundflug"
-    Spanish: "ida y vuelta", "viaje redondo", "vuelo de regreso"
-    French: "aller-retour", "aller retour", "vol retour"
-    Italian: "andata e ritorno", "ritorno"
+- return_dates: DEFAULTS TO EMPTY []. Most queries are ONE-WAY.
+  - ONLY set return_dates to non-empty if the user EXPLICITLY uses a round-trip keyword:
+    English: "round trip", "roundtrip", "return", "returning on", "back on", "come back", "both ways", "hin und zurück"
+    German: "hin und zurück", "hin- und rückflug", "rückflug", "retour"
+    Spanish: "ida y vuelta", "viaje redondo"
+    French: "aller-retour", "aller retour"
+    Italian: "andata e ritorno"
     Portuguese: "ida e volta"
-    Also set true if the query implies needing to come back (e.g., "I need to be back by...", "flying home on...")
-  - "JFK to London April 10 returning April 17" -> dates=["2026-04-10"], return_dates=["2026-04-17"]
-  - "round trip March 10-12 returning March 20-22" -> dates=["2026-03-10","2026-03-11","2026-03-12"], return_dates=["2026-03-20","2026-03-21","2026-03-22"]
+    Turkish: "gidiş dönüş"
+    Japanese: "往復" | Korean: "왕복" | Chinese: "往返" | Arabic: "ذهاب وعودة" | Hindi: "राउंड ट्रिप"
+  - Also set if the query implies needing to come back (e.g., "I need to be back by...", "flying home on...")
+  - CRITICAL: If NONE of these keywords appear, return_dates MUST be []. Do NOT assume round trip.
+  - "Berlin to Rome, July, under 100" -> return_dates=[] (NO round trip keyword = one-way)
+  - "cheapest flight to Bangkok" -> return_dates=[] (one-way)
+  - "JFK to London April 10 returning April 17" -> return_dates=["2026-04-17"] (has "returning")
+  - "round trip March 10-12 returning March 20-22" -> return_dates=["2026-03-20","2026-03-21","2026-03-22"]
   - If user indicates round trip but no specific return date, set return_dates to 7 days after each outbound date.
 - max_price 0 means no limit.
 - cabin: economy | premium_economy | business | first
@@ -408,23 +413,32 @@ Examples:
 - "cheapest week to fly JFK to CDG" -> one date per week for next 4 weeks from today ({today})
 - "HAM to anywhere beach next week roundtrip 5-7 days" -> {{"origins":["HAM"],"destinations":["AGP","PMI","ATH","TFS","HRG"],"dates":["2026-03-23","2026-03-24","2026-03-25","2026-03-27"],"return_dates":["2026-03-28","2026-03-29","2026-03-30","2026-04-01","2026-04-02"],...}} (1×5×4×5=100 combos, at limit)
 
-CRITICAL LIMIT — MANDATORY: Maximum 100 route combinations.
+CRITICAL LIMIT — HARD CAP: Maximum 100 route combinations. NEVER exceed this.
 Formula: total = len(origins) × len(destinations) × len(dates) × max(len(return_dates), 1)
-You MUST calculate this before outputting. If total > 100, REDUCE until it fits.
 
-Round trips multiply fast: 5 destinations × 7 dates × 7 return_dates = 245 (OVER LIMIT).
-For round trip + open-ended destinations: use 5 destinations × 4 outbound dates × 5 return dates = 100 (exactly at limit).
-For round trip + specific route (1 dest): you can use more dates, e.g. 1×7×7=49.
-AIM for 80-100 combinations to maximize coverage. Do NOT go far below 50.
+BEFORE writing the JSON, you MUST:
+1. Count your arrays: O origins, D destinations, T dates, R return_dates (R=1 if empty)
+2. Calculate: total = O × D × T × R
+3. If total > 100, REDUCE arrays until total ≤ 100
+4. Set "total_routes" to your calculated number
+
+Common calculations:
+- 1 origin × 5 dests × 7 dates × 1 (one-way) = 35 ✓
+- 1 origin × 10 dests × 10 dates × 1 (one-way) = 100 ✓ (at limit)
+- 1 origin × 5 dests × 5 dates × 4 return_dates = 100 ✓ (at limit)
+- 2 origins × 5 dests × 7 dates × 1 = 70 ✓
+- 1 origin × 10 dests × 7 dates × 3 return_dates = 210 ✗ OVER! Reduce to 5 dests or 3 dates
+- 3 origins × 8 dests × 5 dates × 1 = 120 ✗ OVER! Reduce to 6 dests
+
+AIM for 60-100 combinations. Do NOT go far below 50 for broad queries.
 
 Reduction strategies (apply in order until total ≤ 100):
 1. Cut destinations to 3-5 (pick the best matches)
 2. Sample dates: every 2nd or 3rd day instead of consecutive
-3. Sample return_dates: pick 2-3 representative return dates (e.g. 5 days, 7 days after first outbound)
+3. Sample return_dates: pick 2-3 representative return dates
 4. Cut origins to 1-2
 
-Include "total_routes": <your calculated number> in the JSON.
-For broad queries (e.g. "any beach", "anywhere warm"), select only the top 3-5 best-matching destinations."""
+For broad queries ("any beach", "anywhere warm"), select only the top 3-5 best-matching destinations."""
 
 
 PARSE_RESPONSE_SCHEMA = {
