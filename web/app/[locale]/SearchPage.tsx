@@ -3399,7 +3399,7 @@ function HomePage() {
                       onClick={() => { setError(null); search(); }}
                       className="text-sm px-5 py-2.5 rounded-lg bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-colors font-medium"
                     >
-                      {t("common.tryAgain")}
+                      {tc("tryAgain")}
                     </button>
                   )}
                   {suggestions && suggestions.length > 0 && (
