@@ -367,6 +367,7 @@ Rules:
     Japanese: "往復" | Korean: "왕복" | Chinese: "往返" | Arabic: "ذهاب وعودة" | Hindi: "राउंड ट्रिप"
   - Also set if the query implies needing to come back (e.g., "I need to be back by...", "flying home on...")
   - CRITICAL: If NONE of these keywords appear, return_dates MUST be []. Do NOT assume round trip.
+  - PRIORITY: If a round-trip keyword IS present, you MUST include return_dates even if it means fewer destinations or dates. Never drop return_dates to stay under the combo limit; reduce destinations/dates instead.
   - "Berlin to Rome, July, under 100" -> return_dates=[] (NO round trip keyword = one-way)
   - "cheapest flight to Bangkok" -> return_dates=[] (one-way)
   - "JFK to London April 10 returning April 17" -> return_dates=["2026-04-17"] (has "returning")
