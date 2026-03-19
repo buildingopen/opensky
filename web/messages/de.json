@@ -110,6 +110,7 @@
       "findingFlights": "Flüge werden gesucht",
       "comparingPrices": "Preise werden verglichen",
       "almostReady": "Fast fertig",
+      "checkingRemaining": "{done} von {total} Routen werden geprüft",
       "showDetails": "Details anzeigen",
       "hideDetails": "Details ausblenden",
       "almostDone": "Fast fertig...",

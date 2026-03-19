@@ -110,6 +110,7 @@
       "findingFlights": "आपकी उड़ानें खोज रहे हैं",
       "comparingPrices": "एयरलाइनों में कीमतों की तुलना कर रहे हैं",
       "almostReady": "लगभग तैयार",
+      "checkingRemaining": "{total} में से {done} रूट जांचे जा रहे हैं",
       "showDetails": "विवरण दिखाएं",
       "hideDetails": "विवरण छिपाएं",
       "almostDone": "लगभग हो गया...",

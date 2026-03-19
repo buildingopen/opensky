@@ -110,6 +110,7 @@
       "findingFlights": "جارٍ البحث عن رحلاتك",
       "comparingPrices": "مقارنة الأسعار بين شركات الطيران",
       "almostReady": "جاهز تقريبًا",
+      "checkingRemaining": "جارٍ التحقق من {done} من أصل {total} مسار",
       "showDetails": "عرض التفاصيل",
       "hideDetails": "إخفاء التفاصيل",
       "almostDone": "على وشك الانتهاء...",

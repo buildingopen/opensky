@@ -119,6 +119,7 @@
       "findingFlights": "Finding your flights",
       "comparingPrices": "Comparing prices across airlines",
       "almostReady": "Almost ready",
+      "checkingRemaining": "Checking {done} of {total} routes",
       "showDetails": "Show details",
       "hideDetails": "Hide details",
       "almostDone": "Almost done...",

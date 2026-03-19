@@ -1789,7 +1789,7 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
       ? t("loading.findingFlights")
       : pct < 70
         ? t("loading.comparingPrices")
-        : t("loading.almostReady");
+        : t("loading.checkingRemaining", { done: routesChecked, total: totalRoutes });
 
   // Derive route summary from parsed data
   const originCount = parsed?.origins?.length ?? 0;

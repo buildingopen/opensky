@@ -110,6 +110,7 @@
       "findingFlights": "Procurando seus voos",
       "comparingPrices": "Comparando preços entre companhias",
       "almostReady": "Quase pronto",
+      "checkingRemaining": "Verificando {done} de {total} rotas",
       "showDetails": "Mostrar detalhes",
       "hideDetails": "Ocultar detalhes",
       "almostDone": "Quase pronto...",

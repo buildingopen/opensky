@@ -110,6 +110,7 @@
       "findingFlights": "Uçuşlarınız aranıyor",
       "comparingPrices": "Havayolları arasında fiyatlar karşılaştırılıyor",
       "almostReady": "Neredeyse hazır",
+      "checkingRemaining": "{total} rotadan {done} tanesi kontrol ediliyor",
       "showDetails": "Ayrıntıları göster",
       "hideDetails": "Ayrıntıları gizle",
       "almostDone": "Neredeyse bitti...",

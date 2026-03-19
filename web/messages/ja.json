@@ -110,6 +110,7 @@
       "findingFlights": "フライトを検索中",
       "comparingPrices": "航空会社間の料金を比較中",
       "almostReady": "もうすぐ完了",
+      "checkingRemaining": "{total}件中{done}件のルートを確認中",
       "showDetails": "詳細を表示",
       "hideDetails": "詳細を非表示",
       "almostDone": "まもなく完了...",

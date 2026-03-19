@@ -110,6 +110,7 @@
       "findingFlights": "正在搜索航班",
       "comparingPrices": "正在比较各航空公司的价格",
       "almostReady": "即将完成",
+      "checkingRemaining": "正在检查 {total} 条路线中的第 {done} 条",
       "showDetails": "显示详情",
       "hideDetails": "隐藏详情",
       "almostDone": "即将完成...",

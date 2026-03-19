@@ -110,6 +110,7 @@
       "findingFlights": "항공편을 찾고 있습니다",
       "comparingPrices": "항공사 간 가격을 비교하고 있습니다",
       "almostReady": "거의 완료",
+      "checkingRemaining": "{total}개 중 {done}개 경로 확인 중",
       "showDetails": "세부 정보 표시",
       "hideDetails": "세부 정보 숨기기",
       "almostDone": "거의 완료되었습니다...",
