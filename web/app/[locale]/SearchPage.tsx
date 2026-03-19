@@ -1793,7 +1793,7 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
     <div className="py-10 space-y-6">
       <div className="flex flex-col items-center gap-3">
         {/* Floating plane icon with pulsing glow */}
-        <svg viewBox="0 0 24 24" className="w-8 h-8 text-[var(--color-interactive)] plane-float plane-glow" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <svg viewBox="0 0 24 24" className="w-8 h-8 text-[var(--color-interactive)] plane-float" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
         </svg>
         <p key={message} className="text-base text-[var(--color-text)] loading-message">

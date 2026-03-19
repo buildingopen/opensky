@@ -261,16 +261,13 @@ body {
   75% { transform: translateX(-6px) translateY(-4px) rotate(-2deg); }
 }
 .plane-float {
-  animation: plane-float 3s ease-in-out infinite;
+  animation: plane-float 3s ease-in-out infinite, plane-glow 2s ease-in-out infinite;
 }
 
 /* Pulsing glow around plane icon during loading */
 @keyframes plane-glow {
   0%, 100% { filter: drop-shadow(0 0 6px rgba(34,197,94,0.15)); }
   50% { filter: drop-shadow(0 0 14px rgba(34,197,94,0.4)); }
-}
-.plane-glow {
-  animation: plane-glow 2s ease-in-out infinite;
 }
 
 /* Animated dots after loading message */
