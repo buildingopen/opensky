@@ -49,7 +49,7 @@ function CloudOrbs() {
           top: "-100px",
           left: "-120px",
           background: "radial-gradient(ellipse, var(--cloud-white-start) 0%, var(--cloud-white-end) 40%, transparent 70%)",
-          filter: "blur(40px)",
+          filter: "blur(30px)",
           animationDuration: "10s",
         }}
       />
@@ -62,7 +62,7 @@ function CloudOrbs() {
           top: "-50px",
           right: "-80px",
           background: "radial-gradient(ellipse, var(--cloud-green-start) 0%, var(--cloud-green-end) 40%, transparent 70%)",
-          filter: "blur(45px)",
+          filter: "blur(35px)",
           animationDelay: "-3s",
           animationDuration: "12s",
         }}
@@ -76,7 +76,7 @@ function CloudOrbs() {
           top: "28%",
           left: "-60px",
           background: "radial-gradient(ellipse, var(--cloud-white-start) 0%, var(--cloud-white-end) 45%, transparent 70%)",
-          filter: "blur(35px)",
+          filter: "blur(25px)",
           animationDelay: "-5s",
           animationDuration: "13s",
         }}
@@ -90,7 +90,7 @@ function CloudOrbs() {
           top: "18%",
           right: "-150px",
           background: "radial-gradient(ellipse, var(--cloud-white-start) 0%, var(--cloud-white-end) 45%, transparent 65%)",
-          filter: "blur(45px)",
+          filter: "blur(35px)",
           animationDelay: "-7s",
           animationDuration: "15s",
         }}
@@ -104,7 +104,7 @@ function CloudOrbs() {
           bottom: "12%",
           left: "8%",
           background: "radial-gradient(ellipse, var(--cloud-green-start) 0%, var(--cloud-green-end) 40%, transparent 70%)",
-          filter: "blur(40px)",
+          filter: "blur(30px)",
           animationDelay: "-9s",
           animationDuration: "11s",
         }}
@@ -118,7 +118,7 @@ function CloudOrbs() {
           bottom: "-80px",
           right: "3%",
           background: "radial-gradient(ellipse, var(--cloud-white-start) 0%, var(--cloud-white-end) 40%, transparent 70%)",
-          filter: "blur(45px)",
+          filter: "blur(30px)",
           animationDelay: "-2s",
           animationDuration: "14s",
         }}

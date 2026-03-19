@@ -56,10 +56,10 @@
   --shadow-cta-hover: 0 0 32px rgba(34,197,94,0.25), 0 4px 12px rgba(0,0,0,0.12);
   --glass-fallback: rgba(248,250,255,0.95);
   --sky-gradient: linear-gradient(180deg, #7ab8f5 0%, #93c5fd 10%, #bfdbfe 25%, #dbeafe 40%, #e8f0fe 55%, #f0f4ff 75%, #f8faff 100%);
-  --cloud-white-start: rgba(180,210,255,0.5);
-  --cloud-white-end: rgba(180,210,255,0.2);
-  --cloud-green-start: rgba(34,197,94,0.08);
-  --cloud-green-end: rgba(34,197,94,0.03);
+  --cloud-white-start: rgba(180,210,255,0.6);
+  --cloud-white-end: rgba(180,210,255,0.25);
+  --cloud-green-start: rgba(34,197,94,0.10);
+  --cloud-green-end: rgba(34,197,94,0.04);
   --color-geo-stroke: #dce5f5;
   --color-geo-default: #e8edf5;
   --color-geo-hover: #dce5f5;
@@ -181,11 +181,11 @@ body {
 
 /* Cloud orb drift - large atmospheric movement */
 @keyframes cloud-drift {
-  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
-  25% { transform: translate3d(100px, -30px, 0) scale(1.1); opacity: 0.7; }
-  50% { transform: translate3d(40px, 20px, 0) scale(0.95); opacity: 1; }
-  75% { transform: translate3d(-60px, -10px, 0) scale(1.05); opacity: 0.8; }
-  100% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  25% { transform: translate3d(140px, -40px, 0) scale(1.08); }
+  50% { transform: translate3d(50px, 30px, 0) scale(0.96); }
+  75% { transform: translate3d(-80px, -15px, 0) scale(1.04); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 .cloud-orb {
   animation: cloud-drift 14s ease-in-out infinite;

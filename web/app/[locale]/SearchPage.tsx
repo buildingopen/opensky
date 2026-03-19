@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Component, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations, useLocale, useFormatter } from "next-intl";
 import { Link } from "../../i18n/navigation";
 import { trackEvent } from "../../lib/analytics";
@@ -1100,7 +1101,7 @@ function InlineHighlight({ text, airports, resolvedDate, tooltip }: { text: stri
       onClick={(e) => { e.stopPropagation(); }}
     >
       <span className="text-[var(--color-interactive)] cursor-help border-b border-dotted border-[var(--color-interactive)]/50">{text}</span>
-      {show && (
+      {show && typeof document !== "undefined" && createPortal(
         <div ref={tooltipRef} className="fixed z-50 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg p-2 shadow-lg animate-fade-in" style={{ maxHeight: 240, maxWidth: 220, overflowY: "auto" }}>
           {tooltip ? (
             <span className="block text-[11px] leading-relaxed text-[var(--color-text)] whitespace-nowrap">{tooltip}</span>
@@ -1114,7 +1115,8 @@ function InlineHighlight({ text, airports, resolvedDate, tooltip }: { text: stri
               </span>
             ))
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </span>
   );
