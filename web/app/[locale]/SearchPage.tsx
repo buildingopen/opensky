@@ -2270,6 +2270,15 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
   const [datesExpanded, setDatesExpanded] = useState(false);
   const [originsExpanded, setOriginsExpanded] = useState(false);
   const [destsExpanded, setDestsExpanded] = useState(false);
+  const [showExpandDone, setShowExpandDone] = useState(false);
+  useEffect(() => {
+    if (expandPhase === "done" && expandCount != null && expandCount > 0) {
+      setShowExpandDone(true);
+      const timer = setTimeout(() => setShowExpandDone(false), 4000);
+      return () => clearTimeout(timer);
+    }
+    setShowExpandDone(false);
+  }, [expandPhase, expandCount]);
 
   const originItems = origins.map((o) => airport_names?.[o] ? `${airport_names[o]} (${o})` : o);
   const canExpandOrigins = originItems.length > 2;
@@ -2359,7 +2368,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
           )}
         </div>
       )}
-      {expandPhase === "done" && expandCount != null && expandCount > 0 && (
+      {showExpandDone && (
         <div className="pt-1 animate-[fadeOutDelay_4s_ease-out_forwards]">
           <span className="text-xs text-[var(--color-interactive)]">+{expandCount} {t("expand.flightsAdded")}</span>
         </div>

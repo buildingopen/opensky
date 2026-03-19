@@ -1558,6 +1558,15 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
   const sym = currencySymbol(currency);
   const isRoundTrip = return_dates && return_dates.length > 0;
   const [datesExpanded, setDatesExpanded] = useState(false);
+  const [showExpandDone, setShowExpandDone] = useState(false);
+  useEffect(() => {
+    if (expandPhase === "done" && expandCount != null && expandCount > 0) {
+      setShowExpandDone(true);
+      const timer = setTimeout(() => setShowExpandDone(false), 4000);
+      return () => clearTimeout(timer);
+    }
+    setShowExpandDone(false);
+  }, [expandPhase, expandCount]);
 
   const originLabel = origins.map((o) => airport_names?.[o] ? `${airport_names[o]} (${o})` : o).join(", ");
   const destLabel = destinations.map((d) => airport_names?.[d] ? `${airport_names[d]} (${d})` : d).join(", ");
@@ -1627,7 +1636,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
           )}
         </div>
       )}
-      {expandPhase === "done" && expandCount != null && expandCount > 0 && (
+      {showExpandDone && (
         <div className="pt-1 animate-[fadeOutDelay_4s_ease-out_forwards]">
           <span className="text-xs text-[var(--color-interactive)]">+{expandCount} flights added</span>
         </div>
