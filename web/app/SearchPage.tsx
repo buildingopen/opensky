@@ -1266,12 +1266,22 @@ function ScanSummaryExpanded({
 }) {
   const { best_destinations, price_matrix, stats } = summary;
   const sym = currencySymbol(currency);
-  const isMultiDest = best_destinations.length > 1;
-  const isMultiOrigin = stats.origins > 1;
-  const showMatrix = isMultiDest && price_matrix.dates.length > 1 && Object.values(price_matrix.prices).some((v) => v != null);
 
-  // Compute global min/max for heatmap coloring
-  const allPrices = Object.values(price_matrix.prices).filter((v): v is number => v != null);
+  // After expand, derive heatmap dimensions from live flights (summary is frozen)
+  const expanded = !!(expandCount && expandCount > 0 && flights.length > 0);
+  const liveUniqueOrigins = expanded ? new Set(flights.map(f => f.origin)).size : stats.origins;
+  const liveUniqueDests = expanded ? [...new Set(flights.map(f => f.destination))] : best_destinations.map(d => d.destination);
+  const isMultiDest = liveUniqueDests.length > 1;
+  const isMultiOrigin = liveUniqueOrigins > 1;
+  const heatmapDates = expanded
+    ? [...new Set(flights.map(f => f.date))].sort()
+    : price_matrix.dates;
+  const showMatrix = isMultiDest && heatmapDates.length > 1 && (expanded || Object.values(price_matrix.prices).some((v) => v != null));
+
+  // Compute global min/max for heatmap coloring (live data after expand)
+  const allPrices = expanded
+    ? flights.filter(f => f.price > 0).map(f => f.price)
+    : Object.values(price_matrix.prices).filter((v): v is number => v != null);
   const globalMin = allPrices.length > 0 ? Math.min(...allPrices) : 0;
   const globalMax = allPrices.length > 0 ? Math.max(...allPrices) : 0;
 
@@ -1354,8 +1364,8 @@ function ScanSummaryExpanded({
           <div className="px-4 py-2.5 border-b border-[var(--color-border)] text-xs font-medium text-[var(--color-text-muted)] uppercase">Fare heatmap</div>
           <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             {(() => {
-              // When multi-origin, build route-level matrix from flights data
-              const routeRows = isMultiOrigin
+              // When multi-origin or after expand, build route-level matrix from flights data
+              const routeRows = (isMultiOrigin || expanded)
                 ? (() => {
                     const routeMap = new Map<string, { origin: string; dest: string; byDate: Record<string, number> }>();
                     for (const f of flights) {
@@ -1372,8 +1382,8 @@ function ScanSummaryExpanded({
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-[var(--color-border)]">
-                      <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)] sticky left-0 z-10 bg-[var(--color-surface)]">{isMultiOrigin ? "Route" : "Dest"}</th>
-                      {price_matrix.dates.map((d) => (
+                      <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)] sticky left-0 z-10 bg-[var(--color-surface)]">{(isMultiOrigin || expanded) ? "Route" : "Dest"}</th>
+                      {heatmapDates.map((d) => (
                         <th key={d} className="px-2 py-2 text-center font-mono text-[var(--color-text-muted)] min-w-[60px]">{d.slice(5)}</th>
                       ))}
                     </tr>
@@ -1385,7 +1395,7 @@ function ScanSummaryExpanded({
                             <td className="px-3 py-1.5 font-mono font-medium sticky left-0 z-10 bg-[var(--color-surface)] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">
                               {row.origin} → {row.dest} <span className="font-sans text-[var(--color-text-muted)] hidden sm:inline">{airportNames[row.dest] || ""}</span>
                             </td>
-                            {price_matrix.dates.map((dt) => {
+                            {heatmapDates.map((dt) => {
                               const price = row.byDate[dt] ?? null;
                               const bg = priceToColor(price, globalMin, globalMax);
                               const gfLink = `https://www.google.com/travel/flights?q=flights+from+${row.origin}+to+${row.dest}+on+${dt}`;
