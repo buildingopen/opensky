@@ -228,7 +228,7 @@
       "findMore": "Yakın havalimanları ve esnek tarihlerle daha fazla seçenek bulun",
       "expanding": "Arama genişletiliyor",
       "expandingInfo": "Arama genişletiliyor: {info}",
-      "flightsAdded": "+{count, plural, one {1 uçuş} other {{count} uçuş}} yakın havalimanlarından eklendi",
+      "flightsAdded": "+{count, plural, one {1 uçuş} other {{count} uçuş}} eklendi",
       "limitReached": "Arama limiti doldu. Yaklaşık {mins} dk sonra tekrar deneyin.",
       "failed": "Genişletme başarısız oldu. Daha sonra tekrar deneyin.",
       "couldNotReach": "Arama API'sine ulaşılamadı.",

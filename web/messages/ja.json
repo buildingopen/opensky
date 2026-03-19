@@ -228,7 +228,7 @@
       "findMore": "近隣の空港と前後の日程で、さらに多くの選択肢を検索",
       "expanding": "検索を拡大中",
       "expandingInfo": "検索を拡大中: {info}",
-      "flightsAdded": "+{count, plural, one {1便} other {{count}便}}を近隣空港から追加",
+      "flightsAdded": "+{count, plural, one {1便} other {{count}便}}追加",
       "limitReached": "検索制限に達しました。約{mins}分後にもう一度お試しください。",
       "failed": "拡大検索に失敗しました。しばらくしてからもう一度お試しください。",
       "couldNotReach": "検索APIに接続できませんでした。",

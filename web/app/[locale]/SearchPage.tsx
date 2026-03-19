@@ -1944,17 +1944,19 @@ function ScanSummaryCollapsed({
   currency,
   onExpand,
   flights,
+  expandCount,
 }: {
   summary: ScanSummaryData;
   currency: string;
   onExpand: () => void;
   flights?: FlightOut[];
+  expandCount?: number;
 }) {
   const t = useTranslations("search");
   const { stats } = summary;
   const sym = currencySymbol(currency);
   // Use live flight count/prices if available (e.g. after expand merge)
-  const totalFlights = flights && flights.length > stats.total_flights ? flights.length : stats.total_flights;
+  const totalFlights = stats.total_flights + (expandCount || 0);
   const destCount = flights && flights.length > 0 ? new Set(flights.map(f => f.destination)).size : stats.destinations;
   const minPrice = flights && flights.length > 0 ? Math.min(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.min_price;
   const maxPrice = flights && flights.length > 0 ? Math.max(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.max_price;
@@ -1982,6 +1984,7 @@ function ScanSummaryExpanded({
   flights,
   onCollapse,
   cabin,
+  expandCount,
 }: {
   summary: ScanSummaryData;
   currency: string;
@@ -1989,6 +1992,7 @@ function ScanSummaryExpanded({
   flights: FlightOut[];
   onCollapse: () => void;
   cabin?: string;
+  expandCount?: number;
 }) {
   const t = useTranslations("search");
   const locale = useLocale();
@@ -2025,7 +2029,7 @@ function ScanSummaryExpanded({
         {t("compare.hideComparison")}
       </button>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
-        <span><span className="text-[var(--color-text)] font-semibold">{flights.length > stats.total_flights ? flights.length : stats.total_flights}</span> {t("compare.flights")}</span>
+        <span><span className="text-[var(--color-text)] font-semibold">{stats.total_flights + (expandCount || 0)}</span> {t("compare.flights")}</span>
         <span><span className="text-[var(--color-text)] font-semibold">{flights.length > 0 ? new Set(flights.map(f => f.destination)).size : stats.destinations}</span> {t("compare.destinations")}</span>
         {stats.min_price > 0 && (
           <span>{sym}{Math.round(flights.length > 0 ? Math.min(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.min_price)} – {sym}{Math.round(flights.length > 0 ? Math.max(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.max_price)}</span>
@@ -3606,7 +3610,7 @@ function HomePage() {
                       <div className="mt-6">
                         <div className="flex items-center justify-between mb-2">
                           {!showCompare && (
-                            <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} flights={flights} />
+                            <ScanSummaryCollapsed summary={summary} currency={parsed.currency} onExpand={() => setShowCompare(true)} flights={flights} expandCount={expandCount} />
                           )}
                           <button
                             onClick={handleShare}
@@ -3626,7 +3630,7 @@ function HomePage() {
                           </button>
                         </div>
                         {showCompare && (
-                          <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} cabin={parsed?.cabin} />
+                          <ScanSummaryExpanded summary={summary} currency={parsed.currency} airportNames={airportNames} flights={flights} onCollapse={() => setShowCompare(false)} cabin={parsed?.cabin} expandCount={expandCount} />
                         )}
                       </div>
                     )}
@@ -3774,7 +3778,10 @@ function HomePage() {
                           <span className="text-sm text-[var(--color-caution)]">{expandError}</span>
                         )}
                         {expandPhase === "done" && !expandError && expandCount > 0 && (
-                          <span className="text-sm text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount })}</span>
+                          <div>
+                            <span className="text-sm text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount })}</span>
+                            {expansionInfo && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{expansionInfo}</p>}
+                          </div>
                         )}
                         {expandPhase === "done" && !expandError && expandCount === 0 && (
                           <span className="text-sm text-[var(--color-text-muted)]">{t("expand.noNewFlights")}</span>

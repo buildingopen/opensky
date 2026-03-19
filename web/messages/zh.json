@@ -228,7 +228,7 @@
       "findMore": "通过附近机场和弹性日期查找更多选项",
       "expanding": "正在扩展搜索",
       "expandingInfo": "正在扩展搜索：{info}",
-      "flightsAdded": "+{count, plural, one {1个航班} other {{count}个航班}}来自附近机场",
+      "flightsAdded": "+{count, plural, one {1个航班} other {{count}个航班}}已添加",
       "limitReached": "搜索次数已达上限。请约{mins}分钟后重试。",
       "failed": "扩展搜索失败。请稍后重试。",
       "couldNotReach": "无法连接搜索API。",

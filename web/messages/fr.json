@@ -228,7 +228,7 @@
       "findMore": "Trouvez plus d'options avec des aéroports proches et des dates flexibles",
       "expanding": "Élargissement de la recherche",
       "expandingInfo": "Élargissement de la recherche : {info}",
-      "flightsAdded": "+{count, plural, one {1 vol} other {{count} vols}} ajoutés depuis des aéroports proches",
+      "flightsAdded": "+{count, plural, one {1 vol} other {{count} vols}} ajoutés",
       "limitReached": "Limite de recherche atteinte. Réessayez dans ~{mins}m.",
       "failed": "L'élargissement a échoué. Réessayez plus tard.",
       "couldNotReach": "Impossible de joindre l'API de recherche.",

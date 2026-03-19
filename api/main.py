@@ -1750,10 +1750,13 @@ Rules:
 
 Expansion strategy (apply in priority order):
 1. Nearby ORIGIN airports (highest ROI): add 2-3 airports within ~3h train/car of each original origin.
-   Examples: HAM -> BRE, HAJ, BER; BLR -> MAA, HYD; JFK -> EWR, PHL; LHR -> LGW, STN, BRS
+   PREFER major commercial airports with high international flight volume. Avoid small regional airports with few routes.
+   Good: HAM -> BER, DUS, FRA; JFK -> EWR, PHL; LHR -> LGW, MAN; BLR -> MAA, HYD, BOM
+   Bad: HAM -> PAD, FMO; JFK -> SWF, HPN; LHR -> SOU, EXT (too small, few international routes)
 2. Adjacent dates: add 1-2 days before/after the original date range (if dates were narrow, 1-3 days).
-3. Nearby DESTINATION airports: add 1-2 airports in the same region as each original destination.
-   Examples: HAM -> BRE, HAJ; FRA -> STR, CGN; CDG -> ORY, BRU
+3. Nearby DESTINATION airports: add 1-2 major airports in the same region as each original destination.
+   Good: BCN -> MAD, VLC; CDG -> BRU, AMS; FCO -> MXP, NAP
+   Bad: BCN -> REU, GRO; CDG -> BVA (too small, mostly low-cost with few connections)
 4. Only expand what makes sense. If origins already cover a wide area, skip origin expansion.
 
 CRITICAL LIMIT: total_routes = len(origins) * len(destinations) * len(dates) * max(len(return_dates), 1) must be <= 100.
@@ -1892,16 +1895,9 @@ async def _expand_params(original: dict, prompt: str) -> dict:
 @app.post("/api/expand-search")
 async def expand_search(req: ExpandRequest, request: Request):
     """Expand a previous search with nearby airports, flexible dates, etc."""
-    api_key = _extract_api_key(request)
-    if api_key and api_key in API_KEYS:
-        key_hash = _hash_key(api_key)
-        if redis_client:
-            remaining = await _check_rate_limit_api_key_redis(key_hash)
-        else:
-            remaining = _check_rate_limit_api_key_memory(key_hash)
-    else:
-        ip = _get_client_ip(request)
-        remaining = await _check_rate_limit(ip)
+    # Skip rate limit for expand: it piggybacks on an already-paid search,
+    # is bounded by the 100-route cap, and can only trigger once per search.
+    remaining = 999
 
     _expand_start = time.time()
     _anon_expand = _anonymous_id(_get_client_ip(request))
@@ -2039,9 +2035,9 @@ async def expand_search(req: ExpandRequest, request: Request):
                 rt_results = [r for r in rt_results if r.get("risk_level") == "safe"]
             result_data = {
                 "type": "results",
-                "flights": [r["outbound"] for r in rt_results[:20]],
-                "round_trip_results": rt_results[:20],
-                "count": len(rt_results[:20]),
+                "flights": [r["outbound"] for r in rt_results],
+                "round_trip_results": rt_results,
+                "count": len(rt_results),
                 "remaining_searches": remaining,
                 "expansion_info": expansion_strategy,
             }
@@ -2061,7 +2057,7 @@ async def expand_search(req: ExpandRequest, request: Request):
                 flights = [f for f in flights if f.get("risk_level") == "safe"]
             result_data = {
                 "type": "results",
-                "flights": flights[:20],
+                "flights": flights,
                 "count": len(flights),
                 "remaining_searches": remaining,
                 "expansion_info": expansion_strategy,

@@ -228,7 +228,7 @@
       "findMore": "पास के हवाई अड्डों और लचीली तारीख़ों के साथ और विकल्प खोजें",
       "expanding": "खोज बढ़ाई जा रही है",
       "expandingInfo": "खोज बढ़ाई जा रही है: {info}",
-      "flightsAdded": "+{count, plural, one {1 फ़्लाइट} other {{count} फ़्लाइटें}} पास के हवाई अड्डों से जोड़ी गईं",
+      "flightsAdded": "+{count, plural, one {1 फ़्लाइट} other {{count} फ़्लाइटें}} जोड़ी गईं",
       "limitReached": "खोज सीमा पूरी हो गई। ~{mins}मि. में फिर कोशिश करें।",
       "failed": "विस्तार विफल। बाद में फिर कोशिश करें।",
       "couldNotReach": "खोज API तक नहीं पहुंच सके।",

@@ -228,7 +228,7 @@
       "findMore": "인근 공항과 유연한 날짜로 더 많은 옵션 찾기",
       "expanding": "검색 확장 중",
       "expandingInfo": "검색 확장 중: {info}",
-      "flightsAdded": "+{count, plural, one {1개 항공편} other {{count}개 항공편}} 인근 공항에서 추가됨",
+      "flightsAdded": "+{count, plural, one {1개 항공편} other {{count}개 항공편}} 추가됨",
       "limitReached": "검색 한도에 도달했습니다. 약 {mins}분 후 다시 시도해 주세요.",
       "failed": "확장 검색에 실패했습니다. 나중에 다시 시도해 주세요.",
       "couldNotReach": "검색 API에 연결할 수 없습니다.",

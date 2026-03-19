@@ -228,7 +228,7 @@
       "findMore": "Finde mehr Optionen mit nahen Flughäfen und flexiblen Daten",
       "expanding": "Suche wird erweitert",
       "expandingInfo": "Suche wird erweitert: {info}",
-      "flightsAdded": "+{count, plural, one {1 Flug} other {{count} Flüge}} von nahen Flughäfen hinzugefügt",
+      "flightsAdded": "+{count, plural, one {1 Flug} other {{count} Flüge}} hinzugefügt",
       "limitReached": "Suchlimit erreicht. Versuche es in ~{mins}m erneut.",
       "failed": "Erweiterung fehlgeschlagen. Versuche es später erneut.",
       "couldNotReach": "Such-API nicht erreichbar.",
