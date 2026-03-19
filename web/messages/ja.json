@@ -247,7 +247,7 @@
       "roundTripReturn": "往復",
       "moreReturnDates": "+ 他{count}件",
       "airportCount": "{count, plural, one {# 空港} other {# 空港}}",
-      "combinations": "{count}件の組み合わせを検索"
+      "combinations": "{count}件の組み合わせ"
     },
     "compare": {
       "compareAll": "すべてのオプションを比較 ({flights, plural, one {1便} other {{flights}便}}, {destinations, plural, one {1目的地} other {{destinations}目的地}})",

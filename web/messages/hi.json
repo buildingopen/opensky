@@ -247,7 +247,7 @@
       "roundTripReturn": "आना-जाना",
       "moreReturnDates": "+ {count} और",
       "airportCount": "{count, plural, one {# हवाई अड्डा} other {# हवाई अड्डे}}",
-      "combinations": "{count, plural, one {# संयोजन} other {# संयोजन}} खोजे गए"
+      "combinations": "{count, plural, one {# संयोजन} other {# संयोजन}}"
     },
     "compare": {
       "compareAll": "सभी विकल्पों की तुलना करें ({flights, plural, one {1 फ़्लाइट} other {{flights} फ़्लाइटें}}, {destinations, plural, one {1 गंतव्य} other {{destinations} गंतव्य}})",

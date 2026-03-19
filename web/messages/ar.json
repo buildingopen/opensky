@@ -247,7 +247,7 @@
       "roundTripReturn": "ذهاب وعودة",
       "moreReturnDates": "+ {count} إضافية",
       "airportCount": "{count, plural, =0 {لا مطارات} one {مطار واحد} two {مطاران} few {{count} مطارات} many {{count} مطاراً} other {{count} مطار}}",
-      "combinations": "تم البحث في {count} مجموعة"
+      "combinations": "{count} مجموعة"
     },
     "compare": {
       "compareAll": "مقارنة جميع الخيارات ({flights, plural, one {رحلة واحدة} two {رحلتان} few {{flights} رحلات} many {{flights} رحلة} other {{flights} رحلة}}، {destinations, plural, one {وجهة واحدة} two {وجهتان} few {{destinations} وجهات} many {{destinations} وجهة} other {{destinations} وجهة}})",

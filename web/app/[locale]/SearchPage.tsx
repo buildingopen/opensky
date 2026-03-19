@@ -1846,35 +1846,6 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
         )}
       </div>
 
-      {/* Skeleton preview cards */}
-      <div className="max-w-2xl mx-auto space-y-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 card-surface animate-fade-up" style={{ animationDelay: `${i * 150}ms`, opacity: 0.55 - i * 0.1 }}>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <div className="flex-1 min-w-0 space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="h-3.5 skeleton-shimmer" style={{ width: `${130 + i * 20}px` }} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full skeleton-shimmer shrink-0" />
-                  <div className="h-2.5 skeleton-shimmer w-20" />
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-2.5 skeleton-shimmer w-14" />
-                  <div className="h-2.5 skeleton-shimmer w-24" />
-                  <div className="h-2.5 skeleton-shimmer w-12" />
-                  <div className="h-2.5 skeleton-shimmer w-10" />
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-2 shrink-0">
-                <div className="h-7 skeleton-shimmer w-16 rounded" />
-                <div className="h-8 skeleton-shimmer w-28 rounded-lg" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {filteredCount > 0 && (
         <p className="text-xs text-[var(--color-caution)] text-center">
           {t("loading.safetyFiltered", { count: filteredCount })}
@@ -3475,7 +3446,7 @@ function HomePage() {
             {/* Expand search progress (inline bar, no spinner) */}
             {expandPhase === "expanding" && (
               <div className="mt-3 w-full rounded-lg px-4 py-3 bg-[var(--color-interactive)]/5 border border-[var(--color-interactive)]/20">
-                <span className="text-sm text-[var(--color-text)]">{expansionInfo ? t("expand.expandingInfo", { info: expansionInfo }) : t("loading.comparingPrices")}</span>
+                <span className="text-sm text-[var(--color-text)]">{expansionInfo ? t("expand.expandingInfo", { info: expansionInfo }) : t("expand.expanding")}</span>
                 {expandProgress && (
                   <div className="mt-2 h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
                     <div
