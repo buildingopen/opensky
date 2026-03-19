@@ -2652,6 +2652,7 @@ function HomePage() {
     }
 
     setPhase("parsing");
+    cancelledRef.current = false;
     setError(null);
     setSuggestions(null);
     setParsed(null);
@@ -2807,7 +2808,9 @@ function HomePage() {
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
-        // Use callback form to read current flights without stale closure
+        // User clicked cancel: clean exit, no error state
+        if (cancelledRef.current) return;
+        // Timeout abort: show partial results or timeout error
         setFlights((current) => {
           if (current.length > 0) {
             setIsPartial(true);
@@ -2832,11 +2835,15 @@ function HomePage() {
     }
   };
 
+  const cancelledRef = useRef(false);
   const cancelSearch = () => {
+    cancelledRef.current = true;
     abortRef.current?.abort();
     abortRef.current = null;
     setPhase("idle");
     setError(null);
+    setFlights([]);
+    setNoResultsReason(null);
   };
 
   const expandSearch = async () => {
@@ -3368,47 +3375,52 @@ function HomePage() {
       <section id="main-content" ref={resultsRef} aria-live="polite" className="max-w-3xl mx-auto px-4 py-4 w-full flex-1">
         {error && (
           <div role="alert" className="mb-4 animate-fade-in">
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-5 py-5 card-surface">
-              <div className="flex flex-col items-center text-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[var(--color-danger)]/10 flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 text-[var(--color-danger)]" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-8 card-surface">
+              <div className="flex flex-col items-center text-center gap-4">
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-full bg-[var(--color-danger)]/10 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="w-6 h-6 text-[var(--color-danger)]" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                   </svg>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-[var(--color-text)]">{error}</p>
+                {/* Message */}
+                <div className="space-y-1.5">
+                  <p className="text-base font-medium text-[var(--color-text)]">{error}</p>
                   {rateLimitCountdown > 0 && (
-                    <p className="text-xs text-[var(--color-text-muted)] mt-1 tabular-nums">
+                    <p className="text-sm text-[var(--color-text-muted)] tabular-nums">
                       {t("rateLimit.countdown", { minutes: Math.floor(rateLimitCountdown / 60), seconds: String(rateLimitCountdown % 60).padStart(2, "0") })}
                     </p>
                   )}
                 </div>
-                {rateLimitCountdown <= 0 && (
-                  <button
-                    onClick={() => { setError(null); search(); }}
-                    className="mt-1 text-sm px-4 py-2 rounded-lg bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-colors"
-                  >
-                    {t("common.tryAgain")}
-                  </button>
-                )}
-              </div>
-            </div>
-            {suggestions && suggestions.length > 0 && (
-              <div className="mt-3">
-                <p className="text-xs text-[var(--color-text-muted)] mb-2">{t("rateLimit.tryInstead")}</p>
-                <div className="flex flex-wrap gap-2">
-                  {suggestions.map((s, i) => (
+                {/* Actions */}
+                <div className="flex flex-col items-center gap-3 mt-1">
+                  {rateLimitCountdown <= 0 && (
                     <button
-                      key={i}
-                      onClick={() => { setSearchMode("natural"); setPrompt(s); search(s); }}
-                      className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-interactive)] hover:text-[var(--color-interactive)] transition-colors"
+                      onClick={() => { setError(null); search(); }}
+                      className="text-sm px-5 py-2.5 rounded-lg bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-colors font-medium"
                     >
-                      {s}
+                      {t("common.tryAgain")}
                     </button>
-                  ))}
+                  )}
+                  {suggestions && suggestions.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-[var(--color-text-muted)]">{t("rateLimit.tryInstead")}</p>
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {suggestions.map((s, i) => (
+                          <button
+                            key={i}
+                            onClick={() => { setSearchMode("natural"); setPrompt(s); search(s); }}
+                            className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-interactive)] hover:text-[var(--color-interactive)] transition-colors"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -3464,51 +3476,43 @@ function HomePage() {
             )}
 
             {flights.length === 0 && (!returnFlights || returnFlights.length === 0) && (!roundTripResults || roundTripResults.length === 0) ? (
-              <div className="mt-6 text-center py-12 space-y-3">
-                {noResultsReason === "timeout" ? (
-                  <>
-                    <p className="text-lg font-medium text-[var(--color-text)]">{t("noResults.timeout")}</p>
-                    <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
-                      {t("noResults.timeoutExplanation")}
-                    </p>
-                    <div className="flex flex-col items-center gap-2 mt-2">
-                      <button onClick={() => search()} className="px-4 py-2 text-sm font-medium bg-[var(--color-interactive)] text-white rounded-lg hover:bg-[var(--color-interactive-hover)] transition-colors">
-                        {tc("tryAgain")}
-                      </button>
-                      <p className="text-xs text-[var(--color-text-muted)]">
-                        {t("noResults.timeoutTip")}
+              <div className="mt-6 animate-fade-in">
+                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-8 card-surface">
+                  <div className="flex flex-col items-center text-center gap-4">
+                    {/* Icon per reason */}
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${noResultsReason === "timeout" || noResultsReason === "provider_error" ? "bg-[var(--color-caution)]/10" : noResultsReason === "safety_filtered" ? "bg-[var(--color-danger)]/10" : "bg-[var(--color-text-muted)]/10"}`}>
+                      {noResultsReason === "timeout" ? (
+                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-[var(--color-caution)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      ) : noResultsReason === "safety_filtered" ? (
+                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-[var(--color-danger)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                      ) : noResultsReason === "provider_error" ? (
+                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-[var(--color-caution)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                      )}
+                    </div>
+                    {/* Message */}
+                    <div className="space-y-1.5 max-w-sm">
+                      <p className="text-base font-medium text-[var(--color-text)]">
+                        {noResultsReason === "timeout" ? t("noResults.timeout") : noResultsReason === "provider_error" ? t("noResults.providerError") : noResultsReason === "safety_filtered" ? t("noResults.safetyFiltered") : noResultsReason === "no_routes" ? t("noResults.noRoutes") : t("noResults.nothingMatched")}
+                      </p>
+                      <p className="text-sm text-[var(--color-text-muted)]">
+                        {noResultsReason === "timeout" ? t("noResults.timeoutExplanation") : noResultsReason === "provider_error" ? t("noResults.providerErrorExplanation") : noResultsReason === "safety_filtered" ? t("noResults.safetyFilteredExplanation") : noResultsReason === "no_routes" ? t("noResults.noRoutesExplanation") : t("noResults.nothingMatchedExplanation")}
                       </p>
                     </div>
-                  </>
-                ) : noResultsReason === "provider_error" ? (
-                  <>
-                    <p className="text-lg font-medium text-[var(--color-text)]">{t("noResults.providerError")}</p>
-                    <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
-                      {t("noResults.providerErrorExplanation")}
-                    </p>
-                  </>
-                ) : noResultsReason === "safety_filtered" ? (
-                  <>
-                    <p className="text-lg font-medium text-[var(--color-text)]">{t("noResults.safetyFiltered")}</p>
-                    <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
-                      {t("noResults.safetyFilteredExplanation")}
-                    </p>
-                  </>
-                ) : noResultsReason === "no_routes" ? (
-                  <>
-                    <p className="text-lg font-medium text-[var(--color-text)]">{t("noResults.noRoutes")}</p>
-                    <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
-                      {t("noResults.noRoutesExplanation")}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-lg font-medium text-[var(--color-text)]">{t("noResults.nothingMatched")}</p>
-                    <p className="text-sm text-[var(--color-text-muted)] max-w-sm mx-auto">
-                      {t("noResults.nothingMatchedExplanation")}
-                    </p>
-                  </>
-                )}
+                    {/* Actions */}
+                    <div className="flex flex-col items-center gap-2 mt-1">
+                      {(noResultsReason === "timeout" || noResultsReason === "provider_error") && (
+                        <button onClick={() => search()} className="text-sm px-5 py-2.5 rounded-lg bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-colors font-medium">
+                          {tc("tryAgain")}
+                        </button>
+                      )}
+                      {noResultsReason === "timeout" && (
+                        <p className="text-xs text-[var(--color-text-muted)]">{t("noResults.timeoutTip")}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <>
