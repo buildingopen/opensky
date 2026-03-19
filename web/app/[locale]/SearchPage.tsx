@@ -2878,7 +2878,21 @@ function HomePage() {
             const msg = JSON.parse(line.slice(6));
             if (msg.type === "parsed") {
               if (msg.expansion_info) setExpansionInfo(msg.expansion_info);
-              if (msg.parsed) expandParsedRef.current = msg.parsed as ParsedSearch;
+              if (msg.parsed) {
+                expandParsedRef.current = msg.parsed as ParsedSearch;
+                // Update ParsedConfig immediately so user sees expanded origins/dests/dates
+                const exp = msg.parsed as ParsedSearch;
+                setParsed(prev => {
+                  if (!prev) return exp;
+                  const mergedOrigins = [...new Set([...prev.origins, ...exp.origins])];
+                  const mergedDests = [...new Set([...prev.destinations, ...exp.destinations])];
+                  const mergedDates = [...new Set([...prev.dates, ...exp.dates])].sort();
+                  const mergedReturnDates = [...new Set([...(prev.return_dates || []), ...(exp.return_dates || [])])].sort();
+                  const mergedNames = { ...prev.airport_names, ...exp.airport_names };
+                  const mergedTotalRoutes = mergedOrigins.length * mergedDests.length * mergedDates.length;
+                  return { ...prev, origins: mergedOrigins, destinations: mergedDests, dates: mergedDates, return_dates: mergedReturnDates, airport_names: mergedNames, total_routes: mergedTotalRoutes };
+                });
+              }
             } else if (msg.type === "progress") {
               setExpandProgress({ done: msg.done, total: msg.total });
             } else if (msg.type === "results") {
@@ -2916,21 +2930,7 @@ function HomePage() {
               }
 
               setExpandPhase("done");
-              // Merge expanded airports/dates into parsed config header
-              if (expandParsedRef.current) {
-                const exp = expandParsedRef.current;
-                setParsed(prev => {
-                  if (!prev) return exp;
-                  const mergedOrigins = [...new Set([...prev.origins, ...exp.origins])];
-                  const mergedDests = [...new Set([...prev.destinations, ...exp.destinations])];
-                  const mergedDates = [...new Set([...prev.dates, ...exp.dates])].sort();
-                  const mergedReturnDates = [...new Set([...(prev.return_dates || []), ...(exp.return_dates || [])])].sort();
-                  const mergedNames = { ...prev.airport_names, ...exp.airport_names };
-                  const mergedTotalRoutes = mergedOrigins.length * mergedDests.length * mergedDates.length;
-                  return { ...prev, origins: mergedOrigins, destinations: mergedDests, dates: mergedDates, return_dates: mergedReturnDates, airport_names: mergedNames, total_routes: mergedTotalRoutes };
-                });
-                expandParsedRef.current = null;
-              }
+              expandParsedRef.current = null;
               window.scrollTo({ top: 0, behavior: "smooth" });
               trackEvent("expand_search_results", { new_flights: expandedFlights.length, new_rt: expandedRT.length });
             } else if (msg.type === "error") {

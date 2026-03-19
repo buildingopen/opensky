@@ -2136,6 +2136,19 @@ function HomePage() {
             const msg = JSON.parse(line.slice(6));
             if (msg.type === "parsed") {
               if (msg.expansion_info) setExpansionInfo(msg.expansion_info);
+              if (msg.parsed) {
+                const exp = msg.parsed as ParsedSearch;
+                setParsed(prev => {
+                  if (!prev) return exp;
+                  const mergedOrigins = [...new Set([...prev.origins, ...exp.origins])];
+                  const mergedDests = [...new Set([...prev.destinations, ...exp.destinations])];
+                  const mergedDates = [...new Set([...prev.dates, ...exp.dates])].sort();
+                  const mergedReturnDates = [...new Set([...(prev.return_dates || []), ...(exp.return_dates || [])])].sort();
+                  const mergedNames = { ...prev.airport_names, ...exp.airport_names };
+                  const mergedTotalRoutes = mergedOrigins.length * mergedDests.length * mergedDates.length;
+                  return { ...prev, origins: mergedOrigins, destinations: mergedDests, dates: mergedDates, return_dates: mergedReturnDates, airport_names: mergedNames, total_routes: mergedTotalRoutes };
+                });
+              }
             } else if (msg.type === "progress") {
               setExpandProgress({ done: msg.done, total: msg.total });
             } else if (msg.type === "results") {
