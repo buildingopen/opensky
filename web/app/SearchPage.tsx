@@ -2943,9 +2943,11 @@ function HomePage() {
                       </div>
                     )}
                     {expandPhase === "done" && !expandError && expandCount > 0 && (
-                      <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-2.5 text-sm">
+                      <div className="w-full flex items-center justify-between bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-sm">
                         <span className="text-[var(--color-interactive)]">+{expandCount} flight{expandCount !== 1 ? "s" : ""} added</span>
-                        {expansionInfo && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{expansionInfo}</p>}
+                        <svg viewBox="0 0 20 20" className="w-4 h-4 text-[var(--color-interactive)] shrink-0" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
                       </div>
                     )}
                   </div>

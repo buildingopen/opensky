@@ -3757,10 +3757,7 @@ function HomePage() {
                           <span className="text-sm text-[var(--color-caution)]">{expandError}</span>
                         )}
                         {expandPhase === "done" && !expandError && expandCount > 0 && (
-                          <div>
-                            <span className="text-sm text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount })}</span>
-                            {expansionInfo && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{expansionInfo}</p>}
-                          </div>
+                          <span className="text-sm text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount })}</span>
                         )}
                         {expandPhase === "done" && !expandError && expandCount === 0 && (
                           <span className="text-sm text-[var(--color-text-muted)]">{t("expand.noNewFlights")}</span>
