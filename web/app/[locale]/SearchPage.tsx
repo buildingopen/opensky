@@ -1955,8 +1955,8 @@ function ScanSummaryCollapsed({
   const t = useTranslations("search");
   const { stats } = summary;
   const sym = currencySymbol(currency);
-  // Use live flight count/prices if available (e.g. after expand merge)
-  const totalFlights = stats.total_flights + (expandCount || 0);
+  // After expand, use live flights.length (deduplicated truth). Before expand, use stats.total_flights (backend knows full count even though only 20 are sent).
+  const totalFlights = expandCount ? (flights?.length || stats.total_flights) : stats.total_flights;
   const destCount = flights && flights.length > 0 ? new Set(flights.map(f => f.destination)).size : stats.destinations;
   const minPrice = flights && flights.length > 0 ? Math.min(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.min_price;
   const maxPrice = flights && flights.length > 0 ? Math.max(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.max_price;
@@ -2029,7 +2029,7 @@ function ScanSummaryExpanded({
         {t("compare.hideComparison")}
       </button>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--color-text-muted)]">
-        <span><span className="text-[var(--color-text)] font-semibold">{stats.total_flights + (expandCount || 0)}</span> {t("compare.flights")}</span>
+        <span><span className="text-[var(--color-text)] font-semibold">{expandCount ? flights.length : stats.total_flights}</span> {t("compare.flights")}</span>
         <span><span className="text-[var(--color-text)] font-semibold">{flights.length > 0 ? new Set(flights.map(f => f.destination)).size : stats.destinations}</span> {t("compare.destinations")}</span>
         {stats.min_price > 0 && (
           <span>{sym}{Math.round(flights.length > 0 ? Math.min(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.min_price)} – {sym}{Math.round(flights.length > 0 ? Math.max(...flights.filter(f => f.price > 0).map(f => f.price)) : stats.max_price)}</span>
