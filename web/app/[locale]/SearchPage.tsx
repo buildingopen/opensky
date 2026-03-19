@@ -603,6 +603,50 @@ function resolveDate(phrase: string): string | null {
   return null;
 }
 
+/** Convert a date phrase (multilingual) to ISO date strings for API fallback */
+function resolveIsoDates(phrase: string): string[] {
+  const now = new Date();
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  const p = (I18N_TEMPORAL[phrase.toLowerCase().trim()] || phrase.toLowerCase().trim());
+
+  if (p === "today") return [fmt(now)];
+  if (p === "tomorrow") { const d = new Date(now); d.setDate(d.getDate() + 1); return [fmt(d)]; }
+  if (p === "next week") {
+    const d = new Date(now); const dow = d.getDay(); d.setDate(d.getDate() + (dow === 0 ? 1 : 8 - dow));
+    return Array.from({ length: 7 }, (_, i) => { const dd = new Date(d); dd.setDate(dd.getDate() + i); return fmt(dd); });
+  }
+  if (p === "this weekend") {
+    const d = new Date(now); d.setDate(d.getDate() + (d.getDay() === 6 ? 0 : 6 - d.getDay()));
+    return [fmt(d), fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1))];
+  }
+  if (p === "next weekend") {
+    const d = new Date(now); d.setDate(d.getDate() + (d.getDay() === 6 ? 7 : 6 - d.getDay() + 7));
+    return [fmt(d), fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1))];
+  }
+  if (p === "next month") {
+    const m = (now.getMonth() + 1) % 12; const y = m === 0 ? now.getFullYear() + 1 : (now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear());
+    return [1, 7, 14, 21, 28].filter(day => new Date(y, m, day).getMonth() === m).map(day => fmt(new Date(y, m, day)));
+  }
+  // Day names (multilingual via I18N_DAYS normalization already applied)
+  const dayIdx = DAY_NAMES.indexOf(p);
+  if (dayIdx >= 0) { const d = new Date(now); let diff = dayIdx - d.getDay(); if (diff <= 0) diff += 7; d.setDate(d.getDate() + diff); return [fmt(d)]; }
+  // Month names (multilingual)
+  const monthIdx = I18N_MONTHS[p] ?? -1;
+  if (monthIdx >= 0) {
+    const y = monthIdx < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
+    return [1, 7, 14, 21, 28].filter(day => new Date(y, monthIdx, day).getMonth() === monthIdx).map(day => fmt(new Date(y, monthIdx, day)));
+  }
+  // "march 15" / "15 march" etc.
+  for (const mn of Object.keys(I18N_MONTHS)) {
+    const mi = I18N_MONTHS[mn];
+    const m1 = p.match(new RegExp(`^${mn}\\s+(\\d{1,2})$`));
+    if (m1) { const y = mi < now.getMonth() || (mi === now.getMonth() && parseInt(m1[1]) < now.getDate()) ? now.getFullYear() + 1 : now.getFullYear(); return [fmt(new Date(y, mi, parseInt(m1[1])))]; }
+    const m2 = p.match(new RegExp(`^(\\d{1,2})\\s+${mn}$`));
+    if (m2) { const y = mi < now.getMonth() || (mi === now.getMonth() && parseInt(m2[1]) < now.getDate()) ? now.getFullYear() + 1 : now.getFullYear(); return [fmt(new Date(y, mi, parseInt(m2[1])))]; }
+  }
+  return [];
+}
+
 interface LocAirport { iata: string; city: string }
 interface PreviewLocInfo { display: string; count: number; airports: LocAirport[] }
 
@@ -864,7 +908,7 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       [/(एकतरफ़?ा)/i, "One-way"],
       [/(ذهاب\s+فقط)/i, "One-way"],
       // Round trip / return
-      [/\b(round[\s-]?trip|return\s+(?:flights?|tickets?|trip))\b/i, "Round trip"],
+      [/\b(round[\s-]?trip|return(?:\s+(?:flights?|tickets?|trip))?)\b/i, "Round trip"],
       [/\b(hin\s*(?:und|&|-)\s*r[uü]e?ck(?:flug)?)\b/i, "Round trip"],
       [/\b(ida\s+y\s+vuelta)\b/i, "Round trip"],
       [/\b(aller[\s-]retour)\b/i, "Round trip"],
@@ -2698,11 +2742,29 @@ function HomePage() {
     abortRef.current = controller;
     const timeout = setTimeout(() => controller.abort(), 150_000);
 
+    // Build fallback parsed data from client-side preview (used if Gemini fails)
+    let fallback: { origins: string[]; destinations: string[]; dates: string[] } | undefined;
+    {
+      const fbOrigins = highlightRanges.filter(r => r.type === "origin").flatMap(r => r.airports.map(a => a.iata));
+      const fbDests = highlightRanges.filter(r => r.type === "dest").flatMap(r => r.airports.map(a => a.iata));
+      const dateRanges = highlightRanges.filter(r => r.type === "date");
+      const fbDates = dateRanges.flatMap(r => resolveIsoDates(text.slice(r.start, r.end)));
+      if (fbOrigins.length > 0 && fbDests.length > 0 && fbDates.length > 0) {
+        let o = fbOrigins.slice(0, 10);
+        let d = fbDests.slice(0, 20);
+        let dt = [...fbDates];
+        while (o.length * d.length * dt.length > 100 && dt.length > 1) dt.pop();
+        while (o.length * d.length * dt.length > 100 && d.length > 1) d.pop();
+        while (o.length * d.length * dt.length > 100 && o.length > 1) o.pop();
+        fallback = { origins: o, destinations: d, dates: dt };
+      }
+    }
+
     try {
       const resp = await fetch(`${API_URL}/api/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text, currency: userCurrency, locale }),
+        body: JSON.stringify({ prompt: text, fallback_parsed: fallback, currency: userCurrency, locale }),
         signal: controller.signal,
       });
 
