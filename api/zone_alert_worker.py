@@ -14,8 +14,6 @@ from pathlib import Path
 from html import escape as html_escape
 import httpx
 
-sys.path.insert(0, "/opt/opensky/repo/src")
-
 from opensky.safety import load_zones
 
 logging.basicConfig(
@@ -27,7 +25,7 @@ log = logging.getLogger(__name__)
 ALERTS_DB_PATH = os.environ.get("ALERTS_DB_PATH", "/opt/opensky/alerts.db")
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL = "FlyFast <alerts@flyfast.app>"
-SNAPSHOT_PATH = Path("/opt/opensky/zone_risk_snapshot.json")
+SNAPSHOT_PATH = Path(os.environ.get("SNAPSHOT_PATH", "/data/zone_risk_snapshot.json"))
 
 ZONE_DISPLAY_NAMES: dict[str, str] = {
     "ukraine": "Ukraine", "iran": "Iran", "iraq": "Iraq", "syria": "Syria",

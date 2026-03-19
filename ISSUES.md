@@ -2,13 +2,14 @@
 
 ## OPEN
 
-### 3. Safety zone CTA: zone data NOT updated via cron
-- **Status**: OPEN
-- **Date**: 2026-03-19
-- **Description**: Zone data last updated 2026-03-01 (18 days old). Zone alert worker must be run manually. No cron job set up.
-- **Files**: `api/zone_alert_worker.py`
+*No open issues.*
 
 ## FIXED
+
+### Zone alert worker cron set up
+- **Status**: FIXED
+- **Date**: 2026-03-19
+- **Description**: Fixed hardcoded paths in zone_alert_worker.py (removed sys.path.insert, changed snapshot path to /data/). Set up daily cron at 6am UTC via `docker exec opensky-api python3 zone_alert_worker.py`. Log: `/var/log/flyfast-zone-alerts.log`.
 
 ### Preview API service created on Hetzner
 - **Status**: FIXED
