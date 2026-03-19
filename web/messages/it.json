@@ -119,7 +119,8 @@
       "fetchingPrices": "Recupero prezzi in tempo reale...",
       "safetyFiltered": "{count, plural, one {1 rotta filtrata per sicurezza} other {{count} rotte filtrate per sicurezza}}",
       "bestSoFar": "Migliore finora (si aggiorna durante la ricerca)",
-      "roundTrip": "andata e ritorno"
+      "roundTrip": "andata e ritorno",
+      "routesChecked": "rotte verificate"
     },
     "results": {
       "roundTripFrom": "Andata e ritorno da {price}",

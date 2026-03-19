@@ -119,7 +119,8 @@
       "fetchingPrices": "लाइव कीमतें ला रहे हैं...",
       "safetyFiltered": "{count, plural, one {1 मार्ग सुरक्षा के लिए फ़िल्टर किया गया} other {{count} मार्ग सुरक्षा के लिए फ़िल्टर किए गए}}",
       "bestSoFar": "अब तक का सबसे अच्छा (खोज जारी है)",
-      "roundTrip": "आना-जाना"
+      "roundTrip": "आना-जाना",
+      "routesChecked": "मार्ग जांचे गए"
     },
     "results": {
       "roundTripFrom": "{price} से आना-जाना",

@@ -119,7 +119,8 @@
       "fetchingPrices": "Buscando preços ao vivo...",
       "safetyFiltered": "{count, plural, one {1 rota filtrada por segurança} other {{count} rotas filtradas por segurança}}",
       "bestSoFar": "Melhor até agora (atualizando conforme buscamos)",
-      "roundTrip": "ida e volta"
+      "roundTrip": "ida e volta",
+      "routesChecked": "rotas verificadas"
     },
     "results": {
       "roundTripFrom": "Ida e volta a partir de {price}",

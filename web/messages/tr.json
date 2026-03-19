@@ -119,7 +119,8 @@
       "fetchingPrices": "Güncel fiyatlar alınıyor...",
       "safetyFiltered": "{count, plural, one {1 rota güvenlik nedeniyle filtrelendi} other {{count} rota güvenlik nedeniyle filtrelendi}}",
       "bestSoFar": "Şu ana kadarki en iyi sonuç (arama devam ediyor)",
-      "roundTrip": "gidiş-dönüş"
+      "roundTrip": "gidiş-dönüş",
+      "routesChecked": "rota kontrol edildi"
     },
     "results": {
       "roundTripFrom": "Gidiş-dönüş {price}'den başlayan fiyatlarla",

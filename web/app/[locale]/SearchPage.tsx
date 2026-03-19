@@ -1780,6 +1780,8 @@ interface ProgressInfo {
 function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSearch | null; progress: ProgressInfo | null; filteredCount: number }) {
   const t = useTranslations("search");
   const pct = progress?.total ? (progress.done / progress.total) * 100 : 0;
+  const routesChecked = progress?.done ?? 0;
+  const totalRoutes = progress?.total ?? 0;
 
   const message = !parsed
     ? t("loading.understanding")
@@ -1789,47 +1791,74 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
         ? t("loading.comparingPrices")
         : t("loading.almostReady");
 
+  // Derive route summary from parsed data
+  const originCount = parsed?.origins?.length ?? 0;
+  const destCount = parsed?.destinations?.length ?? 0;
+
   return (
-    <div className="py-10 space-y-6">
-      <div className="flex flex-col items-center gap-3">
-        {/* Floating plane icon with pulsing glow */}
-        <svg viewBox="0 0 24 24" className="w-8 h-8 text-[var(--color-interactive)] plane-float" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-        </svg>
-        <p key={message} className="text-base text-[var(--color-text)] loading-message">
+    <div className="py-8 space-y-5">
+      {/* Hero animation area */}
+      <div className="flex flex-col items-center gap-4">
+        {/* Animated plane with orbit ring */}
+        <div className="relative w-20 h-20 flex items-center justify-center">
+          {/* Orbit ring */}
+          <div className="absolute inset-0 rounded-full border border-[var(--color-interactive)]/20 orbit-ring" />
+          <div className="absolute inset-2 rounded-full border border-dashed border-[var(--color-interactive)]/10 orbit-ring-reverse" />
+          {/* Plane icon */}
+          <svg viewBox="0 0 24 24" className="w-10 h-10 text-[var(--color-interactive)] plane-float relative z-10" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+          </svg>
+        </div>
+
+        {/* Status message with animated dots */}
+        <p key={message} className="text-base font-medium text-[var(--color-text)] loading-message text-center">
           {message}<span className="loading-dots"><span>.</span><span>.</span><span>.</span></span>
         </p>
-      </div>
 
-      {/* Smooth progress bar */}
-      <div className="mx-auto max-w-xs h-1 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
-        {parsed && progress ? (
-          <div
-            className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${pct}%` }}
-          />
-        ) : (
-          <div className="h-full bg-[var(--color-interactive)] opacity-60 rounded-full shimmer-bar" />
+        {/* Live route counter */}
+        {parsed && totalRoutes > 0 && (
+          <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] animate-fade-in tabular-nums">
+            <span>{routesChecked} / {totalRoutes} {t("loading.routesChecked")}</span>
+            {originCount > 0 && destCount > 0 && (
+              <>
+                <span className="w-px h-3 bg-[var(--color-border)]" />
+                <span>{originCount} {originCount === 1 ? "origin" : "origins"} &rarr; {destCount} {destCount === 1 ? "dest" : "dests"}</span>
+              </>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Skeleton preview cards - mirror real FlightCard layout */}
+      {/* Progress bar */}
+      <div className="mx-auto max-w-xs">
+        <div className="h-1.5 bg-[var(--color-surface-2)] rounded-full overflow-hidden">
+          {parsed && progress ? (
+            <div
+              className="h-full bg-[var(--color-interactive)] rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${pct}%` }}
+            />
+          ) : (
+            <div className="h-full bg-[var(--color-interactive)] opacity-60 rounded-full shimmer-bar" />
+          )}
+        </div>
+        {parsed && progress && (
+          <p className="text-[10px] text-[var(--color-text-muted)]/60 text-center mt-1.5 tabular-nums">{Math.round(pct)}%</p>
+        )}
+      </div>
+
+      {/* Skeleton preview cards */}
       <div className="max-w-2xl mx-auto space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 card-surface" style={{ animationDelay: `${i * 150}ms`, opacity: 0.55 - i * 0.1 }}>
+          <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 card-surface animate-fade-up" style={{ animationDelay: `${i * 150}ms`, opacity: 0.55 - i * 0.1 }}>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              {/* Left: route, airline, metadata */}
               <div className="flex-1 min-w-0 space-y-2.5">
-                {/* Route placeholder (e.g. "JFK → LHR") */}
                 <div className="flex items-center gap-2">
                   <div className="h-3.5 skeleton-shimmer" style={{ width: `${130 + i * 20}px` }} />
                 </div>
-                {/* Airline logo + name */}
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full skeleton-shimmer shrink-0" />
                   <div className="h-2.5 skeleton-shimmer w-20" />
                 </div>
-                {/* Metadata: date, times, stops, duration */}
                 <div className="flex items-center gap-3">
                   <div className="h-2.5 skeleton-shimmer w-14" />
                   <div className="h-2.5 skeleton-shimmer w-24" />
@@ -1837,7 +1866,6 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
                   <div className="h-2.5 skeleton-shimmer w-10" />
                 </div>
               </div>
-              {/* Right: price + CTA */}
               <div className="flex flex-col items-end gap-2 shrink-0">
                 <div className="h-7 skeleton-shimmer w-16 rounded" />
                 <div className="h-8 skeleton-shimmer w-28 rounded-lg" />
@@ -3326,14 +3354,31 @@ function HomePage() {
       {/* Results */}
       <section id="main-content" ref={resultsRef} aria-live="polite" className="max-w-3xl mx-auto px-4 py-4 w-full flex-1">
         {error && (
-          <div role="alert" className="mb-4">
-            <div className="bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/30 rounded-lg px-4 py-3 text-sm text-[var(--color-danger)]">
-              {error}
-              {rateLimitCountdown > 0 && (
-                <span className="block mt-1 text-xs tabular-nums">
-                  {t("rateLimit.countdown", { minutes: Math.floor(rateLimitCountdown / 60), seconds: String(rateLimitCountdown % 60).padStart(2, "0") })}
-                </span>
-              )}
+          <div role="alert" className="mb-4 animate-fade-in">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-5 py-5 card-surface">
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[var(--color-danger)]/10 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 text-[var(--color-danger)]" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[var(--color-text)]">{error}</p>
+                  {rateLimitCountdown > 0 && (
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1 tabular-nums">
+                      {t("rateLimit.countdown", { minutes: Math.floor(rateLimitCountdown / 60), seconds: String(rateLimitCountdown % 60).padStart(2, "0") })}
+                    </p>
+                  )}
+                </div>
+                {rateLimitCountdown <= 0 && (
+                  <button
+                    onClick={() => { setError(null); search(); }}
+                    className="mt-1 text-sm px-4 py-2 rounded-lg bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-colors"
+                  >
+                    {t("common.tryAgain")}
+                  </button>
+                )}
+              </div>
             </div>
             {suggestions && suggestions.length > 0 && (
               <div className="mt-3">

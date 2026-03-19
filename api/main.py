@@ -427,6 +427,26 @@ Include "total_routes": <your calculated number> in the JSON.
 For broad queries (e.g. "any beach", "anywhere warm"), select only the top 3-5 best-matching destinations."""
 
 
+PARSE_RESPONSE_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "origins": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "destinations": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "dates": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "return_dates": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "max_price": {"type": "NUMBER"},
+        "currency": {"type": "STRING"},
+        "cabin": {"type": "STRING"},
+        "stops": {"type": "STRING"},
+        "safe_only": {"type": "BOOLEAN"},
+        "total_routes": {"type": "INTEGER"},
+    },
+    "required": ["origins", "destinations", "dates", "return_dates", "max_price", "currency", "cabin", "stops"],
+}
+
+PARSE_ERROR_USER = "We couldn't understand that search. Try something like: \"New York to London next week\""
+
+
 async def parse_prompt(prompt: str) -> dict:
     """Use Gemini Flash to parse a natural language flight search prompt."""
     if not GEMINI_KEY:
@@ -447,6 +467,7 @@ async def parse_prompt(prompt: str) -> dict:
                         "generationConfig": {
                             "temperature": 0,
                             "responseMimeType": "application/json",
+                            "responseSchema": PARSE_RESPONSE_SCHEMA,
                         },
                     },
                 )
@@ -455,14 +476,14 @@ async def parse_prompt(prompt: str) -> dict:
             if attempt < GEMINI_MAX_RETRIES:
                 await asyncio.sleep((0.25 * (2**attempt)) + random.uniform(0, 0.15))
                 continue
-            raise HTTPException(status_code=502, detail="Failed to parse search prompt")
+            raise HTTPException(status_code=502, detail=PARSE_ERROR_USER)
 
         if resp.status_code != 200:
-            log.warning("Gemini API error status=%s attempt=%s", resp.status_code, attempt + 1)
+            log.warning("Gemini API error status=%s body=%s attempt=%s", resp.status_code, resp.text[:200], attempt + 1)
             if attempt < GEMINI_MAX_RETRIES:
                 await asyncio.sleep((0.25 * (2**attempt)) + random.uniform(0, 0.15))
                 continue
-            raise HTTPException(status_code=502, detail="Failed to parse search prompt")
+            raise HTTPException(status_code=502, detail=PARSE_ERROR_USER)
 
         data = resp.json()
         text = _extract_gemini_text(data)
@@ -473,13 +494,13 @@ async def parse_prompt(prompt: str) -> dict:
 
     if not text:
         log.error("Gemini returned empty payload")
-        raise HTTPException(status_code=502, detail="Failed to parse search prompt")
+        raise HTTPException(status_code=502, detail=PARSE_ERROR_USER)
 
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError:
         log.error("Gemini returned invalid JSON: %s", text[:200])
-        raise HTTPException(status_code=502, detail="Failed to parse search prompt")
+        raise HTTPException(status_code=502, detail=PARSE_ERROR_USER)
 
     # Validate required fields
     if not parsed.get("origins") or not parsed.get("destinations"):
@@ -1412,7 +1433,7 @@ async def search_flights(req: PromptRequest, request: Request):
             valid_origins = [c.upper()[:3] for c in fb.origins if c.upper()[:3] in _VALID_IATA]
             valid_dests = [c.upper()[:3] for c in fb.destinations if c.upper()[:3] in _VALID_IATA]
             if not valid_origins or not valid_dests:
-                raise HTTPException(status_code=502, detail="Failed to parse search prompt")
+                raise HTTPException(status_code=502, detail=PARSE_ERROR_USER)
             parsed = {
                 "origins": valid_origins[:MAX_ORIGINS],
                 "destinations": valid_dests[:MAX_DESTINATIONS],
@@ -1426,7 +1447,7 @@ async def search_flights(req: PromptRequest, request: Request):
             }
             used_fallback = True
         else:
-            raise HTTPException(status_code=502, detail="Failed to parse search prompt")
+            raise HTTPException(status_code=502, detail=PARSE_ERROR_USER)
 
     # Apply user's currency preference if prompt didn't specify one
     if req.currency and parsed.get("currency", "EUR") == "EUR":

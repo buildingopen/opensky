@@ -270,6 +270,22 @@ body {
   50% { filter: drop-shadow(0 0 14px rgba(34,197,94,0.4)); }
 }
 
+/* Orbit rings around plane during loading */
+@keyframes orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes orbit-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+.orbit-ring {
+  animation: orbit-spin 8s linear infinite;
+}
+.orbit-ring-reverse {
+  animation: orbit-spin-reverse 12s linear infinite;
+}
+
 /* Animated dots after loading message */
 @keyframes dot-pulse {
   0%, 20% { opacity: 0; }

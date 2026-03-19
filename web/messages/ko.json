@@ -119,7 +119,8 @@
       "fetchingPrices": "실시간 가격을 가져오는 중...",
       "safetyFiltered": "{count, plural, one {1개 노선이 안전상 제외됨} other {{count}개 노선이 안전상 제외됨}}",
       "bestSoFar": "현재까지 최적 (검색 중 업데이트됨)",
-      "roundTrip": "왕복"
+      "roundTrip": "왕복",
+      "routesChecked": "경로 확인됨"
     },
     "results": {
       "roundTripFrom": "왕복 {price}부터",

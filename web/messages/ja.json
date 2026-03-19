@@ -119,7 +119,8 @@
       "fetchingPrices": "最新の料金を取得中...",
       "safetyFiltered": "{count, plural, one {1ルートを安全性で除外} other {{count}ルートを安全性で除外}}",
       "bestSoFar": "現時点のベスト（検索中、随時更新）",
-      "roundTrip": "往復"
+      "roundTrip": "往復",
+      "routesChecked": "ルート確認済み"
     },
     "results": {
       "roundTripFrom": "往復 {price}から",

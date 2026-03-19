@@ -128,7 +128,8 @@
       "fetchingPrices": "Fetching live prices...",
       "safetyFiltered": "{count, plural, one {1 route filtered for safety} other {{count} routes filtered for safety}}",
       "bestSoFar": "Best so far (updating as we search)",
-      "roundTrip": "round trip"
+      "roundTrip": "round trip",
+      "routesChecked": "routes checked"
     },
     "results": {
       "roundTripFrom": "Round trip from {price}",
