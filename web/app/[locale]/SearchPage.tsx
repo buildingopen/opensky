@@ -2260,7 +2260,7 @@ function PriceAlertSection({
 // ---------------------------------------------------------------------------
 // Fix 2: Parsed Config chips
 // ---------------------------------------------------------------------------
-function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount, expandPhase, expandProgress, expansionInfo }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number; expandPhase?: "idle" | "expanding" | "done"; expandProgress?: { done: number; total: number } | null; expansionInfo?: string | null }) {
+function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount, expandPhase, expandProgress, expansionInfo, expandCount }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number; expandPhase?: "idle" | "expanding" | "done"; expandProgress?: { done: number; total: number } | null; expansionInfo?: string | null; expandCount?: number }) {
   const t = useTranslations("search");
   const tc = useTranslations("common");
   const locale = useLocale();
@@ -2283,7 +2283,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
   const routeCount = parsed.total_routes || origins.length * destinations.length * dates.length;
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 space-y-2">
+    <div className={`bg-[var(--color-surface)] border rounded-lg px-4 py-3 space-y-2 transition-colors duration-500 ${expandPhase === "expanding" ? "border-[var(--color-interactive)]/40" : "border-[var(--color-border)]"}`}>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {canExpandOrigins ? (
           <button onClick={() => setOriginsExpanded(!originsExpanded)} className="font-medium text-[var(--color-text)] hover:text-[var(--color-interactive)] transition-colors cursor-pointer inline-flex items-center gap-1.5">
@@ -2357,6 +2357,11 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
               />
             </div>
           )}
+        </div>
+      )}
+      {expandPhase === "done" && expandCount != null && expandCount > 0 && (
+        <div className="pt-1 animate-[fadeOutDelay_4s_ease-out_forwards]">
+          <span className="text-xs text-[var(--color-interactive)]">+{expandCount} {t("expand.flightsAdded")}</span>
         </div>
       )}
     </div>
@@ -2944,7 +2949,6 @@ function HomePage() {
 
               setExpandPhase("done");
               expandParsedRef.current = null;
-              window.scrollTo({ top: 0, behavior: "smooth" });
               trackEvent("expand_search_results", { new_flights: expandedFlights.length, new_rt: expandedRT.length });
             } else if (msg.type === "error") {
               setExpandError(msg.detail || t("expand.failed"));
@@ -3453,7 +3457,7 @@ function HomePage() {
             {(() => {
               const items = (tripTab === "roundtrip" && roundTripResults?.length) ? roundTripResults : flights;
               const safeCount = items.filter((f: any) => f.risk_level === "safe").length;
-              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} expandPhase={expandPhase} expandProgress={expandProgress} expansionInfo={expansionInfo} />;
+              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} expandPhase={expandPhase} expandProgress={expandProgress} expansionInfo={expansionInfo} expandCount={expandCount} />;
             })()}
 
             {/* Fix 5: Show warning if return date was before departure */}

@@ -310,6 +310,12 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Expand completion fade out */
+@keyframes fadeOutDelay {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* Tabular numbers for prices */
 .price-display {
   font-feature-settings: "tnum" on;

@@ -1553,7 +1553,7 @@ function PriceAlertSection({
 // ---------------------------------------------------------------------------
 // Fix 2: Parsed Config chips
 // ---------------------------------------------------------------------------
-function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount, expandPhase, expandProgress, expansionInfo }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number; expandPhase?: "idle" | "expanding" | "done"; expandProgress?: { done: number; total: number } | null; expansionInfo?: string | null }) {
+function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount, expandPhase, expandProgress, expansionInfo, expandCount }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number; expandPhase?: "idle" | "expanding" | "done"; expandProgress?: { done: number; total: number } | null; expansionInfo?: string | null; expandCount?: number }) {
   const { origins, destinations, dates, return_dates, max_price, currency, cabin, stops, airport_names } = parsed;
   const sym = currencySymbol(currency);
   const isRoundTrip = return_dates && return_dates.length > 0;
@@ -1566,7 +1566,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
   const canExpandDates = dates.length > 2;
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-3 space-y-2">
+    <div className={`bg-[var(--color-surface)] border rounded-lg px-4 py-3 space-y-2 transition-colors duration-500 ${expandPhase === "expanding" ? "border-[var(--color-interactive)]/40" : "border-[var(--color-border)]"}`}>
       <div className="flex items-center gap-2 text-sm">
         <span className="font-medium text-[var(--color-text)]">{originLabel}</span>
         <span className="text-[var(--color-text-muted)]">→</span>
@@ -1625,6 +1625,11 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
               />
             </div>
           )}
+        </div>
+      )}
+      {expandPhase === "done" && expandCount != null && expandCount > 0 && (
+        <div className="pt-1 animate-[fadeOutDelay_4s_ease-out_forwards]">
+          <span className="text-xs text-[var(--color-interactive)]">+{expandCount} flights added</span>
         </div>
       )}
     </div>
@@ -2667,7 +2672,7 @@ function HomePage() {
             {(() => {
               const items = (tripTab === "roundtrip" && roundTripResults?.length) ? roundTripResults : flights;
               const safeCount = items.filter((f: any) => f.risk_level === "safe").length;
-              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} expandPhase={expandPhase} expandProgress={expandProgress} expansionInfo={expansionInfo} />;
+              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} expandPhase={expandPhase} expandProgress={expandProgress} expansionInfo={expansionInfo} expandCount={expandCount} />;
             })()}
 
             {/* Fix 5: Show warning if return date was before departure */}
