@@ -726,6 +726,7 @@ allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000").spl
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://web-[a-z0-9]+-fedes-projects-5891bd50\.vercel\.app",
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
