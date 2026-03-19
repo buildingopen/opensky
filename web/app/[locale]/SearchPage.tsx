@@ -2370,7 +2370,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
       )}
       {showExpandDone && (
         <div className="pt-1 animate-[fadeOutDelay_4s_ease-out_forwards]">
-          <span className="text-xs text-[var(--color-interactive)]">+{expandCount} {t("expand.flightsAdded")}</span>
+          <span className="text-xs text-[var(--color-interactive)]">{t("expand.flightsAdded", { count: expandCount ?? 0 })}</span>
         </div>
       )}
     </div>
