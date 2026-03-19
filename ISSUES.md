@@ -8,13 +8,14 @@
 - **Description**: Zone data last updated 2026-03-01 (18 days old). Zone alert worker must be run manually. No cron job set up.
 - **Files**: `api/zone_alert_worker.py`
 
-### 4. Preview API service missing on Hetzner
-- **Status**: OPEN
-- **Date**: 2026-03-19
-- **Description**: `opensky-api-preview.service` does not exist on Hetzner. MEMORY.md references it on port 8091 but it was never created. Both preview.flyfast.app and flyfast.app use the same production API. No staging environment for API changes.
-- **Fix**: Create preview API container/service on port 8091 with separate DNS
-
 ## FIXED
+
+### Preview API service created on Hetzner
+- **Status**: FIXED
+- **Date**: 2026-03-19
+- **Description**: Created `opensky-api-preview` Docker container on Hetzner at port 8091. Set up nginx, DNS (api-preview.flyfast.app), and SSL. Separate staging environment for API changes.
+- **URL**: https://api-preview.flyfast.app
+- **Deploy path**: `/opt/flyfast-preview/` on Hetzner
 
 ### Duplicate highlights now supported (all date matches)
 - **Status**: FIXED
