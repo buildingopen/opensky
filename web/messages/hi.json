@@ -742,6 +742,7 @@
       "lastChecked": "अंतिम जांच",
       "dataRefreshed": "डेटा EASA, FAA और safeairspace.net से दैनिक रिफ्रेश किया जाता है।",
       "searchAvoiding": "{zone} से बचकर फ़्लाइट खोजें",
+      "searchSafe": "सुरक्षित फ़्लाइट खोजें",
       "notFound": "ज़ोन नहीं मिला - FlyFast",
       "safeToFlyTitle": "क्या {zone} के ऊपर से उड़ना सुरक्षित है? - FlyFast",
       "safeToFlyDescription": "{details} वर्तमान जोखिम स्तर: {level}। अपडेट {updated}।",

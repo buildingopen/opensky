@@ -742,6 +742,7 @@
       "lastChecked": "Ultimo controllo",
       "dataRefreshed": "Dati aggiornati quotidianamente da EASA, FAA e safeairspace.net.",
       "searchAvoiding": "Cerca voli evitando {zone}",
+      "searchSafe": "Cerca voli sicuri",
       "notFound": "Zona non trovata - FlyFast",
       "safeToFlyTitle": "È sicuro volare sopra {zone}? - FlyFast",
       "safeToFlyDescription": "{details} Livello di rischio attuale: {level}. Aggiornato il {updated}.",

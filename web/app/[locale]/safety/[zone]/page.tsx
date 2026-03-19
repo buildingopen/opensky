@@ -205,10 +205,10 @@ export default async function ZonePage({
         {/* CTA */}
         <div className="border-t border-[var(--color-border)] pt-8">
           <Link
-            href={`/?q=${encodeURIComponent(`flights avoiding ${zoneName}`)}`}
+            href="/?q=safe+routes"
             className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-interactive)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-interactive-hover)] transition-colors"
           >
-            {t("zone.searchAvoiding", { zone: zoneName })}
+            {t("zone.searchSafe")}
           </Link>
         </div>
       </section>

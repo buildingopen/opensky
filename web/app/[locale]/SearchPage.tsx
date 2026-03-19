@@ -790,42 +790,47 @@ function scanLocations(prompt: string): ScannedLoc[] {
 // ---------------------------------------------------------------------------
 // Shared date detection helper (used by useHighlightRanges)
 // ---------------------------------------------------------------------------
-function detectDate(lower: string): { text: string; start: number; end: number; resolved: string | undefined } | null {
+type DateMatch = { text: string; start: number; end: number; resolved: string | undefined };
+function detectDates(lower: string): DateMatch[] {
+  const results: DateMatch[] = [];
+  const overlaps = (s: number, e: number) => results.some(r => s < r.end && e > r.start);
+  const add = (text: string, start: number, end: number) => {
+    if (!overlaps(start, end)) results.push({ text, start, end, resolved: resolveDate(text) || undefined });
+  };
+  const findAll = (re: RegExp, skipMay = false) => {
+    const g = new RegExp(re.source, "gi");
+    let m;
+    while ((m = g.exec(lower)) !== null) {
+      if (skipMay && m[0].toLowerCase() === "may") continue;
+      add(m[0], m.index, m.index + m[0].length);
+    }
+  };
   const allTemporalKeys = Object.keys(I18N_TEMPORAL);
   const allMonthNamesStr = Object.keys(I18N_MONTHS).join("|");
   const allDayNamesStr = Object.keys(I18N_DAYS).join("|");
   // 1. Multilingual temporal phrases (longest first)
   const sorted = allTemporalKeys.slice().sort((a, b) => b.length - a.length);
   for (const phrase of sorted) {
-    const idx = lower.indexOf(phrase);
-    if (idx >= 0) return { text: phrase, start: idx, end: idx + phrase.length, resolved: resolveDate(phrase) || undefined };
+    let from = 0;
+    while (from < lower.length) {
+      const idx = lower.indexOf(phrase, from);
+      if (idx < 0) break;
+      add(phrase, idx, idx + phrase.length);
+      from = idx + phrase.length;
+    }
   }
   // 2. English temporal
-  const enPats = [/\b(tomorrow|today)\b/i, /\b(next week)\b/i, /\b(this week)\b/i, /\b(next weekend)\b/i, /\b(this weekend)\b/i, /\b(next month)\b/i, /\b(this month)\b/i];
-  for (const pat of enPats) {
-    const m = pat.exec(lower);
-    if (m && m.index !== undefined) return { text: m[0], start: m.index, end: m.index + m[0].length, resolved: resolveDate(m[0]) || undefined };
-  }
+  const enPats = [/\b(tomorrow|today)\b/, /\b(next week)\b/, /\b(this week)\b/, /\b(next weekend)\b/, /\b(this weekend)\b/, /\b(next month)\b/, /\b(this month)\b/];
+  for (const pat of enPats) findAll(pat);
   // 3. Day names
-  const dayRe = new RegExp(`\\b(${allDayNamesStr})\\b`, "i");
-  const dayM = dayRe.exec(lower);
-  if (dayM && dayM.index !== undefined) return { text: dayM[0], start: dayM.index, end: dayM.index + dayM[0].length, resolved: resolveDate(dayM[0]) || undefined };
-  // 4. Month + day
-  const mdRe = new RegExp(`\\b(${allMonthNamesStr})\\s+\\d{1,2}\\b`, "i");
-  const mdM = mdRe.exec(lower);
-  if (mdM && mdM.index !== undefined) return { text: mdM[0], start: mdM.index, end: mdM.index + mdM[0].length, resolved: resolveDate(mdM[0]) || undefined };
-  const dmRe = new RegExp(`\\b\\d{1,2}\\s+(${allMonthNamesStr})\\b`, "i");
-  const dmM = dmRe.exec(lower);
-  if (dmM && dmM.index !== undefined) return { text: dmM[0], start: dmM.index, end: dmM.index + dmM[0].length, resolved: resolveDate(dmM[0]) || undefined };
-  // 5. Standalone month
-  const inMonthRe = new RegExp(`\\b(?:in|en|im|em|nel)\\s+(${allMonthNamesStr})\\b`, "i");
-  const inM = inMonthRe.exec(lower);
-  if (inM && inM.index !== undefined) return { text: inM[0], start: inM.index, end: inM.index + inM[0].length, resolved: resolveDate(inM[0]) || undefined };
-  const monthRe = new RegExp(`\\b(${allMonthNamesStr})\\b`, "i");
-  const moM = monthRe.exec(lower);
-  // Skip ambiguous standalone "may" (too common as English verb); compound "in may" / "may 15" handled above
-  if (moM && moM.index !== undefined && moM[0].toLowerCase() !== "may") return { text: moM[0], start: moM.index, end: moM.index + moM[0].length, resolved: resolveDate(moM[0]) || undefined };
-  return null;
+  findAll(new RegExp(`\\b(${allDayNamesStr})\\b`, "i"));
+  // 4. Month + day (both orders)
+  findAll(new RegExp(`\\b(${allMonthNamesStr})\\s+\\d{1,2}\\b`, "i"));
+  findAll(new RegExp(`\\b\\d{1,2}\\s+(${allMonthNamesStr})\\b`, "i"));
+  // 5. Standalone month (with preposition first, then bare)
+  findAll(new RegExp(`\\b(?:in|en|im|em|nel)\\s+(${allMonthNamesStr})\\b`, "i"));
+  findAll(new RegExp(`\\b(${allMonthNamesStr})\\b`, "i"), true);
+  return results;
 }
 
 // ---------------------------------------------------------------------------
@@ -848,10 +853,9 @@ function useHighlightRanges(prompt: string): HighlightRange[] {
       ranges.push({ start: s.start, end: s.end, type: li === 0 ? "origin" : "dest", airports: s.loc.airports, tooltip: regionTooltip });
     }
 
-    // Date detection
-    const dateMatch = detectDate(lower);
-    if (dateMatch) {
-      ranges.push({ start: dateMatch.start, end: dateMatch.end, type: "date", airports: [], resolvedDate: dateMatch.resolved });
+    // Date detection (all matches)
+    for (const dm of detectDates(lower)) {
+      ranges.push({ start: dm.start, end: dm.end, type: "date", airports: [], resolvedDate: dm.resolved });
     }
 
     // Qualifier detection: safe routes, budget, class, etc. (all 12 languages)

@@ -742,6 +742,7 @@
       "lastChecked": "最后检查时间",
       "dataRefreshed": "数据每日从EASA、FAA和safeairspace.net刷新。",
       "searchAvoiding": "搜索避开{zone}的航班",
+      "searchSafe": "搜索安全航班",
       "notFound": "未找到该区域 - FlyFast",
       "safeToFlyTitle": "飞越{zone}安全吗？ - FlyFast",
       "safeToFlyDescription": "{details} 当前风险等级：{level}。更新于{updated}。",

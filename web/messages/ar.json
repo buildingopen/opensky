@@ -742,6 +742,7 @@
       "lastChecked": "آخر فحص",
       "dataRefreshed": "يتم تحديث البيانات يومياً من EASA وFAA وsafeairspace.net.",
       "searchAvoiding": "ابحث عن رحلات تتجنب {zone}",
+      "searchSafe": "ابحث عن رحلات آمنة",
       "notFound": "المنطقة غير موجودة - FlyFast",
       "safeToFlyTitle": "هل من الآمن الطيران فوق {zone}؟ - FlyFast",
       "safeToFlyDescription": "{details} مستوى الخطورة الحالي: {level}. آخر تحديث {updated}.",
