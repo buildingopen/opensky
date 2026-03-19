@@ -35,6 +35,8 @@
   --color-geo-stroke: #0f1523;
   --color-geo-default: #1e2a3c;
   --color-geo-hover: #2a3a52;
+  --skeleton-base: rgba(30,42,60,0.25);
+  --skeleton-shine: rgba(30,42,60,0.10);
 }
 
 /* Light mode overrides */
@@ -61,6 +63,8 @@
   --color-geo-stroke: #dce5f5;
   --color-geo-default: #e8edf5;
   --color-geo-hover: #dce5f5;
+  --skeleton-base: rgba(100,130,180,0.18);
+  --skeleton-shine: rgba(100,130,180,0.08);
 }
 
 body {
@@ -243,7 +247,7 @@ body {
   100% { background-position: 200% 0; }
 }
 .skeleton-shimmer {
-  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-surface-2) 50%, var(--color-surface) 75%);
+  background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%);
   background-size: 200% 100%;
   animation: shimmerGradient 1.5s ease-in-out infinite;
   border-radius: 6px;

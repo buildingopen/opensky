@@ -1809,16 +1809,35 @@ function SearchingState({ parsed, progress, filteredCount }: { parsed: ParsedSea
         )}
       </div>
 
-      {/* Skeleton preview cards - always visible for instant feedback */}
-      <div className="max-w-2xl mx-auto space-y-3 opacity-30">
+      {/* Skeleton preview cards - mirror real FlightCard layout */}
+      <div className="max-w-2xl mx-auto space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-4 py-4 card-surface animate-pulse" style={{ animationDelay: `${i * 200}ms` }}>
-            <div className="flex items-center justify-between">
-              <div className="space-y-2 flex-1">
-                <div className="h-3 bg-[var(--color-surface-2)] rounded w-2/3" />
-                <div className="h-2.5 bg-[var(--color-surface-2)] rounded w-1/3" />
+          <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 card-surface" style={{ animationDelay: `${i * 150}ms`, opacity: 0.55 - i * 0.1 }}>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              {/* Left: route, airline, metadata */}
+              <div className="flex-1 min-w-0 space-y-2.5">
+                {/* Route placeholder (e.g. "JFK → LHR") */}
+                <div className="flex items-center gap-2">
+                  <div className="h-3.5 skeleton-shimmer" style={{ width: `${130 + i * 20}px` }} />
+                </div>
+                {/* Airline logo + name */}
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full skeleton-shimmer shrink-0" />
+                  <div className="h-2.5 skeleton-shimmer w-20" />
+                </div>
+                {/* Metadata: date, times, stops, duration */}
+                <div className="flex items-center gap-3">
+                  <div className="h-2.5 skeleton-shimmer w-14" />
+                  <div className="h-2.5 skeleton-shimmer w-24" />
+                  <div className="h-2.5 skeleton-shimmer w-12" />
+                  <div className="h-2.5 skeleton-shimmer w-10" />
+                </div>
               </div>
-              <div className="h-5 bg-[var(--color-surface-2)] rounded w-16" />
+              {/* Right: price + CTA */}
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <div className="h-7 skeleton-shimmer w-16 rounded" />
+                <div className="h-8 skeleton-shimmer w-28 rounded-lg" />
+              </div>
             </div>
           </div>
         ))}
