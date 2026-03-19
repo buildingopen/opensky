@@ -2496,12 +2496,14 @@ function HomePage() {
   const [expandProgress, setExpandProgress] = useState<{ done: number; total: number } | null>(null);
   const expandAbortRef = useRef<AbortController | null>(null);
   const expandParsedRef = useRef<ParsedSearch | null>(null);
-  // Auto-dismiss expand result banner after 5s
+  // Reset expand state when a new search starts (not on a timer)
   useEffect(() => {
-    if (expandPhase !== "done") return;
-    const timer = setTimeout(() => setExpandPhase("idle"), 5000);
-    return () => clearTimeout(timer);
-  }, [expandPhase]);
+    if (phase === "searching") {
+      setExpandPhase("idle");
+      setExpandCount(0);
+      setExpandError(null);
+    }
+  }, [phase]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);

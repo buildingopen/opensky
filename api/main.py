@@ -1887,6 +1887,18 @@ async def expand_search(req: ExpandRequest, request: Request):
     original = req.original_parsed
     expanded = await _expand_params(original, req.prompt)
 
+    # CRITICAL: Include original airports to enable cross-route matching.
+    # Without this, we only search new_origins × new_destinations (e.g. BRE→GRO)
+    # which rarely have flights. The valuable routes are:
+    # - new_origins → original_dests (e.g. BRE→BCN)
+    # - original_origins → new_dests (e.g. HAM→GRO)
+    # Frontend deduplicates results by route|date|stops, so re-scanned
+    # original combos are harmlessly filtered out.
+    orig_origins = list(dict.fromkeys(o.upper() for o in original.get("origins", [])))
+    orig_dests = list(dict.fromkeys(d.upper() for d in original.get("destinations", [])))
+    expanded["origins"] = list(dict.fromkeys(orig_origins + expanded["origins"]))
+    expanded["destinations"] = list(dict.fromkeys(orig_dests + expanded["destinations"]))
+
     _capture(_anon_expand, "server_expand_started", {
         "origin_count": len(expanded.get("origins", [])),
         "destination_count": len(expanded.get("destinations", [])),
