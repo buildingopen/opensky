@@ -1763,6 +1763,27 @@ Always return valid 3-letter IATA airport codes, never city codes.
 Never include an airport that appears in BOTH the original AND expanded origins or destinations."""
 
 
+EXPAND_RESPONSE_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "origins": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "destinations": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "dates": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "return_dates": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "max_price": {"type": "NUMBER"},
+        "currency": {"type": "STRING"},
+        "cabin": {"type": "STRING"},
+        "stops": {"type": "STRING"},
+        "safe_only": {"type": "BOOLEAN"},
+        "total_routes": {"type": "INTEGER"},
+        "expansion_strategy": {"type": "STRING"},
+    },
+    "required": ["origins", "destinations", "dates", "expansion_strategy"],
+}
+
+EXPAND_TIMEOUT_SECONDS = 20  # Expansion queries are complex, need more time
+
+
 class ExpandRequest(BaseModel):
     prompt: str = Field(..., min_length=3, max_length=500)
     original_parsed: dict
@@ -1795,7 +1816,7 @@ async def _expand_params(original: dict, prompt: str) -> dict:
         # Use fallback model on retries (primary may be overloaded)
         url = GEMINI_URL if attempt == 0 else GEMINI_FALLBACK_URL
         try:
-            async with httpx.AsyncClient(timeout=GEMINI_TIMEOUT_SECONDS) as client:
+            async with httpx.AsyncClient(timeout=EXPAND_TIMEOUT_SECONDS) as client:
                 resp = await client.post(
                     url,
                     params={"key": GEMINI_KEY},
@@ -1805,6 +1826,7 @@ async def _expand_params(original: dict, prompt: str) -> dict:
                         "generationConfig": {
                             "temperature": 0,
                             "responseMimeType": "application/json",
+                            "responseSchema": EXPAND_RESPONSE_SCHEMA,
                         },
                     },
                 )
@@ -1859,7 +1881,7 @@ async def _expand_params(original: dict, prompt: str) -> dict:
         except HTTPException:
             raise
         except Exception as e:
-            log.error("Expand attempt %d failed: %s", attempt, e)
+            log.error("Expand attempt %d failed: %s: %s", attempt, type(e).__name__, e)
             if attempt < GEMINI_MAX_RETRIES:
                 await asyncio.sleep(1)
                 continue
