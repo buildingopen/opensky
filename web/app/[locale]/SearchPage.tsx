@@ -3451,7 +3451,7 @@ function HomePage() {
                   trackEvent("example_prompt_clicked", { prompt: ex });
                   setTimeout(() => inputRef.current?.focus(), 0);
                 }}
-                className="text-[13px] px-4 py-2 rounded-full bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] transition-all duration-200 whitespace-nowrap hover:-translate-y-px card-surface"
+                className="text-[13px] px-4 py-2 rounded-full bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis max-w-full hover:-translate-y-px card-surface"
               >
                 {ex}
               </button>

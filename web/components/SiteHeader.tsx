@@ -263,7 +263,7 @@ export function SiteHeader() {
           onClick={() => setMenuOpen(false)}
         />
         {/* Panel */}
-        <div className="absolute end-0 top-0 h-full w-64 bg-[var(--color-surface)] border-s border-[var(--color-border)] shadow-xl flex flex-col animate-slide-in-right">
+        <div className="absolute end-0 top-0 h-full w-64 bg-[var(--color-background)] border-s border-[var(--color-border)] shadow-xl flex flex-col animate-slide-in-right">
           <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--color-border)]">
             <div className="flex items-center">
               <svg viewBox="0 0 32 32" className="w-6 h-6" fill="none">
