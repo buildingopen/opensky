@@ -51,6 +51,9 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   return {
     title,
     description,
+    alternates: {
+      canonical: `${siteUrl}/${locale}`,
+    },
     openGraph: {
       title,
       description,

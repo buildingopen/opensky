@@ -7,17 +7,13 @@ import json
 import logging
 import os
 import sqlite3
-import sys
-import time
 from datetime import datetime, timedelta
 
 from html import escape as html_escape
 import httpx
 
-sys.path.insert(0, "/opt/opensky/repo/src")
-
-from opensky.search import SearchEngine
-from opensky.models import RiskLevel
+from skyroute.search import SearchEngine
+from skyroute.models import RiskLevel
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,7 +21,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-ALERTS_DB_PATH = os.environ.get("ALERTS_DB_PATH", "/opt/opensky/alerts.db")
+ALERTS_DB_PATH = os.environ.get("ALERTS_DB_PATH", "/data/alerts.db")
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 DUFFEL_TOKEN = os.environ.get("SKYROUTE_DUFFEL_TOKEN", "")
 FROM_EMAIL = "FlyFast <alerts@flyfast.app>"

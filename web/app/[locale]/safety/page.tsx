@@ -5,15 +5,17 @@ import { SafetyPageClient } from "./SafetyPageClient";
 
 export const revalidate = 3600;
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app";
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const { setRequestLocale } = await import("next-intl/server");
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "safety" });
-  return { title: t("title"), description: t("description") };
+  return { title: t("title"), description: t("description"), alternates: { canonical: `${siteUrl}/${locale}/safety` } };
 }
 
-const itemListSchema = (zoneIds: string[]) => ({
+const itemListSchema = (zoneIds: string[], locale: string) => ({
   "@context": "https://schema.org",
   "@type": "ItemList",
   name: "Conflict Zone Airspace Status",
@@ -21,11 +23,12 @@ const itemListSchema = (zoneIds: string[]) => ({
   itemListElement: zoneIds.map((id, i) => ({
     "@type": "ListItem",
     position: i + 1,
-    url: `https://flyfast.app/safety/${id}`,
+    url: `${siteUrl}/${locale}/safety/${id}`,
   })),
 });
 
-export default async function SafetyIndexPage() {
+export default async function SafetyIndexPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const t = await getTranslations("safety");
   const zones = await getZones();
 
@@ -67,7 +70,7 @@ export default async function SafetyIndexPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(itemListSchema(zones.map((z) => z.id))),
+          __html: JSON.stringify(itemListSchema(zones.map((z) => z.id), locale)),
         }}
       />
       <h1 className="text-3xl font-bold text-[var(--color-text)]">

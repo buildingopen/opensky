@@ -2,12 +2,12 @@
 
 import React, { Component, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useTranslations, useLocale, useFormatter } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "../../i18n/navigation";
 import { trackEvent } from "../../lib/analytics";
 import { AirportAutocomplete } from "../../components/AirportAutocomplete";
 import { useSavedSearches, SavedSearchesList } from "../../components/SavedSearches";
-import { useAirlineFilter, AirlineFilterChips, AIRLINE_NAMES, airlineName } from "../../components/AirlineFilter";
+import { useAirlineFilter, AirlineFilterChips, airlineName } from "../../components/AirlineFilter";
 import { AIRPORTS } from "../../lib/airports";
 import { useCurrency } from "../../components/CurrencyProvider";
 

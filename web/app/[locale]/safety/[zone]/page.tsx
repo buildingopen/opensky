@@ -17,12 +17,14 @@ export async function generateStaticParams() {
   return zones.map((z) => ({ zone: z.id }));
 }
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app";
+
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ zone: string }>;
+  params: Promise<{ locale: string; zone: string }>;
 }): Promise<Metadata> {
-  const { zone: zoneId } = await params;
+  const { locale, zone: zoneId } = await params;
   const zone = await getZoneById(zoneId);
   const t = await getTranslations("safety");
   if (!zone) return { title: t("zone.notFound") };
@@ -33,10 +35,13 @@ export async function generateMetadata({
   return {
     title,
     description,
+    alternates: {
+      canonical: `${siteUrl}/${locale}/safety/${zone.id}`,
+    },
     openGraph: {
       title,
       description,
-      url: `https://flyfast.app/safety/${zone.id}`,
+      url: `${siteUrl}/${locale}/safety/${zone.id}`,
     },
   };
 }

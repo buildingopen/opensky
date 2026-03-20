@@ -1,10 +1,12 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app";
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "imprint" });
-  return { title: t("title"), description: t("description") };
+  return { title: t("title"), description: t("description"), alternates: { canonical: `${siteUrl}/${locale}/imprint` } };
 }
 
 export default async function ImprintPage() {

@@ -30,3 +30,4 @@ web/.next/
 web/.env.local
 .vercel
 api/.env
+api/.next/

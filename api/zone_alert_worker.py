@@ -7,14 +7,13 @@ import json
 import logging
 import os
 import sqlite3
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 from html import escape as html_escape
 import httpx
 
-from opensky.safety import load_zones
+from skyroute.safety import load_zones
 
 logging.basicConfig(
     level=logging.INFO,

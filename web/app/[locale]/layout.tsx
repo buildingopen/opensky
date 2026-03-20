@@ -53,7 +53,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description: t("description"),
     keywords: ["flights", "flight search", "Google Flights search", "natural language flights", "conflict zones", "cheap flights", "AI flight search"],
     alternates: {
-      canonical: `${siteUrl}/${locale}`,
       languages,
     },
   };
