@@ -1925,7 +1925,7 @@ function SearchingState({ parsed, progress, filteredCount, workers }: { parsed: 
           )}
         </div>
         {parsed && progress && (
-          <p className="text-[10px] text-[var(--color-text-muted)]/60 text-center mt-1.5 tabular-nums">{Math.round(pct)}%</p>
+          <p className="text-[10px] text-[var(--color-text-muted)] text-center mt-1.5 tabular-nums">{Math.round(pct)}%</p>
         )}
       </div>
 
@@ -3452,7 +3452,7 @@ function HomePage() {
                   trackEvent("example_prompt_clicked", { prompt: ex });
                   setTimeout(() => inputRef.current?.focus(), 0);
                 }}
-                className="text-[13px] px-4 py-2 rounded-full bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis max-w-full hover:-translate-y-px card-surface"
+                className="text-[13px] px-4 py-2 rounded-2xl bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] transition-all duration-200 text-start hover:-translate-y-px card-surface"
               >
                 {ex}
               </button>
@@ -3472,7 +3472,7 @@ function HomePage() {
 
         {/* Time saved */}
         {phase === "idle" && flights.length === 0 && mounted && minutesSaved > 0 && (
-          <p className="text-[11px] text-[var(--color-text-muted)]/50 mt-3 text-center">
+          <p className="text-[11px] text-[var(--color-text-muted)] mt-3 text-center">
             {t("timeSaved", { time: minutesSaved >= 60 ? `${Math.floor(minutesSaved / 60)}h ${minutesSaved % 60}m` : `${minutesSaved} min` })}
           </p>
         )}

@@ -49,7 +49,7 @@ export function SavedSearchesList({ searches, onSelect, onClear }: { searches: S
     <div className="mt-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-[var(--color-text-muted)]">{t("recentSearches")}</span>
-        <button onClick={onClear} className="text-[11px] text-[var(--color-text-muted)]/50 hover:text-[var(--color-text-muted)] transition-colors" aria-label={t("clearHistory")}>
+        <button onClick={onClear} className="text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors" aria-label={t("clearHistory")}>
           {t("clear")}
         </button>
       </div>
