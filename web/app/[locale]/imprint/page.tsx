@@ -17,7 +17,7 @@ export default async function ImprintPage() {
       <p className="mt-2 text-xs text-[var(--color-text-muted)]">{t("legalBasis")}</p>
       <p className="mt-1 text-xs text-[var(--color-text-muted)] italic">{t("germanAuthoritative")}</p>
 
-      <section className="mt-10 space-y-8 text-sm text-[var(--color-text-muted)]">
+      <section className="mt-10 space-y-8 text-sm text-[var(--color-text)]">
 
         <div>
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">{t("infoHeading")}</h2>

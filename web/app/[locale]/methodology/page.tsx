@@ -42,12 +42,12 @@ export default async function MethodologyPage() {
     <main className="max-w-5xl mx-auto px-4 py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />
       <h1 className="text-3xl font-bold text-[var(--color-text)]">{t("heading")}</h1>
-      <p className="mt-4 text-[var(--color-text-muted)]">
+      <p className="mt-4 text-[var(--color-text)]">
         {t("intro")}
       </p>
 
       <div className="lg:grid lg:grid-cols-[1fr_180px] lg:gap-12 mt-10">
-        <section className="space-y-8 text-sm text-[var(--color-text-muted)]">
+        <section className="space-y-8 text-sm text-[var(--color-text)]">
 
           {/* Step 1 */}
           <div id="describe">

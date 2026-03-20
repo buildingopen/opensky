@@ -38,14 +38,14 @@ export default async function ContactPage() {
     <main className="max-w-5xl mx-auto px-4 py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <h1 className="text-3xl font-bold text-[var(--color-text)]">{t("heading")}</h1>
-      <p className="mt-4 text-[var(--color-text-muted)]">
+      <p className="mt-4 text-[var(--color-text)]">
         {t.rich("intro", {
           link: (chunks) => <a className="text-[var(--color-interactive)] hover:underline" href="https://buildingopen.org" target="_blank" rel="noopener noreferrer">{chunks}</a>
         })}
       </p>
 
       <div className="lg:grid lg:grid-cols-[1fr_180px] lg:gap-12 mt-10">
-        <section className="space-y-8 text-sm text-[var(--color-text-muted)]">
+        <section className="space-y-8 text-sm text-[var(--color-text)]">
 
           {/* Get in touch */}
           <div id="get-in-touch">

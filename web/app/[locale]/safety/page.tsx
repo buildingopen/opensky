@@ -76,7 +76,7 @@ export default async function SafetyIndexPage({ params }: { params: Promise<{ lo
       <h1 className="text-3xl font-bold text-[var(--color-text)]">
         {t("heading")}
       </h1>
-      <p className="mt-4 text-[var(--color-text-muted)] max-w-2xl">
+      <p className="mt-4 text-[var(--color-text)] max-w-2xl">
         {t("subtitle")}
       </p>
 

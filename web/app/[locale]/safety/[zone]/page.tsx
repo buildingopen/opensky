@@ -152,7 +152,7 @@ export default async function ZonePage({
         );
       })()}
 
-      <section className="mt-10 space-y-8 text-sm text-[var(--color-text-muted)]">
+      <section className="mt-10 space-y-8 text-sm text-[var(--color-text)]">
         {/* Current status */}
         <div>
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">

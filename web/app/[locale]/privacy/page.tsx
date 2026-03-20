@@ -23,13 +23,13 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
     <main className="max-w-3xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-[var(--color-text)]">{t("heading")}</h1>
       <p className="mt-2 text-xs text-[var(--color-text-muted)]">{t("lastUpdated", { date: localizedDate })}</p>
-      <p className="mt-4 text-[var(--color-text-muted)]">
+      <p className="mt-4 text-[var(--color-text)]">
         {t.rich("intro", {
           link: (chunks) => <a className="text-[var(--color-interactive)] hover:underline" href="https://buildingopen.org" target="_blank" rel="noopener noreferrer">{chunks}</a>
         })}
       </p>
 
-      <section className="mt-10 space-y-8 text-sm text-[var(--color-text-muted)]">
+      <section className="mt-10 space-y-8 text-sm text-[var(--color-text)]">
 
         <div>
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">{t("whatWeCollectHeading")}</h2>

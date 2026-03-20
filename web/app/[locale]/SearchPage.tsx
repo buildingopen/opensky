@@ -3253,7 +3253,7 @@ function HomePage() {
           </h1>
         )}
         {!hasResults && (
-          <p className="mt-4 text-[var(--color-text-muted)] text-base sm:text-lg max-w-xl mx-auto">
+          <p className="mt-4 text-[var(--color-text)] text-base sm:text-lg max-w-xl mx-auto">
             {t("heroSubtitle")}
           </p>
         )}

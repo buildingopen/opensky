@@ -44,8 +44,8 @@
 :root.light {
   --glass-blur: 16px;
   --color-background: #f8faff;
-  --color-surface: rgba(255,255,255,0.55);
-  --color-surface-2: rgba(240,244,255,0.55);
+  --color-surface: rgba(255,255,255,0.88);
+  --color-surface-2: rgba(240,244,255,0.88);
   --color-border: #dce5f5;
   --color-text: #0f172a;
   --color-heading: #0f172a;
