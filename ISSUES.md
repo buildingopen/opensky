@@ -6,6 +6,24 @@
 
 ## FIXED
 
+### Canonical URLs wrong for all sub-pages
+- **Status**: FIXED
+- **Date**: 2026-03-20
+- **Description**: All pages inherited homepage canonical from layout (`/${locale}`). Each page now sets its own canonical URL. Also fixed OG URLs on safety zone pages to include locale prefix, and ItemList schema URLs on safety index.
+- **Commit**: afe189d
+
+### Alert workers crash in Docker (wrong import paths)
+- **Status**: FIXED
+- **Date**: 2026-03-20
+- **Description**: Both `alert_worker.py` and `zone_alert_worker.py` imported from `opensky.*` but Docker image installs `skyroute.*`. Changed to `skyroute.*` imports matching `main.py`. Also fixed `alert_worker.py` default DB path and removed unused `sys`/`time` imports. Redeployed to Hetzner, verified imports work inside container.
+- **Commit**: afe189d
+
+### Dead SearchPage.tsx removed (3163 lines)
+- **Status**: FIXED
+- **Date**: 2026-03-20
+- **Description**: `web/app/SearchPage.tsx` was a pre-i18n copy only imported by one stale test. Removed both files. The live page is `web/app/[locale]/SearchPage.tsx`.
+- **Commit**: afe189d
+
 ### Zone alert worker cron set up
 - **Status**: FIXED
 - **Date**: 2026-03-19
