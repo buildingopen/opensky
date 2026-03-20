@@ -2767,8 +2767,9 @@ function HomePage() {
     expandParsedRef.current = null;
     setRtShowCount(5);
 
-    // Update browser URL so refresh/back restores the search (C6)
-    // Keep ref/utm_source when arriving from a share URL (first search only)
+    // Update browser URL so refresh restores the search (C6)
+    // replaceState instead of pushState: avoids creating history entries
+    // that wipe client state when user hits back (prompt disappears)
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.set("q", text.trim());
@@ -2778,7 +2779,7 @@ function HomePage() {
         url.searchParams.delete("utm_source");
         setAttributionParams((prev) => ({ ...prev, ref: "organic", utm_source: undefined }));
       }
-      window.history.pushState({}, "", url.toString());
+      window.history.replaceState({}, "", url.toString());
     }
 
     const controller = new AbortController();
