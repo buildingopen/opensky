@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               `img-src 'self' data: https://images.kiwi.com https://flagcdn.com ${apiOrigin || ""}`,
+              `media-src 'self' ${apiOrigin || ""}`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
