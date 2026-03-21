@@ -105,10 +105,10 @@
       "maxPricePlaceholder": "any"
     },
     "examples": [
-      "India to Germany, next week, safe routes only",
-      "JFK to London, next week, under $500",
-      "New York to Tokyo, business class, under $3000",
-      "Berlin to anywhere in Europe, July, under 100, return"
+      "New York to London, next week, under $500",
+      "Los Angeles to Tokyo, next month, business class",
+      "Chicago to Miami, next week, return",
+      "Boston to Paris, next month, under $800"
     ],
     "timeSaved": "FlyFast saved you ~{time} of manual searching",
     "loading": {
@@ -195,7 +195,11 @@
       "noRoutes": "No airlines fly this route",
       "noRoutesExplanation": "This city pair doesn't have scheduled service. Try a nearby hub airport, flexible dates, or describe your trip in plain English and we'll suggest alternatives.",
       "nothingMatched": "Nothing matched",
-      "nothingMatchedExplanation": "No flights for this route and date. Try nearby airports, shift the dates by a day or two, or relax your filters."
+      "nothingMatchedExplanation": "No flights for this route and date. Try nearby airports, shift the dates by a day or two, or relax your filters.",
+      "noRoutesTip": "Tip: a nearby hub airport (LHR, CDG, FRA) often connects routes without direct service.",
+      "nothingMatchedTip": "Tip: dropping the price filter or shifting dates by a few days often finds options.",
+      "orTryThese": "Or try one of these",
+      "newSearch": "New search"
     },
     "errors": {
       "somethingWentWrong": "Something went wrong",

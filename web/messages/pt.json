@@ -96,10 +96,10 @@
       "maxPricePlaceholder": "qualquer"
     },
     "examples": [
-      "São Paulo para Lisboa, semana que vem, menos de R$3000",
-      "GRU para Miami, mês que vem, abaixo de R$5000",
-      "Rio para Buenos Aires, classe executiva, abaixo de R$4000",
-      "Brasília para qualquer lugar da Europa, julho, abaixo de R$4000, ida e volta"
+      "São Paulo para Miami, semana que vem, menos de R$4000",
+      "Rio para Buenos Aires, mês que vem, classe executiva",
+      "Brasília para Lisboa, semana que vem, ida e volta",
+      "GRU para Santiago, mês que vem, menos de R$2500"
     ],
     "timeSaved": "O FlyFast economizou ~{time} de busca manual para você",
     "loading": {
@@ -186,7 +186,11 @@
       "noRoutes": "Nenhuma companhia aérea opera esta rota",
       "noRoutesExplanation": "Este par de cidades não tem voo regular. Tente um aeroporto hub próximo, datas flexíveis, ou descreva sua viagem em português e sugeriremos alternativas.",
       "nothingMatched": "Nenhum resultado",
-      "nothingMatchedExplanation": "Nenhum voo para esta rota e data. Tente aeroportos próximos, mude as datas em um ou dois dias, ou flexibilize seus filtros."
+      "nothingMatchedExplanation": "Nenhum voo para esta rota e data. Tente aeroportos próximos, mude as datas em um ou dois dias, ou flexibilize seus filtros.",
+      "noRoutesTip": "Dica: um aeroporto hub próximo (LHR, CDG, FRA) conecta rotas sem voo direto.",
+      "nothingMatchedTip": "Dica: remover o filtro de preço ou mudar as datas em alguns dias costuma encontrar opções.",
+      "orTryThese": "Ou tente uma destas",
+      "newSearch": "Nova busca"
     },
     "errors": {
       "somethingWentWrong": "Algo deu errado",

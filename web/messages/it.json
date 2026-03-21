@@ -96,10 +96,10 @@
       "maxPricePlaceholder": "qualsiasi"
     },
     "examples": [
-      "Roma a Londra, la prossima settimana, meno di 500€",
-      "Milano a New York, il mese prossimo, meno di 600€",
-      "FCO a Tokyo, business class, meno di 3000€",
-      "Napoli a qualsiasi meta in Europa, luglio, meno di 100€, andata e ritorno"
+      "Roma a Londra, la prossima settimana, meno di 200€",
+      "Milano a New York, il mese prossimo, business class",
+      "Napoli a Barcellona, la prossima settimana, andata e ritorno",
+      "Bologna a Berlino, il mese prossimo, meno di 150€"
     ],
     "timeSaved": "FlyFast ti ha risparmiato circa {time} di ricerca manuale",
     "loading": {
@@ -186,7 +186,11 @@
       "noRoutes": "Nessuna compagnia aerea opera questa rotta",
       "noRoutesExplanation": "Questa coppia di città non ha un servizio programmato. Prova un aeroporto hub vicino, date flessibili, o descrivi il tuo viaggio in italiano e ti suggeriremo alternative.",
       "nothingMatched": "Nessun risultato",
-      "nothingMatchedExplanation": "Nessun volo per questa rotta e data. Prova aeroporti vicini, sposta le date di un giorno o due, o allenta i filtri."
+      "nothingMatchedExplanation": "Nessun volo per questa rotta e data. Prova aeroporti vicini, sposta le date di un giorno o due, o allenta i filtri.",
+      "noRoutesTip": "Suggerimento: un aeroporto hub vicino (LHR, CDG, FRA) collega spesso rotte senza voli diretti.",
+      "nothingMatchedTip": "Suggerimento: rimuovere il filtro di prezzo o spostare le date di qualche giorno trova spesso opzioni.",
+      "orTryThese": "Oppure prova una di queste",
+      "newSearch": "Nuova ricerca"
     },
     "errors": {
       "somethingWentWrong": "Qualcosa è andato storto",

@@ -96,10 +96,10 @@
       "maxPricePlaceholder": "不限"
     },
     "examples": [
-      "北京到东京，下周，3000元以内",
-      "上海到伦敦，下周，5000元以内",
-      "广州到纽约，商务舱，20000元以内",
-      "成都到东南亚任意城市，七月，1000元以内，往返"
+      "北京到首尔，下周，2000元以内",
+      "上海到东京，下个月，商务舱",
+      "广州到曼谷，下周，往返",
+      "深圳到新加坡，下个月，3000元以内"
     ],
     "timeSaved": "FlyFast为你节省了约{time}的手动搜索时间",
     "loading": {
@@ -186,7 +186,11 @@
       "noRoutes": "没有航空公司运营此航线",
       "noRoutesExplanation": "该城市对之间没有定期航班。请尝试附近的枢纽机场、弹性日期，或用自然语言描述你的行程，我们会为你推荐替代方案。",
       "nothingMatched": "无匹配结果",
-      "nothingMatchedExplanation": "该航线和日期没有航班。请尝试附近机场、调整一两天日期，或放宽筛选条件。"
+      "nothingMatchedExplanation": "该航线和日期没有航班。请尝试附近机场、调整一两天日期，或放宽筛选条件。",
+      "noRoutesTip": "提示：附近的枢纽机场（LHR、CDG、FRA）通常可以连接没有直飞的航线。",
+      "nothingMatchedTip": "提示：去掉价格筛选或将日期调整几天，通常能找到选项。",
+      "orTryThese": "或者试试这些",
+      "newSearch": "新搜索"
     },
     "errors": {
       "somethingWentWrong": "出了点问题",

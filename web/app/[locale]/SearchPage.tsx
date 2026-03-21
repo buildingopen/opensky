@@ -3584,22 +3584,22 @@ function HomePage() {
 
             {flights.length === 0 && (!returnFlights || returnFlights.length === 0) && (!roundTripResults || roundTripResults.length === 0) ? (
               <div className="mt-6 animate-fade-in">
-                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-8 card-surface">
+                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-8 sm:p-10 card-surface">
                   <div className="flex flex-col items-center text-center gap-4">
                     {/* Icon per reason */}
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${noResultsReason === "timeout" || noResultsReason === "provider_error" ? "bg-[var(--color-caution)]/10" : noResultsReason === "safety_filtered" ? "bg-[var(--color-danger)]/10" : "bg-[var(--color-text-muted)]/10"}`}>
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${noResultsReason === "timeout" || noResultsReason === "provider_error" ? "bg-[var(--color-caution)]/10" : noResultsReason === "safety_filtered" ? "bg-[var(--color-danger)]/10" : "bg-[var(--color-text-muted)]/10"}`}>
                       {noResultsReason === "timeout" ? (
-                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-[var(--color-caution)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <svg viewBox="0 0 24 24" className="w-7 h-7 text-[var(--color-caution)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       ) : noResultsReason === "safety_filtered" ? (
-                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-[var(--color-danger)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                        <svg viewBox="0 0 24 24" className="w-7 h-7 text-[var(--color-danger)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
                       ) : noResultsReason === "provider_error" ? (
-                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-[var(--color-caution)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                        <svg viewBox="0 0 24 24" className="w-7 h-7 text-[var(--color-caution)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
                       ) : (
-                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                        <svg viewBox="0 0 24 24" className="w-7 h-7 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
                       )}
                     </div>
                     {/* Message */}
-                    <div className="space-y-1.5 max-w-sm">
+                    <div className="space-y-1.5 max-w-md">
                       <p className="text-base font-medium text-[var(--color-text)]">
                         {noResultsReason === "timeout" ? t("noResults.timeout") : noResultsReason === "provider_error" ? t("noResults.providerError") : noResultsReason === "safety_filtered" ? t("noResults.safetyFiltered") : noResultsReason === "no_routes" ? t("noResults.noRoutes") : t("noResults.nothingMatched")}
                       </p>
@@ -3607,17 +3607,63 @@ function HomePage() {
                         {noResultsReason === "timeout" ? t("noResults.timeoutExplanation") : noResultsReason === "provider_error" ? t("noResults.providerErrorExplanation") : noResultsReason === "safety_filtered" ? t("noResults.safetyFilteredExplanation") : noResultsReason === "no_routes" ? t("noResults.noRoutesExplanation") : t("noResults.nothingMatchedExplanation")}
                       </p>
                     </div>
-                    {/* Actions */}
-                    <div className="flex flex-col items-center gap-2 mt-1">
-                      {(noResultsReason === "timeout" || noResultsReason === "provider_error") && (
-                        <button onClick={() => search()} className="text-sm px-5 py-2.5 rounded-lg bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-colors font-medium">
-                          {tc("tryAgain")}
-                        </button>
-                      )}
-                      {noResultsReason === "timeout" && (
-                        <p className="text-xs text-[var(--color-text-muted)]">{t("noResults.timeoutTip")}</p>
-                      )}
+                    {/* Tip callout for no_routes and nothingMatched */}
+                    {(noResultsReason === "no_routes" || noResultsReason === "nothing_matched" || !noResultsReason) && (
+                      <div className="bg-[var(--color-surface-2)] rounded-lg px-4 py-3 text-sm text-[var(--color-text-muted)] flex items-start gap-2.5 max-w-md text-start">
+                        <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 mt-0.5 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" /></svg>
+                        <span>{noResultsReason === "no_routes" ? t("noResults.noRoutesTip") : t("noResults.nothingMatchedTip")}</span>
+                      </div>
+                    )}
+                    {/* Timeout tip */}
+                    {noResultsReason === "timeout" && (
+                      <div className="bg-[var(--color-surface-2)] rounded-lg px-4 py-3 text-sm text-[var(--color-text-muted)] flex items-start gap-2.5 max-w-md text-start">
+                        <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 mt-0.5 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" /></svg>
+                        <span>{t("noResults.timeoutTip")}</span>
+                      </div>
+                    )}
+                    {/* Retry button for timeout/provider_error */}
+                    {(noResultsReason === "timeout" || noResultsReason === "provider_error") && (
+                      <button onClick={() => search()} className="text-sm px-6 py-2.5 rounded-lg bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-colors font-medium w-full sm:w-auto flex items-center justify-center gap-2">
+                        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg>
+                        {tc("tryAgain")}
+                      </button>
+                    )}
+                    {/* "Or try one of these" divider + example pills */}
+                    <div className="w-full mt-2">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex-1 h-px bg-[var(--color-border)]" />
+                        <span className="text-xs text-[var(--color-text-muted)]">{t("noResults.orTryThese")}</span>
+                        <div className="flex-1 h-px bg-[var(--color-border)]" />
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {(t.raw("examples") as string[]).map((rawEx, i) => {
+                          const sym = currencySymbol(userCurrency);
+                          const ex = rawEx.replace(/\$/g, sym);
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => {
+                                setSearchMode("natural");
+                                setPrompt(ex);
+                                trackEvent("example_prompt_clicked", { prompt: ex, source: "no_results" });
+                                setTimeout(() => inputRef.current?.focus(), 0);
+                              }}
+                              className="text-[13px] px-4 py-2 rounded-2xl bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] transition-all duration-200 text-start hover:-translate-y-px card-surface"
+                            >
+                              {ex}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
+                    {/* New search link */}
+                    <button
+                      onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setNoResultsReason(null); setPrompt(""); setTimeout(() => { inputRef.current?.focus(); }, 0); }}
+                      className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center gap-1.5"
+                    >
+                      {t("noResults.newSearch")}
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg>
+                    </button>
                   </div>
                 </div>
               </div>

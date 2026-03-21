@@ -96,10 +96,10 @@
       "maxPricePlaceholder": "tous"
     },
     "examples": [
-      "Paris à Londres, la semaine prochaine, moins de 500 €",
-      "CDG à New York, la semaine prochaine, routes sûres uniquement",
-      "Lyon à Tokyo, classe affaires, moins de 3000 €",
-      "Marseille à n'importe où en Europe, juillet, moins de 100 €, aller-retour"
+      "Paris à Londres, la semaine prochaine, moins de 200€",
+      "Lyon à New York, le mois prochain, classe affaires",
+      "Marseille à Barcelone, la semaine prochaine, aller-retour",
+      "Nice à Berlin, le mois prochain, moins de 150€"
     ],
     "timeSaved": "FlyFast vous a fait gagner ~{time} de recherche manuelle",
     "loading": {
@@ -186,7 +186,11 @@
       "noRoutes": "Aucune compagnie ne dessert cette route",
       "noRoutesExplanation": "Cette paire de villes n'a pas de service régulier. Essayez un aéroport hub proche, des dates flexibles, ou décrivez votre voyage en quelques mots et nous vous suggérerons des alternatives.",
       "nothingMatched": "Aucun résultat",
-      "nothingMatchedExplanation": "Aucun vol pour cette route et cette date. Essayez des aéroports proches, décalez les dates d'un jour ou deux, ou assouplissez vos filtres."
+      "nothingMatchedExplanation": "Aucun vol pour cette route et cette date. Essayez des aéroports proches, décalez les dates d'un jour ou deux, ou assouplissez vos filtres.",
+      "noRoutesTip": "Astuce : un aéroport hub proche (LHR, CDG, FRA) connecte souvent des routes sans vol direct.",
+      "nothingMatchedTip": "Astuce : supprimer le filtre de prix ou décaler les dates de quelques jours trouve souvent des options.",
+      "orTryThese": "Ou essayez une de celles-ci",
+      "newSearch": "Nouvelle recherche"
     },
     "errors": {
       "somethingWentWrong": "Une erreur est survenue",

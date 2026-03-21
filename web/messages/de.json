@@ -96,10 +96,10 @@
       "maxPricePlaceholder": "beliebig"
     },
     "examples": [
-      "Indien nach Deutschland, nächste Woche, nur sichere Routen",
-      "Berlin nach London, nächste Woche, unter 500€",
-      "New York nach Tokyo, Business Class, unter 3000$",
-      "Berlin nach überall in Europa, Juli, unter 100, hin und zurück"
+      "Berlin nach London, nächste Woche, unter 200€",
+      "München nach New York, nächsten Monat, Business Class",
+      "Hamburg nach Barcelona, nächste Woche, hin und zurück",
+      "Frankfurt nach Bangkok, nächsten Monat, unter 700€"
     ],
     "timeSaved": "FlyFast hat dir ~{time} manuelle Suche erspart",
     "loading": {
@@ -186,7 +186,11 @@
       "noRoutes": "Keine Fluggesellschaft bedient diese Strecke",
       "noRoutesExplanation": "Dieses Städtepaar hat keinen Linienverkehr. Versuche einen nahegelegenen Hub-Flughafen, flexible Daten oder beschreibe deine Reise in natürlicher Sprache.",
       "nothingMatched": "Nichts gefunden",
-      "nothingMatchedExplanation": "Keine Flüge für diese Route und dieses Datum. Versuche nahe Flughäfen, verschiebe die Daten um ein oder zwei Tage oder lockere deine Filter."
+      "nothingMatchedExplanation": "Keine Flüge für diese Route und dieses Datum. Versuche nahe Flughäfen, verschiebe die Daten um ein oder zwei Tage oder lockere deine Filter.",
+      "noRoutesTip": "Tipp: Ein nahegelegener Hub-Flughafen (LHR, CDG, FRA) verbindet oft Routen ohne Direktverbindung.",
+      "nothingMatchedTip": "Tipp: Preisfilter entfernen oder Daten um ein paar Tage verschieben findet oft Optionen.",
+      "orTryThese": "Oder probiere eine davon",
+      "newSearch": "Neue Suche"
     },
     "errors": {
       "somethingWentWrong": "Etwas ist schiefgelaufen",

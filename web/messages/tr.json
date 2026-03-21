@@ -96,10 +96,10 @@
       "maxPricePlaceholder": "fark etmez"
     },
     "examples": [
-      "İstanbul'dan Londra'ya, gelecek hafta, 15000 TL altında",
-      "Ankara'dan Berlin'e, gelecek hafta, sadece direkt",
-      "İstanbul'dan Tokyo'ya, business class, 50000 TL altında",
-      "İzmir'den Avrupa'da herhangi bir yere, Temmuz, 10000 TL altında, gidiş dönüş"
+      "İstanbul'dan Londra'ya, gelecek hafta, 10000 TL altında",
+      "Ankara'dan Berlin'e, gelecek ay, business class",
+      "İstanbul'dan Barcelona'ya, gelecek hafta, gidiş dönüş",
+      "İzmir'den Amsterdam'a, gelecek ay, 8000 TL altında"
     ],
     "timeSaved": "FlyFast size yaklaşık {time} manuel arama süresinden tasarruf ettirdi",
     "loading": {
@@ -186,7 +186,11 @@
       "noRoutes": "Bu rotada uçuş yapan havayolu yok",
       "noRoutesExplanation": "Bu şehir çifti arasında tarifeli sefer bulunmuyor. Yakındaki bir merkez havalimanını, esnek tarihleri deneyin veya seyahatinizi kendi cümlelerinizle anlatın, biz alternatif önerelim.",
       "nothingMatched": "Eşleşen sonuç yok",
-      "nothingMatchedExplanation": "Bu rota ve tarih için uçuş bulunamadı. Yakındaki havalimanlarını deneyin, tarihleri bir iki gün kaydırın veya filtrelerinizi gevşetin."
+      "nothingMatchedExplanation": "Bu rota ve tarih için uçuş bulunamadı. Yakındaki havalimanlarını deneyin, tarihleri bir iki gün kaydırın veya filtrelerinizi gevşetin.",
+      "noRoutesTip": "İpucu: Yakındaki bir hub havalimanı (LHR, CDG, FRA) direkt uçuş olmayan rotaları bağlar.",
+      "nothingMatchedTip": "İpucu: Fiyat filtresini kaldırmak veya tarihleri birkaç gün kaydırmak genellikle seçenek bulur.",
+      "orTryThese": "Ya da bunlardan birini deneyin",
+      "newSearch": "Yeni arama"
     },
     "errors": {
       "somethingWentWrong": "Bir hata oluştu",

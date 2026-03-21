@@ -96,10 +96,10 @@
       "maxPricePlaceholder": "cualquiera"
     },
     "examples": [
-      "Madrid a Londres, la proxima semana, menos de 500€",
-      "Barcelona a Nueva York, clase business, menos de 3000€",
-      "Madrid a cualquier lugar de Europa, julio, menos de 100€",
-      "India a Alemania, la proxima semana, solo rutas seguras, ida y vuelta"
+      "Madrid a Londres, la próxima semana, menos de 200€",
+      "Barcelona a Nueva York, el próximo mes, clase business",
+      "Madrid a Roma, la próxima semana, ida y vuelta",
+      "Málaga a Berlín, el próximo mes, menos de 150€"
     ],
     "timeSaved": "FlyFast te ahorro ~{time} de busqueda manual",
     "loading": {
@@ -186,7 +186,11 @@
       "noRoutes": "Ninguna aerolinea opera esta ruta",
       "noRoutesExplanation": "Este par de ciudades no tiene servicio regular. Prueba con un aeropuerto hub cercano, fechas flexibles o describe tu viaje con tus propias palabras y te sugeriremos alternativas.",
       "nothingMatched": "Sin resultados",
-      "nothingMatchedExplanation": "No hay vuelos para esta ruta y fecha. Prueba aeropuertos cercanos, cambia las fechas uno o dos dias o relaja tus filtros."
+      "nothingMatchedExplanation": "No hay vuelos para esta ruta y fecha. Prueba aeropuertos cercanos, cambia las fechas uno o dos dias o relaja tus filtros.",
+      "noRoutesTip": "Consejo: un aeropuerto hub cercano (LHR, CDG, FRA) conecta rutas sin servicio directo.",
+      "nothingMatchedTip": "Consejo: quitar el filtro de precio o cambiar las fechas unos dias suele encontrar opciones.",
+      "orTryThese": "O prueba una de estas",
+      "newSearch": "Nueva busqueda"
     },
     "errors": {
       "somethingWentWrong": "Algo salio mal",
