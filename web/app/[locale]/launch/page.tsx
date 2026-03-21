@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const API = "https://api.flyfast.app/static";
 const VIDEO_URL = `${API}/launch-video-web.mp4`;
-const POSTER_URL = `${API}/launch-poster.jpg`;
+const POSTER_URL = `${API}/launch-poster-video.jpg`;
 
 export default function LaunchPage() {
   const [playing, setPlaying] = useState(false);
@@ -34,8 +34,8 @@ export default function LaunchPage() {
           style={{ aspectRatio: "16/9" }}
         />
         {!playing && (
-          <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/20 transition-opacity hover:bg-black/30">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+          <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/10 transition-opacity hover:bg-black/20">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
               <svg viewBox="0 0 24 24" className="w-8 h-8 sm:w-10 sm:h-10 text-[#0a0a0a] ml-1" fill="currentColor">
                 <path d="M8 5v14l11-7z" />
               </svg>
