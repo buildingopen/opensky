@@ -24,9 +24,12 @@ export const metadata: Metadata = {
 export default function LaunchLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
+      <link rel="dns-prefetch" href="https://api.flyfast.app" />
+      <link rel="preconnect" href="https://api.flyfast.app" crossOrigin="anonymous" />
       <style>{`
         header, footer, .cloud-orb { display: none !important; }
         html { color-scheme: light !important; }
+        body { background: #f0f4ff !important; }
       `}</style>
       {children}
     </>
