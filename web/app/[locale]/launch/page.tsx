@@ -95,12 +95,6 @@ export default function LaunchPage() {
   useHideCookieConsent();
   const config = isMobile ? MOBILE : DESKTOP;
 
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => setPosterLoaded(true);
-    img.src = config.poster;
-  }, [config.poster]);
-
   function handlePlay() {
     const v = videoRef.current;
     if (!v) return;
@@ -135,39 +129,44 @@ export default function LaunchPage() {
 
       {/* Video */}
       <div
-        className={`w-full relative ${isMobile ? "max-w-sm" : "max-w-4xl"}`}
+        className={`w-full relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-black/[0.08] ${isMobile ? "max-w-sm" : "max-w-4xl"}`}
         onClick={!playing ? handlePlay : undefined}
         style={{
           cursor: !playing ? "pointer" : undefined,
+          aspectRatio: config.aspect,
           maxHeight: isMobile ? "65vh" : undefined,
         }}
       >
-        {/* Blur-to-poster placeholder */}
-        <div
-          className="absolute inset-0 rounded-2xl transition-opacity duration-500"
-          style={{
-            backgroundImage: `url(${posterLoaded ? config.poster : config.blur})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: playing ? 0 : 1,
-            pointerEvents: "none",
-          }}
-        />
+        {/* Poster image (real <img> for reliable loading) */}
+        {!playing && (
+          <>
+            {/* Blur base64 shown instantly, hidden when real poster loads */}
+            <img
+              src={config.blur}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ opacity: posterLoaded ? 0 : 1, transition: "opacity 0.4s" }}
+            />
+            {/* Real poster fades in on load */}
+            <img
+              src={config.poster}
+              alt="FlyFast demo preview"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ opacity: posterLoaded ? 1 : 0, transition: "opacity 0.4s" }}
+              onLoad={() => setPosterLoaded(true)}
+            />
+          </>
+        )}
 
         <video
           ref={videoRef}
           key={config.video}
           src={config.video}
-          poster={config.poster}
           playsInline
           controls={playing}
           preload="auto"
-          className="w-full rounded-2xl shadow-2xl relative"
-          style={{
-            aspectRatio: config.aspect,
-            maxHeight: isMobile ? "65vh" : undefined,
-            objectFit: "cover",
-          }}
+          className="w-full h-full object-cover"
         />
 
         {/* Play overlay */}
