@@ -26,6 +26,7 @@ export default function LaunchLayout({ children }: { children: React.ReactNode }
     <>
       <style>{`
         header, footer, .cloud-orb { display: none !important; }
+        html { color-scheme: light !important; }
       `}</style>
       {children}
     </>
