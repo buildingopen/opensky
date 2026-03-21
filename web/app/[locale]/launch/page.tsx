@@ -28,10 +28,25 @@ function useIsMobile() {
   return mobile;
 }
 
+function useHideCookieConsent() {
+  useEffect(() => {
+    // Hide cookie consent on launch page
+    const interval = setInterval(() => {
+      const el = document.querySelector("div.fixed.bottom-0");
+      if (el instanceof HTMLElement) {
+        el.style.display = "none";
+        clearInterval(interval);
+      }
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
+}
+
 export default function LaunchPage() {
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
+  useHideCookieConsent();
   const config = isMobile ? MOBILE : DESKTOP;
 
   function handlePlay() {

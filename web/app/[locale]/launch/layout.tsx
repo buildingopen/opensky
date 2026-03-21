@@ -26,7 +26,6 @@ export default function LaunchLayout({ children }: { children: React.ReactNode }
     <>
       <style>{`
         header, footer, .cloud-orb { display: none !important; }
-        body > div [class*="cookie"] { display: none !important; }
       `}</style>
       {children}
     </>
