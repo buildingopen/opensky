@@ -103,7 +103,8 @@ export default function LaunchPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center px-4 pt-8 pb-12 sm:pt-12 sm:pb-16">
+    <main className="min-h-screen flex flex-col items-center px-4 pt-8 pb-12 sm:pt-12 sm:pb-16 animate-[fadeIn_0.6s_ease-out]">
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
       {/* Background gradient */}
       <div className="fixed inset-0 -z-10 bg-gradient-to-b from-[#e8f4fd] via-[#f0f4ff] to-white" />
 
