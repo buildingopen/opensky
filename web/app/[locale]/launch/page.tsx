@@ -103,13 +103,21 @@ export default function LaunchPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center px-4 pt-8 pb-12 sm:pt-12 sm:pb-16 animate-[fadeIn_0.6s_ease-out]">
-      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+    <main className="min-h-screen flex flex-col items-center px-4 pt-8 pb-12 sm:pt-12 sm:pb-16">
+      <style>{`
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes softPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+        .entrance-1 { animation: fadeUp 0.6s ease-out both; }
+        .entrance-2 { animation: fadeUp 0.6s ease-out 0.1s both; }
+        .entrance-3 { animation: fadeUp 0.7s ease-out 0.2s both; }
+        .entrance-4 { animation: fadeUp 0.6s ease-out 0.4s both; }
+        .entrance-5 { animation: fadeUp 0.6s ease-out 0.55s both; }
+      `}</style>
       {/* Background gradient */}
       <div className="fixed inset-0 -z-10 bg-gradient-to-b from-[#e8f4fd] via-[#f0f4ff] to-white" />
 
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity">
+      <Link href="/" className="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity entrance-1">
         <svg viewBox="0 0 32 32" className="w-8 h-8 sm:w-10 sm:h-10" fill="none">
           <rect width="32" height="32" rx="6" fill="#0a0a0a" />
           <path d="M10 26V12L15 5" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="square" />
@@ -121,16 +129,16 @@ export default function LaunchPage() {
         </span>
       </Link>
 
-      <h1 className="text-lg sm:text-xl text-[#374151] font-medium mb-1 text-center">
+      <h1 className="text-lg sm:text-xl text-[#374151] font-medium mb-1 text-center entrance-2">
         Search flights in plain English.
       </h1>
-      <p className="text-sm text-[#6b7280] mb-6 sm:mb-8 text-center">
+      <p className="text-sm text-[#6b7280] mb-6 sm:mb-8 text-center entrance-2">
         One sentence, not six form fields.
       </p>
 
       {/* Video */}
       <div
-        className={`w-full relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-black/[0.08] ${isMobile ? "max-w-sm" : "max-w-4xl"}`}
+        className={`w-full relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-black/[0.08] entrance-3 ${isMobile ? "max-w-sm" : "max-w-4xl"}`}
         onClick={!playing ? handlePlay : undefined}
         style={{
           cursor: !playing ? "pointer" : undefined,
@@ -138,27 +146,30 @@ export default function LaunchPage() {
           maxHeight: isMobile ? "65vh" : undefined,
         }}
       >
-        {/* Poster image (real <img> for reliable loading) */}
-        {!playing && (
-          <>
-            {/* Blur base64 shown instantly, hidden when real poster loads */}
-            <img
-              src={config.blur}
-              alt=""
-              aria-hidden
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ opacity: posterLoaded ? 0 : 1, transition: "opacity 0.4s" }}
-            />
-            {/* Real poster fades in on load */}
-            <img
-              src={config.poster}
-              alt="FlyFast demo preview"
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ opacity: posterLoaded ? 1 : 0, transition: "opacity 0.4s" }}
-              onLoad={() => setPosterLoaded(true)}
-            />
-          </>
-        )}
+        {/* Blur placeholder - fades out when real poster loads or video plays */}
+        <img
+          src={config.blur}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            opacity: posterLoaded || playing ? 0 : 1,
+            transition: "opacity 0.4s",
+            pointerEvents: "none",
+          }}
+        />
+        {/* Real poster - fades in on load, fades out when video plays */}
+        <img
+          src={config.poster}
+          alt="FlyFast demo preview"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            opacity: posterLoaded && !playing ? 1 : 0,
+            transition: "opacity 0.5s ease-out",
+            pointerEvents: "none",
+          }}
+          onLoad={() => setPosterLoaded(true)}
+        />
 
         <video
           ref={videoRef}
@@ -168,28 +179,38 @@ export default function LaunchPage() {
           controls={playing}
           preload="auto"
           className="w-full h-full object-cover"
+          onEnded={() => setPlaying(false)}
         />
 
-        {/* Play overlay */}
-        {!playing && (
-          <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-3 bg-black/5 transition-all hover:bg-black/10">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg transition-transform hover:scale-105">
-              <svg viewBox="0 0 24 24" className="w-8 h-8 sm:w-10 sm:h-10 text-[#0a0a0a] ml-1" fill="currentColor">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </div>
-            <span className="text-xs font-medium px-3 py-1 rounded-full bg-black/20 text-white/90 backdrop-blur-sm">
-              Watch demo · 0:28
-            </span>
+        {/* Play overlay - fades out when playing */}
+        <div
+          className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/5 hover:bg-black/10"
+          style={{
+            opacity: playing ? 0 : 1,
+            transition: "opacity 0.3s ease-out",
+            pointerEvents: playing ? "none" : undefined,
+          }}
+        >
+          <div
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+            style={{ animation: posterLoaded && !playing ? "softPulse 2.5s ease-in-out infinite" : "none" }}
+          >
+            <svg viewBox="0 0 24 24" className="w-8 h-8 sm:w-10 sm:h-10 text-[#0a0a0a] ml-1" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
           </div>
-        )}
+          {/* Badge at bottom of overlay, not competing with poster text */}
+          <span className="absolute bottom-3 sm:bottom-4 text-xs font-medium px-3 py-1 rounded-full bg-black/30 text-white backdrop-blur-sm">
+            Watch demo · 0:28
+          </span>
+        </div>
       </div>
 
       {/* CTA */}
       <div className={`flex flex-col items-center gap-2 ${
         playing && isMobile
           ? "fixed bottom-6 left-4 right-4 z-40"
-          : "mt-6 sm:mt-8"
+          : "mt-6 sm:mt-8 entrance-4"
       }`}>
         <Link
           href="/"
@@ -207,7 +228,7 @@ export default function LaunchPage() {
       </div>
 
       {/* Features */}
-      <div className="mt-10 sm:mt-14 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 max-w-3xl w-full">
+      <div className="mt-10 sm:mt-14 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 max-w-3xl w-full entrance-5">
         {FEATURES.map((f) => (
           <div key={f.label} className="flex flex-col items-center gap-1.5 text-center">
             <div className="w-10 h-10 rounded-xl bg-[#dcfce7] flex items-center justify-center text-[#16a34a]">
