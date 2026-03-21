@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
               `connect-src 'self' ${apiOrigin || ""} https://generativelanguage.googleapis.com https://www.google-analytics.com https://eu.i.posthog.com`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: https://images.kiwi.com https://flagcdn.com",
+              `img-src 'self' data: https://images.kiwi.com https://flagcdn.com ${apiOrigin || ""}`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
