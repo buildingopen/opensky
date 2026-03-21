@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 
 const API = "https://api.flyfast.app/static";
@@ -8,37 +8,40 @@ const VIDEO_URL = `${API}/launch-video-web.mp4`;
 const POSTER_URL = `${API}/launch-poster.jpg`;
 
 export default function LaunchPage() {
+  const [playing, setPlaying] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [ready, setReady] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  function handlePlay() {
+    const v = videoRef.current;
+    if (!v) return;
+    v.play();
+    setPlaying(true);
+  }
 
   return (
-    <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-4xl relative">
-        {!ready && (
-          <div
-            className="absolute inset-0 rounded-2xl flex items-center justify-center"
-            style={{
-              aspectRatio: "16/9",
-              backgroundImage: `url(${POSTER_URL})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          >
-            <div className="w-10 h-10 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-          </div>
-        )}
+    <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-4xl relative cursor-pointer" onClick={!playing ? handlePlay : undefined}>
         <video
+          ref={videoRef}
           src={VIDEO_URL}
           poster={POSTER_URL}
-          autoPlay
           playsInline
-          controls
+          controls={playing}
           preload="auto"
-          onCanPlay={() => setReady(true)}
           onEnded={() => setEnded(true)}
-          className={`w-full rounded-2xl shadow-2xl transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
+          className="w-full rounded-2xl shadow-2xl"
           style={{ aspectRatio: "16/9" }}
         />
+        {!playing && (
+          <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/20 transition-opacity hover:bg-black/30">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+              <svg viewBox="0 0 24 24" className="w-8 h-8 sm:w-10 sm:h-10 text-[#0a0a0a] ml-1" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
+        )}
       </div>
 
       <div
