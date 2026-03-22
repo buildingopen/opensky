@@ -101,7 +101,7 @@
       "Madrid a Roma, la próxima semana, ida y vuelta",
       "Málaga a Berlín, el próximo mes, menos de 150€"
     ],
-    "timeSaved": "FlyFast te ahorro ~{time} de búsqueda manual",
+    "timeSaved": "FlyFast te ahorró ~{time} de búsqueda manual",
     "loading": {
       "understanding": "Interpretando destinos, fechas y preferencias",
       "agentsChecking": "{workers} agentes comprobando {total} combinaciones en Google Flights",
@@ -109,14 +109,14 @@
       "checked": "{done}/{total} comprobados",
       "findingFlights": "Buscando tus vuelos",
       "comparingPrices": "Comparando precios entre aerolíneas",
-      "almostReady": "Casí listo",
+      "almostReady": "Casi listo",
       "checkingRemaining": "Verificando {done} de {total} rutas",
       "showDetails": "Mostrar detalles",
       "hideDetails": "Ocultar detalles",
-      "almostDone": "Casí listo...",
+      "almostDone": "Casi listo...",
       "remaining": "~{seconds}s restantes",
       "savingYou": "Te ahorramos ~{time} de búsqueda manual",
-      "wouldTake": "Esto tardaría ~{time} manualmente. Lo tendremos en segúndos.",
+      "wouldTake": "Esto tardaría ~{time} manualmente. Lo tendremos en segundos.",
       "fetchingPrices": "Obteniendo precios en tiempo real...",
       "safetyFiltered": "{count, plural, one {1 ruta filtrada por seguridad} other {{count} rutas filtradas por seguridad}}",
       "bestSoFar": "Mejor resultado hasta ahora (actualizando mientras buscamos)",
@@ -134,7 +134,7 @@
       "sortFastest": "Más rápido",
       "sortFewestStops": "Menos escalas",
       "returnOptions": "Opciones de vuelta",
-      "roundTripExplanation": "Cada opción muestra ida + vuelta. Los precios están combinados; completaras dos reservas por separado.",
+      "roundTripExplanation": "Cada opción muestra ida + vuelta. Los precios están combinados; completarás dos reservas por separado.",
       "showMoreRoundTrips": "Mostrar {count} más de ida y vuelta",
       "combinedTotal": "total combinado",
       "twoBookings": "Se requieren dos reservas",
@@ -177,7 +177,7 @@
     },
     "noResults": {
       "timeout": "La búsqueda agotó el tiempo",
-      "timeoutExplanation": "Google Flights tardó en responder. Normalmente funciona al segúndo intento.",
+      "timeoutExplanation": "Google Flights tardó en responder. Normalmente funciona al segundo intento.",
       "timeoutTip": "Consejo: prueba con menos fechas, un solo destino o busca en horas de menor actividad.",
       "providerError": "Los proveedores tienen un problema temporal",
       "providerErrorExplanation": "Las fuentes de datos de vuelos devolvieron un error. Espera un momento y vuelve a intentarlo.",
@@ -468,7 +468,7 @@
     "whatWeCollectSearchQueries": "<bold>Consultas de búsqueda</bold> -- sus indicaciones en lenguaje natural se envían a nuestro backend para analizar y buscar vuelos. No almacenamos su texto de búsqueda. Las métricas anonimizadas (recuento de resultados, duración, filtros seleccionados) se registran en el servidor.",
     "whatWeCollectAnalytics": "<bold>Análisis de uso</bold> -- vistas de página anonimizadas y datos de interacción a través de PostHog y Google Analytics, cargados solo si acepta las cookies. No se rastrea ninguna información de identificación personal.",
     "whatWeCollectRateLimit": "<bold>Datos de limitación de frecuencia</bold> -- tu dirección IP se utiliza en el servidor para aplicar el límite de 10 búsquedas por hora. No se almacena ni se comparte.",
-    "whatWeCollectEmail": "<bold>Email para alertas de precio</bold> -- si configuras una alerta de precio, almacenamos tu dirección de correo electrónico y los criterios de búsqueda (rutas, umbral de precio). Estos datos se guardan en una base de datos local y se utilizan únicamente para enviarte notificaciónes de precios. Las alertas caducan a los 90 días. Puedes cancelar la suscripción en cualquier momento mediante el enlace en cada correo.",
+    "whatWeCollectEmail": "<bold>Email para alertas de precio</bold> -- si configuras una alerta de precio, almacenamos tu dirección de correo electrónico y los criterios de búsqueda (rutas, umbral de precio). Estos datos se guardan en una base de datos local y se utilizan únicamente para enviarte notificaciones de precios. Las alertas caducan a los 90 días. Puedes cancelar la suscripción en cualquier momento mediante el enlace en cada correo.",
     "whatWeDoNotCollectHeading": "Qué no recopilamos",
     "whatWeDoNotCollect1": "Sin registro de cuenta, sin inicio de sesión, sin contraseñas",
     "whatWeDoNotCollect2": "Sin cookies de publicidad ni seguimiento entre sitios",
@@ -596,7 +596,7 @@
       "example2": "Vuelo más barato de JFK a cualquier lugar del sudeste asiático en julio",
       "example3": "Berlin a Tokio, ida y vuelta, clase business, fechas flexibles",
       "example4": "Londres a Nueva York directo este fin de semana",
-      "nearbyAirports": "FlyFast también amplía automáticamente a aeropuertos cercanos. Buscar \"Hamburgo\" comprueba HAM, BRE, HAJ, LBC y BER. Las fechas flexibles como \"mas barato en julio\" muestrean cada pocos días a lo largo del mes."
+      "nearbyAirports": "FlyFast también amplía automáticamente a aeropuertos cercanos. Buscar \"Hamburgo\" comprueba HAM, BRE, HAJ, LBC y BER. Las fechas flexibles como \"más barato en julio\" muestrean cada pocos días a lo largo del mes."
     },
     "step2": {
       "heading": "2. Analizamos tu consulta con IA",
@@ -758,7 +758,7 @@
       "faqAnswer_caution": "{zone} está clasificado como Precaución. {details} Los aeropuertos operan normalmente, pero los vuelos pueden ser redirigidos cerca de zonas de conflicto."
     },
     "alerts": {
-      "title": "Recibe notificaciónes cuando cambien los niveles de riesgo",
+      "title": "Recibe notificaciones cuando cambien los niveles de riesgo",
       "subtitle": "Selecciona las zonas a monitorizar. Te enviaremos un email cuando cambie su estado.",
       "collapse": "Contraer",
       "subscribe": "Suscribirse",
