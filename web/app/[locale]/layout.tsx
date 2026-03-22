@@ -89,8 +89,7 @@ export default async function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#f8faff" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#f8faff" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
