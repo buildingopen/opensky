@@ -133,8 +133,13 @@ export function CloudsBackground() {
   const { theme } = useTheme();
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      {/* Stars (dark only) */}
-      {theme === "dark" && <StarsLayer />}
+      {/* Stars: always mounted, fade in/out over 3s */}
+      <div
+        className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"
+        style={{ opacity: theme === "dark" ? 1 : 0 }}
+      >
+        <StarsLayer />
+      </div>
       {/* Cloud orbs (both themes) */}
       <CloudOrbs />
     </div>
