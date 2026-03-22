@@ -64,14 +64,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const mode = useSyncExternalStore(subscribe, getSnapshot, () => "system" as Mode);
   const theme = resolveTheme(mode);
 
-  // Initialize from localStorage on mount
+  // Initialize from localStorage on mount — always re-apply because React
+  // hydration strips the class that the inline <script> added pre-paint.
   useEffect(() => {
     const stored = getStoredMode();
-    if (stored !== currentMode) {
-      currentMode = stored;
-      applyTheme(resolveTheme(stored));
-      listeners.forEach((cb) => cb());
-    }
+    currentMode = stored;
+    applyTheme(resolveTheme(stored));
+    listeners.forEach((cb) => cb());
   }, []);
 
   // Listen for OS preference changes when in system mode
