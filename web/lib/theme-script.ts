@@ -7,6 +7,7 @@ export const themeScript = `(function(){
     if (stored === 'system') {
       resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
+    document.documentElement.classList.remove('light','dark');
     document.documentElement.classList.add(resolved);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', resolved === 'dark' ? '#070b14' : '#7ab8f5');

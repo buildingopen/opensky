@@ -18,8 +18,15 @@
   --color-danger: #b85c5c;
 }
 
-/* Extended tokens: shadows, clouds, map colors (dark defaults) */
+/* Dark defaults (unlayered, ensures override-ability by :root.light and @media) */
 :root {
+  --color-background: #070b14;
+  --color-surface: #0f1523;
+  --color-surface-2: #161d2d;
+  --color-border: #1e2a3c;
+  --color-text: #e4e4e7;
+  --color-heading: #e4e4e7;
+  --color-text-muted: #94a3b8;
   --glass-blur: 0px;
   --shadow-card: 0 2px 16px -4px rgba(0,0,0,0.3), 0 0 0 1px rgba(96,165,250,0.06);
   --shadow-surface: 0 2px 20px -6px rgba(0,0,0,0.5), 0 0 0 1px rgba(96,165,250,0.06);
