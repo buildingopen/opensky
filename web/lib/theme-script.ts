@@ -10,7 +10,8 @@ export const themeScript = `(function(){
     document.documentElement.classList.remove('light','dark');
     document.documentElement.classList.add(resolved);
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', resolved === 'dark' ? '#070b14' : '#f8faff');
+    if (!meta) { meta = document.createElement('meta'); meta.name = 'theme-color'; document.head.appendChild(meta); }
+    meta.setAttribute('content', resolved === 'dark' ? '#070b14' : '#f8faff');
   } catch(e) {
     document.documentElement.classList.add('dark');
   }
