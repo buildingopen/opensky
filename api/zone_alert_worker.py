@@ -203,7 +203,8 @@ def run() -> None:
 
         html = _build_change_email(relevant_changes, sub["unsubscribe_token"])
         zone_names = [ch["name"] for ch in relevant_changes]
-        subject = f"Zone alert: {', '.join(zone_names[:3])}{'...' if len(zone_names) > 3 else ''} risk level changed"
+        safe_names = ", ".join(zone_names[:3]).replace("\r", "").replace("\n", "")
+        subject = f"Zone alert: {safe_names}{'...' if len(zone_names) > 3 else ''} risk level changed"
 
         if _send_email(sub["email"], subject, html):
             now = datetime.now(timezone.utc).isoformat()

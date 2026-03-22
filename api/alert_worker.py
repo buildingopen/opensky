@@ -200,7 +200,8 @@ def run() -> None:
                 query, best_origin, best_dest, best_price, currency, best_date, unsub_token
             )
             sym = _currency_symbol(currency)
-            subject = f"Price drop: {query} from {sym}{best_price:.0f}"
+            safe_subj = query.replace("\r", "").replace("\n", "")
+            subject = f"Price drop: {safe_subj} from {sym}{best_price:.0f}"
             if _send_email(email, subject, html):
                 emailed += 1
 

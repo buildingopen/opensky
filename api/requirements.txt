@@ -5,4 +5,3 @@ httpx==0.28.1
 airportsdata==20250224
 redis==5.2.1
 posthog==3.11.0
-pytest==8.4.1

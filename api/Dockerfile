@@ -23,6 +23,9 @@ VOLUME /data
 
 EXPOSE 8090
 
+RUN adduser --disabled-password --gecos '' --uid 1001 appuser
+USER appuser
+
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8090/api/healthz || exit 1
 
