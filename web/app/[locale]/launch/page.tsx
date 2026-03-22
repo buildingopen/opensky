@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
+/* full-page <a> used instead of <Link> so the launch layout CSS
+   (header/footer hidden) doesn't leak into the main app */
 
 const API = "https://api.flyfast.app/static";
 
@@ -117,7 +118,7 @@ export default function LaunchPage() {
       <div className="fixed inset-0 -z-10 bg-gradient-to-b from-[#e8f4fd] via-[#f0f4ff] to-white" />
 
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity entrance-1">
+      <a href="/" className="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity entrance-1">
         <svg viewBox="0 0 32 32" className="w-8 h-8 sm:w-10 sm:h-10" fill="none">
           <rect width="32" height="32" rx="6" fill="#0a0a0a" />
           <path d="M10 26V12L15 5" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="square" />
@@ -127,7 +128,7 @@ export default function LaunchPage() {
         <span className="text-2xl sm:text-3xl font-bold text-[#0a0a0a] font-[var(--font-brand)]">
           <span className="text-[#22c55e]">Fly</span>Fast
         </span>
-      </Link>
+      </a>
 
       <h1 className="text-lg sm:text-xl text-[#374151] font-medium mb-1 text-center entrance-2">
         Search flights in plain English.
@@ -212,14 +213,14 @@ export default function LaunchPage() {
           ? "fixed bottom-6 left-4 right-4 z-40"
           : "mt-6 sm:mt-8 entrance-4"
       }`}>
-        <Link
+        <a
           href="/"
           className={`px-8 py-3.5 rounded-full bg-[#22c55e] text-white font-semibold text-lg shadow-lg hover:bg-[#16a34a] hover:shadow-xl transition-all ${
             playing && isMobile ? "w-full text-center" : ""
           }`}
         >
           Try FlyFast
-        </Link>
+        </a>
         {!(playing && isMobile) && (
           <p className="text-xs text-[#6b7280]">
             Free. No login. Open source.
