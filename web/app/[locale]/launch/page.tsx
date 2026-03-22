@@ -23,7 +23,7 @@ const FEATURES = [
     label: "Natural language",
     detail: "12 languages",
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
         <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M2 12h20M12 3a15 15 0 0 1 4 9 15 15 0 0 1-4 9 15 15 0 0 1-4-9 15 15 0 0 1 4-9Z" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -33,7 +33,7 @@ const FEATURES = [
     label: "Safety badges",
     detail: "19 conflict zones",
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" strokeLinecap="round" strokeLinejoin="round" />
         <path d="m9 12 2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -41,9 +41,9 @@ const FEATURES = [
   },
   {
     label: "Fare heatmap",
-    detail: "Dates and destinations",
+    detail: "Dates & destinations",
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
         <rect x="3" y="3" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
         <rect x="14" y="3" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
         <rect x="3" y="14" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
@@ -55,7 +55,7 @@ const FEATURES = [
     label: "Price alerts",
     detail: "Via email",
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9ZM13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
@@ -228,14 +228,15 @@ export default function LaunchPage() {
       </div>
 
       {/* Features */}
-      <div className="mt-10 sm:mt-14 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 max-w-3xl w-full entrance-5">
+      <div className="mt-10 sm:mt-14 flex flex-wrap justify-center gap-2 sm:gap-2.5 max-w-2xl w-full entrance-5">
         {FEATURES.map((f) => (
-          <div key={f.label} className="flex flex-col items-center gap-1.5 text-center">
-            <div className="w-10 h-10 rounded-xl bg-[#dcfce7] flex items-center justify-center text-[#16a34a]">
-              {f.icon}
-            </div>
-            <span className="text-sm font-semibold text-[#1a1a1a] mt-1">{f.label}</span>
-            <span className="text-xs text-[#6b7280]">{f.detail}</span>
+          <div
+            key={f.label}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/70 backdrop-blur-sm border border-[#dce5f5] text-[13px] shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+          >
+            <span className="text-[#22c55e] shrink-0">{f.icon}</span>
+            <span className="font-medium text-[#1e293b]">{f.label}</span>
+            <span className="text-[#94a3b8]">{f.detail}</span>
           </div>
         ))}
       </div>
