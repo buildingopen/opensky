@@ -228,16 +228,17 @@ export default function LaunchPage() {
       </div>
 
       {/* Features */}
-      <div className="mt-10 sm:mt-14 flex flex-wrap justify-center gap-2 sm:gap-2.5 max-w-2xl w-full entrance-5">
-        {FEATURES.map((f) => (
-          <div
+      <div className="mt-8 sm:mt-12 flex flex-wrap justify-center gap-x-1.5 gap-y-1.5 max-w-xl w-full entrance-5">
+        {FEATURES.map((f, i) => (
+          <span
             key={f.label}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/70 backdrop-blur-sm border border-[#dce5f5] text-[13px] shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+            className="inline-flex items-center gap-1.5 text-[12px] sm:text-[13px] text-[#475569]"
           >
-            <span className="text-[#22c55e] shrink-0">{f.icon}</span>
+            <span className="text-[#22c55e]">{f.icon}</span>
             <span className="font-medium text-[#1e293b]">{f.label}</span>
             <span className="text-[#94a3b8]">{f.detail}</span>
-          </div>
+            {i < FEATURES.length - 1 && <span className="text-[#cbd5e1] mx-1">·</span>}
+          </span>
         ))}
       </div>
     </main>
