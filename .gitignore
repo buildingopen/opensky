@@ -26,8 +26,9 @@ node_modules/
 
 # Web frontend
 web/node_modules/
-web/.next/
+.next/
 web/.env.local
 .vercel
 api/.env
-api/.next/
+benchmark/
+web/wireframe-colors.html
