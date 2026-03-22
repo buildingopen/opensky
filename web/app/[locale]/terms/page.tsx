@@ -28,7 +28,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
     );
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-12">
+    <main id="main-content" className="max-w-3xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-[var(--color-text)]">{t("heading")}</h1>
       <p className="mt-2 text-xs text-[var(--color-text-muted)]">{t("lastUpdated", { date: localizedDate })}</p>
       <p className="mt-4 text-[var(--color-text)]">

@@ -223,7 +223,8 @@
       "disclaimer": "We'll send a confirmation email. Daily check, 90-day expiry, one-click unsubscribe.",
       "priceDropAlert": "Price drop alert",
       "getEmailed": "Get emailed when fares drop",
-      "alertSet": "Alert set! We'll email you."
+      "alertSet": "Alert set! We'll email you.",
+      "error": "Something went wrong. Please try again."
     },
     "shareResults": "Share results",
     "shareText": "Found {route} from {price} on FlyFast",
@@ -546,7 +547,9 @@
     "disputeHeading": "EU-Streitschlichtung",
     "disputeTextBefore": "Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:",
     "disputeUrl": "https://ec.europa.eu/consumers/odr/",
-    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+    "company": "TUYO UG (haftungsbeschränkt)",
+    "address": "Mansteinstr. 27, 20253 Hamburg, Germany"
   },
   "contact": {
     "title": "Contact - FlyFast",
@@ -772,5 +775,20 @@
       "error": "Something went wrong.",
       "networkError": "Network error. Please try again."
     }
+  },
+  "launch": {
+    "headline": "Search flights in plain English.",
+    "subheadline": "One sentence, not six form fields.",
+    "watchDemo": "Watch demo · 0:28",
+    "cta": "Try FlyFast",
+    "ctaSubtext": "Free. No login. Open source.",
+    "feature1Label": "Natural language",
+    "feature1Detail": "12 languages",
+    "feature2Label": "Safety badges",
+    "feature2Detail": "19 conflict zones",
+    "feature3Label": "Fare heatmap",
+    "feature3Detail": "Dates & destinations",
+    "feature4Label": "Price alerts",
+    "feature4Detail": "Via email"
   }
 }

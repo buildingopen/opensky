@@ -4,7 +4,7 @@ import { Link } from "../../i18n/navigation";
 export default async function NotFound() {
   const t = await getTranslations("notFound");
   return (
-    <main className="min-h-[80vh] flex flex-col items-center justify-center px-4 text-center">
+    <main id="main-content" className="min-h-[80vh] flex flex-col items-center justify-center px-4 text-center">
       <svg viewBox="0 0 32 32" className="w-12 h-12 mb-6" fill="none">
         <path d="M9 27V11L15 4" stroke="var(--color-interactive)" strokeWidth="2.8" strokeLinecap="square" strokeLinejoin="miter" opacity={0.3} />
         <path d="M19 27V11L25 4" stroke="var(--color-interactive)" strokeWidth="2.8" strokeLinecap="square" strokeLinejoin="miter" opacity={0.3} />

@@ -214,7 +214,8 @@
       "disclaimer": "Enviaremos um e-mail de confirmação. Verificação diária, expira em 90 dias, cancele com um clique.",
       "priceDropAlert": "Alerta de queda de preço",
       "getEmailed": "Receba e-mails quando as tarifas caírem",
-      "alertSet": "Alerta criado! Enviaremos um e-mail."
+      "alertSet": "Alerta criado! Enviaremos um e-mail.",
+      "error": "Algo deu errado. Por favor, tente novamente."
     },
     "shareResults": "Compartilhar resultados",
     "shareText": "Encontrei {route} a partir de {price} no FlyFast",
@@ -251,7 +252,7 @@
       "moreDates": "+ {count} datas a mais",
       "roundTripReturn": "Ida e volta",
       "moreReturnDates": "+ {count} mais",
-      "airportCount": "{count, plural, one {# aeroporto} other {# aeroportos}",
+      "airportCount": "{count, plural, one {# aeroporto} other {# aeroportos}}",
       "combinations": "{count, plural, one {# combinação} other {# combinações}}"
     },
     "compare": {
@@ -541,7 +542,9 @@
     "disputeHeading": "EU-Streitschlichtung",
     "disputeTextBefore": "Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:",
     "disputeUrl": "https://ec.europa.eu/consumers/odr/",
-    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+    "company": "TUYO UG (haftungsbeschränkt)",
+    "address": "Mansteinstr. 27, 20253 Hamburg, Germany"
   },
   "contact": {
     "title": "Contato - FlyFast",
@@ -772,5 +775,20 @@
     "message": "Usamos cookies de análise para melhorar o FlyFast. Sem anúncios, sem rastreamento entre sites.",
     "accept": "Aceitar",
     "decline": "Recusar"
+  },
+  "launch": {
+    "headline": "Pesquise voos em português.",
+    "subheadline": "Uma frase, não seis campos de formulário.",
+    "watchDemo": "Ver demo · 0:28",
+    "cta": "Experimentar FlyFast",
+    "ctaSubtext": "Grátis. Sem cadastro. Código aberto.",
+    "feature1Label": "Linguagem natural",
+    "feature1Detail": "12 idiomas",
+    "feature2Label": "Selos de segurança",
+    "feature2Detail": "19 zonas de conflito",
+    "feature3Label": "Mapa de tarifas",
+    "feature3Detail": "Datas e destinos",
+    "feature4Label": "Alertas de preço",
+    "feature4Detail": "Por email"
   }
 }

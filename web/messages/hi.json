@@ -214,7 +214,8 @@
       "disclaimer": "हम एक पुष्टि ईमेल भेजेंगे। दैनिक जांच, 90-दिन की समाप्ति, एक क्लिक में अनसब्सक्राइब।",
       "priceDropAlert": "कीमत गिरने का अलर्ट",
       "getEmailed": "किराया गिरने पर ईमेल पाएं",
-      "alertSet": "अलर्ट सेट! हम आपको ईमेल करेंगे।"
+      "alertSet": "अलर्ट सेट! हम आपको ईमेल करेंगे।",
+      "error": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।"
     },
     "shareResults": "परिणाम शेयर करें",
     "shareText": "FlyFast पर {route} {price} से मिला",
@@ -541,7 +542,9 @@
     "disputeHeading": "EU-Streitschlichtung",
     "disputeTextBefore": "Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:",
     "disputeUrl": "https://ec.europa.eu/consumers/odr/",
-    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+    "company": "TUYO UG (haftungsbeschränkt)",
+    "address": "Mansteinstr. 27, 20253 Hamburg, Germany"
   },
   "contact": {
     "title": "संपर्क - FlyFast",
@@ -772,5 +775,20 @@
     "message": "हम FlyFast को बेहतर बनाने के लिए एनालिटिक्स कुकीज़ का उपयोग करते हैं। कोई विज्ञापन नहीं, साइटों पर कोई ट्रैकिंग नहीं।",
     "accept": "स्वीकार करें",
     "decline": "अस्वीकार करें"
+  },
+  "launch": {
+    "headline": "हिंदी में उड़ानें खोजें।",
+    "subheadline": "एक वाक्य, छह फॉर्म फील्ड नहीं।",
+    "watchDemo": "डेमो देखें · 0:28",
+    "cta": "FlyFast आज़माएं",
+    "ctaSubtext": "मुफ़्त। लॉगिन नहीं। ओपन सोर्स।",
+    "feature1Label": "प्राकृतिक भाषा",
+    "feature1Detail": "12 भाषाएं",
+    "feature2Label": "सुरक्षा बैज",
+    "feature2Detail": "19 संघर्ष क्षेत्र",
+    "feature3Label": "किराया हीटमैप",
+    "feature3Detail": "तारीखें और गंतव्य",
+    "feature4Label": "मूल्य अलर्ट",
+    "feature4Detail": "ईमेल द्वारा"
   }
 }

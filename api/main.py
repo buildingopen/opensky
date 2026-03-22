@@ -21,6 +21,7 @@ from uuid import uuid4
 import httpx
 from html import escape as html_escape
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
@@ -38,6 +39,11 @@ from skyroute.safety import check_route, load_zones, zones_age_warning
 from skyroute.search import SearchEngine
 
 logging.basicConfig(level=logging.INFO)
+
+
+def _mask_email(email: str) -> str:
+    local, _, domain = email.partition("@")
+    return f"{local[:2]}***@{domain}" if len(local) > 2 else f"***@{domain}"
 
 # Valid IATA airport codes (loaded once at import)
 _IATA_DB = airportsdata.load("IATA")
@@ -857,6 +863,11 @@ app = FastAPI(title="OpenSky API", version="0.2.0", lifespan=lifespan,
               docs_url=None, redoc_url=None, openapi_url=None)
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(status_code=422, content={"detail": "Invalid request. Please check your input."})
+
+
 # ---------------------------------------------------------------------------
 # PostHog helpers (server-side, no PII)
 # ---------------------------------------------------------------------------
@@ -1572,7 +1583,7 @@ async def search_flights(req: PromptRequest, request: Request):
     # Concurrent SSE limit (checked early, before Gemini parsing)
     _stream_ip = _get_client_ip(request)
     if not await _incr_streams(_stream_ip):
-        raise HTTPException(429, "Too many concurrent searches.")
+        raise HTTPException(429, "Too many concurrent searches.", headers={"Retry-After": "5"})
 
     # PostHog: track search start
     _search_start = time.time()
@@ -2109,7 +2120,7 @@ async def expand_search(req: ExpandRequest, request: Request):
     # Concurrent SSE limit (checked early, before Gemini parsing)
     _stream_ip_expand = _get_client_ip(request)
     if not await _incr_streams(_stream_ip_expand):
-        raise HTTPException(429, "Too many concurrent searches.")
+        raise HTTPException(429, "Too many concurrent searches.", headers={"Retry-After": "5"})
 
     _expand_start = time.time()
     _anon_expand = _anonymous_id(ip)
@@ -2224,7 +2235,7 @@ async def expand_search(req: ExpandRequest, request: Request):
             while True:
                 if time.time() - scan_start > 300:
                     cancel.set()
-                    yield f"data: {json.dumps({'type': 'error', 'detail': 'Expansion timed out.'})}\n\n"
+                    yield f"data: {json.dumps({'type': 'error', 'detail': 'Expansion timed out after 5 minutes. The results found so far are shown above.'})}\n\n"
                     thread.join(timeout=5)
                     return
                 try:
@@ -2386,7 +2397,7 @@ def _send_confirmation_email(
             timeout=10,
         )
     except Exception as exc:
-        log.warning("Confirmation email failed for %s: %s", to, exc)
+        log.warning("Confirmation email failed for %s: %s", _mask_email(to), exc)
 
 
 class AlertCreate(BaseModel):
@@ -2566,7 +2577,7 @@ def _send_zone_alert_confirmation(to: str, zone_names: list[str], unsub_token: s
             timeout=10,
         )
     except Exception as exc:
-        log.warning("Zone alert confirmation email failed for %s: %s", to, exc)
+        log.warning("Zone alert confirmation email failed for %s: %s", _mask_email(to), exc)
 
 
 @app.post("/api/zone-alerts")

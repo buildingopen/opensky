@@ -214,7 +214,8 @@
       "disclaimer": "Wir senden eine Bestätigungs-E-Mail. Tägliche Prüfung, 90 Tage Ablauf, Ein-Klick-Abmeldung.",
       "priceDropAlert": "Preisalarm",
       "getEmailed": "Erhalte E-Mails bei günstigeren Tarifen",
-      "alertSet": "Alarm gesetzt! Wir senden dir eine E-Mail."
+      "alertSet": "Alarm gesetzt! Wir senden dir eine E-Mail.",
+      "error": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
     },
     "shareResults": "Ergebnisse teilen",
     "shareText": "{route} ab {price} auf FlyFast gefunden",
@@ -541,7 +542,9 @@
     "disputeHeading": "EU-Streitschlichtung",
     "disputeTextBefore": "Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:",
     "disputeUrl": "https://ec.europa.eu/consumers/odr/",
-    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+    "company": "TUYO UG (haftungsbeschränkt)",
+    "address": "Mansteinstr. 27, 20253 Hamburg, Germany"
   },
   "contact": {
     "title": "Kontakt - FlyFast",
@@ -772,5 +775,20 @@
     "message": "Wir verwenden Analyse-Cookies, um FlyFast zu verbessern. Keine Werbung, kein seitenübergreifendes Tracking.",
     "accept": "Akzeptieren",
     "decline": "Ablehnen"
+  },
+  "launch": {
+    "headline": "Flüge suchen auf Deutsch.",
+    "subheadline": "Ein Satz statt sechs Formularfelder.",
+    "watchDemo": "Demo ansehen · 0:28",
+    "cta": "FlyFast testen",
+    "ctaSubtext": "Kostenlos. Ohne Anmeldung. Open Source.",
+    "feature1Label": "Natürliche Sprache",
+    "feature1Detail": "12 Sprachen",
+    "feature2Label": "Sicherheitshinweise",
+    "feature2Detail": "19 Konfliktgebiete",
+    "feature3Label": "Preiskarte",
+    "feature3Detail": "Daten & Ziele",
+    "feature4Label": "Preisalarme",
+    "feature4Detail": "Per E-Mail"
   }
 }

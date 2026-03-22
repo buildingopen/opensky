@@ -26,6 +26,11 @@ RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL = "FlyFast <alerts@flyfast.app>"
 SNAPSHOT_PATH = Path(os.environ.get("SNAPSHOT_PATH", "/data/zone_risk_snapshot.json"))
 
+
+def _mask_email(email: str) -> str:
+    local, _, domain = email.partition("@")
+    return f"{local[:2]}***@{domain}" if len(local) > 2 else f"***@{domain}"
+
 ZONE_DISPLAY_NAMES: dict[str, str] = {
     "ukraine": "Ukraine", "iran": "Iran", "iraq": "Iraq", "syria": "Syria",
     "israel": "Israel", "lebanon": "Lebanon", "yemen": "Yemen", "libya": "Libya",
@@ -50,23 +55,29 @@ RISK_COLORS: dict[str, str] = {
 }
 
 
-def _send_email(to: str, subject: str, html: str) -> bool:
+def _send_email(to: str, subject: str, html: str, unsub_url: str | None = None) -> bool:
     if not RESEND_API_KEY:
-        log.warning("No RESEND_API_KEY, skipping email to %s", to)
+        log.warning("No RESEND_API_KEY, skipping email to %s", _mask_email(to))
         return False
     try:
+        payload: dict = {"from": FROM_EMAIL, "to": [to], "subject": subject, "html": html}
+        if unsub_url:
+            payload["headers"] = {
+                "List-Unsubscribe": f"<{unsub_url}>",
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            }
         resp = httpx.post(
             "https://api.resend.com/emails",
             headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
-            json={"from": FROM_EMAIL, "to": [to], "subject": subject, "html": html},
+            json=payload,
             timeout=15,
         )
         if resp.status_code in (200, 201):
-            log.info("Email sent to %s: %s", to, subject)
+            log.info("Email sent to %s: %s", _mask_email(to), subject)
             return True
         log.error("Resend error %d: %s", resp.status_code, resp.text[:200])
     except Exception as exc:
-        log.error("Failed to send email to %s: %s", to, exc)
+        log.error("Failed to send email to %s: %s", _mask_email(to), exc)
     return False
 
 
@@ -206,7 +217,8 @@ def run() -> None:
         safe_names = ", ".join(zone_names[:3]).replace("\r", "").replace("\n", "")
         subject = f"Zone alert: {safe_names}{'...' if len(zone_names) > 3 else ''} risk level changed"
 
-        if _send_email(sub["email"], subject, html):
+        unsub_url = f"https://api.flyfast.app/api/zone-alerts/unsubscribe/{sub['unsubscribe_token']}"
+        if _send_email(sub["email"], subject, html, unsub_url=unsub_url):
             now = datetime.now(timezone.utc).isoformat()
             conn.execute("UPDATE zone_alerts SET last_notified = ? WHERE id = ?", (now, sub["id"]))
             conn.commit()

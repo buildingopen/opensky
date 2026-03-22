@@ -39,7 +39,7 @@ export default async function MethodologyPage() {
   ];
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-12">
+    <main id="main-content" className="max-w-5xl mx-auto px-4 py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />
       <h1 className="text-3xl font-bold text-[var(--color-text)]">{t("heading")}</h1>
       <p className="mt-4 text-[var(--color-text)]">

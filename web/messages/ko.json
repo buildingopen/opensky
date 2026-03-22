@@ -214,7 +214,8 @@
       "disclaimer": "확인 이메일을 보내드립니다. 매일 확인, 90일 후 만료, 원클릭 구독 해지.",
       "priceDropAlert": "가격 인하 알림",
       "getEmailed": "운임이 내려가면 이메일로 알려드립니다",
-      "alertSet": "알림 설정 완료! 이메일로 알려드리겠습니다."
+      "alertSet": "알림 설정 완료! 이메일로 알려드리겠습니다.",
+      "error": "문제가 발생했습니다. 다시 시도해 주세요."
     },
     "shareResults": "결과 공유",
     "shareText": "FlyFast에서 {route} {price}부터 찾았습니다",
@@ -541,7 +542,9 @@
     "disputeHeading": "EU-Streitschlichtung",
     "disputeTextBefore": "Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:",
     "disputeUrl": "https://ec.europa.eu/consumers/odr/",
-    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+    "company": "TUYO UG (haftungsbeschränkt)",
+    "address": "Mansteinstr. 27, 20253 Hamburg, Germany"
   },
   "contact": {
     "title": "문의 - FlyFast",
@@ -772,5 +775,20 @@
     "message": "FlyFast 개선을 위해 분석 쿠키를 사용합니다. 광고 없음, 사이트 간 추적 없음.",
     "accept": "동의",
     "decline": "거부"
+  },
+  "launch": {
+    "headline": "한국어로 항공편을 검색하세요.",
+    "subheadline": "한 문장으로, 여섯 개의 양식 필드 없이.",
+    "watchDemo": "데모 보기 · 0:28",
+    "cta": "FlyFast 사용해 보기",
+    "ctaSubtext": "무료. 로그인 불필요. 오픈 소스.",
+    "feature1Label": "자연어",
+    "feature1Detail": "12개 언어",
+    "feature2Label": "안전 배지",
+    "feature2Detail": "19개 분쟁 지역",
+    "feature3Label": "요금 히트맵",
+    "feature3Detail": "날짜 및 목적지",
+    "feature4Label": "가격 알림",
+    "feature4Detail": "이메일로"
   }
 }

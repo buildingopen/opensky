@@ -28,6 +28,11 @@ FROM_EMAIL = "FlyFast <alerts@flyfast.app>"
 API_BASE = "https://api.flyfast.app"
 
 
+def _mask_email(email: str) -> str:
+    local, _, domain = email.partition("@")
+    return f"{local[:2]}***@{domain}" if len(local) > 2 else f"***@{domain}"
+
+
 def _next_fridays(count: int = 3) -> list[str]:
     """Return the next N Fridays as YYYY-MM-DD strings."""
     today = datetime.now(tz=None).date()
@@ -45,28 +50,34 @@ def _currency_symbol(c: str) -> str:
     return {"EUR": "\u20ac", "USD": "$", "GBP": "\u00a3"}.get(c, c)
 
 
-def _send_email(to: str, subject: str, html: str) -> bool:
+def _send_email(to: str, subject: str, html: str, unsub_url: str | None = None) -> bool:
     if not RESEND_API_KEY:
-        log.warning("No RESEND_API_KEY, skipping email to %s", to)
+        log.warning("No RESEND_API_KEY, skipping email to %s", _mask_email(to))
         return False
     try:
+        payload: dict = {
+            "from": FROM_EMAIL,
+            "to": [to],
+            "subject": subject,
+            "html": html,
+        }
+        if unsub_url:
+            payload["headers"] = {
+                "List-Unsubscribe": f"<{unsub_url}>",
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            }
         resp = httpx.post(
             "https://api.resend.com/emails",
             headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
-            json={
-                "from": FROM_EMAIL,
-                "to": [to],
-                "subject": subject,
-                "html": html,
-            },
+            json=payload,
             timeout=15,
         )
         if resp.status_code in (200, 201):
-            log.info("Email sent to %s: %s", to, subject)
+            log.info("Email sent to %s: %s", _mask_email(to), subject)
             return True
         log.error("Resend error %d: %s", resp.status_code, resp.text[:200])
     except Exception as exc:
-        log.error("Failed to send email to %s: %s", to, exc)
+        log.error("Failed to send email to %s: %s", _mask_email(to), exc)
     return False
 
 
@@ -138,7 +149,7 @@ def run() -> None:
         query = alert["query"]
         email = alert["email"]
 
-        log.info("Checking alert %s: %s (%s)", alert_id, query, email)
+        log.info("Checking alert %s: %s (%s)", alert_id, query, _mask_email(email))
 
         engine = SearchEngine(
             currency=currency,
@@ -202,7 +213,8 @@ def run() -> None:
             sym = _currency_symbol(currency)
             safe_subj = query.replace("\r", "").replace("\n", "")
             subject = f"Price drop: {safe_subj} from {sym}{best_price:.0f}"
-            if _send_email(email, subject, html):
+            unsub_url = f"{API_BASE}/api/alerts/unsubscribe/{unsub_token}"
+            if _send_email(email, subject, html, unsub_url=unsub_url):
                 emailed += 1
 
     conn.close()

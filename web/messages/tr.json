@@ -214,7 +214,8 @@
       "disclaimer": "Bir onay e-postası göndereceğiz. Günlük kontrol, 90 gün geçerlilik, tek tıkla abonelik iptali.",
       "priceDropAlert": "Fiyat düşüş uyarısı",
       "getEmailed": "Fiyatlar düştüğünde e-posta alın",
-      "alertSet": "Uyarı oluşturuldu! Size e-posta göndereceğiz."
+      "alertSet": "Uyarı oluşturuldu! Size e-posta göndereceğiz.",
+      "error": "Bir şeyler ters gitti. Lütfen tekrar deneyin."
     },
     "shareResults": "Sonuçları paylaş",
     "shareText": "FlyFast'te {route} için {price}'den başlayan fiyatlar buldum",
@@ -541,7 +542,9 @@
     "disputeHeading": "EU-Streitschlichtung",
     "disputeTextBefore": "Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:",
     "disputeUrl": "https://ec.europa.eu/consumers/odr/",
-    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+    "company": "TUYO UG (haftungsbeschränkt)",
+    "address": "Mansteinstr. 27, 20253 Hamburg, Germany"
   },
   "contact": {
     "title": "İletişim - FlyFast",
@@ -772,5 +775,20 @@
     "message": "FlyFast'i geliştirmek için analiz çerezleri kullanıyoruz. Reklam yok, siteler arası takip yok.",
     "accept": "Kabul et",
     "decline": "Reddet"
+  },
+  "launch": {
+    "headline": "Türkçe uçuş ara.",
+    "subheadline": "Bir cümle, altı form alanı değil.",
+    "watchDemo": "Demoyu izle · 0:28",
+    "cta": "FlyFast'ı dene",
+    "ctaSubtext": "Ücretsiz. Giriş yok. Açık kaynak.",
+    "feature1Label": "Doğal dil",
+    "feature1Detail": "12 dil",
+    "feature2Label": "Güvenlik rozetleri",
+    "feature2Detail": "19 çatışma bölgesi",
+    "feature3Label": "Ücret haritası",
+    "feature3Detail": "Tarihler ve rotalar",
+    "feature4Label": "Fiyat uyarıları",
+    "feature4Detail": "E-posta ile"
   }
 }

@@ -214,7 +214,8 @@
       "disclaimer": "我们会发送确认邮件。每日检查，90天有效期，一键退订。",
       "priceDropAlert": "降价提醒",
       "getEmailed": "票价下降时邮件通知你",
-      "alertSet": "提醒已设置！我们会通过邮件通知你。"
+      "alertSet": "提醒已设置！我们会通过邮件通知你。",
+      "error": "出错了，请重试。"
     },
     "shareResults": "分享结果",
     "shareText": "在FlyFast上找到{route}，最低{price}",
@@ -541,7 +542,9 @@
     "disputeHeading": "欧盟争议解决",
     "disputeTextBefore": "欧盟委员会提供了一个在线争议解决（OS）平台：",
     "disputeUrl": "https://ec.europa.eu/consumers/odr/",
-    "disputeTextAfter": "我们不愿意也没有义务参加消费者调解机构的争议解决程序。"
+    "disputeTextAfter": "我们不愿意也没有义务参加消费者调解机构的争议解决程序。",
+    "company": "TUYO UG (haftungsbeschränkt)",
+    "address": "Mansteinstr. 27, 20253 Hamburg, Germany"
   },
   "contact": {
     "title": "联系我们 - FlyFast",
@@ -772,5 +775,20 @@
     "message": "我们使用分析 Cookie 来改进 FlyFast。无广告，无跨站跟踪。",
     "accept": "接受",
     "decline": "拒绝"
+  },
+  "launch": {
+    "headline": "用中文搜索航班。",
+    "subheadline": "一句话，不是六个表单字段。",
+    "watchDemo": "观看演示 · 0:28",
+    "cta": "试试 FlyFast",
+    "ctaSubtext": "免费。无需登录。开源。",
+    "feature1Label": "自然语言",
+    "feature1Detail": "12 种语言",
+    "feature2Label": "安全标识",
+    "feature2Detail": "19 个冲突区",
+    "feature3Label": "票价热力图",
+    "feature3Detail": "日期和目的地",
+    "feature4Label": "价格提醒",
+    "feature4Detail": "通过邮件"
   }
 }

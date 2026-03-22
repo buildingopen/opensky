@@ -214,7 +214,8 @@
       "disclaimer": "سنرسل لك بريد تأكيد. فحص يومي، ينتهي بعد 90 يوماً، إلغاء اشتراك بنقرة واحدة.",
       "priceDropAlert": "تنبيه انخفاض السعر",
       "getEmailed": "احصل على إشعار بالبريد عند انخفاض الأسعار",
-      "alertSet": "تم تعيين التنبيه! سنرسل لك بريداً إلكترونياً."
+      "alertSet": "تم تعيين التنبيه! سنرسل لك بريداً إلكترونياً.",
+      "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
     },
     "shareResults": "مشاركة النتائج",
     "shareText": "وجدت {route} من {price} على FlyFast",
@@ -541,7 +542,9 @@
     "disputeHeading": "EU-Streitschlichtung",
     "disputeTextBefore": "Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:",
     "disputeUrl": "https://ec.europa.eu/consumers/odr/",
-    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+    "disputeTextAfter": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+    "company": "TUYO UG (haftungsbeschränkt)",
+    "address": "Mansteinstr. 27, 20253 Hamburg, Germany"
   },
   "contact": {
     "title": "تواصل معنا - FlyFast",
@@ -772,5 +775,20 @@
     "message": "نحن نستخدم ملفات تعريف الارتباط التحليلية لتحسين FlyFast. لا إعلانات، ولا تتبع عبر المواقع.",
     "accept": "قبول",
     "decline": "رفض"
+  },
+  "launch": {
+    "headline": "ابحث عن رحلات بالعربية.",
+    "subheadline": "جملة واحدة، ليس ستة حقول نماذج.",
+    "watchDemo": "شاهد العرض · 0:28",
+    "cta": "جرب FlyFast",
+    "ctaSubtext": "مجاني. بدون تسجيل. مفتوح المصدر.",
+    "feature1Label": "لغة طبيعية",
+    "feature1Detail": "12 لغة",
+    "feature2Label": "شارات الأمان",
+    "feature2Detail": "19 منطقة نزاع",
+    "feature3Label": "خريطة الأسعار",
+    "feature3Detail": "التواريخ والوجهات",
+    "feature4Label": "تنبيهات الأسعار",
+    "feature4Detail": "عبر البريد"
   }
 }

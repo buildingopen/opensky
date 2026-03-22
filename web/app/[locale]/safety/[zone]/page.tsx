@@ -86,7 +86,7 @@ export default async function ZonePage({
     .filter(Boolean);
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-12">
+    <main id="main-content" className="max-w-3xl mx-auto px-4 py-12">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqQuestion, faqAnswer)) }}
