@@ -89,7 +89,8 @@ export default async function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#22c55e" />
+        <meta name="theme-color" content="#f8faff" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -139,7 +140,7 @@ export default async function RootLayout({
               "@type": "Organization",
               name: "Building Open",
               url: "https://buildingopen.org",
-              logo: `${siteUrl}/favicon.svg`,
+              logo: `${siteUrl}/apple-touch-icon.png`,
               contactPoint: { "@type": "ContactPoint", email: "hello@buildingopen.org", contactType: "customer support" },
               sameAs: ["https://github.com/buildingopen"],
             }),

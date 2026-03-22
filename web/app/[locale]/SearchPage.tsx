@@ -1326,7 +1326,10 @@ function formatDate(iso: string, loc?: string): string {
   }
 }
 function currencySymbol(c: string): string {
-  return c === "EUR" ? "\u20AC" : c === "USD" ? "$" : c === "GBP" ? "\u00A3" : c;
+  try {
+    const parts = new Intl.NumberFormat("en", { style: "currency", currency: c }).formatToParts(0);
+    return parts.find((p) => p.type === "currency")?.value ?? c;
+  } catch { return c; }
 }
 // Fix 1: Extract display date from flight legs (actual departure date, not search date)
 function flightDisplayDate(flight: FlightOut): string {
@@ -2586,7 +2589,7 @@ function HomePage() {
   const [alertPopupDismissed, setAlertPopupDismissed] = useState(false);
   const [popupEmail, setPopupEmail] = useState("");
   const [popupThreshold, setPopupThreshold] = useState("");
-  const [popupStatus, setPopupStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [popupStatus, setPopupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [expandPhase, setExpandPhase] = useState<"idle" | "expanding" | "done">("idle");
   const [expandCount, setExpandCount] = useState(0);
   const [expandError, setExpandError] = useState<string | null>(null);
@@ -2649,10 +2652,9 @@ function HomePage() {
     return () => clearTimeout(dismissTimer);
   }, [showAlertPopup]);
 
-  // Reset popup on new search
+  // Reset popup on new search (keep dismissed state so popup doesn't reappear)
   useEffect(() => {
     if (phase === "parsing") {
-      setAlertPopupDismissed(false);
       setShowAlertPopup(false);
       setPopupStatus("idle");
       setPopupEmail("");
@@ -3298,7 +3300,7 @@ function HomePage() {
             <>
               {searchMode === "structured" ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     <AirportAutocomplete
                       id="from"
                       label={t("form.from")}
@@ -3321,6 +3323,7 @@ function HomePage() {
                         id="depart"
                         type="date"
                         value={form.depart}
+                        min={new Date().toISOString().split("T")[0]}
                         onChange={(e) => setForm((f) => ({ ...f, depart: e.target.value }))}
                         disabled={isLoading}
                         className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-interactive)]/50 transition-colors"
@@ -3336,6 +3339,7 @@ function HomePage() {
                         id="return"
                         type="date"
                         value={form.returnDate}
+                        min={form.depart || new Date().toISOString().split("T")[0]}
                         onChange={(e) => setForm((f) => ({ ...f, returnDate: e.target.value }))}
                         disabled={isLoading || !form.roundTrip}
                         className={`w-full bg-[var(--color-background)] border rounded-lg px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-interactive)]/50 transition-colors disabled:opacity-30 ${returnDateInvalid ? "border-[var(--color-danger)]" : "border-[var(--color-border)]"}`}
@@ -3658,7 +3662,7 @@ function HomePage() {
                     </div>
                     {/* New search link */}
                     <button
-                      onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setNoResultsReason(null); setPrompt(""); setTimeout(() => { inputRef.current?.focus(); }, 0); }}
+                      onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setNoResultsReason(null); setPrompt(""); const url = new URL(window.location.href); if (url.searchParams.has("q")) { url.searchParams.delete("q"); window.history.replaceState({}, "", url.toString()); } setTimeout(() => { inputRef.current?.focus(); }, 0); }}
                       className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center gap-1.5"
                     >
                       {t("noResults.newSearch")}
@@ -3998,6 +4002,8 @@ function HomePage() {
                 setForm({ from: "", to: "", depart: "", returnDate: "", roundTrip: false, flexibleDates: false, maxPrice: "", directOnly: false, cabin: "economy", safeOnly: true });
                 setAttributionParams((prev) => ({ ...prev, ref: "organic", utm_source: undefined }));
                 window.scrollTo({ top: 0, behavior: "smooth" });
+                const url = new URL(window.location.href);
+                if (url.searchParams.has("q")) { url.searchParams.delete("q"); window.history.replaceState({}, "", url.toString()); }
                 setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 100);
               }}
               className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-interactive)] transition-colors"
@@ -4031,6 +4037,11 @@ function HomePage() {
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline-block me-1 -mt-0.5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
               {t("priceAlert.alertSet")}
             </p>
+          ) : popupStatus === "error" ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-[var(--color-danger)]">{t("priceAlert.error")}</p>
+              <button onClick={() => setPopupStatus("idle")} className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] underline">{t("common.tryAgain")}</button>
+            </div>
           ) : (
             <div className="flex flex-col gap-2">
               <input
@@ -4057,7 +4068,7 @@ function HomePage() {
                     if (!popupEmail.trim()) return;
                     setPopupStatus("loading");
                     try {
-                      await fetch(`${API_URL}/api/alerts`, {
+                      const res = await fetch(`${API_URL}/api/alerts`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -4072,11 +4083,12 @@ function HomePage() {
                           current_price: flights[0]?.price || null,
                         }),
                       });
+                      if (!res.ok) throw new Error("fail");
                       setPopupStatus("success");
                       trackEvent("alert_created", { source: "popup" });
                       setTimeout(() => { setShowAlertPopup(false); setAlertPopupDismissed(true); }, 3000);
                     } catch {
-                      setPopupStatus("idle");
+                      setPopupStatus("error");
                     }
                   }}
                   className="px-3 py-1.5 text-sm font-medium bg-[var(--color-interactive)] text-white rounded-lg hover:bg-[var(--color-interactive-hover)] transition-colors disabled:opacity-50 whitespace-nowrap"
