@@ -22,6 +22,7 @@
 - `INTERNAL_API_TOKEN=<shared-secret>`
 - `NEXT_PUBLIC_SITE_URL=https://flyfast.app`
 - `NEXT_PUBLIC_POSTHOG_KEY=<optional>`
+- `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` in GitHub Actions for automated web deploys
 
 Preview should point to `https://api-preview.flyfast.app` with its own `INTERNAL_API_TOKEN`.
 
@@ -35,6 +36,7 @@ Preview should point to `https://api-preview.flyfast.app` with its own `INTERNAL
 - `REDIS_URL=<redis-url>`
 - `INTERNAL_API_TOKEN=<same shared-secret as matching web env>`
 - Existing product secrets such as `GEMINI_API_KEY`, `RESEND_API_KEY`, `POSTHOG_API_KEY`
+- `HETZNER_HOST`, `HETZNER_USER`, `HETZNER_SSH_KEY` in GitHub Actions for automated API deploys
 
 ## Deploy Steps
 
@@ -89,3 +91,4 @@ Preview should point to `https://api-preview.flyfast.app` with its own `INTERNAL
 - `POST https://flyfast.app/api/search` streams results successfully.
 - One manual production search succeeds in the UI.
 - Error rates, readiness, and Redis health stay normal after deploy.
+- The scheduled `Production Smoke` workflow remains green after the deploy.

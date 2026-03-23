@@ -1,12 +1,13 @@
-name: Deploy to Vercel
+name: Deploy
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  deploy-web:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,3 +20,48 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  deploy-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
+
+      - name: Trust Hetzner host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.HETZNER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Sync API files
+        run: |
+          rsync -avz \
+            api/main.py \
+            api/alert_worker.py \
+            api/zone_alert_worker.py \
+            api/Dockerfile \
+            api/requirements.txt \
+            api/docker-compose.yml \
+            "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:/opt/flyfast/"
+
+      - name: Rebuild and restart API
+        run: |
+          ssh "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}" \
+            "cd /opt/flyfast && docker compose up -d --build --remove-orphans"
+
+  verify-production:
+    runs-on: ubuntu-latest
+    needs:
+      - deploy-web
+      - deploy-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run production smoke test
+        run: |
+          API_BASE_URL="https://api.flyfast.app" \
+          SITE_BASE_URL="https://flyfast.app" \
+          bash scripts/smoke-test.sh

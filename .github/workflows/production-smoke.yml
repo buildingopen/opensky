@@ -1,0 +1,18 @@
+name: Production Smoke
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run production smoke test
+        run: |
+          API_BASE_URL="https://api.flyfast.app" \
+          SITE_BASE_URL="https://flyfast.app" \
+          bash scripts/smoke-test.sh

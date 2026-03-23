@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-ALERTS_DB_PATH = os.environ.get("ALERTS_DB_PATH", "/opt/opensky/alerts.db")
+ALERTS_DB_PATH = os.environ.get("ALERTS_DB_PATH", "/data/alerts.db")
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL = "FlyFast <alerts@flyfast.app>"
 SNAPSHOT_PATH = Path(os.environ.get("SNAPSHOT_PATH", "/data/zone_risk_snapshot.json"))
@@ -65,7 +65,6 @@ def _send_email(to: str, subject: str, html: str, unsub_url: str | None = None) 
         if unsub_url:
             payload["headers"] = {
                 "List-Unsubscribe": f"<{unsub_url}>",
-                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
             }
         resp = httpx.post(
             "https://api.resend.com/emails",

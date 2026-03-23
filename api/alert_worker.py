@@ -65,7 +65,6 @@ def _send_email(to: str, subject: str, html: str, unsub_url: str | None = None) 
         if unsub_url:
             payload["headers"] = {
                 "List-Unsubscribe": f"<{unsub_url}>",
-                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
             }
         resp = httpx.post(
             "https://api.resend.com/emails",

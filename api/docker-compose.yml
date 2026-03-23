@@ -6,7 +6,8 @@ services:
     ports:
       - "127.0.0.1:8090:8090"
     volumes:
-      - /opt/opensky/alerts.db:/data/alerts.db
+      - /opt/flyfast/data:/data
+      - /opt/flyfast/static:/opt/flyfast/static
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - SKYROUTE_DUFFEL_TOKEN=${SKYROUTE_DUFFEL_TOKEN}
@@ -23,6 +24,7 @@ services:
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - ALLOW_RATE_LIMIT_FALLBACK=${ALLOW_RATE_LIMIT_FALLBACK:-true}
       - PUBLIC_PARSE_ENABLED=${PUBLIC_PARSE_ENABLED:-true}
+      - POSTHOG_API_KEY=${POSTHOG_API_KEY}
     deploy:
       resources:
         limits:
