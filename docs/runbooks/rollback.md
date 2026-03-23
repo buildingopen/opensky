@@ -21,18 +21,43 @@
 
 ## Concrete provider steps
 
-### Render (API)
+### Hetzner (API)
 
-1. Open [Render Dashboard](https://dashboard.render.com) → select **opensky-api**.
-2. Go to **Deploys**.
-3. Find the last known good deploy (check commit hash and status).
-4. Click the **⋮** menu on that deploy → **Redeploy**.
-5. Wait for the deploy to complete (green status).
-6. Run smoke checks: `API_BASE_URL=https://opensky-api.onrender.com bash scripts/smoke-test.sh`
+1. SSH to the API host:
+   ```bash
+   ssh hetzner
+   ```
+2. Go to the production API directory:
+   ```bash
+   cd /opt/flyfast
+   ```
+3. List backups and pick the last known good snapshot:
+   ```bash
+   ls -1dt backups/*
+   ```
+4. Restore the desired snapshot:
+   ```bash
+   backup="backups/<timestamp>"
+   cp "${backup}"/main.py .
+   cp "${backup}"/alert_worker.py .
+   cp "${backup}"/zone_alert_worker.py .
+   cp "${backup}"/Dockerfile .
+   cp "${backup}"/requirements.txt .
+   cp "${backup}"/docker-compose.yml .
+   cp "${backup}"/.env .
+   ```
+5. Rebuild and restart:
+   ```bash
+   docker compose up -d --build --remove-orphans
+   ```
+6. Run smoke checks:
+   ```bash
+   API_BASE_URL="https://api.flyfast.app" bash scripts/smoke-test.sh
+   ```
 
 ### Vercel (Web)
 
-1. Open [Vercel Dashboard](https://vercel.com) → select the OpenSky project.
+1. Open [Vercel Dashboard](https://vercel.com) → select the FlyFast web project.
 2. Go to **Deployments**.
 3. Find the last known good deployment (check commit and status).
 4. Click **⋮** → **Promote to Production** (or **Redeploy** if needed).
@@ -47,27 +72,26 @@ Run this drill at least once per release cycle to ensure the rollback path works
 
 ### Prerequisites
 
-- Staging API deployed (e.g. from `render.staging.yaml` → `opensky-api-staging` on Render).
-- `STAGING_API_URL` set (e.g. `https://opensky-api-staging.onrender.com`).
-- Optional: Vercel preview deployments can point to staging by setting `NEXT_PUBLIC_API_URL` to the staging API URL in the Preview environment.
+- Preview API deployed on Hetzner at `https://api-preview.flyfast.app`.
+- Preview web environment points to the preview API via `INTERNAL_API_BASE_URL`.
 
 ### Drill steps
 
 1. **Baseline**: Run smoke checks against staging.
    ```bash
-   API_BASE_URL="${STAGING_API_URL}" bash scripts/smoke-test.sh
+   API_BASE_URL="https://api-preview.flyfast.app" SITE_BASE_URL="https://preview.flyfast.app" bash scripts/smoke-test.sh
    ```
    Expect: all checks pass.
 
-2. **Simulate bad deploy**: Trigger a deploy with a known-bad change (e.g. temporarily break healthz), or use Render’s “Rollback” to an older deploy that was broken.
+2. **Simulate bad deploy**: Deploy a known-bad API change to preview or restore a broken backup snapshot.
 
 3. **Verify failure**: Re-run smoke checks. Expect: at least one check fails.
 
-4. **Rollback**: In Render Dashboard → opensky-api-staging → Deploys → Redeploy previous (last known good).
+4. **Rollback**: Restore the previous preview snapshot under `/opt/flyfast-preview/backups` and restart the preview container.
 
 5. **Re-verify**: After rollback completes, run smoke checks again.
    ```bash
-   API_BASE_URL="${STAGING_API_URL}" bash scripts/smoke-test.sh
+   API_BASE_URL="https://api-preview.flyfast.app" SITE_BASE_URL="https://preview.flyfast.app" bash scripts/smoke-test.sh
    ```
    Expect: all checks pass.
 
