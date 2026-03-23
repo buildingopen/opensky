@@ -3,7 +3,7 @@ from main import _booking_link
 
 def test_booking_link_marks_safe_provider_url_as_exact_booking() -> None:
     url, label, exact = _booking_link(
-        "https://provider.example/booking/123",
+        "https://www.google.com/travel/flights/booking/123",
         "DEL",
         "NBO",
         "2026-03-21",
@@ -12,7 +12,7 @@ def test_booking_link_marks_safe_provider_url_as_exact_booking() -> None:
         "",
     )
 
-    assert url == "https://provider.example/booking/123"
+    assert url == "https://www.google.com/travel/flights/booking/123"
     assert label == "Book direct"
     assert exact is True
 

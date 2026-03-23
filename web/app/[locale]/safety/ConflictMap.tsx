@@ -77,12 +77,20 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
 
   // Auto-zoom when filter changes
   useEffect(() => {
+    let frame = 0;
     if (activeFilter && ZOOM_REGIONS[activeFilter]) {
       const region = ZOOM_REGIONS[activeFilter];
-      setPosition({ coordinates: region.center, zoom: region.zoom });
+      frame = window.requestAnimationFrame(() => {
+        setPosition({ coordinates: region.center, zoom: region.zoom });
+      });
     } else if (!activeFilter) {
-      setPosition({ coordinates: [30, 25], zoom: 1 });
+      frame = window.requestAnimationFrame(() => {
+        setPosition({ coordinates: [30, 25], zoom: 1 });
+      });
     }
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, [activeFilter]);
 
   // Build numeric code -> color map
@@ -166,7 +174,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
       const data = buildTooltipData(geoId, geoName);
       if (data.countryName) updateTooltip(data, event);
     },
-    [resolveZone, onCountryHover, updateTooltip, buildTooltipData],
+    [isTouch, resolveZone, onCountryHover, updateTooltip, buildTooltipData],
   );
 
   const handleGeoMouseMove = useCallback(
@@ -175,7 +183,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
       const data = buildTooltipData(geoId, geoName);
       if (data.countryName) updateTooltip(data, event);
     },
-    [buildTooltipData, updateTooltip],
+    [isTouch, buildTooltipData, updateTooltip],
   );
 
   const handleGeoMouseLeave = useCallback(() => {
@@ -183,7 +191,7 @@ function ConflictMapInner({ countryRiskMap, zones, countryToZone, activeFilter, 
     setTooltip(null);
     tooltipZoneRef.current = null;
     onCountryHover?.(null);
-  }, [onCountryHover]);
+  }, [isTouch, onCountryHover]);
 
   const handleGeoClick = useCallback(
     (geoId: string, geoName: string, event: React.MouseEvent) => {

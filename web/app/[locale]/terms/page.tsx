@@ -15,17 +15,22 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
   const t = await getTranslations("terms");
   const localizedDate = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(2026, 2));
 
-  const link = (href: string, opts?: { mailto?: boolean }) =>
-    (chunks: React.ReactNode) => (
-      <a
-        className="text-[var(--color-interactive)] hover:underline"
-        href={opts?.mailto ? `mailto:${href}` : href}
-        target={opts?.mailto ? undefined : "_blank"}
-        rel={opts?.mailto ? undefined : "noopener noreferrer"}
-      >
-        {chunks}
-      </a>
-    );
+  const link = (href: string, opts?: { mailto?: boolean }) => {
+    function RichLink(chunks: React.ReactNode) {
+      return (
+        <a
+          className="text-[var(--color-interactive)] hover:underline"
+          href={opts?.mailto ? `mailto:${href}` : href}
+          target={opts?.mailto ? undefined : "_blank"}
+          rel={opts?.mailto ? undefined : "noopener noreferrer"}
+        >
+          {chunks}
+        </a>
+      );
+    }
+
+    return RichLink;
+  };
 
   return (
     <main id="main-content" className="max-w-3xl mx-auto px-4 py-12">

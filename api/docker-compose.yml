@@ -16,6 +16,13 @@ services:
       - RATE_LIMIT_WHITELIST=${RATE_LIMIT_WHITELIST}
       - SKYROUTE_PROXY=${SKYROUTE_PROXY}
       - ALERTS_DB_PATH=/data/alerts.db
+      - TRUST_PROXY=${TRUST_PROXY:-true}
+      - TRUSTED_PROXY_IPS=${TRUSTED_PROXY_IPS}
+      - REDIS_URL=${REDIS_URL}
+      - INTERNAL_API_TOKEN=${INTERNAL_API_TOKEN}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - ALLOW_RATE_LIMIT_FALLBACK=${ALLOW_RATE_LIMIT_FALLBACK:-true}
+      - PUBLIC_PARSE_ENABLED=${PUBLIC_PARSE_ENABLED:-true}
     deploy:
       resources:
         limits:

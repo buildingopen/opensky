@@ -52,6 +52,13 @@ Set either `NEXT_PUBLIC_GA_MEASUREMENT_ID` (GA4) or `NEXT_PUBLIC_POSTHOG_KEY` (P
 
 For trusted clients (internal tools, partners), you can set `API_KEYS` (comma-separated) and `API_KEY_QUOTA` (e.g. 100/hour). Requests with a valid `X-API-Key` or `Authorization: Bearer <key>` header use the higher quota instead of the default IP-based limit.
 
+## Internal API Proxying
+
+- Browser traffic should call the Next.js `/api/*` routes, not the Python API directly.
+- Set `INTERNAL_API_TOKEN` on both the web and API deployments.
+- Set `INTERNAL_API_BASE_URL` on the web deployment so route handlers can reach the API.
+- In production, set `ENVIRONMENT=production` and `ALLOW_RATE_LIMIT_FALLBACK=false` on the API so Redis-backed abuse controls fail closed.
+
 ## Quality Gates
 
 - Frontend: `npm run lint && npm run typecheck && npm run test:run && npm run build`

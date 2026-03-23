@@ -25,6 +25,7 @@ ALERTS_DB_PATH = os.environ.get("ALERTS_DB_PATH", "/opt/opensky/alerts.db")
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 FROM_EMAIL = "FlyFast <alerts@flyfast.app>"
 SNAPSHOT_PATH = Path(os.environ.get("SNAPSHOT_PATH", "/data/zone_risk_snapshot.json"))
+CONFIRMATION_TTL_HOURS = 24
 
 
 def _mask_email(email: str) -> str:
@@ -196,10 +197,14 @@ def run() -> None:
 
     # Auto-expire
     conn.execute("UPDATE zone_alerts SET is_active = 0 WHERE is_active = 1 AND expires_at < datetime('now')")
+    conn.execute(
+        "DELETE FROM zone_alerts WHERE confirmed_at IS NULL AND confirmation_sent_at < datetime('now', ?)",
+        (f"-{CONFIRMATION_TTL_HOURS} hours",),
+    )
     conn.commit()
 
     subscribers = conn.execute(
-        "SELECT * FROM zone_alerts WHERE is_active = 1 AND expires_at > datetime('now')"
+        "SELECT * FROM zone_alerts WHERE is_active = 1 AND confirmed_at IS NOT NULL AND expires_at > datetime('now')"
     ).fetchall()
 
     log.info("Found %d active zone alert subscribers", len(subscribers))
@@ -230,6 +235,10 @@ def run() -> None:
 
 def _expire_old_alerts() -> None:
     conn = sqlite3.connect(ALERTS_DB_PATH)
+    conn.execute(
+        "DELETE FROM zone_alerts WHERE confirmed_at IS NULL AND confirmation_sent_at < datetime('now', ?)",
+        (f"-{CONFIRMATION_TTL_HOURS} hours",),
+    )
     expired = conn.execute(
         "UPDATE zone_alerts SET is_active = 0 WHERE is_active = 1 AND expires_at < datetime('now')"
     ).rowcount

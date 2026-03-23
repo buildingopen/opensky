@@ -1,4 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL =
+  process.env.INTERNAL_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:8000";
 
 export interface ConflictZone {
   id: string;
@@ -16,7 +19,9 @@ interface ZonesResponse {
   warning: string | null;
 }
 
-export async function getZones(): Promise<ConflictZone[]> {
+let zonesPromise: Promise<ConflictZone[]> | null = null;
+
+async function fetchZones(): Promise<ConflictZone[]> {
   try {
     const res = await fetch(`${API_URL}/api/zones`, { next: { revalidate: 3600 } });
     if (!res.ok) {
@@ -29,6 +34,13 @@ export async function getZones(): Promise<ConflictZone[]> {
     console.error("[zones] fetch error:", err);
     return [];
   }
+}
+
+export async function getZones(): Promise<ConflictZone[]> {
+  if (!zonesPromise) {
+    zonesPromise = fetchZones();
+  }
+  return zonesPromise;
 }
 
 export async function getZoneById(id: string): Promise<ConflictZone | undefined> {

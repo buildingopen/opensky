@@ -16,6 +16,7 @@ import urllib.parse
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta, timezone
+from ipaddress import ip_address, ip_network
 from uuid import uuid4
 
 import httpx
@@ -121,6 +122,16 @@ GEMINI_MAX_RETRIES = int(os.environ.get("GEMINI_MAX_RETRIES", "2"))
 PROXY = os.environ.get("SKYROUTE_PROXY")
 TRUST_PROXY = os.environ.get("TRUST_PROXY", "").lower() in ("1", "true", "yes")
 REQUIRE_GEMINI_KEY = os.environ.get("REQUIRE_GEMINI_KEY", "true").lower() in ("1", "true", "yes")
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "development").strip().lower()
+IS_PRODUCTION = ENVIRONMENT == "production"
+ALLOW_RATE_LIMIT_FALLBACK = os.environ.get("ALLOW_RATE_LIMIT_FALLBACK", "").lower() in ("1", "true", "yes")
+PUBLIC_PARSE_ENABLED = os.environ.get(
+    "PUBLIC_PARSE_ENABLED",
+    "false" if IS_PRODUCTION else "true",
+).lower() in ("1", "true", "yes")
+INTERNAL_API_TOKEN = os.environ.get("INTERNAL_API_TOKEN", "").strip()
+TRUSTED_PROXY_IPS_RAW = [v.strip() for v in os.environ.get("TRUSTED_PROXY_IPS", "").split(",") if v.strip()]
+TRUSTED_PROXY_IPS = tuple(ip_network(v, strict=False) for v in TRUSTED_PROXY_IPS_RAW)
 
 # Gemini API key failover: if primary key is revoked/deleted, switch to fallback
 # permanently for the process lifetime (no per-request retry on dead keys).
@@ -216,6 +227,36 @@ def _safe_subject(s: str) -> str:
 
 def _redact_key(text: str, key: str) -> str:
     return text.replace(key, "[REDACTED]") if key else text
+
+
+def _has_internal_auth(request: Request) -> bool:
+    if not INTERNAL_API_TOKEN:
+        return False
+    token = request.headers.get("X-Internal-API-Token", "").strip()
+    if not token:
+        return False
+    return compare_digest(token.encode(), INTERNAL_API_TOKEN.encode())
+
+
+def _require_internal_request(request: Request) -> None:
+    if INTERNAL_API_TOKEN and not _has_internal_auth(request):
+        raise HTTPException(status_code=403, detail="Forbidden.")
+
+
+def _require_public_parse_access(request: Request) -> None:
+    if PUBLIC_PARSE_ENABLED or _has_internal_auth(request):
+        return
+    raise HTTPException(status_code=404, detail="Not found.")
+
+
+def _ip_in_trusted_proxy_ranges(ip_str: str) -> bool:
+    if not TRUST_PROXY or not TRUSTED_PROXY_IPS:
+        return False
+    try:
+        client_ip = ip_address(ip_str)
+    except ValueError:
+        return False
+    return any(client_ip in net for net in TRUSTED_PROXY_IPS)
 _startup_at = time.time()
 _zones_loaded = False
 
@@ -225,6 +266,14 @@ _zones_loaded = False
 ALERTS_DB_PATH = os.environ.get("ALERTS_DB_PATH", "/opt/opensky/alerts.db")
 _EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$")
 MAX_ALERTS_PER_EMAIL = 5
+CONFIRMATION_TTL_DAYS = 1
+
+
+def _ensure_columns(conn: sqlite3.Connection, table: str, columns: dict[str, str]) -> None:
+    existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    for name, ddl in columns.items():
+        if name not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {ddl}")
 
 
 def _init_alerts_db() -> None:
@@ -246,10 +295,21 @@ def _init_alerts_db() -> None:
         created_at TEXT NOT NULL,
         expires_at TEXT NOT NULL,
         unsubscribe_token TEXT NOT NULL UNIQUE,
-        is_active INTEGER DEFAULT 1
+        is_active INTEGER DEFAULT 1,
+        confirm_token TEXT,
+        confirmed_at TEXT,
+        confirmation_sent_at TEXT,
+        unsubscribed_at TEXT
     )""")
+    _ensure_columns(conn, "alerts", {
+        "confirm_token": "confirm_token TEXT",
+        "confirmed_at": "confirmed_at TEXT",
+        "confirmation_sent_at": "confirmation_sent_at TEXT",
+        "unsubscribed_at": "unsubscribed_at TEXT",
+    })
     conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_active ON alerts(is_active, expires_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_email ON alerts(email)")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_alerts_confirm_token ON alerts(confirm_token)")
     # Zone alert subscriptions
     conn.execute("""CREATE TABLE IF NOT EXISTS zone_alerts (
         id TEXT PRIMARY KEY,
@@ -259,10 +319,21 @@ def _init_alerts_db() -> None:
         expires_at TEXT NOT NULL,
         unsubscribe_token TEXT NOT NULL UNIQUE,
         is_active INTEGER DEFAULT 1,
-        last_notified TEXT
+        last_notified TEXT,
+        confirm_token TEXT,
+        confirmed_at TEXT,
+        confirmation_sent_at TEXT,
+        unsubscribed_at TEXT
     )""")
+    _ensure_columns(conn, "zone_alerts", {
+        "confirm_token": "confirm_token TEXT",
+        "confirmed_at": "confirmed_at TEXT",
+        "confirmation_sent_at": "confirmation_sent_at TEXT",
+        "unsubscribed_at": "unsubscribed_at TEXT",
+    })
     conn.execute("CREATE INDEX IF NOT EXISTS idx_zone_alerts_active ON zone_alerts(is_active, expires_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_zone_alerts_email ON zone_alerts(email)")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_zone_alerts_confirm_token ON zone_alerts(confirm_token)")
     conn.commit()
     conn.close()
 
@@ -326,8 +397,11 @@ async def _check_rate_limit_redis(ip: str, *, limit: int = 0, prefix: str = "", 
         if count == 1:
             await redis_client.expire(key, ttl)
     except RedisError as exc:
-        log.warning("Redis rate-limit unavailable, request allowed without limit: %s", exc)
-        return 0
+        if ALLOW_RATE_LIMIT_FALLBACK:
+            log.warning("Redis rate-limit unavailable, falling back to memory: %s", exc)
+            return _check_rate_limit_memory(ip, limit=limit, store=store, label=label)
+        log.error("Redis rate-limit unavailable; failing closed: %s", exc)
+        raise HTTPException(status_code=503, detail="Rate limiting unavailable. Please try again shortly.")
 
     if count > limit:
         try:
@@ -347,8 +421,10 @@ async def _check_rate_limit(ip: str, *, limit: int = 0, prefix: str = "", store:
     if redis_client:
         return await _check_rate_limit_redis(ip, limit=limit, prefix=prefix, store=store, label=label)
     if REDIS_URL:
-        log.error("Redis not connected, allowing request without rate limit")
-        return 0
+        if ALLOW_RATE_LIMIT_FALLBACK:
+            return _check_rate_limit_memory(ip, limit=limit, store=store, label=label)
+        log.error("Redis not connected and fallback disabled; failing closed")
+        raise HTTPException(status_code=503, detail="Rate limiting unavailable. Please try again shortly.")
     return _check_rate_limit_memory(ip, limit=limit, store=store, label=label)
 
 
@@ -408,8 +484,11 @@ async def _check_rate_limit_api_key_redis(key_hash: str) -> int:
         if count == 1:
             await redis_client.expire(key, ttl)
     except RedisError as exc:
-        log.warning("Redis API-key rate-limit failed, falling back to memory: %s", exc)
-        return _check_rate_limit_api_key_memory(key_hash)
+        if ALLOW_RATE_LIMIT_FALLBACK:
+            log.warning("Redis API-key rate-limit failed, falling back to memory: %s", exc)
+            return _check_rate_limit_api_key_memory(key_hash)
+        log.error("Redis API-key rate-limit failed; failing closed: %s", exc)
+        raise HTTPException(status_code=503, detail="Rate limiting unavailable. Please try again shortly.")
     if count > API_KEY_QUOTA:
         try:
             remaining_ttl = await redis_client.ttl(key)
@@ -831,6 +910,8 @@ async def lifespan(app: FastAPI):
             await redis_client.ping()
             log.info("Redis rate limiting enabled")
         except RedisError as exc:
+            if not ALLOW_RATE_LIMIT_FALLBACK:
+                raise RuntimeError("REDIS_URL is configured but Redis is unavailable.") from exc
             log.warning("Redis unavailable, falling back to memory rate limiting: %s", exc)
             redis_client = None
 
@@ -894,7 +975,6 @@ allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000").spl
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://web-[a-z0-9]+-fedes-projects-5891bd50\.vercel\.app",
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
@@ -1132,7 +1212,17 @@ def _scored_to_out(sf: ScoredFlight, cabin: str = "economy", return_date: str = 
 
 
 def _get_client_ip(request: Request) -> str:
-    if TRUST_PROXY:
+    if _has_internal_auth(request):
+        internal_ip = (request.headers.get("X-End-User-IP") or "").strip()
+        if internal_ip:
+            try:
+                _ipaddress.ip_address(internal_ip)
+                return internal_ip
+            except ValueError:
+                pass
+
+    direct_ip = request.client.host if request.client else "unknown"
+    if _ip_in_trusted_proxy_ranges(direct_ip):
         forwarded_for = request.headers.get("x-forwarded-for", "")
         if forwarded_for:
             ip_str = forwarded_for.split(",")[0].strip()
@@ -1148,7 +1238,7 @@ def _get_client_ip(request: Request) -> str:
                 return real_ip
             except ValueError:
                 pass
-    return request.client.host if request.client else "unknown"
+    return direct_ip
 
 
 def _run_scan(
@@ -1546,8 +1636,14 @@ def _build_summary(flights: list[dict], currency: str) -> dict:
 # Endpoints
 # ---------------------------------------------------------------------------
 @app.post("/api/parse", response_model=ParsedSearch)
-async def parse_search(req: PromptRequest):
+async def parse_search(req: PromptRequest, request: Request):
     """Parse a natural language prompt into structured search params (no search executed)."""
+    _require_public_parse_access(request)
+    await _check_rate_limit(
+        _get_client_ip(request),
+        prefix=f"{RATE_LIMIT_PREFIX}:parse",
+        label="parse requests",
+    )
     parsed = await parse_prompt(req.prompt)
     total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"])
     names = _airport_names(parsed["origins"] + parsed["destinations"])
@@ -1567,6 +1663,7 @@ async def parse_search(req: PromptRequest):
 @app.post("/api/search")
 async def search_flights(req: PromptRequest, request: Request):
     """Parse prompt with AI, then stream search progress via SSE."""
+    _require_internal_request(request)
     api_key = _extract_api_key(request)
     if api_key and API_KEYS:
         if not _validate_api_key(api_key):
@@ -1584,340 +1681,353 @@ async def search_flights(req: PromptRequest, request: Request):
     _stream_ip = _get_client_ip(request)
     if not await _incr_streams(_stream_ip):
         raise HTTPException(429, "Too many concurrent searches.", headers={"Retry-After": "5"})
+    stream_released = False
 
-    # PostHog: track search start
-    _search_start = time.time()
-    _anon = _anonymous_id(_get_client_ip(request))
-    _capture(_anon, "server_search_started", {
-        "prompt_length": len(req.prompt),
-        "currency": req.currency,
-        "locale": req.locale,
-    })
+    async def _release_stream_once() -> None:
+        nonlocal stream_released
+        if stream_released:
+            return
+        stream_released = True
+        await _decr_streams(_stream_ip)
 
-    # Step 1: Parse with Gemini (fallback to client-side parsed data if AI fails)
-    used_fallback = False
     try:
-        parsed = await parse_prompt(req.prompt)
-    except HTTPException:
-        fb = req.fallback_parsed
-        if fb and fb.origins and fb.destinations and fb.dates:
-            log.info("Gemini failed, using client-side fallback: %s origins, %s dests, %s dates",
-                     len(fb.origins), len(fb.destinations), len(fb.dates))
-            valid_origins = [c.upper()[:3] for c in fb.origins if c.upper()[:3] in _VALID_IATA]
-            valid_dests = [c.upper()[:3] for c in fb.destinations if c.upper()[:3] in _VALID_IATA]
-            if not valid_origins or not valid_dests:
-                await _decr_streams(_stream_ip)
-                raise HTTPException(status_code=502, detail=PARSE_ERROR_USER)
-            today_dt = date.today()
-            max_dt = today_dt + timedelta(days=365)
-            valid_dates = []
-            for d in fb.dates:
-                try:
-                    dt = date.fromisoformat(str(d))
-                    if today_dt <= dt <= max_dt:
-                        valid_dates.append(dt.isoformat())
-                except (ValueError, TypeError):
-                    pass
-            if not valid_dates:
-                await _decr_streams(_stream_ip)
-                raise HTTPException(status_code=400, detail="No valid future dates provided.")
-            valid_return = []
-            for d in (fb.return_dates or []):
-                try:
-                    dt = date.fromisoformat(str(d))
-                    if today_dt <= dt <= max_dt:
-                        valid_return.append(dt.isoformat())
-                except (ValueError, TypeError):
-                    pass
-            parsed = {
-                "origins": valid_origins[:MAX_ORIGINS],
-                "destinations": valid_dests[:MAX_DESTINATIONS],
-                "dates": valid_dates[:21],
-                "return_dates": valid_return[:21],
-                "max_price": 0,
-                "currency": "EUR",
-                "cabin": "economy",
-                "stops": "any",
-                "safe_only": False,
-            }
-            used_fallback = True
-        else:
-            await _decr_streams(_stream_ip)
-            raise HTTPException(status_code=502, detail=PARSE_ERROR_USER)
-
-    # Apply user's currency preference if prompt didn't specify one
-    if req.currency and parsed.get("currency", "EUR") == "EUR":
-        user_cur = req.currency.upper()[:3]
-        if user_cur in VALID_CURRENCIES:
-            parsed["currency"] = user_cur
-
-    total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"])
-
-    return_dates = parsed.get("return_dates", [])
-    # Fix 5: Return dates must be after the last departure date
-    return_date_warning: str | None = None
-    if return_dates and parsed.get("dates"):
-        last_departure = max(parsed["dates"])
-        filtered_return = [d for d in return_dates if d > last_departure]
-        if not filtered_return:
-            return_date_warning = "Return date is before or same as departure — searching one-way only."
-            return_dates = []
-            parsed["return_dates"] = []
-        elif len(filtered_return) < len(return_dates):
-            return_dates = filtered_return
-            parsed["return_dates"] = filtered_return
-    is_round_trip = len(return_dates) > 0
-    # For round trips: each (origin, dest, outbound_date, return_date) is one combo
-    if is_round_trip:
-        combined_total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"]) * len(return_dates)
-    else:
-        combined_total = total
-
-    # Guard: same origin and destination – remove overlap instead of rejecting
-    overlapping = set(parsed["origins"]) & set(parsed["destinations"])
-    if overlapping:
-        parsed["destinations"] = [d for d in parsed["destinations"] if d not in overlapping]
-        if not parsed["destinations"]:
-            await _decr_streams(_stream_ip)
-            return JSONResponse(
-                status_code=400,
-                content={"detail": "Origin and destination are the same. Please choose different airports."},
-            )
-
-    if combined_total > 100:
-        # Auto-trim to fit under 100 instead of rejecting
-        parsed, combined_total = _trim_to_limit(parsed, return_dates, is_round_trip)
-        return_dates = parsed.get("return_dates", [])
-        is_round_trip = len(return_dates) > 0
-
-    names = _airport_names(parsed["origins"] + parsed["destinations"])
-    parsed_out = ParsedSearch(
-        origins=parsed["origins"],
-        destinations=parsed["destinations"],
-        dates=parsed["dates"],
-        return_dates=return_dates,
-        max_price=parsed.get("max_price", 0),
-        currency=parsed.get("currency", "EUR"),
-        cabin=parsed.get("cabin", "economy"),
-        stops=parsed.get("stops", "any"),
-        safe_only=bool(parsed.get("safe_only", False)),
-        total_routes=combined_total,
-        airport_names=names,
-    )
-
-    _capture(_anon, "server_search_parsed", {
-        "origin_count": len(parsed["origins"]),
-        "destination_count": len(parsed["destinations"]),
-        "date_count": len(parsed["dates"]),
-        "cabin": parsed.get("cabin", "economy"),
-        "currency": parsed.get("currency", "EUR"),
-        "max_price": parsed.get("max_price", 0),
-        "is_round_trip": is_round_trip,
-        "total_routes": combined_total,
-    })
-
-    async def event_stream():
-        # Send parsed params immediately
-        try:
-            parsed_data = parsed_out.model_dump()
-        except Exception:
-            _capture(_anon, "server_search_error", {"error_type": "parse_failure", "duration_ms": int((time.time() - _search_start) * 1000)})
-            yield f"data: {json.dumps({'type': 'error', 'detail': 'Internal error preparing search.'})}\n\n"
-            return
-        parsed_event: dict = {"type": "parsed", "parsed": parsed_data, "workers": min(16, combined_total)}
-        if return_date_warning:
-            parsed_event["warning"] = return_date_warning
-        yield f"data: {json.dumps(parsed_event)}\n\n"
-
-        cancel = threading.Event()
-        progress_q: queue.Queue = queue.Queue()
-
-        filtered_counter: list[int] = [0]
-        partial_results: list = []  # Shared list for streaming preview flights
-
-        def on_progress(done: int, total: int, origin: str, dest: str, dt: str):
-            # Build preview from best partial results so far (deduped)
-            preview = []
-            if partial_results and done < total:
-                if is_round_trip:
-                    # Dedup by (route, date, stops) keeping lowest combined price
-                    deduped: dict[tuple, tuple] = {}
-                    for r in partial_results:
-                        key = (r["outbound"]["route"], r["outbound"].get("date", ""), r["outbound"]["stops"])
-                        combined = r["outbound"]["price"] + r["inbound"]["price"]
-                        if key not in deduped or combined < deduped[key][1]:
-                            deduped[key] = (r, combined)
-                    sorted_deduped = sorted(deduped.values(), key=lambda x: x[1])[:3]
-                    preview = [{"price": r["outbound"]["price"] + r["inbound"]["price"], "currency": r["outbound"].get("currency", "EUR"), "route": r["outbound"]["route"], "duration_minutes": r["outbound"]["duration_minutes"], "stops": r["outbound"]["stops"], "risk_level": r.get("risk_level", "safe"), "risk_details": r.get("risk_details", []), "legs": r["outbound"].get("legs", []), "_combined_price": r["outbound"]["price"] + r["inbound"]["price"]} for r, _ in sorted_deduped]
-                else:
-                    # Dedup by (route, date, stops) keeping lowest score
-                    deduped_ow: dict[tuple, tuple] = {}
-                    for sf in partial_results:
-                        d = _flight_result_to_dict(sf.flight, sf.origin, sf.destination, sf.date, "", "", True)
-                        d["risk_level"] = sf.risk.risk_level.value
-                        d["risk_details"] = [
-                            {"airport": fa.code, "country": fa.country, "zone": fa.zone_name, "risk": fa.risk_level.value}
-                            for fa in sf.risk.flagged_airports
-                        ]
-                        key = (d["route"], d["date"], d["stops"])
-                        if key not in deduped_ow or sf.score < deduped_ow[key][1]:
-                            deduped_ow[key] = (d, sf.score)
-                    sorted_deduped_ow = sorted(deduped_ow.values(), key=lambda x: x[1])[:3]
-                    preview = [d for d, _ in sorted_deduped_ow]
-            msg = {"type": "progress", "done": done, "total": total, "route": f"{origin} -> {dest}", "date": dt, "filtered": filtered_counter[0]}
-            if preview:
-                msg["preview_flights"] = preview
-            progress_q.put(msg)
-
-        # Run scan in thread
-        result_holder: list = []
-        error_holder: list = []
-        outbound_errors: list = []  # Fix 7: track per-combo errors for zero-results reason
-
-        if is_round_trip:
-            def run():
-                try:
-                    result_holder.append(_run_round_trip_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors, partial_results=partial_results))
-                except Exception as e:
-                    error_holder.append(str(e))
-                finally:
-                    progress_q.put(None)
-        else:
-            def run():
-                try:
-                    result_holder.append(_run_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors, partial_results=partial_results))
-                except Exception as e:
-                    error_holder.append(str(e))
-                finally:
-                    progress_q.put(None)  # sentinel
-
-        thread = threading.Thread(target=run, daemon=True)
-        thread.start()
-
-        # Stream progress events with keepalive (max 300s total)
-        scan_start = time.time()
-        try:
-            while True:
-                if time.time() - scan_start > 300:
-                    cancel.set()
-                    _capture(_anon, "server_search_error", {"error_type": "timeout", "duration_ms": int((time.time() - _search_start) * 1000)})
-                    yield f"data: {json.dumps({'type': 'error', 'detail': 'Search timed out after 5 minutes. Try a narrower search.'})}\n\n"
-                    thread.join(timeout=5)
-                    return
-                try:
-                    msg = progress_q.get(timeout=2.0)
-                except queue.Empty:
-                    if await request.is_disconnected():
-                        cancel.set()
-                        break
-                    yield ": keepalive\n\n"
-                    continue
-                if msg is None:
-                    break
-                yield f"data: {json.dumps(msg)}\n\n"
-        finally:
-            cancel.set()
-            thread.join(timeout=10)
-            await _decr_streams(_stream_ip)
-
-        if error_holder:
-            error_id = str(uuid4())[:8]
-            log.error("Search worker failed [%s]: %s", error_id, error_holder[0])
-            _capture(_anon, "server_search_error", {"error_type": "worker_error", "duration_ms": int((time.time() - _search_start) * 1000)})
-            yield f"data: {json.dumps({'type': 'error', 'detail': f'Search failed. Reference: {error_id}'})}\n\n"
-            return
-
-        cabin = parsed.get("cabin", "economy")
-        warning = zones_age_warning()
-        outbound_error_count = len(outbound_errors)
-        no_results_reason: str | None = None
-        cache_age_seconds: int | None = None
-
-        if is_round_trip:
-            # Round-trip: results are already paired by _run_round_trip_scan
-            rt_raw, rt_cache_age = result_holder[0] if result_holder else ([], None)
-            cache_age_seconds = rt_cache_age
-            rt_results: list[dict] = rt_raw
-            # Post-search safe_only filter for round trips
-            if parsed.get("safe_only"):
-                rt_results = [r for r in rt_results if r.get("risk_level") == "safe"]
-            round_trip_results = rt_results[:20]
-            # Derive outbound flights for summary purposes
-            flights = [r["outbound"] for r in rt_results[:10]]
-            total_count = len(round_trip_results)
-            summary = None  # summary not applicable for paired round trips
-            if not round_trip_results:
-                no_results_reason = "provider_error" if outbound_error_count > 0 else "no_routes"
-            result_data: dict = {
-                "type": "results",
-                "flights": flights,
-                "round_trip_results": round_trip_results,
-                "count": total_count,
-                "remaining_searches": remaining,
-                "zones_warning": warning,
-                "summary": summary,
-            }
-        else:
-            scored_raw, scan_cache_age = result_holder[0] if result_holder else ([], None)
-            cache_age_seconds = scan_cache_age
-            scored = scored_raw
-
-            def _process_flights(scored_list):
-                fl = [_scored_to_out(sf, cabin=cabin).model_dump() for sf in scored_list]
-                priced = [f for f in fl if f["price"] > 0]
-                fl = priced if priced else fl
-                fl = _filter_price_anomalies(fl)
-                seen: dict[tuple, dict] = {}
-                for f in fl:
-                    key = (f["route"], f["date"], f["stops"])
-                    if key not in seen or f["price"] < seen[key]["price"]:
-                        seen[key] = f
-                return sorted(seen.values(), key=lambda x: x["score"])
-
-            flights = _process_flights(scored)
-            # Count how many flights will be filtered for safety reasons
-            filter_levels = ("high_risk", "do_not_fly", "caution") if parsed.get("safe_only") else ("high_risk", "do_not_fly")
-            safety_filtered_count = sum(1 for f in flights if f.get("risk_level") in filter_levels)
-            # Post-search safe_only filter: remove non-safe flights even from cache
-            if parsed.get("safe_only"):
-                flights = [f for f in flights if f.get("risk_level") == "safe"]
-            # C8: when every result is high_risk, suppress them and emit safety_filtered
-            if flights and all(f.get("risk_level") == "high_risk" for f in flights):
-                no_results_reason = "safety_filtered"
-                flights = []
-            elif not flights:
-                no_results_reason = "provider_error" if outbound_error_count > 0 else "no_routes"
-            total_count = len(flights)
-            summary = _build_summary(flights, parsed.get("currency", "EUR"))
-            all_codes = list(_collect_all_airport_codes(flights[:20]))
-            result_data = {
-                "type": "results",
-                "flights": flights[:20],
-                "count": total_count,
-                "remaining_searches": remaining,
-                "zones_warning": warning,
-                "summary": summary,
-                "safety_filtered_count": safety_filtered_count,
-                "airport_names": _airport_names(all_codes),
-                "airport_countries": _airport_countries(all_codes),
-            }
-
-        if no_results_reason:
-            result_data["no_results_reason"] = no_results_reason
-        if return_date_warning:
-            result_data["warning"] = return_date_warning
-        if cache_age_seconds is not None:
-            result_data["cache_age_seconds"] = cache_age_seconds
-
-        _capture(_anon, "server_search_results", {
-            "flight_count": result_data.get("count", 0),
-            "round_trip_count": len(result_data.get("round_trip_results", [])),
-            "safety_filtered_count": result_data.get("safety_filtered_count", 0),
-            "duration_ms": int((time.time() - _search_start) * 1000),
+        # PostHog: track search start
+        _search_start = time.time()
+        _anon = _anonymous_id(_get_client_ip(request))
+        _capture(_anon, "server_search_started", {
+            "prompt_length": len(req.prompt),
+            "currency": req.currency,
+            "locale": req.locale,
         })
-        yield f"data: {json.dumps(result_data)}\n\n"
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+        # Step 1: Parse with Gemini (fallback to client-side parsed data if AI fails)
+        used_fallback = False
+        try:
+            parsed = await parse_prompt(req.prompt)
+        except HTTPException:
+            fb = req.fallback_parsed
+            if fb and fb.origins and fb.destinations and fb.dates:
+                log.info("Gemini failed, using client-side fallback: %s origins, %s dests, %s dates",
+                         len(fb.origins), len(fb.destinations), len(fb.dates))
+                valid_origins = [c.upper()[:3] for c in fb.origins if c.upper()[:3] in _VALID_IATA]
+                valid_dests = [c.upper()[:3] for c in fb.destinations if c.upper()[:3] in _VALID_IATA]
+                if not valid_origins or not valid_dests:
+                    await _release_stream_once()
+                    raise HTTPException(status_code=502, detail=PARSE_ERROR_USER)
+                today_dt = date.today()
+                max_dt = today_dt + timedelta(days=365)
+                valid_dates = []
+                for d in fb.dates:
+                    try:
+                        dt = date.fromisoformat(str(d))
+                        if today_dt <= dt <= max_dt:
+                            valid_dates.append(dt.isoformat())
+                    except (ValueError, TypeError):
+                        pass
+                if not valid_dates:
+                    await _release_stream_once()
+                    raise HTTPException(status_code=400, detail="No valid future dates provided.")
+                valid_return = []
+                for d in (fb.return_dates or []):
+                    try:
+                        dt = date.fromisoformat(str(d))
+                        if today_dt <= dt <= max_dt:
+                            valid_return.append(dt.isoformat())
+                    except (ValueError, TypeError):
+                        pass
+                parsed = {
+                    "origins": valid_origins[:MAX_ORIGINS],
+                    "destinations": valid_dests[:MAX_DESTINATIONS],
+                    "dates": valid_dates[:21],
+                    "return_dates": valid_return[:21],
+                    "max_price": 0,
+                    "currency": "EUR",
+                    "cabin": "economy",
+                    "stops": "any",
+                    "safe_only": False,
+                }
+                used_fallback = True
+            else:
+                await _release_stream_once()
+                raise HTTPException(status_code=502, detail=PARSE_ERROR_USER)
+
+        # Apply user's currency preference if prompt didn't specify one
+        if req.currency and parsed.get("currency", "EUR") == "EUR":
+            user_cur = req.currency.upper()[:3]
+            if user_cur in VALID_CURRENCIES:
+                parsed["currency"] = user_cur
+
+        total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"])
+
+        return_dates = parsed.get("return_dates", [])
+        # Fix 5: Return dates must be after the last departure date
+        return_date_warning: str | None = None
+        if return_dates and parsed.get("dates"):
+            last_departure = max(parsed["dates"])
+            filtered_return = [d for d in return_dates if d > last_departure]
+            if not filtered_return:
+                return_date_warning = "Return date is before or same as departure — searching one-way only."
+                return_dates = []
+                parsed["return_dates"] = []
+            elif len(filtered_return) < len(return_dates):
+                return_dates = filtered_return
+                parsed["return_dates"] = filtered_return
+        is_round_trip = len(return_dates) > 0
+        # For round trips: each (origin, dest, outbound_date, return_date) is one combo
+        if is_round_trip:
+            combined_total = len(parsed["origins"]) * len(parsed["destinations"]) * len(parsed["dates"]) * len(return_dates)
+        else:
+            combined_total = total
+
+        # Guard: same origin and destination – remove overlap instead of rejecting
+        overlapping = set(parsed["origins"]) & set(parsed["destinations"])
+        if overlapping:
+            parsed["destinations"] = [d for d in parsed["destinations"] if d not in overlapping]
+            if not parsed["destinations"]:
+                await _release_stream_once()
+                return JSONResponse(
+                    status_code=400,
+                    content={"detail": "Origin and destination are the same. Please choose different airports."},
+                )
+
+        if combined_total > 100:
+            # Auto-trim to fit under 100 instead of rejecting
+            parsed, combined_total = _trim_to_limit(parsed, return_dates, is_round_trip)
+            return_dates = parsed.get("return_dates", [])
+            is_round_trip = len(return_dates) > 0
+
+        names = _airport_names(parsed["origins"] + parsed["destinations"])
+        parsed_out = ParsedSearch(
+            origins=parsed["origins"],
+            destinations=parsed["destinations"],
+            dates=parsed["dates"],
+            return_dates=return_dates,
+            max_price=parsed.get("max_price", 0),
+            currency=parsed.get("currency", "EUR"),
+            cabin=parsed.get("cabin", "economy"),
+            stops=parsed.get("stops", "any"),
+            safe_only=bool(parsed.get("safe_only", False)),
+            total_routes=combined_total,
+            airport_names=names,
+        )
+
+        _capture(_anon, "server_search_parsed", {
+            "origin_count": len(parsed["origins"]),
+            "destination_count": len(parsed["destinations"]),
+            "date_count": len(parsed["dates"]),
+            "cabin": parsed.get("cabin", "economy"),
+            "currency": parsed.get("currency", "EUR"),
+            "max_price": parsed.get("max_price", 0),
+            "is_round_trip": is_round_trip,
+            "total_routes": combined_total,
+        })
+
+        async def event_stream():
+            nonlocal stream_released
+            # Send parsed params immediately
+            try:
+                parsed_data = parsed_out.model_dump()
+            except Exception:
+                _capture(_anon, "server_search_error", {"error_type": "parse_failure", "duration_ms": int((time.time() - _search_start) * 1000)})
+                yield f"data: {json.dumps({'type': 'error', 'detail': 'Internal error preparing search.'})}\n\n"
+                return
+            parsed_event: dict = {"type": "parsed", "parsed": parsed_data, "workers": min(16, combined_total)}
+            if return_date_warning:
+                parsed_event["warning"] = return_date_warning
+            yield f"data: {json.dumps(parsed_event)}\n\n"
+
+            cancel = threading.Event()
+            progress_q: queue.Queue = queue.Queue()
+
+            filtered_counter: list[int] = [0]
+            partial_results: list = []  # Shared list for streaming preview flights
+
+            def on_progress(done: int, total: int, origin: str, dest: str, dt: str):
+                # Build preview from best partial results so far (deduped)
+                preview = []
+                if partial_results and done < total:
+                    if is_round_trip:
+                        # Dedup by (route, date, stops) keeping lowest combined price
+                        deduped: dict[tuple, tuple] = {}
+                        for r in partial_results:
+                            key = (r["outbound"]["route"], r["outbound"].get("date", ""), r["outbound"]["stops"])
+                            combined = r["outbound"]["price"] + r["inbound"]["price"]
+                            if key not in deduped or combined < deduped[key][1]:
+                                deduped[key] = (r, combined)
+                        sorted_deduped = sorted(deduped.values(), key=lambda x: x[1])[:3]
+                        preview = [{"price": r["outbound"]["price"] + r["inbound"]["price"], "currency": r["outbound"].get("currency", "EUR"), "route": r["outbound"]["route"], "duration_minutes": r["outbound"]["duration_minutes"], "stops": r["outbound"]["stops"], "risk_level": r.get("risk_level", "safe"), "risk_details": r.get("risk_details", []), "legs": r["outbound"].get("legs", []), "_combined_price": r["outbound"]["price"] + r["inbound"]["price"]} for r, _ in sorted_deduped]
+                    else:
+                        # Dedup by (route, date, stops) keeping lowest score
+                        deduped_ow: dict[tuple, tuple] = {}
+                        for sf in partial_results:
+                            d = _flight_result_to_dict(sf.flight, sf.origin, sf.destination, sf.date, "", "", True)
+                            d["risk_level"] = sf.risk.risk_level.value
+                            d["risk_details"] = [
+                                {"airport": fa.code, "country": fa.country, "zone": fa.zone_name, "risk": fa.risk_level.value}
+                                for fa in sf.risk.flagged_airports
+                            ]
+                            key = (d["route"], d["date"], d["stops"])
+                            if key not in deduped_ow or sf.score < deduped_ow[key][1]:
+                                deduped_ow[key] = (d, sf.score)
+                        sorted_deduped_ow = sorted(deduped_ow.values(), key=lambda x: x[1])[:3]
+                        preview = [d for d, _ in sorted_deduped_ow]
+                msg = {"type": "progress", "done": done, "total": total, "route": f"{origin} -> {dest}", "date": dt, "filtered": filtered_counter[0]}
+                if preview:
+                    msg["preview_flights"] = preview
+                progress_q.put(msg)
+
+            # Run scan in thread
+            result_holder: list = []
+            error_holder: list = []
+            outbound_errors: list = []  # Fix 7: track per-combo errors for zero-results reason
+
+            if is_round_trip:
+                def run():
+                    try:
+                        result_holder.append(_run_round_trip_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors, partial_results=partial_results))
+                    except Exception as e:
+                        error_holder.append(str(e))
+                    finally:
+                        progress_q.put(None)
+            else:
+                def run():
+                    try:
+                        result_holder.append(_run_scan(parsed, progress_cb=on_progress, cancel=cancel, error_counter=outbound_errors, partial_results=partial_results))
+                    except Exception as e:
+                        error_holder.append(str(e))
+                    finally:
+                        progress_q.put(None)  # sentinel
+
+            thread = threading.Thread(target=run, daemon=True)
+            thread.start()
+
+            # Stream progress events with keepalive (max 300s total)
+            scan_start = time.time()
+            try:
+                while True:
+                    if time.time() - scan_start > 300:
+                        cancel.set()
+                        _capture(_anon, "server_search_error", {"error_type": "timeout", "duration_ms": int((time.time() - _search_start) * 1000)})
+                        yield f"data: {json.dumps({'type': 'error', 'detail': 'Search timed out after 5 minutes. Try a narrower search.'})}\n\n"
+                        thread.join(timeout=5)
+                        return
+                    try:
+                        msg = progress_q.get(timeout=2.0)
+                    except queue.Empty:
+                        if await request.is_disconnected():
+                            cancel.set()
+                            break
+                        yield ": keepalive\n\n"
+                        continue
+                    if msg is None:
+                        break
+                    yield f"data: {json.dumps(msg)}\n\n"
+            finally:
+                cancel.set()
+                thread.join(timeout=10)
+                await _release_stream_once()
+
+            if error_holder:
+                error_id = str(uuid4())[:8]
+                log.error("Search worker failed [%s]: %s", error_id, error_holder[0])
+                _capture(_anon, "server_search_error", {"error_type": "worker_error", "duration_ms": int((time.time() - _search_start) * 1000)})
+                yield f"data: {json.dumps({'type': 'error', 'detail': f'Search failed. Reference: {error_id}'})}\n\n"
+                return
+
+            cabin = parsed.get("cabin", "economy")
+            warning = zones_age_warning()
+            outbound_error_count = len(outbound_errors)
+            no_results_reason: str | None = None
+            cache_age_seconds: int | None = None
+
+            if is_round_trip:
+                # Round-trip: results are already paired by _run_round_trip_scan
+                rt_raw, rt_cache_age = result_holder[0] if result_holder else ([], None)
+                cache_age_seconds = rt_cache_age
+                rt_results: list[dict] = rt_raw
+                # Post-search safe_only filter for round trips
+                if parsed.get("safe_only"):
+                    rt_results = [r for r in rt_results if r.get("risk_level") == "safe"]
+                round_trip_results = rt_results[:20]
+                # Derive outbound flights for summary purposes
+                flights = [r["outbound"] for r in rt_results[:10]]
+                total_count = len(round_trip_results)
+                summary = None  # summary not applicable for paired round trips
+                if not round_trip_results:
+                    no_results_reason = "provider_error" if outbound_error_count > 0 else "no_routes"
+                result_data: dict = {
+                    "type": "results",
+                    "flights": flights,
+                    "round_trip_results": round_trip_results,
+                    "count": total_count,
+                    "remaining_searches": remaining,
+                    "zones_warning": warning,
+                    "summary": summary,
+                }
+            else:
+                scored_raw, scan_cache_age = result_holder[0] if result_holder else ([], None)
+                cache_age_seconds = scan_cache_age
+                scored = scored_raw
+
+                def _process_flights(scored_list):
+                    fl = [_scored_to_out(sf, cabin=cabin).model_dump() for sf in scored_list]
+                    priced = [f for f in fl if f["price"] > 0]
+                    fl = priced if priced else fl
+                    fl = _filter_price_anomalies(fl)
+                    seen: dict[tuple, dict] = {}
+                    for f in fl:
+                        key = (f["route"], f["date"], f["stops"])
+                        if key not in seen or f["price"] < seen[key]["price"]:
+                            seen[key] = f
+                    return sorted(seen.values(), key=lambda x: x["score"])
+
+                flights = _process_flights(scored)
+                # Count how many flights will be filtered for safety reasons
+                filter_levels = ("high_risk", "do_not_fly", "caution") if parsed.get("safe_only") else ("high_risk", "do_not_fly")
+                safety_filtered_count = sum(1 for f in flights if f.get("risk_level") in filter_levels)
+                # Post-search safe_only filter: remove non-safe flights even from cache
+                if parsed.get("safe_only"):
+                    flights = [f for f in flights if f.get("risk_level") == "safe"]
+                # C8: when every result is high_risk, suppress them and emit safety_filtered
+                if flights and all(f.get("risk_level") == "high_risk" for f in flights):
+                    no_results_reason = "safety_filtered"
+                    flights = []
+                elif not flights:
+                    no_results_reason = "provider_error" if outbound_error_count > 0 else "no_routes"
+                total_count = len(flights)
+                summary = _build_summary(flights, parsed.get("currency", "EUR"))
+                all_codes = list(_collect_all_airport_codes(flights[:20]))
+                result_data = {
+                    "type": "results",
+                    "flights": flights[:20],
+                    "count": total_count,
+                    "remaining_searches": remaining,
+                    "zones_warning": warning,
+                    "summary": summary,
+                    "safety_filtered_count": safety_filtered_count,
+                    "airport_names": _airport_names(all_codes),
+                    "airport_countries": _airport_countries(all_codes),
+                }
+
+            if no_results_reason:
+                result_data["no_results_reason"] = no_results_reason
+            if return_date_warning:
+                result_data["warning"] = return_date_warning
+            if cache_age_seconds is not None:
+                result_data["cache_age_seconds"] = cache_age_seconds
+
+            _capture(_anon, "server_search_results", {
+                "flight_count": result_data.get("count", 0),
+                "round_trip_count": len(result_data.get("round_trip_results", [])),
+                "safety_filtered_count": result_data.get("safety_filtered_count", 0),
+                "duration_ms": int((time.time() - _search_start) * 1000),
+            })
+            yield f"data: {json.dumps(result_data)}\n\n"
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+    except Exception:
+        await _release_stream_once()
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -2108,6 +2218,7 @@ async def _expand_params(original: ExpandOriginal, prompt: str) -> dict:
 @app.post("/api/expand-search")
 async def expand_search(req: ExpandRequest, request: Request):
     """Expand a previous search with nearby airports, flexible dates, etc."""
+    _require_internal_request(request)
     ip = _get_client_ip(request)
     remaining = await _check_rate_limit(
         ip,
@@ -2121,6 +2232,14 @@ async def expand_search(req: ExpandRequest, request: Request):
     _stream_ip_expand = _get_client_ip(request)
     if not await _incr_streams(_stream_ip_expand):
         raise HTTPException(429, "Too many concurrent searches.", headers={"Retry-After": "5"})
+    stream_released = False
+
+    async def _release_stream_once() -> None:
+        nonlocal stream_released
+        if stream_released:
+            return
+        stream_released = True
+        await _decr_streams(_stream_ip_expand)
 
     _expand_start = time.time()
     _anon_expand = _anonymous_id(ip)
@@ -2129,7 +2248,7 @@ async def expand_search(req: ExpandRequest, request: Request):
     try:
         expanded = await _expand_params(original, req.prompt)
     except Exception:
-        await _decr_streams(_stream_ip_expand)
+        await _release_stream_once()
         raise
 
     # CRITICAL: Include original airports to enable cross-route matching.
@@ -2165,6 +2284,7 @@ async def expand_search(req: ExpandRequest, request: Request):
         expanded["destinations"] = [d for d in expanded["destinations"] if d not in overlapping]
 
     if not expanded["destinations"]:
+        await _release_stream_once()
         return JSONResponse(status_code=400, content={"detail": "No new airports to expand to."})
 
     if combined_total > 100:
@@ -2252,7 +2372,7 @@ async def expand_search(req: ExpandRequest, request: Request):
         finally:
             cancel.set()
             thread.join(timeout=10)
-            await _decr_streams(_stream_ip_expand)
+            await _release_stream_once()
 
         if error_holder:
             yield f"data: {json.dumps({'type': 'error', 'detail': 'Expansion search failed.'})}\n\n"
@@ -2302,7 +2422,11 @@ async def expand_search(req: ExpandRequest, request: Request):
         })
         yield f"data: {json.dumps(result_data)}\n\n"
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    try:
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+    except Exception:
+        await _release_stream_once()
+        raise
 
 
 @app.get("/api/zones", response_model=ZonesResponse)
@@ -2321,15 +2445,25 @@ async def healthz():
 @app.get("/api/readyz")
 async def readyz():
     """Readiness probe: critical dependencies are available."""
-    ready = _zones_loaded and (_get_gemini_key() or not REQUIRE_GEMINI_KEY)
+    redis_required = bool(REDIS_URL) and not ALLOW_RATE_LIMIT_FALLBACK
+    redis_connected = False
     if REDIS_URL and redis_client:
         try:
-            ready = ready and bool(await redis_client.ping())
+            redis_connected = bool(await redis_client.ping())
         except RedisError:
-            ready = False
+            redis_connected = False
+    ready = _zones_loaded and (_get_gemini_key() or not REQUIRE_GEMINI_KEY)
+    if REDIS_URL:
+        ready = ready and (redis_connected or not redis_required)
+    checks = {
+        "zones_loaded": _zones_loaded,
+        "gemini_configured": bool(_get_gemini_key() or not REQUIRE_GEMINI_KEY),
+        "redis_required": redis_required,
+        "redis_connected": redis_connected,
+    }
     if not ready:
-        raise HTTPException(status_code=503)
-    return {"status": "ready"}
+        raise HTTPException(status_code=503, detail={"status": "not_ready", "checks": checks})
+    return {"status": "ready", "checks": checks}
 
 
 # ---------------------------------------------------------------------------
@@ -2343,18 +2477,36 @@ def _currency_symbol(c: str) -> str:
     return {"EUR": "\u20ac", "USD": "$", "GBP": "\u00a3"}.get(c, c)
 
 
+def _send_resend_email(to: str, subject: str, html: str) -> None:
+    if not RESEND_API_KEY:
+        return
+    try:
+        httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+            json={
+                "from": FROM_EMAIL,
+                "to": [to],
+                "subject": _safe_subject(subject),
+                "html": html,
+            },
+            timeout=10,
+        )
+    except Exception as exc:
+        log.warning("Email send failed for %s: %s", _mask_email(to), exc)
+
+
 def _send_confirmation_email(
     to: str, query: str, currency: str, max_price: float,
-    current_price: float | None, unsub_token: str,
+    current_price: float | None, confirm_token: str,
 ) -> None:
-    """Send confirmation email via Resend (fire-and-forget, non-blocking)."""
+    """Send double opt-in email via Resend (fire-and-forget, non-blocking)."""
     if not RESEND_API_KEY:
         return
     sym = _currency_symbol(currency)
     encoded_q = urllib.parse.quote(query)
     flyfast_url = f"https://flyfast.app/?q={encoded_q}&ref=alert_email&utm_source=alert_confirmation"
-    unsub_url = f"https://api.flyfast.app/api/alerts/unsubscribe/{unsub_token}"
-
+    confirm_url = f"https://api.flyfast.app/api/alerts/confirm/{confirm_token}"
     safe_query = html_escape(query.replace("\n", " ").replace("\r", " "))
     price_line = ""
     if current_price and current_price > 0:
@@ -2368,36 +2520,23 @@ def _send_confirmation_email(
     <h1 style="margin:0;font-size:20px;font-weight:700">FlyFast</h1>
   </div>
   <div style="padding:24px 0">
-    <h2 style="margin:0 0 8px;font-size:18px">Alert set: {safe_query}</h2>
+    <h2 style="margin:0 0 8px;font-size:18px">Confirm your alert</h2>
     <p style="margin:0 0 12px;color:#6b7280;font-size:14px">
-      We'll notify you when prices drop{f' below <strong>{sym}{max_price:.0f}</strong>' if max_price > 0 else ''}.
+      Confirm that you want price alerts for <strong>{safe_query}</strong>{f' below <strong>{sym}{max_price:.0f}</strong>' if max_price > 0 else ''}.
     </p>
     {price_line}
-    <a href="{flyfast_url}" style="display:inline-block;padding:12px 24px;background:#f97316;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
-      View current prices on FlyFast
+    <a href="{confirm_url}" style="display:inline-block;padding:12px 24px;background:#f97316;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+      Confirm this alert
     </a>
+    <p style="margin:16px 0 0;color:#6b7280;font-size:13px">If this wasn't you, you can ignore this email.</p>
   </div>
   <div style="padding:16px 0;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;text-align:center">
-    Alert active for 90 days. Daily price checks.<br>
-    <a href="{unsub_url}" style="color:#9ca3af">Unsubscribe</a>
+    Confirmation expires in 24 hours.<br>
+    <a href="{flyfast_url}" style="color:#9ca3af">View FlyFast</a>
   </div>
 </body>
 </html>"""
-
-    try:
-        httpx.post(
-            "https://api.resend.com/emails",
-            headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
-            json={
-                "from": FROM_EMAIL,
-                "to": [to],
-                "subject": _safe_subject(f"Alert set: {query}"),
-                "html": html,
-            },
-            timeout=10,
-        )
-    except Exception as exc:
-        log.warning("Confirmation email failed for %s: %s", _mask_email(to), exc)
+    _send_resend_email(to, f"Confirm your FlyFast alert: {query}", html)
 
 
 class AlertCreate(BaseModel):
@@ -2415,6 +2554,7 @@ class AlertCreate(BaseModel):
 
 @app.post("/api/alerts")
 async def create_alert(body: AlertCreate, request: Request):
+    _require_internal_request(request)
     ip = _get_client_ip(request)
     await _check_rate_limit(ip, limit=RATE_LIMIT_ALERTS, prefix=f"{RATE_LIMIT_PREFIX}:alerts", store=_alert_create_log, label="alert creations")
     if not _EMAIL_RE.match(body.email):
@@ -2441,7 +2581,7 @@ async def create_alert(body: AlertCreate, request: Request):
     conn = _alerts_db()
     try:
         active_count = conn.execute(
-            "SELECT COUNT(*) FROM alerts WHERE email = ? AND is_active = 1 AND expires_at > datetime('now')",
+            "SELECT COUNT(*) FROM alerts WHERE email = ? AND is_active = 1 AND confirmed_at IS NOT NULL AND expires_at > datetime('now')",
             (body.email.lower(),),
         ).fetchone()[0]
         if active_count >= MAX_ALERTS_PER_EMAIL:
@@ -2449,12 +2589,16 @@ async def create_alert(body: AlertCreate, request: Request):
 
         alert_id = uuid4().hex[:12]
         unsub_token = uuid4().hex
+        confirm_token = uuid4().hex
         now = datetime.now(timezone.utc).isoformat()
         expires = (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()
 
         conn.execute(
-            """INSERT INTO alerts (id, email, query, origins, destinations, max_price, currency, cabin, is_round_trip, created_at, expires_at, unsubscribe_token)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO alerts (
+                   id, email, query, origins, destinations, max_price, currency, cabin,
+                   is_round_trip, created_at, expires_at, unsubscribe_token, is_active,
+                   confirm_token, confirmation_sent_at
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 alert_id,
                 body.email.lower(),
@@ -2468,6 +2612,9 @@ async def create_alert(body: AlertCreate, request: Request):
                 now,
                 expires,
                 unsub_token,
+                0,
+                confirm_token,
+                now,
             ),
         )
         conn.commit()
@@ -2477,21 +2624,98 @@ async def create_alert(body: AlertCreate, request: Request):
     # Fire-and-forget confirmation email (threaded to avoid blocking event loop)
     threading.Thread(
         target=_send_confirmation_email,
-        args=(body.email.lower(), clean_query, body.currency.upper(), body.max_price, body.current_price, unsub_token),
+        args=(body.email.lower(), clean_query, body.currency.upper(), body.max_price, body.current_price, confirm_token),
         daemon=True,
     ).start()
 
-    return {"id": alert_id, "message": "Alert created. We'll email you when prices drop."}
+    return {"id": alert_id, "message": "Check your email to confirm this alert."}
+
+
+@app.get("/api/alerts/confirm/{token}")
+async def confirm_alert_get(token: str):
+    conn = _alerts_db()
+    try:
+        row = conn.execute("SELECT id, query, confirmed_at FROM alerts WHERE confirm_token = ?", (token,)).fetchone()
+        if not row:
+            return HTMLResponse("<html><body><h2>Confirmation link not found</h2><p>This link may have expired.</p></body></html>", status_code=404)
+        if row["confirmed_at"]:
+            return HTMLResponse(
+                "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
+                "<h2>Alert already confirmed</h2>"
+                f"<p>Your alert for <strong>{html_escape(row['query'])}</strong> is already active.</p>"
+                "<p><a href='https://flyfast.app'>Back to FlyFast</a></p>"
+                "</body></html>"
+            )
+    finally:
+        conn.close()
+
+    return HTMLResponse(
+        "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
+        "<h2>Confirm alert</h2>"
+        f"<p>Activate price alerts for: <strong>{html_escape(row['query'])}</strong></p>"
+        f"<form method='post' action='/api/alerts/confirm/{token}'><button style='padding:10px 18px;border-radius:8px;border:none;background:#f97316;color:#fff;font-weight:600;cursor:pointer'>Confirm alert</button></form>"
+        "<p style='margin-top:16px'><a href='https://flyfast.app'>Back to FlyFast</a></p>"
+        "</body></html>"
+    )
+
+
+@app.post("/api/alerts/confirm/{token}")
+async def confirm_alert_post(token: str):
+    conn = _alerts_db()
+    try:
+        row = conn.execute("SELECT id, query, confirmed_at FROM alerts WHERE confirm_token = ?", (token,)).fetchone()
+        if not row:
+            return HTMLResponse("<html><body><h2>Confirmation link not found</h2><p>This link may have expired.</p></body></html>", status_code=404)
+        if not row["confirmed_at"]:
+            now = datetime.now(timezone.utc).isoformat()
+            conn.execute(
+                "UPDATE alerts SET is_active = 1, confirmed_at = ?, confirm_token = NULL WHERE confirm_token = ?",
+                (now, token),
+            )
+            conn.commit()
+    finally:
+        conn.close()
+
+    return HTMLResponse(
+        "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
+        "<h2>Alert confirmed</h2>"
+        f"<p>We'll watch prices for: <strong>{html_escape(row['query'])}</strong></p>"
+        "<p><a href='https://flyfast.app'>Back to FlyFast</a></p>"
+        "</body></html>"
+    )
 
 
 @app.get("/api/alerts/unsubscribe/{token}")
-async def unsubscribe_alert(token: str):
+async def unsubscribe_alert_get(token: str):
     conn = _alerts_db()
     try:
         row = conn.execute("SELECT id, query FROM alerts WHERE unsubscribe_token = ?", (token,)).fetchone()
         if not row:
             return HTMLResponse("<html><body><h2>Alert not found</h2><p>This link may have expired.</p></body></html>", status_code=404)
-        conn.execute("UPDATE alerts SET is_active = 0 WHERE unsubscribe_token = ?", (token,))
+    finally:
+        conn.close()
+
+    return HTMLResponse(
+        "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
+        "<h2>Cancel alert</h2>"
+        f"<p>Stop emails for: <strong>{html_escape(row['query'])}</strong></p>"
+        f"<form method='post' action='/api/alerts/unsubscribe/{token}'><button style='padding:10px 18px;border-radius:8px;border:none;background:#f97316;color:#fff;font-weight:600;cursor:pointer'>Unsubscribe</button></form>"
+        "<p style='margin-top:16px'><a href='https://flyfast.app'>Back to FlyFast</a></p>"
+        "</body></html>"
+    )
+
+
+@app.post("/api/alerts/unsubscribe/{token}")
+async def unsubscribe_alert_post(token: str):
+    conn = _alerts_db()
+    try:
+        row = conn.execute("SELECT id, query FROM alerts WHERE unsubscribe_token = ?", (token,)).fetchone()
+        if not row:
+            return HTMLResponse("<html><body><h2>Alert not found</h2><p>This link may have expired.</p></body></html>", status_code=404)
+        conn.execute(
+            "UPDATE alerts SET is_active = 0, unsubscribed_at = ? WHERE unsubscribe_token = ?",
+            (datetime.now(timezone.utc).isoformat(), token),
+        )
         conn.commit()
     finally:
         conn.close()
@@ -2534,10 +2758,10 @@ class ZoneAlertCreate(BaseModel):
     zones: list[str] = Field(..., min_length=1, max_length=19)
 
 
-def _send_zone_alert_confirmation(to: str, zone_names: list[str], unsub_token: str) -> None:
+def _send_zone_alert_confirmation(to: str, zone_names: list[str], confirm_token: str) -> None:
     if not RESEND_API_KEY:
         return
-    unsub_url = f"https://api.flyfast.app/api/zone-alerts/unsubscribe/{unsub_token}"
+    confirm_url = f"https://api.flyfast.app/api/zone-alerts/confirm/{confirm_token}"
     zone_list_html = "".join(f"<li>{html_escape(z)}</li>" for z in zone_names)
 
     html = f"""<!DOCTYPE html>
@@ -2548,40 +2772,28 @@ def _send_zone_alert_confirmation(to: str, zone_names: list[str], unsub_token: s
     <h1 style="margin:0;font-size:20px;font-weight:700">FlyFast</h1>
   </div>
   <div style="padding:24px 0">
-    <h2 style="margin:0 0 8px;font-size:18px">Conflict zone alert active</h2>
+    <h2 style="margin:0 0 8px;font-size:18px">Confirm conflict zone alert</h2>
     <p style="margin:0 0 12px;color:#6b7280;font-size:14px">
-      You'll be notified when the risk level changes for:
+      Confirm that you want risk-change alerts for:
     </p>
     <ul style="margin:0 0 16px;padding-left:20px;color:#374151;font-size:14px">{zone_list_html}</ul>
-    <a href="https://flyfast.app/safety" style="display:inline-block;padding:12px 24px;background:#f97316;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
-      View conflict zone map
+    <a href="{confirm_url}" style="display:inline-block;padding:12px 24px;background:#f97316;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+      Confirm this alert
     </a>
+    <p style="margin:16px 0 0;color:#6b7280;font-size:13px">If this wasn't you, you can ignore this email.</p>
   </div>
   <div style="padding:16px 0;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;text-align:center">
-    Alert active for 180 days.<br>
-    <a href="{unsub_url}" style="color:#9ca3af">Unsubscribe</a>
+    Confirmation expires in 24 hours.<br>
+    <a href="https://flyfast.app/safety" style="color:#9ca3af">View conflict zone map</a>
   </div>
 </body>
 </html>"""
-
-    try:
-        httpx.post(
-            "https://api.resend.com/emails",
-            headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
-            json={
-                "from": FROM_EMAIL,
-                "to": [to],
-                "subject": _safe_subject(f"Zone alert active: {', '.join(zone_names[:3])}{'...' if len(zone_names) > 3 else ''}"),
-                "html": html,
-            },
-            timeout=10,
-        )
-    except Exception as exc:
-        log.warning("Zone alert confirmation email failed for %s: %s", _mask_email(to), exc)
+    _send_resend_email(to, f"Confirm your FlyFast zone alert: {', '.join(zone_names[:3])}", html)
 
 
 @app.post("/api/zone-alerts")
 async def create_zone_alert(body: ZoneAlertCreate, request: Request):
+    _require_internal_request(request)
     ip = _get_client_ip(request)
     await _check_rate_limit(ip, limit=RATE_LIMIT_ALERTS, prefix=f"{RATE_LIMIT_PREFIX}:zone-alerts", store=_alert_create_log, label="alert creations")
     if not _EMAIL_RE.match(body.email):
@@ -2595,7 +2807,7 @@ async def create_zone_alert(body: ZoneAlertCreate, request: Request):
     conn = _alerts_db()
     try:
         active_count = conn.execute(
-            "SELECT COUNT(*) FROM zone_alerts WHERE email = ? AND is_active = 1 AND expires_at > datetime('now')",
+            "SELECT COUNT(*) FROM zone_alerts WHERE email = ? AND is_active = 1 AND confirmed_at IS NOT NULL AND expires_at > datetime('now')",
             (body.email.lower(),),
         ).fetchone()[0]
         if active_count >= MAX_ZONE_ALERTS_PER_EMAIL:
@@ -2603,13 +2815,16 @@ async def create_zone_alert(body: ZoneAlertCreate, request: Request):
 
         alert_id = uuid4().hex[:12]
         unsub_token = uuid4().hex
+        confirm_token = uuid4().hex
         now = datetime.now(timezone.utc).isoformat()
         expires = (datetime.now(timezone.utc) + timedelta(days=180)).isoformat()
 
         conn.execute(
-            """INSERT INTO zone_alerts (id, email, zones, created_at, expires_at, unsubscribe_token)
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (alert_id, body.email.lower(), json.dumps(body.zones), now, expires, unsub_token),
+            """INSERT INTO zone_alerts (
+                   id, email, zones, created_at, expires_at, unsubscribe_token, is_active,
+                   confirm_token, confirmation_sent_at
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (alert_id, body.email.lower(), json.dumps(body.zones), now, expires, unsub_token, 0, confirm_token, now),
         )
         conn.commit()
     finally:
@@ -2618,21 +2833,104 @@ async def create_zone_alert(body: ZoneAlertCreate, request: Request):
     zone_names = [ZONE_DISPLAY_NAMES.get(z, z) for z in body.zones]
     threading.Thread(
         target=_send_zone_alert_confirmation,
-        args=(body.email.lower(), zone_names, unsub_token),
+        args=(body.email.lower(), zone_names, confirm_token),
         daemon=True,
     ).start()
 
-    return {"id": alert_id, "message": f"Zone alert created for {len(body.zones)} zone(s). Check your email for confirmation."}
+    return {"id": alert_id, "message": f"Check your email to confirm alerts for {len(body.zones)} zone(s)."}
+
+
+@app.get("/api/zone-alerts/confirm/{token}")
+async def confirm_zone_alert_get(token: str):
+    conn = _alerts_db()
+    try:
+        row = conn.execute("SELECT id, zones, confirmed_at FROM zone_alerts WHERE confirm_token = ?", (token,)).fetchone()
+        if not row:
+            return HTMLResponse("<html><body><h2>Confirmation link not found</h2><p>This link may have expired.</p></body></html>", status_code=404)
+        zone_ids = json.loads(row["zones"])
+        zone_names = [ZONE_DISPLAY_NAMES.get(z, z) for z in zone_ids]
+        if row["confirmed_at"]:
+            return HTMLResponse(
+                "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
+                "<h2>Zone alert already confirmed</h2>"
+                f"<p>Your zone alerts are already active for: <strong>{html_escape(', '.join(zone_names))}</strong></p>"
+                "<p><a href='https://flyfast.app/safety'>Back to conflict zone map</a></p>"
+                "</body></html>"
+            )
+    finally:
+        conn.close()
+
+    return HTMLResponse(
+        "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
+        "<h2>Confirm zone alert</h2>"
+        f"<p>Activate risk-change alerts for: <strong>{html_escape(', '.join(zone_names))}</strong></p>"
+        f"<form method='post' action='/api/zone-alerts/confirm/{token}'><button style='padding:10px 18px;border-radius:8px;border:none;background:#f97316;color:#fff;font-weight:600;cursor:pointer'>Confirm alert</button></form>"
+        "<p style='margin-top:16px'><a href='https://flyfast.app/safety'>Back to conflict zone map</a></p>"
+        "</body></html>"
+    )
+
+
+@app.post("/api/zone-alerts/confirm/{token}")
+async def confirm_zone_alert_post(token: str):
+    conn = _alerts_db()
+    try:
+        row = conn.execute("SELECT id, zones, confirmed_at FROM zone_alerts WHERE confirm_token = ?", (token,)).fetchone()
+        if not row:
+            return HTMLResponse("<html><body><h2>Confirmation link not found</h2><p>This link may have expired.</p></body></html>", status_code=404)
+        zone_ids = json.loads(row["zones"])
+        zone_names = [ZONE_DISPLAY_NAMES.get(z, z) for z in zone_ids]
+        if not row["confirmed_at"]:
+            now = datetime.now(timezone.utc).isoformat()
+            conn.execute(
+                "UPDATE zone_alerts SET is_active = 1, confirmed_at = ?, confirm_token = NULL WHERE confirm_token = ?",
+                (now, token),
+            )
+            conn.commit()
+    finally:
+        conn.close()
+
+    return HTMLResponse(
+        "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
+        "<h2>Zone alert confirmed</h2>"
+        f"<p>We'll notify you about risk changes for: <strong>{html_escape(', '.join(zone_names))}</strong></p>"
+        "<p><a href='https://flyfast.app/safety'>Back to conflict zone map</a></p>"
+        "</body></html>"
+    )
 
 
 @app.get("/api/zone-alerts/unsubscribe/{token}")
-async def unsubscribe_zone_alert(token: str):
+async def unsubscribe_zone_alert_get(token: str):
     conn = _alerts_db()
     try:
         row = conn.execute("SELECT id, zones FROM zone_alerts WHERE unsubscribe_token = ?", (token,)).fetchone()
         if not row:
             return HTMLResponse("<html><body><h2>Alert not found</h2><p>This link may have expired.</p></body></html>", status_code=404)
-        conn.execute("UPDATE zone_alerts SET is_active = 0 WHERE unsubscribe_token = ?", (token,))
+        zone_ids = json.loads(row["zones"])
+        zone_names = [ZONE_DISPLAY_NAMES.get(z, z) for z in zone_ids]
+    finally:
+        conn.close()
+
+    return HTMLResponse(
+        "<html><body style='font-family:system-ui;max-width:480px;margin:40px auto;text-align:center'>"
+        "<h2>Cancel zone alert</h2>"
+        f"<p>Stop updates for: <strong>{html_escape(', '.join(zone_names))}</strong></p>"
+        f"<form method='post' action='/api/zone-alerts/unsubscribe/{token}'><button style='padding:10px 18px;border-radius:8px;border:none;background:#f97316;color:#fff;font-weight:600;cursor:pointer'>Unsubscribe</button></form>"
+        "<p style='margin-top:16px'><a href='https://flyfast.app/safety'>Back to conflict zone map</a></p>"
+        "</body></html>"
+    )
+
+
+@app.post("/api/zone-alerts/unsubscribe/{token}")
+async def unsubscribe_zone_alert_post(token: str):
+    conn = _alerts_db()
+    try:
+        row = conn.execute("SELECT id, zones FROM zone_alerts WHERE unsubscribe_token = ?", (token,)).fetchone()
+        if not row:
+            return HTMLResponse("<html><body><h2>Alert not found</h2><p>This link may have expired.</p></body></html>", status_code=404)
+        conn.execute(
+            "UPDATE zone_alerts SET is_active = 0, unsubscribed_at = ? WHERE unsubscribe_token = ?",
+            (datetime.now(timezone.utc).isoformat(), token),
+        )
         conn.commit()
         zone_ids = json.loads(row["zones"])
         zone_names = [ZONE_DISPLAY_NAMES.get(z, z) for z in zone_ids]

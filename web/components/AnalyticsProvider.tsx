@@ -9,11 +9,12 @@ const STORAGE_KEY = "flyfast_consent";
 const EVENT_NAME = "flyfast_consent_change";
 
 export function AnalyticsProvider() {
-  const [consent, setConsent] = useState<string | null>(null);
+  const [consent, setConsent] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(STORAGE_KEY);
+  });
 
   useEffect(() => {
-    setConsent(localStorage.getItem(STORAGE_KEY));
-
     const onConsentChange = () => {
       setConsent(localStorage.getItem(STORAGE_KEY));
     };

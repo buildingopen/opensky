@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 const STORAGE_KEY = "flyfast_history";
@@ -12,14 +12,15 @@ interface SavedSearch {
 }
 
 export function useSavedSearches() {
-  const [searches, setSearches] = useState<SavedSearch[]>([]);
-
-  useEffect(() => {
+  const [searches, setSearches] = useState<SavedSearch[]>(() => {
+    if (typeof window === "undefined") return [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setSearches(JSON.parse(raw));
-    } catch {}
-  }, []);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const save = (query: string) => {
     const trimmed = query.trim();

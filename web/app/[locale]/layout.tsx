@@ -78,6 +78,7 @@ export default async function RootLayout({
   setRequestLocale(locale);
 
   const messages = await getMessages();
+  const commonMessages = (messages as Record<string, unknown>).common as Record<string, string> | undefined;
   const t = await getTranslations({ locale, namespace: "metadata" });
   const dir = isRtl(locale) ? "rtl" : "ltr";
 
@@ -152,7 +153,7 @@ export default async function RootLayout({
           <AnalyticsProvider />
           <CloudsBackground />
           <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 focus:px-3 focus:py-1.5 focus:bg-[var(--color-interactive)] focus:text-black focus:rounded focus:text-sm focus:font-medium">
-            {(messages as any)?.common?.skipToContent || "Skip to main content"}
+            {commonMessages?.skipToContent || "Skip to main content"}
           </a>
           <SiteHeader />
           {children}

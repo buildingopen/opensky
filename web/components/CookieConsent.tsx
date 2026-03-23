@@ -8,12 +8,12 @@ const EVENT_NAME = "flyfast_consent_change";
 
 export function CookieConsent() {
   const t = useTranslations("consent");
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !localStorage.getItem(STORAGE_KEY);
+  });
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) setVisible(true);
-
     const onConsentChange = () => {
       const val = localStorage.getItem(STORAGE_KEY);
       setVisible(!val);

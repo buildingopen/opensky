@@ -21,9 +21,15 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: INTERNAL_API_TOKEN
+        sync: false
+      - key: ENVIRONMENT
+        value: "production"
       - key: RATE_LIMIT_PER_HOUR
         value: "20"
       - key: REDIS_URL
         sync: false
+      - key: ALLOW_RATE_LIMIT_FALLBACK
+        value: "false"
       - key: RATE_LIMIT_PREFIX
         value: "opensky:ratelimit:staging"

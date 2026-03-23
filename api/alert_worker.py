@@ -26,6 +26,7 @@ RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 DUFFEL_TOKEN = os.environ.get("SKYROUTE_DUFFEL_TOKEN", "")
 FROM_EMAIL = "FlyFast <alerts@flyfast.app>"
 API_BASE = "https://api.flyfast.app"
+CONFIRMATION_TTL_HOURS = 24
 
 
 def _mask_email(email: str) -> str:
@@ -126,10 +127,14 @@ def run() -> None:
 
     # Auto-deactivate expired alerts
     conn.execute("UPDATE alerts SET is_active = 0 WHERE is_active = 1 AND expires_at < datetime('now')")
+    conn.execute(
+        "DELETE FROM alerts WHERE confirmed_at IS NULL AND confirmation_sent_at < datetime('now', ?)",
+        (f"-{CONFIRMATION_TTL_HOURS} hours",),
+    )
     conn.commit()
 
     alerts = conn.execute(
-        "SELECT * FROM alerts WHERE is_active = 1 AND expires_at > datetime('now')"
+        "SELECT * FROM alerts WHERE is_active = 1 AND confirmed_at IS NOT NULL AND expires_at > datetime('now')"
     ).fetchall()
 
     log.info("Found %d active alerts", len(alerts))

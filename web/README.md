@@ -21,6 +21,8 @@ Open `http://localhost:3000`.
 
 ## Environment
 
-- `NEXT_PUBLIC_API_URL` - backend API URL
+- `NEXT_PUBLIC_API_URL` - backend API URL for server-side use
+- `INTERNAL_API_BASE_URL` - backend API URL for Next.js route handlers
+- `INTERNAL_API_TOKEN` - shared secret used by Next.js route handlers when proxying to the API
 - `NEXT_PUBLIC_SITE_URL` - canonical app URL for metadata/sitemap
 - `NEXT_PUBLIC_ZONES_UPDATED_AT` - user-facing safety data freshness label

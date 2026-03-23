@@ -11,7 +11,7 @@ import { useAirlineFilter, AirlineFilterChips, airlineName } from "../../compone
 import { AIRPORTS } from "../../lib/airports";
 import { useCurrency } from "../../components/CurrencyProvider";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = "";
 
 const AIRPORTS_BY_CODE = Object.fromEntries(AIRPORTS.map((a) => [a.iata, a]));
 function flagUrl(iata: string, countries?: Record<string, string>): string | null {
@@ -2356,15 +2356,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
   const [datesExpanded, setDatesExpanded] = useState(false);
   const [originsExpanded, setOriginsExpanded] = useState(false);
   const [destsExpanded, setDestsExpanded] = useState(false);
-  const [showExpandDone, setShowExpandDone] = useState(false);
-  useEffect(() => {
-    if (expandPhase === "done" && expandCount != null && expandCount > 0) {
-      setShowExpandDone(true);
-      const timer = setTimeout(() => setShowExpandDone(false), 4000);
-      return () => clearTimeout(timer);
-    }
-    setShowExpandDone(false);
-  }, [expandPhase, expandCount]);
+  const showExpandDone = expandPhase === "done" && (expandCount ?? 0) > 0;
 
   const originItems = origins.map((o) => airport_names?.[o] ? `${airport_names[o]} (${o})` : o);
   const canExpandOrigins = originItems.length > 2;
@@ -2796,9 +2788,9 @@ function HomePage() {
       const dateRanges = highlightRanges.filter(r => r.type === "date");
       const fbDates = dateRanges.flatMap(r => resolveIsoDates(text.slice(r.start, r.end)));
       if (fbOrigins.length > 0 && fbDests.length > 0 && fbDates.length > 0) {
-        let o = fbOrigins.slice(0, 10);
-        let d = fbDests.slice(0, 20);
-        let dt = [...fbDates];
+        const o = fbOrigins.slice(0, 10);
+        const d = fbDests.slice(0, 20);
+        const dt = [...fbDates];
         while (o.length * d.length * dt.length > 100 && dt.length > 1) dt.pop();
         while (o.length * d.length * dt.length > 100 && d.length > 1) d.pop();
         while (o.length * d.length * dt.length > 100 && o.length > 1) o.pop();
@@ -3568,7 +3560,7 @@ function HomePage() {
             {/* Parsed config chips + expand progress inside */}
             {(() => {
               const items = (tripTab === "roundtrip" && roundTripResults?.length) ? roundTripResults : flights;
-              const safeCount = items.filter((f: any) => f.risk_level === "safe").length;
+              const safeCount = items.filter((f: { risk_level?: string }) => f.risk_level === "safe").length;
               return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} expandPhase={expandPhase} expandProgress={expandProgress} expansionInfo={expansionInfo} expandCount={expandCount} />;
             })()}
 

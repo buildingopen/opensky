@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://eu-assets.i.posthog.com",
-              `connect-src 'self' ${apiOrigin || ""} https://generativelanguage.googleapis.com https://www.google-analytics.com https://eu.i.posthog.com`,
+              "connect-src 'self' https://www.google-analytics.com https://eu.i.posthog.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               `img-src 'self' data: https://images.kiwi.com https://flagcdn.com ${apiOrigin || ""}`,
