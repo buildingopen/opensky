@@ -1,0 +1,22 @@
+{
+  "name": "@flyfast/cli",
+  "version": "0.1.0",
+  "description": "FlyFast CLI - search flights from your terminal",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "flyfast": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@flyfast/client": "0.1.0",
+    "commander": "13.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.10",
+    "typescript": "5.7.3"
+  }
+}
