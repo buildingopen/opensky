@@ -37,6 +37,7 @@ export function SiteFooter() {
             <Link href="/imprint" className="hover:text-[var(--color-text)]">{t("imprint")}</Link>
             <Link href="/methodology" className="hover:text-[var(--color-text)]">{t("methodology")}</Link>
             <Link href="/contact" className="hover:text-[var(--color-text)]">{t("contact")}</Link>
+            <Link href="/api-access" className="hover:text-[var(--color-text)]">{t("api")}</Link>
             <button
               type="button"
               onClick={() => {

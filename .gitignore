@@ -32,3 +32,6 @@ web/.env.local
 api/.env
 benchmark/
 web/wireframe-colors.html
+
+# Packages
+packages/*/dist/

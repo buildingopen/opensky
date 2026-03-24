@@ -14,7 +14,7 @@ function localeAlternates(path: string): Record<string, string> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const pages = ["", "/privacy", "/terms", "/methodology", "/contact", "/imprint"];
+  const pages = ["", "/privacy", "/terms", "/methodology", "/contact", "/imprint", "/api-access"];
   const now = new Date();
 
   const staticPages = pages.flatMap((path) => {

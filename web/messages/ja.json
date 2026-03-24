@@ -36,7 +36,8 @@
     "imprint": "運営者情報",
     "methodology": "検索方法",
     "contact": "お問い合わせ",
-    "cookieSettings": "クッキー設定"
+    "cookieSettings": "クッキー設定",
+    "api": "API"
   },
   "savedSearches": {
     "recentSearches": "最近の検索",
