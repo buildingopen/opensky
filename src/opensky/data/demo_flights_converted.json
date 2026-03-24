@@ -1,0 +1,353 @@
+[
+  {
+    "price": 357.0,
+    "currency": "EUR",
+    "duration_minutes": 790,
+    "stops": 1,
+    "legs": [
+      {
+        "airline": "EK",
+        "flight_number": "565",
+        "departure_airport": "BLR",
+        "arrival_airport": "DXB",
+        "departure_time": "2026-03-10T10:25:00",
+        "arrival_time": "2026-03-10T13:00:00",
+        "duration_minutes": 245
+      },
+      {
+        "airline": "EK",
+        "flight_number": "61",
+        "departure_airport": "DXB",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-10T15:00:00",
+        "arrival_time": "2026-03-10T19:05:00",
+        "duration_minutes": 425
+      }
+    ],
+    "provider": "demo"
+  },
+  {
+    "price": 357.0,
+    "currency": "EUR",
+    "duration_minutes": 1635,
+    "stops": 1,
+    "legs": [
+      {
+        "airline": "EK",
+        "flight_number": "567",
+        "departure_airport": "BLR",
+        "arrival_airport": "DXB",
+        "departure_time": "2026-03-10T20:20:00",
+        "arrival_time": "2026-03-10T23:00:00",
+        "duration_minutes": 250
+      },
+      {
+        "airline": "EK",
+        "flight_number": "61",
+        "departure_airport": "DXB",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-11T15:00:00",
+        "arrival_time": "2026-03-11T19:05:00",
+        "duration_minutes": 425
+      }
+    ],
+    "provider": "demo"
+  },
+  {
+    "price": 482.0,
+    "currency": "EUR",
+    "duration_minutes": 945,
+    "stops": 2,
+    "legs": [
+      {
+        "airline": "GF",
+        "flight_number": "281",
+        "departure_airport": "BLR",
+        "arrival_airport": "BAH",
+        "departure_time": "2026-03-10T21:50:00",
+        "arrival_time": "2026-03-11T00:30:00",
+        "duration_minutes": 310
+      },
+      {
+        "airline": "GF",
+        "flight_number": "17",
+        "departure_airport": "BAH",
+        "arrival_airport": "FRA",
+        "departure_time": "2026-03-11T01:20:00",
+        "arrival_time": "2026-03-11T06:15:00",
+        "duration_minutes": 415
+      },
+      {
+        "airline": "LH",
+        "flight_number": "6",
+        "departure_airport": "FRA",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-11T08:00:00",
+        "arrival_time": "2026-03-11T09:05:00",
+        "duration_minutes": 65
+      }
+    ],
+    "provider": "demo"
+  },
+  {
+    "price": 489.0,
+    "currency": "EUR",
+    "duration_minutes": 1095,
+    "stops": 2,
+    "legs": [
+      {
+        "airline": "GF",
+        "flight_number": "281",
+        "departure_airport": "BLR",
+        "arrival_airport": "BAH",
+        "departure_time": "2026-03-10T21:50:00",
+        "arrival_time": "2026-03-11T00:30:00",
+        "duration_minutes": 310
+      },
+      {
+        "airline": "GF",
+        "flight_number": "47",
+        "departure_airport": "BAH",
+        "arrival_airport": "ATH",
+        "departure_time": "2026-03-11T01:40:00",
+        "arrival_time": "2026-03-11T05:30:00",
+        "duration_minutes": 290
+      },
+      {
+        "airline": "A3",
+        "flight_number": "824",
+        "departure_airport": "ATH",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-11T09:15:00",
+        "arrival_time": "2026-03-11T11:35:00",
+        "duration_minutes": 200
+      }
+    ],
+    "provider": "demo"
+  },
+  {
+    "price": 498.0,
+    "currency": "EUR",
+    "duration_minutes": 775,
+    "stops": 1,
+    "legs": [
+      {
+        "airline": "EK",
+        "flight_number": "569",
+        "departure_airport": "BLR",
+        "arrival_airport": "DXB",
+        "departure_time": "2026-03-10T04:30:00",
+        "arrival_time": "2026-03-10T07:10:00",
+        "duration_minutes": 250
+      },
+      {
+        "airline": "EK",
+        "flight_number": "59",
+        "departure_airport": "DXB",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-10T08:50:00",
+        "arrival_time": "2026-03-10T12:55:00",
+        "duration_minutes": 425
+      }
+    ],
+    "provider": "demo"
+  },
+  {
+    "price": 498.0,
+    "currency": "EUR",
+    "duration_minutes": 1265,
+    "stops": 1,
+    "legs": [
+      {
+        "airline": "EK",
+        "flight_number": "567",
+        "departure_airport": "BLR",
+        "arrival_airport": "DXB",
+        "departure_time": "2026-03-10T20:20:00",
+        "arrival_time": "2026-03-10T23:00:00",
+        "duration_minutes": 250
+      },
+      {
+        "airline": "EK",
+        "flight_number": "59",
+        "departure_airport": "DXB",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-11T08:50:00",
+        "arrival_time": "2026-03-11T12:55:00",
+        "duration_minutes": 425
+      }
+    ],
+    "provider": "demo"
+  },
+  {
+    "price": 692.0,
+    "currency": "EUR",
+    "duration_minutes": 815,
+    "stops": 1,
+    "legs": [
+      {
+        "airline": "6E",
+        "flight_number": "1301",
+        "departure_airport": "BLR",
+        "arrival_airport": "DOH",
+        "departure_time": "2026-03-10T03:55:00",
+        "arrival_time": "2026-03-10T06:20:00",
+        "duration_minutes": 295
+      },
+      {
+        "airline": "QR",
+        "flight_number": "91",
+        "departure_airport": "DOH",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-10T08:25:00",
+        "arrival_time": "2026-03-10T13:00:00",
+        "duration_minutes": 395
+      }
+    ],
+    "provider": "demo"
+  },
+  {
+    "price": 1407.0,
+    "currency": "EUR",
+    "duration_minutes": 1050,
+    "stops": 2,
+    "legs": [
+      {
+        "airline": "EY",
+        "flight_number": "239",
+        "departure_airport": "BLR",
+        "arrival_airport": "AUH",
+        "departure_time": "2026-03-10T21:50:00",
+        "arrival_time": "2026-03-11T00:35:00",
+        "duration_minutes": 255
+      },
+      {
+        "airline": "EY",
+        "flight_number": "57",
+        "departure_airport": "AUH",
+        "arrival_airport": "BRU",
+        "departure_time": "2026-03-11T02:15:00",
+        "arrival_time": "2026-03-11T06:35:00",
+        "duration_minutes": 440
+      },
+      {
+        "airline": "SN",
+        "flight_number": "2623",
+        "departure_airport": "BRU",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-11T09:35:00",
+        "arrival_time": "2026-03-11T10:50:00",
+        "duration_minutes": 75
+      }
+    ],
+    "provider": "demo"
+  },
+  {
+    "price": 4659.0,
+    "currency": "EUR",
+    "duration_minutes": 1110,
+    "stops": 2,
+    "legs": [
+      {
+        "airline": "AI",
+        "flight_number": "2610",
+        "departure_airport": "BLR",
+        "arrival_airport": "BOM",
+        "departure_time": "2026-03-10T19:00:00",
+        "arrival_time": "2026-03-10T21:05:00",
+        "duration_minutes": 125
+      },
+      {
+        "airline": "LX",
+        "flight_number": "155",
+        "departure_airport": "BOM",
+        "arrival_airport": "ZRH",
+        "departure_time": "2026-03-11T01:25:00",
+        "arrival_time": "2026-03-11T06:10:00",
+        "duration_minutes": 555
+      },
+      {
+        "airline": "LX",
+        "flight_number": "1050",
+        "departure_airport": "ZRH",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-11T07:25:00",
+        "arrival_time": "2026-03-11T09:00:00",
+        "duration_minutes": 95
+      }
+    ],
+    "provider": "demo"
+  },
+  {
+    "price": 0.0,
+    "currency": "EUR",
+    "duration_minutes": 885,
+    "stops": 2,
+    "legs": [
+      {
+        "airline": "LH",
+        "flight_number": "765",
+        "departure_airport": "BLR",
+        "arrival_airport": "MUC",
+        "departure_time": "2026-03-10T02:50:00",
+        "arrival_time": "2026-03-10T08:10:00",
+        "duration_minutes": 590
+      },
+      {
+        "airline": "LH",
+        "flight_number": "101",
+        "departure_airport": "MUC",
+        "arrival_airport": "FRA",
+        "departure_time": "2026-03-10T10:00:00",
+        "arrival_time": "2026-03-10T11:00:00",
+        "duration_minutes": 60
+      },
+      {
+        "airline": "LH",
+        "flight_number": "14",
+        "departure_airport": "FRA",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-10T12:00:00",
+        "arrival_time": "2026-03-10T13:05:00",
+        "duration_minutes": 65
+      }
+    ],
+    "provider": "demo"
+  },
+  {
+    "price": 0.0,
+    "currency": "EUR",
+    "duration_minutes": 885,
+    "stops": 2,
+    "legs": [
+      {
+        "airline": "LH",
+        "flight_number": "765",
+        "departure_airport": "BLR",
+        "arrival_airport": "MUC",
+        "departure_time": "2026-03-10T02:50:00",
+        "arrival_time": "2026-03-10T08:10:00",
+        "duration_minutes": 590
+      },
+      {
+        "airline": "LH",
+        "flight_number": "99",
+        "departure_airport": "MUC",
+        "arrival_airport": "FRA",
+        "departure_time": "2026-03-10T09:00:00",
+        "arrival_time": "2026-03-10T10:00:00",
+        "duration_minutes": 60
+      },
+      {
+        "airline": "LH",
+        "flight_number": "14",
+        "departure_airport": "FRA",
+        "arrival_airport": "HAM",
+        "departure_time": "2026-03-10T12:00:00",
+        "arrival_time": "2026-03-10T13:05:00",
+        "duration_minutes": 65
+      }
+    ],
+    "provider": "demo"
+  }
+]

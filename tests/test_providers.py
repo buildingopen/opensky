@@ -125,13 +125,12 @@ def test_amadeus_convert_offer():
 
 # ---- configured_providers ----
 
-def test_configured_providers_google_always_present():
+def test_configured_providers_empty_without_keys():
     from opensky.providers import configured_providers
 
     with patch.dict(os.environ, {}, clear=True):
         providers = configured_providers()
-    assert len(providers) == 1
-    assert providers[0].name == "google"
+    assert len(providers) == 0
 
 
 def test_configured_providers_duffel_with_token():
@@ -140,7 +139,6 @@ def test_configured_providers_duffel_with_token():
     with patch.dict(os.environ, {"OPENSKY_DUFFEL_TOKEN": "test_token"}, clear=True):
         providers = configured_providers()
     names = [p.name for p in providers]
-    assert "google" in names
     assert "duffel" in names
 
 
@@ -150,7 +148,6 @@ def test_configured_providers_duffel_with_legacy_token():
     with patch.dict(os.environ, {"SKYROUTE_DUFFEL_TOKEN": "legacy_token"}, clear=True):
         providers = configured_providers()
     names = [p.name for p in providers]
-    assert "google" in names
     assert "duffel" in names
 
 
@@ -170,7 +167,6 @@ def test_configured_providers_amadeus_with_both_keys():
     with patch.dict(os.environ, env, clear=True):
         providers = configured_providers()
     names = [p.name for p in providers]
-    assert "google" in names
     assert "amadeus" in names
 
 
@@ -219,7 +215,7 @@ def test_configured_providers_all_three():
     with patch.dict(os.environ, env, clear=True):
         providers = configured_providers()
     names = [p.name for p in providers]
-    assert names == ["google", "duffel", "amadeus"]
+    assert names == ["duffel", "amadeus"]
 
 
 # ---- Amadeus auth token caching ----

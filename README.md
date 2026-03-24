@@ -1,6 +1,6 @@
 # opensky
 
-`opensky` is an open-source flight search CLI that aggregates Google Flights, Duffel, and Amadeus results, then flags itineraries that transit through risky airports, land in risky countries, or appear to overfly whole-country conflict zones on regional segments.
+`opensky` is an open-source flight search CLI that aggregates Duffel and Amadeus results, then flags itineraries that transit through risky airports, land in risky countries, or appear to overfly whole-country conflict zones on regional segments.
 
 ## What The Engine Evaluates Today
 
@@ -38,7 +38,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e .
 ```
 
-Copy `.env.example` to `.env` and fill in any API keys you have. Google Flights works without any keys.
+Copy `.env.example` to `.env` and fill in your API keys (Duffel token, Amadeus key + secret).
 
 `skyroute` remains available as a compatibility command for now, but `opensky` is the canonical CLI.
 
@@ -55,11 +55,10 @@ opensky demo --show-risky
 
 ## Providers
 
-`opensky` supports three providers. Google Flights is always available. Duffel and Amadeus activate automatically when their env vars are set.
+`opensky` supports two providers. They activate automatically when their env vars are set.
 
 | Provider | Env vars | Notes |
 |----------|----------|-------|
-| Google Flights | none (default) | Scrapes Google Flights. Needs a residential IP. |
 | [Duffel](https://duffel.com) | `OPENSKY_DUFFEL_TOKEN` | Fallback: `SKYROUTE_DUFFEL_TOKEN`. |
 | [Amadeus](https://developers.amadeus.com) | `OPENSKY_AMADEUS_KEY` + `OPENSKY_AMADEUS_SECRET` | Fallback: legacy `SKYROUTE_AMADEUS_KEY` + `SKYROUTE_AMADEUS_SECRET`. |
 
@@ -163,7 +162,6 @@ This is informational only. Always check official NOTAMs and airline advisories 
 
 ## Limitations
 
-- Google Flights often requires a residential IP. Use `--proxy` if you are running searches from a server.
 - Prices can differ from airline and OTA checkout pages.
 - The conflict-zone database is a best-effort dataset and can be incomplete or stale.
 - Overflight screening uses a regional great-circle proxy, not filed flight plans or live ATC reroutes.

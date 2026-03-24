@@ -19,7 +19,7 @@ console = Console()
 stderr_console = Console(stderr=True)
 
 
-VALID_PROVIDERS = ("google", "duffel", "amadeus")
+VALID_PROVIDERS = ("duffel", "amadeus")
 
 
 def _validate_provider(provider: str | None) -> None:
@@ -99,7 +99,7 @@ def search(
     csv_output: Annotated[bool, typer.Option("--csv")] = False,
     no_cache: Annotated[bool, typer.Option("--no-cache")] = False,
     proxy: Annotated[Optional[str], typer.Option("--proxy")] = None,
-    provider: Annotated[Optional[str], typer.Option("--provider", "-p", help="Provider: google (default), duffel (OPENSKY_DUFFEL_TOKEN), amadeus (OPENSKY_AMADEUS_KEY + _SECRET)")] = None,
+    provider: Annotated[Optional[str], typer.Option("--provider", "-p", help="Provider: duffel (OPENSKY_DUFFEL_TOKEN), amadeus (OPENSKY_AMADEUS_KEY + _SECRET)")] = None,
     output: Annotated[Optional[str], typer.Option("--output", "-o", help="Save results to file")] = None,
 ) -> None:
     """Search flights for a single route."""
@@ -230,7 +230,7 @@ def scan(
     csv_output: Annotated[bool, typer.Option("--csv")] = False,
     no_cache: Annotated[bool, typer.Option("--no-cache")] = False,
     proxy: Annotated[Optional[str], typer.Option("--proxy")] = None,
-    provider: Annotated[Optional[str], typer.Option("--provider", "-p", help="Provider: google (default), duffel (OPENSKY_DUFFEL_TOKEN), amadeus (OPENSKY_AMADEUS_KEY + _SECRET)")] = None,
+    provider: Annotated[Optional[str], typer.Option("--provider", "-p", help="Provider: duffel (OPENSKY_DUFFEL_TOKEN), amadeus (OPENSKY_AMADEUS_KEY + _SECRET)")] = None,
     output: Annotated[Optional[str], typer.Option("--output", "-o", help="Save results to file")] = None,
 ) -> None:
     """Run exhaustive multi-route scan from a TOML config."""
@@ -391,24 +391,29 @@ def demo(
     from importlib import resources
 
     from opensky import display
-    from opensky._vendor.google_flights import SearchFlights
-    from opensky.models import RiskLevel
-    from opensky.providers.google import _convert_result
+    from opensky.models import FlightLeg, FlightResult, RiskLevel
     from opensky.search import SearchEngine
 
-    # Load bundled fixture
-    fixture_path = resources.files("opensky") / "data" / "demo_flights.json"
-    flights_data = json.loads(fixture_path.read_text())
-    parsed = SearchFlights._deduplicate(
-        [SearchFlights._parse_flight(f) for f in flights_data]
-    )
-    domain_results = [_convert_result(f, "EUR") for f in parsed]
+    # Load pre-converted fixture (FlightResult format)
+    fixture_path = resources.files("opensky") / "data" / "demo_flights_converted.json"
+    raw = json.loads(fixture_path.read_text())
+    domain_results = [
+        FlightResult(
+            price=f["price"],
+            currency=f["currency"],
+            duration_minutes=f["duration_minutes"],
+            stops=f["stops"],
+            legs=[FlightLeg(**leg) for leg in f["legs"]],
+            provider=f["provider"],
+        )
+        for f in raw
+    ]
 
     # Score through the real engine (safety filtering, scoring)
     engine = SearchEngine(currency="EUR", use_cache=False)
     from unittest.mock import MagicMock
     mock_provider = MagicMock()
-    mock_provider.name = "google"
+    mock_provider.name = "demo"
     mock_provider.search.return_value = domain_results
     engine._providers = [mock_provider]
 

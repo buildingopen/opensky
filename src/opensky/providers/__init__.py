@@ -50,15 +50,8 @@ def configured_providers(
 
     If *only* is set, return just that one provider (or raise ValueError).
     Otherwise, return all providers whose credentials are configured.
-    Google is always available (no key needed).
     """
     providers: list[FlightProvider] = []
-
-    # Google: always available
-    if only is None or only == "google":
-        from opensky.providers.google import GoogleProvider
-
-        providers.append(GoogleProvider(currency=currency, proxy=proxy))
 
     # Duffel
     duffel_token = _env_value("OPENSKY_DUFFEL_TOKEN", "SKYROUTE_DUFFEL_TOKEN")

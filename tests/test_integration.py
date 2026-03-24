@@ -1,17 +1,15 @@
 """Integration tests using saved API fixture data."""
 
 import json
+from importlib import resources
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from opensky._vendor.google_flights import SearchFlights
 from opensky.models import FlightLeg, FlightResult, RiskLevel
-from opensky.providers.google import _convert_result
 from opensky.config import ScanConfig
 from opensky.search import SearchEngine
 from tests.utils import future_date, future_datetime
 
-FIXTURE = Path(__file__).parent / "fixture_flights_blr_ham.json"
 DATE = future_date(14)
 DATE_PLUS_1 = future_date(15)
 DATE_PLUS_2 = future_date(16)
@@ -19,27 +17,34 @@ DEP_TIME = future_datetime(14, 8, 0)
 ARR_TIME = future_datetime(14, 18, 0)
 
 
-def _load_fixture():
-    with open(FIXTURE) as f:
-        return json.load(f)
+def _load_converted_fixture():
+    fixture_path = resources.files("opensky") / "data" / "demo_flights_converted.json"
+    raw = json.loads(fixture_path.read_text())
+    return [
+        FlightResult(
+            price=f["price"],
+            currency=f["currency"],
+            duration_minutes=f["duration_minutes"],
+            stops=f["stops"],
+            legs=[FlightLeg(**leg) for leg in f["legs"]],
+            provider=f["provider"],
+        )
+        for f in raw
+    ]
 
 
 def _make_mock_engine():
     """Create a SearchEngine with a mocked provider that returns fixture data."""
     engine = SearchEngine(currency="EUR", use_cache=False)
 
-    flights_data = _load_fixture()
-    parsed_flights = [SearchFlights._parse_flight(f) for f in flights_data]
-    parsed_flights = SearchFlights._deduplicate(parsed_flights)
-
-    domain_results = [_convert_result(f, "EUR") for f in parsed_flights]
+    domain_results = _load_converted_fixture()
 
     mock_provider = MagicMock()
-    mock_provider.name = "google"
+    mock_provider.name = "demo"
     mock_provider.search.return_value = domain_results
     engine._providers = [mock_provider]
 
-    return engine, parsed_flights
+    return engine, domain_results
 
 
 def test_search_one_returns_all_flights():
@@ -169,25 +174,25 @@ def test_search_one_multi_provider_deduplicates():
     """Same flight from two providers: search_one keeps the cheapest."""
     shared_leg = _make_leg()
 
-    google_flight = FlightResult(
+    primary_flight = FlightResult(
         price=400.0, currency="EUR", duration_minutes=600, stops=0,
-        legs=[shared_leg], provider="google",
+        legs=[shared_leg], provider="amadeus",
     )
     duffel_flight = FlightResult(
         price=350.0, currency="EUR", duration_minutes=600, stops=0,
         legs=[shared_leg], provider="duffel",
     )
 
-    mock_google = MagicMock()
-    mock_google.name = "google"
-    mock_google.search.return_value = [google_flight]
+    mock_primary = MagicMock()
+    mock_primary.name = "amadeus"
+    mock_primary.search.return_value = [primary_flight]
 
     mock_duffel = MagicMock()
     mock_duffel.name = "duffel"
     mock_duffel.search.return_value = [duffel_flight]
 
     engine = SearchEngine(currency="EUR", use_cache=False)
-    engine._providers = [mock_google, mock_duffel]
+    engine._providers = [mock_primary, mock_duffel]
 
     results = engine.search_one("BLR", "HAM", DATE)
     assert len(results) == 1
@@ -198,30 +203,30 @@ def test_search_one_multi_provider_deduplicates():
 
 def test_search_one_multi_provider_keeps_unique():
     """Different flights from two providers: both kept."""
-    google_flight = FlightResult(
+    primary_flight = FlightResult(
         price=400.0, currency="EUR", duration_minutes=600, stops=0,
-        legs=[_make_leg(airline="LH", num="760")], provider="google",
+        legs=[_make_leg(airline="LH", num="760")], provider="amadeus",
     )
     duffel_flight = FlightResult(
         price=350.0, currency="EUR", duration_minutes=540, stops=0,
         legs=[_make_leg(airline="EK", num="505")], provider="duffel",
     )
 
-    mock_google = MagicMock()
-    mock_google.name = "google"
-    mock_google.search.return_value = [google_flight]
+    mock_primary = MagicMock()
+    mock_primary.name = "amadeus"
+    mock_primary.search.return_value = [primary_flight]
 
     mock_duffel = MagicMock()
     mock_duffel.name = "duffel"
     mock_duffel.search.return_value = [duffel_flight]
 
     engine = SearchEngine(currency="EUR", use_cache=False)
-    engine._providers = [mock_google, mock_duffel]
+    engine._providers = [mock_primary, mock_duffel]
 
     results = engine.search_one("BLR", "HAM", DATE)
     assert len(results) == 2
     providers = {r.provider for r in results}
-    assert providers == {"google", "duffel"}
+    assert providers == {"amadeus", "duffel"}
     engine.close()
 
 
@@ -229,46 +234,46 @@ def test_search_one_provider_failure_still_returns_others():
     """One provider failing doesn't block results from the other."""
     good_flight = FlightResult(
         price=300.0, currency="EUR", duration_minutes=600, stops=0,
-        legs=[_make_leg()], provider="google",
+        legs=[_make_leg()], provider="amadeus",
     )
 
-    mock_google = MagicMock()
-    mock_google.name = "google"
-    mock_google.search.return_value = [good_flight]
+    mock_primary = MagicMock()
+    mock_primary.name = "amadeus"
+    mock_primary.search.return_value = [good_flight]
 
     mock_duffel = MagicMock()
     mock_duffel.name = "duffel"
     mock_duffel.search.side_effect = RuntimeError("API down")
 
     engine = SearchEngine(currency="EUR", use_cache=False)
-    engine._providers = [mock_google, mock_duffel]
+    engine._providers = [mock_primary, mock_duffel]
 
     results = engine.search_one("BLR", "HAM", DATE)
     assert len(results) == 1
-    assert results[0].provider == "google"
+    assert results[0].provider == "amadeus"
     engine.close()
 
 
 def test_search_scored_report_tracks_partial_provider_failures():
     good_flight = FlightResult(
         price=300.0, currency="EUR", duration_minutes=600, stops=0,
-        legs=[_make_leg()], provider="google",
+        legs=[_make_leg()], provider="amadeus",
     )
 
-    mock_google = MagicMock()
-    mock_google.name = "google"
-    mock_google.search.return_value = [good_flight]
+    mock_primary = MagicMock()
+    mock_primary.name = "amadeus"
+    mock_primary.search.return_value = [good_flight]
 
     mock_duffel = MagicMock()
     mock_duffel.name = "duffel"
     mock_duffel.search.side_effect = RuntimeError("API down")
 
     engine = SearchEngine(currency="EUR", use_cache=False)
-    engine._providers = [mock_google, mock_duffel]
+    engine._providers = [mock_primary, mock_duffel]
 
     report = engine.search_scored_report("BLR", "HAM", DATE)
     assert len(report.results) == 1
-    assert report.successful_providers == ["google"]
+    assert report.successful_providers == ["amadeus"]
     assert len(report.failed_providers) == 1
     assert report.failed_providers[0].provider == "duffel"
     assert report.failed_providers[0].error == "API down"
@@ -276,21 +281,21 @@ def test_search_scored_report_tracks_partial_provider_failures():
 
 
 def test_search_scored_report_detects_total_provider_failure():
-    mock_google = MagicMock()
-    mock_google.name = "google"
-    mock_google.search.side_effect = RuntimeError("Consent wall")
+    mock_primary = MagicMock()
+    mock_primary.name = "amadeus"
+    mock_primary.search.side_effect = RuntimeError("Consent wall")
 
     mock_duffel = MagicMock()
     mock_duffel.name = "duffel"
     mock_duffel.search.side_effect = RuntimeError("API down")
 
     engine = SearchEngine(currency="EUR", use_cache=False)
-    engine._providers = [mock_google, mock_duffel]
+    engine._providers = [mock_primary, mock_duffel]
 
     report = engine.search_scored_report("BLR", "HAM", DATE)
     assert report.results == []
     assert report.successful_providers == []
-    assert {failure.provider for failure in report.failed_providers} == {"google", "duffel"}
+    assert {failure.provider for failure in report.failed_providers} == {"amadeus", "duffel"}
     engine.close()
 
 
@@ -301,15 +306,15 @@ def test_search_scored_report_carries_overflight_findings():
         duration_minutes=160,
         stops=0,
         legs=[_make_leg(dep="TBS", arr="AMM", dur=160)],
-        provider="google",
+        provider="amadeus",
     )
 
-    mock_google = MagicMock()
-    mock_google.name = "google"
-    mock_google.search.return_value = [overflight_flight]
+    mock_primary = MagicMock()
+    mock_primary.name = "amadeus"
+    mock_primary.search.return_value = [overflight_flight]
 
     engine = SearchEngine(currency="EUR", use_cache=False)
-    engine._providers = [mock_google]
+    engine._providers = [mock_primary]
 
     report = engine.search_scored_report("TBS", "AMM", DATE, risk_threshold=None)
     assert len(report.results) == 1
@@ -324,19 +329,19 @@ def test_search_scored_report_carries_overflight_findings():
 def test_scan_report_aggregates_provider_failures():
     good_flight = FlightResult(
         price=300.0, currency="EUR", duration_minutes=600, stops=0,
-        legs=[_make_leg()], provider="google",
+        legs=[_make_leg()], provider="amadeus",
     )
 
-    mock_google = MagicMock()
-    mock_google.name = "google"
-    mock_google.search.return_value = [good_flight]
+    mock_primary = MagicMock()
+    mock_primary.name = "amadeus"
+    mock_primary.search.return_value = [good_flight]
 
     mock_duffel = MagicMock()
     mock_duffel.name = "duffel"
     mock_duffel.search.side_effect = RuntimeError("API down")
 
     engine = SearchEngine(currency="EUR", use_cache=False)
-    engine._providers = [mock_google, mock_duffel]
+    engine._providers = [mock_primary, mock_duffel]
 
     cfg = ScanConfig(
         search={
@@ -347,7 +352,7 @@ def test_scan_report_aggregates_provider_failures():
     )
     report = engine.scan_report(cfg, workers=1, delay=0)
     assert len(report.results) == 1
-    assert report.successful_providers == {"google": 1}
+    assert report.successful_providers == {"amadeus": 1}
     assert report.failed_providers == {"duffel": 1}
     assert report.failed_provider_errors == {"duffel": "API down"}
     engine.close()

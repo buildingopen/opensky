@@ -10,7 +10,7 @@ def _make_flight(
     dep: str = "BLR",
     arr: str = "HAM",
     price: float = 300.0,
-    provider: str = "google",
+    provider: str = "duffel",
 ) -> FlightResult:
     return FlightResult(
         price=price,
@@ -33,7 +33,7 @@ def _make_flight(
 
 
 def test_same_flight_different_prices_keeps_cheapest():
-    f1 = _make_flight(price=400.0, provider="google")
+    f1 = _make_flight(price=400.0, provider="amadeus")
     f2 = _make_flight(price=350.0, provider="duffel")
     result = _deduplicate([f1, f2])
     assert len(result) == 1
@@ -49,7 +49,7 @@ def test_different_flights_keeps_both():
 
 
 def test_priced_preferred_over_unpriced():
-    f1 = _make_flight(price=0.0, provider="google")
+    f1 = _make_flight(price=0.0, provider="amadeus")
     f2 = _make_flight(price=300.0, provider="duffel")
     result = _deduplicate([f1, f2])
     assert len(result) == 1
@@ -58,11 +58,11 @@ def test_priced_preferred_over_unpriced():
 
 
 def test_both_unpriced_keeps_first():
-    f1 = _make_flight(price=0.0, provider="google")
+    f1 = _make_flight(price=0.0, provider="amadeus")
     f2 = _make_flight(price=0.0, provider="duffel")
     result = _deduplicate([f1, f2])
     assert len(result) == 1
-    assert result[0].provider == "google"
+    assert result[0].provider == "amadeus"
 
 
 def test_single_flight_no_change():

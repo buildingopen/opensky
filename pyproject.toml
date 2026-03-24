@@ -12,7 +12,7 @@ requires-python = ">=3.11"
 authors = [
     { name = "Federico De Ponte" },
 ]
-keywords = ["flights", "travel", "safety", "conflict-zones", "google-flights"]
+keywords = ["flights", "travel", "safety", "conflict-zones"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
@@ -22,7 +22,6 @@ classifiers = [
     "Topic :: Internet",
 ]
 dependencies = [
-    "curl-cffi>=0.7",
     "typer>=0.15",
     "rich>=13.0",
     "pydantic>=2.10",

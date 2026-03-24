@@ -19,7 +19,7 @@ ARR_TIME = future_datetime(14, 18, 0)
 
 
 class GoodProvider:
-    name = "google"
+    name = "duffel"
 
     def search(self, *args, **kwargs):
         return [
@@ -39,7 +39,7 @@ class GoodProvider:
                         duration_minutes=600,
                     )
                 ],
-                provider="google",
+                provider="duffel",
             )
         ]
 
@@ -48,7 +48,7 @@ class GoodProvider:
 
 
 class BadProvider:
-    def __init__(self, name: str = "google", error: str = "API down"):
+    def __init__(self, name: str = "duffel", error: str = "API down"):
         self.name = name
         self.error = error
 
@@ -120,34 +120,34 @@ def test_invalid_date_rejected():
 
 
 def test_search_reports_total_provider_failure():
-    with patch("opensky.search.configured_providers", return_value=[BadProvider("google", "Consent wall")]):
+    with patch("opensky.search.configured_providers", return_value=[BadProvider("duffel", "API error")]):
         result = runner.invoke(app, ["search", "BLR", "HAM", DATE, "--json", "--no-cache"])
     assert result.exit_code == 1
-    assert "Search failed: google (Consent wall)" in result.output
+    assert "Search failed: duffel (API error)" in result.output
 
 
 def test_search_warns_on_partial_results():
-    providers = [GoodProvider(), BadProvider("duffel", "API down")]
+    providers = [GoodProvider(), BadProvider("amadeus", "API down")]
     with patch("opensky.search.configured_providers", return_value=providers):
         result = runner.invoke(app, ["search", "BLR", "HAM", DATE, "--json", "--no-cache"])
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
     assert len(payload) == 1
-    assert payload[0]["flight"]["provider"] == "google"
-    assert "Searching google, duffel..." in result.stderr
-    assert "Partial results: duffel (API down)" in result.stderr
+    assert payload[0]["flight"]["provider"] == "duffel"
+    assert "Searching duffel, amadeus..." in result.stderr
+    assert "Partial results: amadeus (API down)" in result.stderr
 
 
 def test_scan_reports_total_provider_failure():
     config_path = _write_scan_config()
     try:
-        with patch("opensky.search.configured_providers", return_value=[BadProvider("google", "Consent wall")]):
+        with patch("opensky.search.configured_providers", return_value=[BadProvider("duffel", "API error")]):
             result = runner.invoke(
                 app,
                 ["scan", "--config", config_path, "--json", "--workers", "1", "--delay", "0", "--no-cache"],
             )
         assert result.exit_code == 1
-        assert "Scan failed: google x1 (Consent wall)" in result.output
+        assert "Scan failed: duffel x1 (API error)" in result.output
     finally:
         Path(config_path).unlink(missing_ok=True)
 
@@ -170,7 +170,7 @@ def test_scan_missing_provider_creds_keeps_stdout_clean_in_json_mode():
 def test_scan_warns_on_partial_results():
     config_path = _write_scan_config()
     try:
-        providers = [GoodProvider(), BadProvider("duffel", "API down")]
+        providers = [GoodProvider(), BadProvider("amadeus", "API down")]
         with patch("opensky.search.configured_providers", return_value=providers):
             result = runner.invoke(
                 app,
@@ -179,9 +179,9 @@ def test_scan_warns_on_partial_results():
         assert result.exit_code == 0
         payload = json.loads(result.stdout)
         assert len(payload) == 1
-        assert payload[0]["flight"]["provider"] == "google"
-        assert "Scanning 1 origins x 1 destinations x 1 dates = 1 combos via google, duffel" in result.stderr
-        assert "Partial results: duffel x1 (API down)" in result.stderr
+        assert payload[0]["flight"]["provider"] == "duffel"
+        assert "Scanning 1 origins x 1 destinations x 1 dates = 1 combos via duffel, amadeus" in result.stderr
+        assert "Partial results: amadeus x1 (API down)" in result.stderr
     finally:
         Path(config_path).unlink(missing_ok=True)
 
