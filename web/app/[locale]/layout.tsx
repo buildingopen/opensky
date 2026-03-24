@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       template: "%s",
     },
     description: t("description"),
-    keywords: ["flights", "flight search", "Google Flights search", "natural language flights", "conflict zones", "cheap flights", "AI flight search"],
+    keywords: ["flights", "flight search", "natural language flights", "conflict zones", "cheap flights", "AI flight search"],
     alternates: {
       languages,
     },
@@ -98,7 +98,7 @@ export default async function RootLayout({
               "@type": "WebApplication",
               name: "FlyFast",
               url: siteUrl,
-              description: "Describe your trip in plain English. FlyFast searches Google Flights, filters conflict zones, and finds the safest, cheapest route. Free, no login.",
+              description: "Describe your trip in plain English. FlyFast searches thousands of flights, filters conflict zones, and finds the safest, cheapest route. Free, no login.",
               applicationCategory: "TravelApplication",
               operatingSystem: "All",
               browserRequirements: "Requires JavaScript",
@@ -107,7 +107,7 @@ export default async function RootLayout({
               featureList: [
                 "Natural language flight search",
                 "Conflict zone and restricted airspace filtering",
-                "Every airline on Google Flights",
+                "Every available airline",
                 "Safety risk scoring per route",
                 "Multi-city and flexible date search",
                 "Direct booking links to airlines",

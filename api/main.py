@@ -218,6 +218,7 @@ _request_log: dict[str, list[float]] = defaultdict(list)
 _expand_request_log: dict[str, list[float]] = defaultdict(list)
 _api_key_log: dict[str, list[float]] = defaultdict(list)
 _alert_create_log: dict[str, list[float]] = defaultdict(list)
+_access_request_log: dict[str, list[float]] = defaultdict(list)
 redis_client: redis.Redis | None = None
 
 
@@ -1060,8 +1061,8 @@ class ZonesResponse(BaseModel):
 # ---------------------------------------------------------------------------
 _SEAT_PB = {"economy": 1, "premium_economy": 2, "business": 3, "first": 4}
 
-def _google_flights_url(origin: str, dest: str, date: str, currency: str = "EUR", cabin: str = "economy", legs: list[dict] | None = None) -> str:
-    """Generate a Google Flights deep link using protobuf-encoded ?tfs= parameter.
+def _flight_compare_url(origin: str, dest: str, date: str, currency: str = "EUR", cabin: str = "economy", legs: list[dict] | None = None) -> str:
+    """Generate a flight comparison deep link using protobuf-encoded ?tfs= parameter.
 
     When legs are provided with airline/flight_number, encodes a specific itinerary.
     Otherwise falls back to a route search (origin/dest/date only).
@@ -2944,3 +2945,72 @@ async def unsubscribe_zone_alert_post(token: str):
         "<p><a href='https://flyfast.app/safety'>Back to conflict zone map</a></p>"
         "</body></html>"
     )
+
+
+# ---------------------------------------------------------------------------
+# API Access Request
+# ---------------------------------------------------------------------------
+
+class AccessRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    name: str = Field(min_length=1, max_length=200)
+    email: str = Field(min_length=3, max_length=254)
+    company: str = Field(default="", max_length=200)
+    use_case: str = Field(min_length=10, max_length=2000)
+
+
+@app.post("/api/access-request")
+async def create_access_request(req: AccessRequest, request: Request):
+    _require_internal_request(request)
+    ip = _get_client_ip(request)
+    await _check_rate_limit(
+        ip, limit=3, prefix="rl:access", store=_access_request_log, label="access requests"
+    )
+
+    if not _EMAIL_RE.match(req.email):
+        raise HTTPException(status_code=422, detail="Invalid email address.")
+
+    safe_name = html_escape(req.name)
+    safe_email = html_escape(req.email)
+    safe_company = html_escape(req.company) if req.company else "Not provided"
+    safe_use_case = html_escape(req.use_case).replace("\n", "<br>")
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:20px;color:#1a1a2e">
+  <div style="padding:16px 0;border-bottom:1px solid #e5e7eb">
+    <h1 style="margin:0;font-size:20px;font-weight:700">FlyFast API Access Request</h1>
+  </div>
+  <div style="padding:24px 0">
+    <table style="font-size:14px;border-collapse:collapse;width:100%">
+      <tr><td style="padding:8px 12px 8px 0;color:#6b7280;vertical-align:top">Name</td><td style="padding:8px 0">{safe_name}</td></tr>
+      <tr><td style="padding:8px 12px 8px 0;color:#6b7280;vertical-align:top">Email</td><td style="padding:8px 0">{safe_email}</td></tr>
+      <tr><td style="padding:8px 12px 8px 0;color:#6b7280;vertical-align:top">Company</td><td style="padding:8px 0">{safe_company}</td></tr>
+      <tr><td style="padding:8px 12px 8px 0;color:#6b7280;vertical-align:top">Use case</td><td style="padding:8px 0">{safe_use_case}</td></tr>
+    </table>
+  </div>
+  <div style="padding:16px 0;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af">
+    Reply to this email to respond directly to the requester.
+  </div>
+</body>
+</html>"""
+
+    try:
+        if RESEND_API_KEY:
+            httpx.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+                json={
+                    "from": FROM_EMAIL,
+                    "to": ["team@openpaper.dev"],
+                    "reply_to": req.email,
+                    "subject": f"FlyFast API Access: {req.name}",
+                    "html": html,
+                },
+                timeout=10,
+            )
+    except Exception as exc:
+        log.warning("Access request email failed: %s", exc)
+
+    return {"status": "ok", "message": "Request submitted. We'll be in touch."}

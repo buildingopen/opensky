@@ -36,7 +36,8 @@
     "imprint": "Imprint",
     "methodology": "Methodology",
     "contact": "Contact",
-    "cookieSettings": "Cookie settings"
+    "cookieSettings": "Cookie settings",
+    "api": "API"
   },
   "consent": {
     "message": "We use analytics cookies to improve FlyFast. No ads, no tracking across sites.",
@@ -67,7 +68,7 @@
   "search": {
     "heroTitle": "Prompt to",
     "heroTitleAccent": "fly.",
-    "heroSubtitle": "Search every flight on Google Flights. AI-powered, conflict zones filtered. Free, no login.",
+    "heroSubtitle": "Search every available flight. AI-powered, conflict zones filtered. Free, no login.",
     "placeholder": "e.g. JFK to London next week under $500, business class",
     "airlineFilter": {
       "ariaLabel": "Filter by airline",
@@ -113,7 +114,7 @@
     "timeSaved": "FlyFast saved you ~{time} of manual searching",
     "loading": {
       "understanding": "Interpreting destinations, dates & preferences",
-      "agentsChecking": "{workers} agents checking {total} combinations on Google Flights",
+      "agentsChecking": "{workers} agents checking {total} combinations across flight sources",
       "checkingRoute": "{route} on {date}",
       "checked": "{done}/{total} checked",
       "findingFlights": "Finding your flights",
@@ -152,8 +153,8 @@
       "partialResults": "We found {count, plural, one {1 flight} other {{count} flights}} but couldn't check all dates. Some options may be missing.",
       "bookDirect": "Book direct",
       "book": "Book",
-      "googleFlights": "Google Flights",
-      "google": "Google",
+      "comparePrices": "Compare prices",
+      "compare": "Compare",
       "hideDetails": "Hide details",
       "showSegments": "Show {count} segments",
       "riskFactors": "Risk factors:",
@@ -186,7 +187,7 @@
     },
     "noResults": {
       "timeout": "Search timed out",
-      "timeoutExplanation": "Google Flights was slow to respond. This usually works on a second try.",
+      "timeoutExplanation": "Flight data source was slow to respond. This usually works on a second try.",
       "timeoutTip": "Tip: try fewer dates, a single destination, or search at off-peak hours.",
       "providerError": "Providers are having a moment",
       "providerErrorExplanation": "Flight data sources returned an error. Give it a minute and try again.",
@@ -442,13 +443,13 @@
   },
   "metadata": {
     "title": "FlyFast - The smartest flight search",
-    "description": "Describe your trip in plain English. FlyFast searches Google Flights, filters conflict zones, and finds the safest, cheapest route. Free, no login.",
+    "description": "Describe your trip in plain English. FlyFast searches thousands of flights, filters conflict zones, and finds the safest, cheapest route. Free, no login.",
     "ogAlt": "FlyFast: describe your trip, we find the best flight",
     "flightTitle": "{route} from {price} - FlyFast",
     "flightDescription": "Found {route} from {price}. Conflict zones filtered. Search your own flights on FlyFast.",
     "faq": {
       "q1": "How does FlyFast work?",
-      "a1": "Type your trip in plain English, like 'Mumbai to Hamburg next week under $300'. FlyFast searches every flight on Google Flights, filters conflict zones, and ranks by price, duration, and route safety. You book directly with the airline.",
+      "a1": "Type your trip in plain English, like 'Mumbai to Hamburg next week under $300'. FlyFast searches every available flight, filters conflict zones, and ranks by price, duration, and route safety. You book directly with the airline.",
       "q2": "Is FlyFast free?",
       "a2": "Yes. FlyFast is completely free with no login required. You get 10 searches per hour. There are no ads and no premium tier.",
       "q3": "How does FlyFast filter conflict zones?",
@@ -456,9 +457,9 @@
       "q4": "Is it safe to fly over conflict zones?",
       "a4": "Some airspace over conflict zones is closed or restricted by aviation authorities (NOTAMs). Airlines reroute around these areas, which can add flight time and cost. FlyFast automatically checks which routes cross conflict airspace and filters or flags them. Always check official government travel advisories before booking.",
       "q5": "How do I find cheap flights that avoid conflict zones?",
-      "a5": "On FlyFast, type a natural language query like 'cheapest flight from London to Bangkok avoiding conflict zones'. FlyFast searches every flight on Google Flights, removes routes through high-risk airspace, and ranks the remaining options by price. You can also specify flexible dates to find the cheapest day to fly.",
+      "a5": "On FlyFast, type a natural language query like 'cheapest flight from London to Bangkok avoiding conflict zones'. FlyFast searches every available flight, removes routes through high-risk airspace, and ranks the remaining options by price. You can also specify flexible dates to find the cheapest day to fly.",
       "q6": "What airlines does FlyFast search?",
-      "a6": "FlyFast searches every flight on Google Flights, covering all major carriers, low-cost airlines, and multi-airline itineraries worldwide.",
+      "a6": "FlyFast searches every available flight, covering all major carriers, low-cost airlines, and multi-airline itineraries worldwide.",
       "q7": "Can I search for multi-city or complex routes?",
       "a7": "Yes. FlyFast handles multi-city searches, flexible dates, nearby airports, and budget constraints. It searches all origin-destination-date combinations and ranks the best options."
     }
@@ -482,7 +483,7 @@
     "whatWeDoNotCollect4": "No location data beyond what you type in your search",
     "thirdPartyHeading": "Third-party services",
     "thirdPartyIntro": "FlyFast uses the following external services to operate:",
-    "thirdPartyGoogleFlights": "<bold>Google Flights</bold> -- flight data provider. Your search parameters (origins, destinations, dates) are sent to retrieve flight results.",
+    "thirdPartyFlightData": "<bold>Flight data providers</bold> -- your search parameters (origins, destinations, dates) are sent to retrieve flight results.",
     "thirdPartyGemini": "<bold>Google Gemini</bold> -- AI service for parsing natural language queries into structured search parameters.",
     "thirdPartyPostHog": "<bold>PostHog</bold> -- privacy-focused analytics. EU-hosted. No personal data is sent.",
     "thirdPartyVercel": "<bold>Vercel</bold> -- hosting provider for the web application.",
@@ -504,7 +505,7 @@
     "lastUpdated": "Last updated: {date}",
     "intro": "By using FlyFast you agree to these terms. FlyFast is operated by <link>Building Open</link>.",
     "serviceHeading": "Service description",
-    "serviceBody": "FlyFast is a free flight search tool that uses natural language input to search flights across Google Flights and filter routes through conflict zones. FlyFast does not sell tickets, process payments, or act as a travel agent. When you click a flight result, you are redirected to the airline or Google Flights to complete your booking.",
+    "serviceBody": "FlyFast is a free flight search tool that uses natural language input to search flights across multiple sources and filter routes through conflict zones. FlyFast does not sell tickets, process payments, or act as a travel agent. When you click a flight result, you are redirected to the airline to complete your booking.",
     "accuracyHeading": "No guarantee of accuracy",
     "accuracyBody": "Flight prices, availability, routes, and safety information can change rapidly. The information displayed on FlyFast is for informational purposes only and may differ from what you see at the point of booking. Always verify prices, schedules, and travel advisories directly with the airline and relevant government authorities.",
     "conflictHeading": "Conflict zone data",
@@ -517,7 +518,7 @@
     "useItem3": "Do not use FlyFast to facilitate illegal activity.",
     "useBlockNotice": "We reserve the right to block access for users who violate these terms.",
     "ipHeading": "Intellectual property",
-    "ipBody": "FlyFast is open source under the MIT license. The source code is available at <link>github.com/buildingopen/opensky</link>. Flight data is provided by Google Flights and is subject to their terms. Conflict zone data is maintained by Building Open.",
+    "ipBody": "FlyFast is open source under the MIT license. The source code is available at <link>github.com/buildingopen/opensky</link>. Flight data is sourced from publicly available flight information. Conflict zone data is maintained by Building Open.",
     "liabilityHeading": "Limitation of liability",
     "liabilityBody": "FlyFast is provided \"as is\" without warranty of any kind. Building Open is not liable for any losses, damages, or costs arising from your use of FlyFast, including but not limited to: inaccurate pricing, route safety misclassification, missed flights, or booking errors.",
     "changesHeading": "Changes to these terms",
@@ -572,7 +573,7 @@
     "faqFreeQ": "Is FlyFast free?",
     "faqFreeA": "Yes. No login, no ads, no premium tier. You get 10 searches per hour.",
     "faqTicketsQ": "Does FlyFast sell tickets?",
-    "faqTicketsA": "No. FlyFast finds and ranks flights. When you click a result, you book directly with the airline or via Google Flights.",
+    "faqTicketsA": "No. FlyFast finds and ranks flights. When you click a result, you book directly with the airline.",
     "faqAccuracyQ": "How accurate is the conflict zone data?",
     "faqAccuracyA": "The dataset is updated regularly and covers active conflict zones, restricted airspace, and aviation advisories. It may not reflect changes from the last few days. Always check official government advisories before booking.",
     "faqApiQ": "Can I use FlyFast data in my app?",
@@ -581,8 +582,8 @@
   "methodology": {
     "title": "How FlyFast Works - Methodology",
     "heading": "How it works",
-    "description": "How FlyFast searches every flight on Google Flights, filters conflict zones, and ranks by price, duration, and route safety.",
-    "intro": "FlyFast combines natural language understanding, real-time flight data from Google Flights, and conflict zone intelligence to find the best route for your trip. This page explains exactly how.",
+    "description": "How FlyFast searches every available flight, filters conflict zones, and ranks by price, duration, and route safety.",
+    "intro": "FlyFast combines natural language understanding, real-time flight data, and conflict zone intelligence to find the best route for your trip. This page explains exactly how.",
     "toc": {
       "describe": "1. Describe your trip",
       "parse": "2. AI parsing",
@@ -610,7 +611,7 @@
     },
     "step3": {
       "heading": "3. We search every matching flight",
-      "body": "FlyFast searches every origin-destination-date combination in parallel across Google Flights. For a query like \"Hamburg or Berlin to Tokyo, any day next week\", that could be 5 origins x 2 destinations x 7 dates = 70 searches, all running simultaneously.",
+      "body": "FlyFast searches every origin-destination-date combination in parallel across all available sources. For a query like \"Hamburg or Berlin to Tokyo, any day next week\", that could be 5 origins x 2 destinations x 7 dates = 70 searches, all running simultaneously.",
       "streaming": "Results stream in as they arrive, so you see flights appearing in real time rather than waiting for all searches to finish."
     },
     "step4": {
@@ -649,12 +650,12 @@
     },
     "step6": {
       "heading": "6. You book directly",
-      "body": "FlyFast does not sell tickets and does not take payment. When you click a flight, you go directly to the airline or to Google Flights where you can compare and book. Prices can change between our search and your booking."
+      "body": "FlyFast does not sell tickets and does not take payment. When you click a flight, you go directly to the airline where you can compare and book. Prices can change between our search and your booking."
     },
     "dataSources": {
       "heading": "Data sources",
       "flightData": "Flight data:",
-      "flightDataDesc": "Google Flights, covering major carriers, low-cost airlines, and multi-airline itineraries worldwide.",
+      "flightDataDesc": "Multiple flight data sources, covering major carriers, low-cost airlines, and multi-airline itineraries worldwide.",
       "conflictData": "Conflict zone data:",
       "conflictDataDesc": "Maintained by Building Open. Includes active conflict zones, military activity areas, restricted airspace, and aviation advisories. Updated regularly. The \"Conflict zones updated\" date in the footer shows when the data was last refreshed.",
       "queryParsing": "Query parsing:",
@@ -790,5 +791,23 @@
     "feature3Detail": "Dates & destinations",
     "feature4Label": "Price alerts",
     "feature4Detail": "Via email"
+  },
+  "apiAccess": {
+    "title": "API Access",
+    "description": "Use FlyFast as an MCP server, CLI tool, or REST API. Free for personal use. Request higher rate limits for commercial use.",
+    "whatYouGet": "What you get",
+    "feature1": "MCP server for Claude and AI agents (search, zones, alerts)",
+    "feature2": "CLI tool for terminal-based flight search",
+    "feature3": "REST API with SSE streaming and structured responses",
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "companyLabel": "Company (optional)",
+    "companyPlaceholder": "Your company or project",
+    "useCaseLabel": "Use case",
+    "useCasePlaceholder": "Describe how you plan to use the FlyFast API...",
+    "submit": "Request access",
+    "submitting": "Submitting...",
+    "successTitle": "Request submitted",
+    "successMessage": "We'll review your request and get back to you shortly."
   }
 }

@@ -15,7 +15,7 @@ const faqSchema = {
   "@type": "FAQPage",
   mainEntity: [
     { "@type": "Question", name: "Is FlyFast free?", acceptedAnswer: { "@type": "Answer", text: "Yes. No login, no ads, no premium tier. You get 10 searches per hour." } },
-    { "@type": "Question", name: "Does FlyFast sell tickets?", acceptedAnswer: { "@type": "Answer", text: "No. FlyFast finds and ranks flights. When you click a result, you book directly with the airline or via Google Flights." } },
+    { "@type": "Question", name: "Does FlyFast sell tickets?", acceptedAnswer: { "@type": "Answer", text: "No. FlyFast finds and ranks flights. When you click a result, you book directly with the airline." } },
     { "@type": "Question", name: "How accurate is the conflict zone data?", acceptedAnswer: { "@type": "Answer", text: "The dataset is updated regularly and covers active conflict zones, restricted airspace, and aviation advisories. It may not reflect changes from the last few days. Always check official government advisories before booking." } },
     { "@type": "Question", name: "Can I use FlyFast data in my app?", acceptedAnswer: { "@type": "Answer", text: "The code is open source under the MIT license. For questions or collaboration, email hello@buildingopen.org." } },
   ],

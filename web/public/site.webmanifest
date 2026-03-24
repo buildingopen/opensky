@@ -1,7 +1,7 @@
 {
   "name": "FlyFast",
   "short_name": "FlyFast",
-  "description": "Describe your trip in plain English. FlyFast searches Google Flights, filters conflict zones.",
+  "description": "Describe your trip in plain English. FlyFast searches thousands of flights, filters conflict zones.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#070b14",

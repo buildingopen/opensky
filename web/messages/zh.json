@@ -62,7 +62,7 @@
   "search": {
     "heroTitle": "Prompt to",
     "heroTitleAccent": "fly.",
-    "heroSubtitle": "搜索谷歌航班上的所有航班。AI驱动，自动过滤冲突区域。免费，无需登录。",
+    "heroSubtitle": "搜索比较价格上的所有航班。AI驱动，自动过滤冲突区域。免费，无需登录。",
     "placeholder": "例如：北京到东京，下周，3000元以内，商务舱",
     "ariaLabel": "用自然语言描述你的行程",
     "enterToSearch": "按回车搜索",
@@ -104,7 +104,7 @@
     "timeSaved": "FlyFast为你节省了约{time}的手动搜索时间",
     "loading": {
       "understanding": "正在解析目的地、日期和偏好",
-      "agentsChecking": "{workers}个智能体正在谷歌航班上检查{total}个组合",
+      "agentsChecking": "{workers}个智能体正在比较价格上检查{total}个组合",
       "checkingRoute": "正在查询{date}的{route}",
       "checked": "已查询 {done}/{total}",
       "findingFlights": "正在搜索航班",
@@ -143,8 +143,8 @@
       "partialResults": "找到了{count, plural, one {1个航班} other {{count}个航班}}，但未能检查所有日期。部分选项可能缺失。",
       "bookDirect": "直接预订",
       "book": "预订",
-      "googleFlights": "谷歌航班",
-      "google": "谷歌",
+      "comparePrices": "比较价格",
+      "compare": "比较",
       "hideDetails": "隐藏详情",
       "showSegments": "显示{count}个航段",
       "riskFactors": "风险因素：",
@@ -177,7 +177,7 @@
     },
     "noResults": {
       "timeout": "搜索超时",
-      "timeoutExplanation": "谷歌航班响应缓慢。通常再试一次即可。",
+      "timeoutExplanation": "比较价格响应缓慢。通常再试一次即可。",
       "timeoutTip": "提示：尝试减少日期范围、单一目的地，或在非高峰时段搜索。",
       "providerError": "数据提供方暂时出了点问题",
       "providerErrorExplanation": "航班数据源返回错误。请稍等片刻再试。",
@@ -437,13 +437,13 @@
   },
   "metadata": {
     "title": "FlyFast - 最智能的航班搜索",
-    "description": "用自然语言描述你的行程。FlyFast搜索谷歌航班，过滤冲突区域，找到最安全、最便宜的航线。免费，无需登录。",
+    "description": "用自然语言描述你的行程。FlyFast搜索比较价格，过滤冲突区域，找到最安全、最便宜的航线。免费，无需登录。",
     "ogAlt": "FlyFast：描述你的行程，我们找到最佳航班",
     "flightTitle": "{route} 最低{price} - FlyFast",
     "flightDescription": "找到{route}，最低{price}。已过滤冲突区域。在FlyFast上搜索你的航班。",
     "faq": {
       "q1": "FlyFast 是如何工作的？",
-      "a1": "用自然语言描述你的行程，例如'下周从孟买到汉堡，预算¥2000以内'。FlyFast 搜索 Google Flights 上的所有航班，过滤冲突区域，并按价格、时长和航线安全性排序。你直接在航空公司官网预订。",
+      "a1": "用自然语言描述你的行程，例如'下周从孟买到汉堡，预算¥2000以内'。FlyFast 搜索 所有可用航班，过滤冲突区域，并按价格、时长和航线安全性排序。你直接在航空公司官网预订。",
       "q2": "FlyFast 免费吗？",
       "a2": "是的。FlyFast 完全免费，无需登录。每小时可搜索10次。没有广告，也没有付费版本。",
       "q3": "FlyFast 如何过滤冲突区域？",
@@ -451,9 +451,9 @@
       "q4": "飞越冲突区域安全吗？",
       "a4": "冲突区域上方的部分空域已被航空当局关闭或限制（NOTAMs）。航空公司会绕行这些区域，这可能增加飞行时间和费用。FlyFast 自动检查哪些航线穿越冲突空域，并进行过滤或标记。预订前请务必查看你所在国家政府的官方旅行建议。",
       "q5": "如何找到避开冲突区域的便宜航班？",
-      "a5": "在 FlyFast 上输入自然语言查询，例如'从伦敦到曼谷最便宜的航班，避开冲突区域'。FlyFast 搜索 Google Flights 上的所有航班，移除经过高风险空域的航线，并按价格对剩余选项排序。你还可以指定灵活日期来找到最便宜的出行日。",
+      "a5": "在 FlyFast 上输入自然语言查询，例如'从伦敦到曼谷最便宜的航班，避开冲突区域'。FlyFast 搜索 所有可用航班，移除经过高风险空域的航线，并按价格对剩余选项排序。你还可以指定灵活日期来找到最便宜的出行日。",
       "q6": "FlyFast 搜索哪些航空公司？",
-      "a6": "FlyFast 搜索 Google Flights 上的所有航班，覆盖全球所有主要航空公司、廉价航空公司和多航空公司联程行程。",
+      "a6": "FlyFast 搜索 所有可用航班，覆盖全球所有主要航空公司、廉价航空公司和多航空公司联程行程。",
       "q7": "我可以搜索多城市或复杂航线吗？",
       "a7": "可以。FlyFast 支持多城市搜索、灵活日期、附近机场和预算限制。它搜索所有出发地-目的地-日期组合，并排列出最佳选项。"
     }
@@ -476,7 +476,7 @@
     "whatWeDoNotCollect4": "除你在搜索中输入的内容外，不收集任何位置数据",
     "thirdPartyHeading": "第三方服务",
     "thirdPartyIntro": "FlyFast使用以下外部服务进行运营：",
-    "thirdPartyGoogleFlights": "<bold>Google Flights</bold> -- 航班数据提供方。你的搜索参数（出发地、目的地、日期）会被发送以获取航班结果。",
+    "thirdPartyFlightData": "<bold>航班数据提供方</bold> -- 你的搜索参数（出发地、目的地、日期）会被发送以获取航班结果。",
     "thirdPartyGemini": "<bold>Google Gemini</bold> -- 用于将自然语言查询解析为结构化搜索参数的AI服务。",
     "thirdPartyPostHog": "<bold>PostHog</bold> -- 注重隐私的分析服务。托管在欧盟。不发送任何个人数据。",
     "thirdPartyVercel": "<bold>Vercel</bold> -- 网站应用的托管服务提供商。",
@@ -499,7 +499,7 @@
     "lastUpdated": "最后更新：{date}",
     "intro": "使用FlyFast即表示你同意以下条款。FlyFast由<link>Building Open</link>运营。",
     "serviceHeading": "服务说明",
-    "serviceBody": "FlyFast是一款免费的航班搜索工具，使用自然语言输入在Google Flights上搜索航班，并过滤穿越冲突区域的航线。FlyFast不销售机票、不处理支付、不充当旅行代理。当你点击航班结果时，你将被跳转到航空公司或Google Flights完成预订。",
+    "serviceBody": "FlyFast是一款免费的航班搜索工具，使用自然语言输入通过多个来源搜索航班，并过滤穿越冲突区域的航线。FlyFast不销售机票、不处理支付、不充当旅行代理。当你点击航班结果时，你将被跳转到航空公司完成预订。",
     "accuracyHeading": "不保证准确性",
     "accuracyBody": "航班价格、可用性、航线和安全信息可能随时变化。FlyFast上显示的信息仅供参考，可能与你预订时看到的信息有所不同。请务必直接向航空公司和相关政府机构确认价格、时刻表和旅行建议。",
     "conflictHeading": "冲突区域数据",
@@ -512,7 +512,7 @@
     "useItem3": "不得使用FlyFast从事非法活动。",
     "useBlockNotice": "我们保留阻止违反这些条款的用户访问的权利。",
     "ipHeading": "知识产权",
-    "ipBody": "FlyFast基于MIT许可证开源。源代码可在<link>github.com/buildingopen/opensky</link>获取。航班数据由Google Flights提供，受其条款约束。冲突区域数据由Building Open维护。",
+    "ipBody": "FlyFast基于MIT许可证开源。源代码可在<link>github.com/buildingopen/opensky</link>获取。航班数据来自公开可用的航班信息。冲突区域数据由Building Open维护。",
     "liabilityHeading": "责任限制",
     "liabilityBody": "FlyFast按「现状」提供，不提供任何形式的保证。Building Open不对因你使用FlyFast而产生的任何损失、损害或费用承担责任，包括但不限于：价格不准确、航线安全分类错误、错过航班或预订错误。",
     "changesHeading": "条款变更",
@@ -567,7 +567,7 @@
     "faqFreeQ": "FlyFast免费吗？",
     "faqFreeA": "是的。无需登录、无广告、无付费版本。每小时可进行10次搜索。",
     "faqTicketsQ": "FlyFast销售机票吗？",
-    "faqTicketsA": "不销售。FlyFast搜索并排列航班。当你点击搜索结果时，你将直接在航空公司或通过Google Flights预订。",
+    "faqTicketsA": "不销售。FlyFast搜索并排列航班。当你点击搜索结果时，你将直接在航空公司预订。",
     "faqAccuracyQ": "冲突区域数据有多准确？",
     "faqAccuracyA": "数据集定期更新，涵盖活跃冲突区域、限制空域和航空建议。可能无法反映最近几天的变化。预订前请务必查看官方政府建议。",
     "faqApiQ": "我可以在自己的应用中使用FlyFast数据吗？",
@@ -576,8 +576,8 @@
   "methodology": {
     "title": "FlyFast工作原理 - 方法说明",
     "heading": "工作原理",
-    "description": "FlyFast如何搜索谷歌航班上的所有航班、过滤冲突区域，并按价格、时长和航线安全性排序。",
-    "intro": "FlyFast结合自然语言理解、来自Google Flights的实时航班数据和冲突区域情报，为你的行程找到最佳航线。本页详细说明具体方法。",
+    "description": "FlyFast如何搜索比较价格上的所有航班、过滤冲突区域，并按价格、时长和航线安全性排序。",
+    "intro": "FlyFast结合自然语言理解、实时航班数据和冲突区域情报，为你的行程找到最佳航线。本页详细说明具体方法。",
     "toc": {
       "describe": "1. 描述行程",
       "parse": "2. AI解析",
@@ -605,7 +605,7 @@
     },
     "step3": {
       "heading": "3. 搜索所有匹配航班",
-      "body": "FlyFast在Google Flights上并行搜索每个出发地-目的地-日期组合。例如「汉堡或柏林到东京，下周任意一天」的查询，可能产生5个出发地 x 2个目的地 x 7个日期 = 70次搜索，全部同时进行。",
+      "body": "FlyFast通过所有可用来源并行搜索每个出发地-目的地-日期组合。例如「汉堡或柏林到东京，下周任意一天」的查询，可能产生5个出发地 x 2个目的地 x 7个日期 = 70次搜索，全部同时进行。",
       "streaming": "结果在返回时实时展示，你可以看到航班逐步出现，而无需等待所有搜索完成。"
     },
     "step4": {
@@ -644,12 +644,12 @@
     },
     "step6": {
       "heading": "6. 直接预订",
-      "body": "FlyFast不销售机票，也不收取费用。当你点击航班时，你将直接前往航空公司或Google Flights进行比较和预订。价格可能在我们搜索和你预订之间发生变化。"
+      "body": "FlyFast不销售机票，也不收取费用。当你点击航班时，你将直接前往航空公司进行比较和预订。价格可能在我们搜索和你预订之间发生变化。"
     },
     "dataSources": {
       "heading": "数据来源",
       "flightData": "航班数据：",
-      "flightDataDesc": "Google Flights，涵盖全球主要航空公司、低成本航空公司和多航空公司联程。",
+      "flightDataDesc": "多个航班数据来源，涵盖全球主要航空公司、低成本航空公司和多航空公司联程。",
       "conflictData": "冲突区域数据：",
       "conflictDataDesc": "由Building Open维护。包括活跃冲突区域、军事活动区域、限制空域和航空建议。定期更新。页脚中的「冲突区域更新于」日期显示数据的最后刷新时间。",
       "queryParsing": "查询解析：",

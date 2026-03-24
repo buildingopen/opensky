@@ -2,14 +2,14 @@
 
 > Natural language flight search with conflict zone filtering.
 
-FlyFast is a free, open source flight search engine at flyfast.app. Users describe their trip in plain English (e.g. "Mumbai to Hamburg next week under $300") and FlyFast searches every flight on Google Flights, filters routes through active conflict zones, and ranks results by price, duration, stops, and route safety. Users book directly with the airline.
+FlyFast is a free, open source flight search engine at flyfast.app. Users describe their trip in plain English (e.g. "Mumbai to Hamburg next week under $300") and FlyFast searches every available flight, filters routes through active conflict zones, and ranks results by price, duration, stops, and route safety. Users book directly with the airline.
 
 ## Key features
 
 - Natural language search: type a sentence instead of filling forms
 - Conflict zone filtering: routes through high-risk airspace are removed or flagged
 - Safety badges: each flight is labeled Safe, Caution, High Risk, or Do Not Fly
-- Every flight on Google Flights
+- Every available flight
 - Multi-city, flexible date, and budget-aware search
 - No login, no ads, no account required
 - Open source (github.com/buildingopen/opensky)
@@ -21,7 +21,7 @@ FlyFast is a free, open source flight search engine at flyfast.app. Users descri
 3. FlyFast searches flight providers for all origin-destination-date combinations
 4. Each route is checked against a conflict zone dataset
 5. Results are scored by safety, price, duration, and stops
-6. User clicks through to book directly with the airline or via Google Flights
+6. User clicks through to book directly with the airline
 
 ## Conflict zone filtering
 

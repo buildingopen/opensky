@@ -118,7 +118,7 @@ export async function GET(req: NextRequest) {
               Describe your trip.
             </div>
             <div style={{ fontSize: "28px", color: "#a1a1aa", display: "flex" }}>
-              Every flight on Google Flights. Conflict zones filtered.
+              Every available flight. Conflict zones filtered.
             </div>
           </div>
         )}

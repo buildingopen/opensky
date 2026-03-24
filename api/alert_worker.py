@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import sqlite3
+import urllib.parse
 from datetime import datetime, timedelta
 
 from html import escape as html_escape
@@ -92,7 +93,7 @@ def _build_email_html(
 ) -> str:
     sym = _currency_symbol(currency)
     safe_query = html_escape(query)
-    gf_url = f"https://www.google.com/travel/flights?q=flights+from+{origin}+to+{dest}+on+{date}"
+    flyfast_url = f"https://flyfast.app/en?q={urllib.parse.quote(query)}&ref=alert_email"
     unsub_url = f"{API_BASE}/api/alerts/unsubscribe/{unsub_token}"
     return f"""<!DOCTYPE html>
 <html>
@@ -107,8 +108,8 @@ def _build_email_html(
       We found flights from <strong>{origin}</strong> to <strong>{dest}</strong>
       for <strong style="color:#22c55e;font-size:18px">{sym}{price:.0f}</strong> on {date}.
     </p>
-    <a href="{gf_url}" style="display:inline-block;padding:12px 24px;background:#f97316;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
-      View on Google Flights
+    <a href="{flyfast_url}" style="display:inline-block;padding:12px 24px;background:#f97316;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px">
+      Search on FlyFast
     </a>
   </div>
   <div style="padding:16px 0;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;text-align:center">

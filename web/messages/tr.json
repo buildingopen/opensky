@@ -62,7 +62,7 @@
   "search": {
     "heroTitle": "Prompt to",
     "heroTitleAccent": "fly.",
-    "heroSubtitle": "Google Flights üzerinden tüm uçuşları arayın. Yapay zeka destekli, çatışma bölgeleri filtrelenmiş. Ücretsiz, giriş gerektirmez.",
+    "heroSubtitle": "Mevcut tüm uçuşları arayın. Yapay zeka destekli, çatışma bölgeleri filtrelenmiş. Ücretsiz, giriş gerektirmez.",
     "placeholder": "ör. İstanbul'dan Londra'ya gelecek hafta 15000 TL altında, business class",
     "ariaLabel": "Seyahatinizi kendi cümlelerinizle anlatın",
     "enterToSearch": "Aramak için Enter",
@@ -104,7 +104,7 @@
     "timeSaved": "FlyFast size yaklaşık {time} manuel arama süresinden tasarruf ettirdi",
     "loading": {
       "understanding": "Hedefler, tarihler ve tercihler yorumlanıyor",
-      "agentsChecking": "{workers} ajan, Google Flights'ta {total} kombinasyonu kontrol ediyor",
+      "agentsChecking": "{workers} ajan, tüm uçuş kaynaklarında {total} kombinasyonu kontrol ediyor",
       "checkingRoute": "{date} tarihinde {route}",
       "checked": "{done}/{total} kontrol edildi",
       "findingFlights": "Uçuşlarınız aranıyor",
@@ -143,8 +143,8 @@
       "partialResults": "{count, plural, one {1 uçuş} other {{count} uçuş}} bulduk ancak tüm tarihleri kontrol edemedik. Bazı seçenekler eksik olabilir.",
       "bookDirect": "Doğrudan rezervasyon",
       "book": "Rezervasyon",
-      "googleFlights": "Google Flights",
-      "google": "Google",
+      "comparePrices": "Fiyatları karşılaştır",
+      "compare": "Karşılaştır",
       "hideDetails": "Detayları gizle",
       "showSegments": "{count} uçuş segmentini göster",
       "riskFactors": "Risk faktörleri:",
@@ -177,7 +177,7 @@
     },
     "noResults": {
       "timeout": "Arama zaman aşımına uğradı",
-      "timeoutExplanation": "Google Flights yanıt vermekte yavaş kaldı. Bu genellikle ikinci denemede çalışır.",
+      "timeoutExplanation": "Uçuş verileri kaynağı yanıt vermekte yavaş kaldı. Bu genellikle ikinci denemede çalışır.",
       "timeoutTip": "İpucu: Daha az tarih, tek bir varış noktası deneyin veya yoğun olmayan saatlerde arama yapın.",
       "providerError": "Sağlayıcılarda bir sorun yaşanıyor",
       "providerErrorExplanation": "Uçuş veri kaynakları hata döndürdü. Bir dakika bekleyip tekrar deneyin.",
@@ -437,13 +437,13 @@
   },
   "metadata": {
     "title": "FlyFast - En akıllı uçuş arama",
-    "description": "Seyahatinizi kendi cümlelerinizle anlatın. FlyFast, Google Flights'ı arar, çatışma bölgelerini filtreler ve en güvenli, en ucuz rotayı bulur. Ücretsiz, giriş gerektirmez.",
+    "description": "Seyahatinizi kendi cümlelerinizle anlatın. FlyFast, binlerce uçuşu arar, çatışma bölgelerini filtreler ve en güvenli, en ucuz rotayı bulur. Ücretsiz, giriş gerektirmez.",
     "ogAlt": "FlyFast: seyahatinizi anlatın, en iyi uçuşu bulalım",
     "flightTitle": "{route} {price}'den itibaren - FlyFast",
     "flightDescription": "{route} için {price}'den başlayan fiyatlar bulundu. Çatışma bölgeleri filtrelendi. FlyFast'te kendi uçuşlarınızı arayın.",
     "faq": {
       "q1": "FlyFast nasıl çalışır?",
-      "a1": "Seyahatinizi doğal dilde yazın, örneğin 'Gelecek hafta Mumbai'den Hamburg'a 300 € altında'. FlyFast, Google Flights'taki tüm uçuşları arar, çatışma bölgelerini filtreler ve fiyat, süre ve rota güvenliğine göre sıralar. Doğrudan havayolu şirketinden rezervasyon yaparsınız.",
+      "a1": "Seyahatinizi doğal dilde yazın, örneğin 'Gelecek hafta Mumbai'den Hamburg'a 300 € altında'. FlyFast, mevcut tüm uçuşları arar, çatışma bölgelerini filtreler ve fiyat, süre ve rota güvenliğine göre sıralar. Doğrudan havayolu şirketinden rezervasyon yaparsınız.",
       "q2": "FlyFast ücretsiz mi?",
       "a2": "Evet. FlyFast tamamen ücretsizdir ve giriş gerektirmez. Saatte 10 arama yapabilirsiniz. Reklam yok, premium plan yok.",
       "q3": "FlyFast çatışma bölgelerini nasıl filtreler?",
@@ -451,9 +451,9 @@
       "q4": "Çatışma bölgeleri üzerinden uçmak güvenli mi?",
       "a4": "Çatışma bölgeleri üzerindeki bazı hava sahaları havacılık otoriteleri tarafından kapatılmış veya kısıtlanmıştır (NOTAMs). Havayolları bu bölgelerin etrafından rota değiştirir, bu da uçuş süresini ve maliyeti artırabilir. FlyFast, hangi rotaların çatışma hava sahasını geçtiğini otomatik olarak kontrol eder ve filtreler veya işaretler. Rezervasyon yapmadan önce her zaman hükümetinizin resmi seyahat uyarılarını kontrol edin.",
       "q5": "Çatışma bölgelerinden kaçınan ucuz uçuşları nasıl bulurum?",
-      "a5": "FlyFast'te doğal dilde bir sorgu yazın, örneğin 'Londra'dan Bangkok'a en ucuz uçuş, çatışma bölgelerinden kaçınarak'. FlyFast, Google Flights'taki tüm uçuşları arar, yüksek riskli hava sahasından geçen rotaları kaldırır ve kalan seçenekleri fiyata göre sıralar. En ucuz günü bulmak için esnek tarihler de belirleyebilirsiniz.",
+      "a5": "FlyFast'te doğal dilde bir sorgu yazın, örneğin 'Londra'dan Bangkok'a en ucuz uçuş, çatışma bölgelerinden kaçınarak'. FlyFast, mevcut tüm uçuşları arar, yüksek riskli hava sahasından geçen rotaları kaldırır ve kalan seçenekleri fiyata göre sıralar. En ucuz günü bulmak için esnek tarihler de belirleyebilirsiniz.",
       "q6": "FlyFast hangi havayollarını arar?",
-      "a6": "FlyFast, Google Flights'taki tüm uçuşları arar; tüm büyük havayolları, düşük maliyetli havayolları ve dünya çapında çok havayollu güzergahları kapsar.",
+      "a6": "FlyFast, mevcut tüm uçuşları arar; tüm büyük havayolları, düşük maliyetli havayolları ve dünya çapında çok havayollu güzergahları kapsar.",
       "q7": "Çok şehirli veya karmaşık rotalar arayabilir miyim?",
       "a7": "Evet. FlyFast çok şehirli aramaları, esnek tarihleri, yakın havalimanlarını ve bütçe kısıtlamalarını yönetir. Tüm kalkış-varış-tarih kombinasyonlarını arar ve en iyi seçenekleri sıralar."
     }
@@ -476,7 +476,7 @@
     "whatWeDoNotCollect4": "Aramanızda yazdıklarınız dışında konum verisi yok",
     "thirdPartyHeading": "Üçüncü taraf hizmetler",
     "thirdPartyIntro": "FlyFast, işletim için aşağıdaki harici hizmetleri kullanır:",
-    "thirdPartyGoogleFlights": "<bold>Google Flights</bold> -- uçuş verileri sağlayıcısı. Uçuş sonuçlarını almak için arama parametreleriniz (kalkış noktaları, varış noktaları, tarihler) gönderilir.",
+    "thirdPartyFlightData": "<bold>Uçuş verileri sağlayıcıları</bold> -- uçuş sonuçlarını almak için arama parametreleriniz (kalkış noktaları, varış noktaları, tarihler) gönderilir.",
     "thirdPartyGemini": "<bold>Google Gemini</bold> -- doğal dil sorgularını yapılandırılmış arama parametrelerine dönüştüren yapay zeka hizmeti.",
     "thirdPartyPostHog": "<bold>PostHog</bold> -- gizlilik odaklı analitik. AB'de barındırılır. Kişisel veri gönderilmez.",
     "thirdPartyVercel": "<bold>Vercel</bold> -- web uygulaması barındırma sağlayıcısı.",
@@ -499,7 +499,7 @@
     "lastUpdated": "Son güncelleme: {date}",
     "intro": "FlyFast'i kullanarak bu şartları kabul etmiş olursunuz. FlyFast, <link>Building Open</link> tarafından işletilmektedir.",
     "serviceHeading": "Hizmet açıklaması",
-    "serviceBody": "FlyFast, doğal dil girişi kullanarak Google Flights üzerinden uçuş arayan ve çatışma bölgelerinden geçen rotaları filtreleyen ücretsiz bir uçuş arama aracıdır. FlyFast bilet satmaz, ödeme işlemi yapmaz veya seyahat acentesi olarak hareket etmez. Bir uçuş sonucuna tıkladığınızda, rezervasyonunuzu tamamlamak için havayoluna veya Google Flights'a yönlendirilirsiniz.",
+    "serviceBody": "FlyFast, doğal dil girişi kullanarak birden fazla kaynak üzerinden uçuş arayan ve çatışma bölgelerinden geçen rotaları filtreleyen ücretsiz bir uçuş arama aracıdır. FlyFast bilet satmaz, ödeme işlemi yapmaz veya seyahat acentesi olarak hareket etmez. Bir uçuş sonucuna tıkladığınızda, rezervasyonunuzu tamamlamak için havayoluna yönlendirilirsiniz.",
     "accuracyHeading": "Doğruluk garantisi yoktur",
     "accuracyBody": "Uçuş fiyatları, müsaitlik durumu, rotalar ve güvenlik bilgileri hızla değişebilir. FlyFast'te gösterilen bilgiler yalnızca bilgilendirme amaçlıdır ve rezervasyon noktasında gördüklerinizden farklı olabilir. Fiyatları, tarihleri ve seyahat uyarılarını her zaman doğrudan havayolu ve ilgili devlet makamlarından doğrulayın.",
     "conflictHeading": "Çatışma bölgesi verileri",
@@ -512,7 +512,7 @@
     "useItem3": "FlyFast'i yasadışı faaliyetlere aracılık etmek için kullanmayın.",
     "useBlockNotice": "Bu şartları ihlal eden kullanıcıların erişimini engelleme hakkını saklı tutarız.",
     "ipHeading": "Fikri mülkiyet",
-    "ipBody": "FlyFast, MIT lisansı altında açık kaynaktır. Kaynak kodu <link>github.com/buildingopen/opensky</link> adresinde mevcuttur. Uçuş verileri Google Flights tarafından sağlanır ve kendi şartlarına tabidir. Çatışma bölgesi verileri Building Open tarafından yönetilir.",
+    "ipBody": "FlyFast, MIT lisansı altında açık kaynaktır. Kaynak kodu <link>github.com/buildingopen/opensky</link> adresinde mevcuttur. Uçuş verileri kamuya açık uçuş bilgilerinden elde edilmektedir. Çatışma bölgesi verileri Building Open tarafından yönetilir.",
     "liabilityHeading": "Sorumluluk sınırlaması",
     "liabilityBody": "FlyFast hiçbir garanti olmaksızın \"olduğu gibi\" sunulmaktadır. Building Open, FlyFast kullanımınızdan kaynaklanan; hatalı fiyatlandırma, rota güvenliği yanlış sınıflandırması, kaçırılan uçuşlar veya rezervasyon hataları dahil ancak bunlarla sınırlı olmamak üzere hiçbir kayıp, hasar veya maliyetten sorumlu değildir.",
     "changesHeading": "Bu şartlardaki değişiklikler",
@@ -567,7 +567,7 @@
     "faqFreeQ": "FlyFast ücretsiz mi?",
     "faqFreeA": "Evet. Giriş yok, reklam yok, premium katman yok. Saatte 10 arama yapabilirsiniz.",
     "faqTicketsQ": "FlyFast bilet satıyor mu?",
-    "faqTicketsA": "Hayır. FlyFast uçuşları bulur ve sıralar. Bir sonuca tıkladığınızda, doğrudan havayolundan veya Google Flights üzerinden rezervasyon yaparsınız.",
+    "faqTicketsA": "Hayır. FlyFast uçuşları bulur ve sıralar. Bir sonuca tıkladığınızda, doğrudan havayolundan  rezervasyon yaparsınız.",
     "faqAccuracyQ": "Çatışma bölgesi verileri ne kadar doğru?",
     "faqAccuracyA": "Veri seti düzenli olarak güncellenir ve aktif çatışma bölgelerini, kısıtlı hava sahalarını ve havacılık uyarılarını kapsar. Son birkaç günün değişikliklerini yansıtmayabilir. Rezervasyon yapmadan önce her zaman resmi hükümet uyarılarını kontrol edin.",
     "faqApiQ": "FlyFast verilerini kendi uygulamamda kullanabilir miyim?",
@@ -576,8 +576,8 @@
   "methodology": {
     "title": "FlyFast Nasıl Çalışır - Metodoloji",
     "heading": "Nasıl çalışır",
-    "description": "FlyFast'in Google Flights'taki tüm uçuşları nasıl aradığını, çatışma bölgelerini nasıl filtrelediğini ve fiyat, süre ve rota güvenliğine göre nasıl sıraladığını öğrenin.",
-    "intro": "FlyFast, doğal dil anlama, Google Flights'tan gerçek zamanlı uçuş verileri ve çatışma bölgesi istihbaratını birleştirerek seyahatiniz için en iyi rotayı bulur. Bu sayfa tam olarak nasıl çalıştığını açıklar.",
+    "description": "FlyFast'in mevcut tüm uçuşları nasıl aradığını, çatışma bölgelerini nasıl filtrelediğini ve fiyat, süre ve rota güvenliğine göre nasıl sıraladığını öğrenin.",
+    "intro": "FlyFast, doğal dil anlama, gerçek zamanlı uçuş verileri ve çatışma bölgesi istihbaratını birleştirerek seyahatiniz için en iyi rotayı bulur. Bu sayfa tam olarak nasıl çalıştığını açıklar.",
     "toc": {
       "describe": "1. Seyahatinizi anlatın",
       "parse": "2. Yapay zeka ile ayrıştırma",
@@ -605,7 +605,7 @@
     },
     "step3": {
       "heading": "3. Eşleşen tüm uçuşları ararız",
-      "body": "FlyFast, Google Flights üzerinden her kalkış-varış-tarih kombinasyonunu paralel olarak arar. \"Hamburg veya Berlin'den Tokyo'ya, gelecek hafta herhangi bir gün\" gibi bir sorgu için bu, 5 kalkış x 2 varış x 7 tarih = 70 arama anlamına gelebilir ve hepsi eş zamanlı çalışır.",
+      "body": "FlyFast, tüm mevcut kaynaklar üzerinden her kalkış-varış-tarih kombinasyonunu paralel olarak arar. \"Hamburg veya Berlin'den Tokyo'ya, gelecek hafta herhangi bir gün\" gibi bir sorgu için bu, 5 kalkış x 2 varış x 7 tarih = 70 arama anlamına gelebilir ve hepsi eş zamanlı çalışır.",
       "streaming": "Sonuçlar geldikçe gerçek zamanlı olarak görünür, böylece tüm aramaların bitmesini beklemeniz gerekmez."
     },
     "step4": {
@@ -644,12 +644,12 @@
     },
     "step6": {
       "heading": "6. Doğrudan rezervasyon yaparsınız",
-      "body": "FlyFast bilet satmaz ve ödeme almaz. Bir uçuşa tıkladığınızda, doğrudan havayoluna veya Google Flights'a gidersiniz; orada karşılaştırma yapabilir ve rezervasyon yapabilirsiniz. Aramamız ile rezervasyonunuz arasında fiyatlar değişebilir."
+      "body": "FlyFast bilet satmaz ve ödeme almaz. Bir uçuşa tıkladığınızda, doğrudan havayoluna gidersiniz; orada karşılaştırma yapabilir ve rezervasyon yapabilirsiniz. Aramamız ile rezervasyonunuz arasında fiyatlar değişebilir."
     },
     "dataSources": {
       "heading": "Veri kaynakları",
       "flightData": "Uçuş verileri:",
-      "flightDataDesc": "Google Flights; büyük havayollarını, düşük maliyetli havayollarını ve dünya genelinde çoklu havayolu güzergahlarını kapsar.",
+      "flightDataDesc": "Birden fazla uçuş verisi kaynağı; büyük havayollarını, düşük maliyetli havayollarını ve dünya genelinde çoklu havayolu güzergahlarını kapsar.",
       "conflictData": "Çatışma bölgesi verileri:",
       "conflictDataDesc": "Building Open tarafından yönetilir. Aktif çatışma bölgelerini, askeri faaliyet alanlarını, kısıtlı hava sahalarını ve havacılık uyarılarını içerir. Düzenli olarak güncellenir. Alt bilgideki \"Çatışma bölgeleri güncelleme\" tarihi verinin en son ne zaman yenilendiğini gösterir.",
       "queryParsing": "Sorgu ayrıştırma:",

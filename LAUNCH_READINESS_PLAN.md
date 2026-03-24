@@ -9,7 +9,7 @@ Production API: `https://opensky-api.buildingopen.org`
 Reach a verified **100/100** launch readiness score with evidence captured on production.
 
 ## Required Evidence Checklist
-- [ ] Production UI shows **Skyscanner + Google Flights** links on flight cards.
+- [ ] Production UI shows **Skyscanner + Compare prices** links on flight cards.
 - [ ] Production prompt input expands for multi-line text.
 - [ ] Booking link behavior is accurate or explicitly labeled as marketplace search.
 - [ ] Production success flow screenshot captured.

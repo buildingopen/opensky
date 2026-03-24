@@ -62,7 +62,7 @@
   "search": {
     "heroTitle": "Prompt to",
     "heroTitleAccent": "fly.",
-    "heroSubtitle": "Pesquise todos os voos no Google Flights. Com IA, zonas de conflito filtradas. Grátis, sem cadastro.",
+    "heroSubtitle": "Pesquise todos os voos disponíveis. Com IA, zonas de conflito filtradas. Grátis, sem cadastro.",
     "placeholder": "Ex: GRU para Lisboa semana que vem abaixo de R$3000, classe executiva",
     "ariaLabel": "Descreva sua viagem em português",
     "enterToSearch": "Enter para buscar",
@@ -104,7 +104,7 @@
     "timeSaved": "O FlyFast economizou ~{time} de busca manual para você",
     "loading": {
       "understanding": "Interpretando destinos, datas e preferências",
-      "agentsChecking": "{workers} agentes verificando {total} combinações no Google Flights",
+      "agentsChecking": "{workers} agentes verificando {total} combinações em todas as fontes de voos",
       "checkingRoute": "{route} em {date}",
       "checked": "{done}/{total} verificados",
       "findingFlights": "Procurando seus voos",
@@ -143,8 +143,8 @@
       "partialResults": "Encontramos {count, plural, one {1 voo} other {{count} voos}}, mas não foi possível verificar todas as datas. Algumas opções podem estar faltando.",
       "bookDirect": "Reservar direto",
       "book": "Reservar",
-      "googleFlights": "Google Flights",
-      "google": "Google",
+      "comparePrices": "Comparar preços",
+      "compare": "Comparar",
       "hideDetails": "Ocultar detalhes",
       "showSegments": "Mostrar {count} trechos",
       "riskFactors": "Fatores de risco:",
@@ -177,7 +177,7 @@
     },
     "noResults": {
       "timeout": "A busca expirou",
-      "timeoutExplanation": "O Google Flights demorou para responder. Geralmente funciona na segunda tentativa.",
+      "timeoutExplanation": "O A fonte de dados de voos demorou para responder. Geralmente funciona na segunda tentativa.",
       "timeoutTip": "Dica: tente menos datas, um único destino, ou busque em horários fora de pico.",
       "providerError": "Os provedores estão com problemas",
       "providerErrorExplanation": "As fontes de dados de voos retornaram um erro. Espere um minuto e tente novamente.",
@@ -437,13 +437,13 @@
   },
   "metadata": {
     "title": "FlyFast - A busca de voos mais inteligente",
-    "description": "Descreva sua viagem em português. O FlyFast pesquisa no Google Flights, filtra zonas de conflito e encontra a rota mais segura e barata. Grátis, sem cadastro.",
+    "description": "Descreva sua viagem em português. O FlyFast pesquisa milhares de voos, filtra zonas de conflito e encontra a rota mais segura e barata. Grátis, sem cadastro.",
     "ogAlt": "FlyFast: descreva sua viagem, encontramos o melhor voo",
     "flightTitle": "{route} a partir de {price} - FlyFast",
     "flightDescription": "Encontrei {route} a partir de {price}. Zonas de conflito filtradas. Busque seus próprios voos no FlyFast.",
     "faq": {
       "q1": "Como o FlyFast funciona?",
-      "a1": "Descreva sua viagem em linguagem natural, por exemplo 'Mumbai para Hamburgo na próxima semana por menos de R$1500'. O FlyFast pesquisa todos os voos no Google Flights, filtra zonas de conflito e classifica por preço, duração e segurança da rota. Você reserva diretamente com a companhia aérea.",
+      "a1": "Descreva sua viagem em linguagem natural, por exemplo 'Mumbai para Hamburgo na próxima semana por menos de R$1500'. O FlyFast pesquisa todos os voos disponíveis, filtra zonas de conflito e classifica por preço, duração e segurança da rota. Você reserva diretamente com a companhia aérea.",
       "q2": "O FlyFast é gratuito?",
       "a2": "Sim. O FlyFast é totalmente gratuito e não exige cadastro. Você tem 10 buscas por hora. Sem anúncios e sem plano premium.",
       "q3": "Como o FlyFast filtra zonas de conflito?",
@@ -451,9 +451,9 @@
       "q4": "É seguro voar sobre zonas de conflito?",
       "a4": "Parte do espaço aéreo sobre zonas de conflito é fechada ou restrita pelas autoridades de aviação (NOTAMs). As companhias aéreas desviam suas rotas ao redor dessas áreas, o que pode aumentar o tempo de voo e o custo. O FlyFast verifica automaticamente quais rotas cruzam espaço aéreo em conflito e as filtra ou sinaliza. Sempre consulte os avisos de viagem oficiais do seu governo antes de reservar.",
       "q5": "Como encontro voos baratos que evitam zonas de conflito?",
-      "a5": "No FlyFast, digite uma busca em linguagem natural como 'voo mais barato de Londres para Bangkok evitando zonas de conflito'. O FlyFast pesquisa todos os voos no Google Flights, remove rotas por espaço aéreo de alto risco e classifica as opções restantes por preço. Você também pode indicar datas flexíveis para encontrar o dia mais barato para voar.",
+      "a5": "No FlyFast, digite uma busca em linguagem natural como 'voo mais barato de Londres para Bangkok evitando zonas de conflito'. O FlyFast pesquisa todos os voos disponíveis, remove rotas por espaço aéreo de alto risco e classifica as opções restantes por preço. Você também pode indicar datas flexíveis para encontrar o dia mais barato para voar.",
       "q6": "Quais companhias aéreas o FlyFast pesquisa?",
-      "a6": "O FlyFast pesquisa todos os voos no Google Flights, incluindo todas as grandes companhias, companhias de baixo custo e itinerários com múltiplas companhias no mundo todo.",
+      "a6": "O FlyFast pesquisa todos os voos disponíveis, incluindo todas as grandes companhias, companhias de baixo custo e itinerários com múltiplas companhias no mundo todo.",
       "q7": "Posso buscar rotas multi-cidade ou complexas?",
       "a7": "Sim. O FlyFast gerencia buscas multi-cidade, datas flexíveis, aeroportos próximos e restrições de orçamento. Ele pesquisa todas as combinações de origem-destino-data e classifica as melhores opções."
     }
@@ -476,7 +476,7 @@
     "whatWeDoNotCollect4": "Sem dados de localização além do que você digita na busca",
     "thirdPartyHeading": "Serviços de terceiros",
     "thirdPartyIntro": "O FlyFast utiliza os seguintes serviços externos para operar:",
-    "thirdPartyGoogleFlights": "<bold>Google Flights</bold> -- provedor de dados de voos. Seus parâmetros de busca (origens, destinos, datas) são enviados para obter resultados de voos.",
+    "thirdPartyFlightData": "<bold>Provedores de dados de voos</bold> -- seus parâmetros de busca (origens, destinos, datas) são enviados para obter resultados de voos.",
     "thirdPartyGemini": "<bold>Google Gemini</bold> -- serviço de IA para interpretar consultas em linguagem natural em parâmetros de busca estruturados.",
     "thirdPartyPostHog": "<bold>PostHog</bold> -- analytics focado em privacidade. Hospedado na UE. Nenhum dado pessoal é enviado.",
     "thirdPartyVercel": "<bold>Vercel</bold> -- provedor de hospedagem para a aplicação web.",
@@ -499,7 +499,7 @@
     "lastUpdated": "Última atualização: {date}",
     "intro": "Ao usar o FlyFast, você concorda com estes termos. O FlyFast é operado pela <link>Building Open</link>.",
     "serviceHeading": "Descrição do serviço",
-    "serviceBody": "O FlyFast é uma ferramenta gratuita de busca de voos que usa linguagem natural para pesquisar voos no Google Flights e filtrar rotas por zonas de conflito. O FlyFast não vende passagens, não processa pagamentos e não atua como agente de viagens. Ao clicar em um resultado de voo, você é redirecionado para a companhia aérea ou Google Flights para concluir sua reserva.",
+    "serviceBody": "O FlyFast é uma ferramenta gratuita de busca de voos que usa linguagem natural para pesquisar voos via múltiplas fontes e filtrar rotas por zonas de conflito. O FlyFast não vende passagens, não processa pagamentos e não atua como agente de viagens. Ao clicar em um resultado de voo, você é redirecionado para a companhia aérea para concluir sua reserva.",
     "accuracyHeading": "Sem garantia de precisão",
     "accuracyBody": "Preços de voos, disponibilidade, rotas e informações de segurança podem mudar rapidamente. As informações exibidas no FlyFast são apenas para fins informativos e podem diferir do que você vê no momento da reserva. Sempre verifique preços, horários e avisos de viagem diretamente com a companhia aérea e autoridades governamentais relevantes.",
     "conflictHeading": "Dados de zonas de conflito",
@@ -512,7 +512,7 @@
     "useItem3": "Não use o FlyFast para facilitar atividades ilegais.",
     "useBlockNotice": "Reservamo-nos o direito de bloquear o acesso de usuários que violem estes termos.",
     "ipHeading": "Propriedade intelectual",
-    "ipBody": "O FlyFast é código aberto sob a licença MIT. O código-fonte está disponível em <link>github.com/buildingopen/opensky</link>. Os dados de voos são fornecidos pelo Google Flights e estão sujeitos aos seus termos. Os dados de zonas de conflito são mantidos pela Building Open.",
+    "ipBody": "O FlyFast é código aberto sob a licença MIT. O código-fonte está disponível em <link>github.com/buildingopen/opensky</link>. Os dados de voos são obtidos de informações de voos disponíveis publicamente. Os dados de zonas de conflito são mantidos pela Building Open.",
     "liabilityHeading": "Limitação de responsabilidade",
     "liabilityBody": "O FlyFast é fornecido \"como está\", sem garantia de qualquer tipo. A Building Open não é responsável por quaisquer perdas, danos ou custos decorrentes do uso do FlyFast, incluindo, mas não se limitando a: preços imprecisos, classificação incorreta de segurança de rotas, voos perdidos ou erros de reserva.",
     "changesHeading": "Alterações nestes termos",
@@ -567,7 +567,7 @@
     "faqFreeQ": "O FlyFast é gratuito?",
     "faqFreeA": "Sim. Sem login, sem anúncios, sem plano premium. Você tem 10 buscas por hora.",
     "faqTicketsQ": "O FlyFast vende passagens?",
-    "faqTicketsA": "Não. O FlyFast encontra e classifica voos. Ao clicar em um resultado, você reserva diretamente com a companhia aérea ou pelo Google Flights.",
+    "faqTicketsA": "Não. O FlyFast encontra e classifica voos. Ao clicar em um resultado, você reserva diretamente com a companhia aérea .",
     "faqAccuracyQ": "Quão precisos são os dados de zonas de conflito?",
     "faqAccuracyA": "O conjunto de dados é atualizado regularmente e cobre zonas de conflito ativas, espaço aéreo restrito e avisos de aviação. Pode não refletir mudanças dos últimos dias. Sempre verifique os avisos oficiais do governo antes de reservar.",
     "faqApiQ": "Posso usar os dados do FlyFast no meu app?",
@@ -576,8 +576,8 @@
   "methodology": {
     "title": "Como o FlyFast Funciona - Metodologia",
     "heading": "Como funciona",
-    "description": "Como o FlyFast pesquisa todos os voos no Google Flights, filtra zonas de conflito e classifica por preço, duração e segurança da rota.",
-    "intro": "O FlyFast combina compreensão de linguagem natural, dados de voos em tempo real do Google Flights e inteligência de zonas de conflito para encontrar a melhor rota para sua viagem. Esta página explica exatamente como.",
+    "description": "Como o FlyFast pesquisa todos os voos disponíveis, filtra zonas de conflito e classifica por preço, duração e segurança da rota.",
+    "intro": "O FlyFast combina compreensão de linguagem natural, dados de voos em tempo real e inteligência de zonas de conflito para encontrar a melhor rota para sua viagem. Esta página explica exatamente como.",
     "toc": {
       "describe": "1. Descreva sua viagem",
       "parse": "2. Interpretação por IA",
@@ -605,7 +605,7 @@
     },
     "step3": {
       "heading": "3. Buscamos todos os voos correspondentes",
-      "body": "O FlyFast busca cada combinação de origem-destino-data em paralelo no Google Flights. Para uma consulta como \"Hamburgo ou Berlim para Tóquio, qualquer dia da semana que vem\", isso pode ser 5 origens x 2 destinos x 7 datas = 70 buscas, todas rodando simultaneamente.",
+      "body": "O FlyFast busca cada combinação de origem-destino-data em paralelo em todas as fontes disponíveis. Para uma consulta como \"Hamburgo ou Berlim para Tóquio, qualquer dia da semana que vem\", isso pode ser 5 origens x 2 destinos x 7 datas = 70 buscas, todas rodando simultaneamente.",
       "streaming": "Os resultados aparecem conforme chegam, para que você veja os voos surgindo em tempo real em vez de esperar todas as buscas terminarem."
     },
     "step4": {
@@ -644,12 +644,12 @@
     },
     "step6": {
       "heading": "6. Você reserva diretamente",
-      "body": "O FlyFast não vende passagens e não aceita pagamento. Ao clicar em um voo, você vai diretamente para a companhia aérea ou para o Google Flights, onde pode comparar e reservar. Os preços podem mudar entre nossa busca e sua reserva."
+      "body": "O FlyFast não vende passagens e não aceita pagamento. Ao clicar em um voo, você vai diretamente para a companhia aérea, onde pode comparar e reservar. Os preços podem mudar entre nossa busca e sua reserva."
     },
     "dataSources": {
       "heading": "Fontes de dados",
       "flightData": "Dados de voos:",
-      "flightDataDesc": "Google Flights, cobrindo grandes companhias, companhias low-cost e itinerários multi-companhias em todo o mundo.",
+      "flightDataDesc": "Múltiplas fontes de dados de voos, cobrindo grandes companhias, companhias low-cost e itinerários multi-companhias em todo o mundo.",
       "conflictData": "Dados de zonas de conflito:",
       "conflictDataDesc": "Mantidos pela Building Open. Incluem zonas de conflito ativas, áreas de atividade militar, espaço aéreo restrito e avisos de aviação. Atualizados regularmente. A data de \"Zonas de conflito atualizadas\" no rodapé mostra quando os dados foram atualizados pela última vez.",
       "queryParsing": "Interpretação de consultas:",

@@ -61,7 +61,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">{t("thirdPartyHeading")}</h2>
           <p>{t("thirdPartyIntro")}</p>
           <ul className="mt-2 space-y-2 list-disc list-inside">
-            <li>{t.rich("thirdPartyGoogleFlights", { bold })}</li>
+            <li>{t.rich("thirdPartyFlightData", { bold })}</li>
             <li>{t.rich("thirdPartyGemini", { bold })}</li>
             <li>{t.rich("thirdPartyPostHog", { bold })}</li>
             <li>{t.rich("thirdPartyVercel", { bold })}</li>
