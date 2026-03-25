@@ -2352,31 +2352,51 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
 
   // Inline edit state
   const [editing, setEditing] = useState(false);
-  const [editOrigins, setEditOrigins] = useState("");
-  const [editDests, setEditDests] = useState("");
+  const [editOriginList, setEditOriginList] = useState<string[]>([]);
+  const [editDestList, setEditDestList] = useState<string[]>([]);
+  const [editOriginInput, setEditOriginInput] = useState("");
+  const [editDestInput, setEditDestInput] = useState("");
   const [editDate, setEditDate] = useState("");
   const [editReturnDate, setEditReturnDate] = useState("");
+  const [editRoundTrip, setEditRoundTrip] = useState(false);
   const [editCabin, setEditCabin] = useState("");
   const [editMaxPrice, setEditMaxPrice] = useState("");
   const [editStops, setEditStops] = useState("");
 
   const startEditing = () => {
-    setEditOrigins(origins.join(", "));
-    setEditDests(destinations.join(", "));
+    setEditOriginList([...origins]);
+    setEditDestList([...destinations]);
+    setEditOriginInput("");
+    setEditDestInput("");
     setEditDate(dates[0] || "");
     setEditReturnDate(return_dates?.[0] || "");
+    setEditRoundTrip((return_dates?.length ?? 0) > 0);
     setEditCabin(cabin || "economy");
     setEditMaxPrice(max_price > 0 ? String(Math.round(max_price)) : "");
     setEditStops(stops || "any");
     setEditing(true);
   };
 
+  const addOrigin = (val: string) => {
+    const code = val.trim().toUpperCase();
+    if (code.length >= 2 && !editOriginList.includes(code)) setEditOriginList((prev) => [...prev, code]);
+    setEditOriginInput("");
+  };
+  const addDest = (val: string) => {
+    const code = val.trim().toUpperCase();
+    if (code.length >= 2 && !editDestList.includes(code)) setEditDestList((prev) => [...prev, code]);
+    setEditDestInput("");
+  };
+
   const submitEdit = () => {
     if (!onSearch) return;
+    const o = editOriginInput.trim() ? [...editOriginList, editOriginInput.trim().toUpperCase()] : editOriginList;
+    const d = editDestInput.trim() ? [...editDestList, editDestInput.trim().toUpperCase()] : editDestList;
+    if (o.length === 0 || d.length === 0) return;
     const parts: string[] = [];
-    parts.push(`${editOrigins.trim()} to ${editDests.trim()}`);
+    parts.push(`${o.join(", ")} to ${d.join(", ")}`);
     if (editDate) parts.push(`on ${editDate}`);
-    if (editReturnDate) parts.push(`return ${editReturnDate}`);
+    if (editRoundTrip && editReturnDate) parts.push(`return ${editReturnDate}`);
     if (editCabin && editCabin !== "economy") parts.push(editCabin.replace("_", " "));
     if (editMaxPrice) parts.push(`under ${sym}${editMaxPrice}`);
     if (editStops === "non_stop") parts.push("direct only");
@@ -2418,23 +2438,52 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
   };
 
   if (editing) {
+    const pillClass = "inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-interactive)]/10 border border-[var(--color-interactive)]/20 text-[var(--color-text)] text-xs font-medium";
+    const removeBtnClass = "text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors";
+    const addInputClass = "bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text)] outline-none px-0.5 py-0.5 text-xs w-14 placeholder:text-[var(--color-text-muted)]/40";
     return (
       <div className="bg-[var(--color-surface)] border border-[var(--color-interactive)]/40 rounded-lg px-4 py-3 space-y-3">
+        {/* Origins → Destinations */}
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <input
-            value={editOrigins}
-            onChange={(e) => setEditOrigins(e.target.value)}
-            className="font-medium bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text)] outline-none px-0.5 py-0.5 w-28 sm:w-36"
-            placeholder="JFK, LAX"
-          />
+          <div className="flex flex-wrap items-center gap-1.5">
+            {editOriginList.map((code) => (
+              <span key={code} className={pillClass}>
+                {airport_names?.[code] ? `${airport_names[code]} (${code})` : code}
+                <button type="button" onClick={() => setEditOriginList((prev) => prev.filter((c) => c !== code))} className={removeBtnClass} aria-label={`Remove ${code}`}>
+                  <svg viewBox="0 0 12 12" className="w-3 h-3" fill="currentColor"><path d="M3.05 3.05a.5.5 0 01.7 0L6 5.29l2.25-2.24a.5.5 0 11.7.7L6.71 6l2.24 2.25a.5.5 0 11-.7.7L6 6.71 3.75 8.95a.5.5 0 11-.7-.7L5.29 6 3.05 3.75a.5.5 0 010-.7z"/></svg>
+                </button>
+              </span>
+            ))}
+            <input
+              value={editOriginInput}
+              onChange={(e) => setEditOriginInput(e.target.value.toUpperCase())}
+              onKeyDown={(e) => { if ((e.key === "Enter" || e.key === ",") && editOriginInput.trim()) { e.preventDefault(); addOrigin(editOriginInput); } if (e.key === "Backspace" && !editOriginInput && editOriginList.length > 0) setEditOriginList((prev) => prev.slice(0, -1)); }}
+              onBlur={() => { if (editOriginInput.trim()) addOrigin(editOriginInput); }}
+              placeholder="+ add"
+              className={addInputClass}
+            />
+          </div>
           <span className="text-[var(--color-text-muted)]">→</span>
-          <input
-            value={editDests}
-            onChange={(e) => setEditDests(e.target.value)}
-            className="font-medium bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text)] outline-none px-0.5 py-0.5 w-28 sm:w-36"
-            placeholder="LHR, CDG"
-          />
+          <div className="flex flex-wrap items-center gap-1.5">
+            {editDestList.map((code) => (
+              <span key={code} className={pillClass}>
+                {airport_names?.[code] ? `${airport_names[code]} (${code})` : code}
+                <button type="button" onClick={() => setEditDestList((prev) => prev.filter((c) => c !== code))} className={removeBtnClass} aria-label={`Remove ${code}`}>
+                  <svg viewBox="0 0 12 12" className="w-3 h-3" fill="currentColor"><path d="M3.05 3.05a.5.5 0 01.7 0L6 5.29l2.25-2.24a.5.5 0 11.7.7L6.71 6l2.24 2.25a.5.5 0 11-.7.7L6 6.71 3.75 8.95a.5.5 0 11-.7-.7L5.29 6 3.05 3.75a.5.5 0 010-.7z"/></svg>
+                </button>
+              </span>
+            ))}
+            <input
+              value={editDestInput}
+              onChange={(e) => setEditDestInput(e.target.value.toUpperCase())}
+              onKeyDown={(e) => { if ((e.key === "Enter" || e.key === ",") && editDestInput.trim()) { e.preventDefault(); addDest(editDestInput); } if (e.key === "Backspace" && !editDestInput && editDestList.length > 0) setEditDestList((prev) => prev.slice(0, -1)); }}
+              onBlur={() => { if (editDestInput.trim()) addDest(editDestInput); }}
+              placeholder="+ add"
+              className={addInputClass}
+            />
+          </div>
         </div>
+        {/* Date, return toggle, cabin, stops, price */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <input
             type="date"
@@ -2442,16 +2491,25 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
             onChange={(e) => setEditDate(e.target.value)}
             className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:w-0"
           />
-          {(isRoundTrip || editReturnDate) && (
-            <>
-              <span className="text-[var(--color-text-muted)]">↩</span>
-              <input
-                type="date"
-                value={editReturnDate}
-                onChange={(e) => setEditReturnDate(e.target.value)}
-                className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:w-0"
-              />
-            </>
+          <label className="inline-flex items-center gap-1.5 cursor-pointer">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={editRoundTrip}
+              onClick={() => setEditRoundTrip((v) => !v)}
+              className={`relative w-7 h-4 rounded-full transition-colors ${editRoundTrip ? "bg-[var(--color-interactive)]" : "bg-[var(--color-text-muted)]/20"}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${editRoundTrip ? "translate-x-3" : ""}`} />
+            </button>
+            <span className="text-[var(--color-text-muted)]">{t("form.roundTrip" as "form.economy")}</span>
+          </label>
+          {editRoundTrip && (
+            <input
+              type="date"
+              value={editReturnDate}
+              onChange={(e) => setEditReturnDate(e.target.value)}
+              className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:w-0"
+            />
           )}
           <button
             type="button"
@@ -2479,6 +2537,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
             />
           </div>
         </div>
+        {/* Actions */}
         <div className="flex items-center gap-2 pt-1">
           <button
             onClick={submitEdit}
