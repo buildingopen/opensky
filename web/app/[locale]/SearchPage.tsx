@@ -2397,6 +2397,26 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
   const canExpandDates = dates.length > 2;
   const routeCount = parsed.total_routes || origins.length * destinations.length * dates.length;
 
+  const cabinOptions = [
+    { value: "economy", label: t("form.economy" as "form.economy") },
+    { value: "premium_economy", label: t("form.premiumEconomy" as "form.economy") },
+    { value: "business", label: t("form.business" as "form.economy") },
+    { value: "first", label: t("form.first" as "form.economy") },
+  ];
+  const stopsOptions = [
+    { value: "any", label: "Any stops" },
+    { value: "non_stop", label: t("parsed.directOnly") },
+    { value: "one_stop_or_fewer", label: t("parsed.oneStopMax") },
+  ];
+  const cycleCabin = () => {
+    const idx = cabinOptions.findIndex((o) => o.value === editCabin);
+    setEditCabin(cabinOptions[(idx + 1) % cabinOptions.length].value);
+  };
+  const cycleStops = () => {
+    const idx = stopsOptions.findIndex((o) => o.value === editStops);
+    setEditStops(stopsOptions[(idx + 1) % stopsOptions.length].value);
+  };
+
   if (editing) {
     return (
       <div className="bg-[var(--color-surface)] border border-[var(--color-interactive)]/40 rounded-lg px-4 py-3 space-y-3">
@@ -2420,7 +2440,7 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
             type="date"
             value={editDate}
             onChange={(e) => setEditDate(e.target.value)}
-            className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5"
+            className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:w-0"
           />
           {(isRoundTrip || editReturnDate) && (
             <>
@@ -2429,35 +2449,31 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
                 type="date"
                 value={editReturnDate}
                 onChange={(e) => setEditReturnDate(e.target.value)}
-                className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5"
+                className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:w-0"
               />
             </>
           )}
-          <select
-            value={editCabin}
-            onChange={(e) => setEditCabin(e.target.value)}
-            className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 cursor-pointer"
+          <button
+            type="button"
+            onClick={cycleCabin}
+            className="border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-0.5 py-0.5 cursor-pointer transition-colors"
           >
-            <option value="economy">{t("form.economy" as "form.economy")}</option>
-            <option value="premium_economy">{t("form.premiumEconomy" as "form.economy")}</option>
-            <option value="business">{t("form.business" as "form.economy")}</option>
-            <option value="first">{t("form.first" as "form.economy")}</option>
-          </select>
-          <select
-            value={editStops}
-            onChange={(e) => setEditStops(e.target.value)}
-            className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 cursor-pointer"
+            {cabinOptions.find((o) => o.value === editCabin)?.label}
+          </button>
+          <button
+            type="button"
+            onClick={cycleStops}
+            className="border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-0.5 py-0.5 cursor-pointer transition-colors"
           >
-            <option value="any">Any stops</option>
-            <option value="non_stop">{t("parsed.directOnly")}</option>
-            <option value="one_stop_or_fewer">{t("parsed.oneStopMax")}</option>
-          </select>
+            {stopsOptions.find((o) => o.value === editStops)?.label}
+          </button>
           <div className="inline-flex items-center gap-1">
             <span className="text-[var(--color-text-muted)]">Max {sym}</span>
             <input
-              type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={editMaxPrice}
-              onChange={(e) => setEditMaxPrice(e.target.value)}
+              onChange={(e) => setEditMaxPrice(e.target.value.replace(/[^0-9]/g, ""))}
               placeholder="any"
               className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 w-16"
             />
