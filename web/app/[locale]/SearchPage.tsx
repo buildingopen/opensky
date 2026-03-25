@@ -2338,7 +2338,7 @@ function PriceAlertSection({
 // ---------------------------------------------------------------------------
 // Fix 2: Parsed Config chips
 // ---------------------------------------------------------------------------
-function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCount, expandPhase, expandProgress, expansionInfo, expandCount }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; safeCount?: number; totalCount?: number; expandPhase?: "idle" | "expanding" | "done"; expandProgress?: { done: number; total: number } | null; expansionInfo?: string | null; expandCount?: number }) {
+function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount, totalCount, expandPhase, expandProgress, expansionInfo, expandCount }: { parsed: ParsedSearch; cacheAgeSeconds: number | null; onRefresh: () => void; onSearch?: (prompt: string) => void; safeCount?: number; totalCount?: number; expandPhase?: "idle" | "expanding" | "done"; expandProgress?: { done: number; total: number } | null; expansionInfo?: string | null; expandCount?: number }) {
   const t = useTranslations("search");
   const tc = useTranslations("common");
   const locale = useLocale();
@@ -2350,6 +2350,42 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
   const [destsExpanded, setDestsExpanded] = useState(false);
   const showExpandDone = expandPhase === "done" && (expandCount ?? 0) > 0;
 
+  // Inline edit state
+  const [editing, setEditing] = useState(false);
+  const [editOrigins, setEditOrigins] = useState("");
+  const [editDests, setEditDests] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editReturnDate, setEditReturnDate] = useState("");
+  const [editCabin, setEditCabin] = useState("");
+  const [editMaxPrice, setEditMaxPrice] = useState("");
+  const [editStops, setEditStops] = useState("");
+
+  const startEditing = () => {
+    setEditOrigins(origins.join(", "));
+    setEditDests(destinations.join(", "));
+    setEditDate(dates[0] || "");
+    setEditReturnDate(return_dates?.[0] || "");
+    setEditCabin(cabin || "economy");
+    setEditMaxPrice(max_price > 0 ? String(Math.round(max_price)) : "");
+    setEditStops(stops || "any");
+    setEditing(true);
+  };
+
+  const submitEdit = () => {
+    if (!onSearch) return;
+    const parts: string[] = [];
+    parts.push(`${editOrigins.trim()} to ${editDests.trim()}`);
+    if (editDate) parts.push(`on ${editDate}`);
+    if (editReturnDate) parts.push(`return ${editReturnDate}`);
+    if (editCabin && editCabin !== "economy") parts.push(editCabin.replace("_", " "));
+    if (editMaxPrice) parts.push(`under ${sym}${editMaxPrice}`);
+    if (editStops === "non_stop") parts.push("direct only");
+    else if (editStops === "one_stop_or_fewer") parts.push("1 stop max");
+    if (parsed.safe_only) parts.push("safe airlines only");
+    onSearch(parts.join(", "));
+    setEditing(false);
+  };
+
   const originItems = origins.map((o) => airport_names?.[o] ? `${airport_names[o]} (${o})` : o);
   const canExpandOrigins = originItems.length > 2;
   const originLabel = originsExpanded || originItems.length <= 2 ? originItems.join(", ") : `${originItems.slice(0, 2).join(", ")} +${originItems.length - 2}`;
@@ -2360,6 +2396,90 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
   const collapsedDates = dates.length <= 2 ? dates.map((d) => formatDate(d, locale)).join(", ") : `${formatDate(dates[0], locale)} + ${t("parsed.moreDates", { count: dates.length - 1 })}`;
   const canExpandDates = dates.length > 2;
   const routeCount = parsed.total_routes || origins.length * destinations.length * dates.length;
+
+  if (editing) {
+    return (
+      <div className="bg-[var(--color-surface)] border border-[var(--color-interactive)]/40 rounded-lg px-4 py-3 space-y-3">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <input
+            value={editOrigins}
+            onChange={(e) => setEditOrigins(e.target.value)}
+            className="font-medium bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text)] outline-none px-0.5 py-0.5 w-28 sm:w-36"
+            placeholder="JFK, LAX"
+          />
+          <span className="text-[var(--color-text-muted)]">→</span>
+          <input
+            value={editDests}
+            onChange={(e) => setEditDests(e.target.value)}
+            className="font-medium bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text)] outline-none px-0.5 py-0.5 w-28 sm:w-36"
+            placeholder="LHR, CDG"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <input
+            type="date"
+            value={editDate}
+            onChange={(e) => setEditDate(e.target.value)}
+            className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5"
+          />
+          {(isRoundTrip || editReturnDate) && (
+            <>
+              <span className="text-[var(--color-text-muted)]">↩</span>
+              <input
+                type="date"
+                value={editReturnDate}
+                onChange={(e) => setEditReturnDate(e.target.value)}
+                className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5"
+              />
+            </>
+          )}
+          <select
+            value={editCabin}
+            onChange={(e) => setEditCabin(e.target.value)}
+            className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 cursor-pointer"
+          >
+            <option value="economy">{t("form.economy" as "form.economy")}</option>
+            <option value="premium_economy">{t("form.premiumEconomy" as "form.economy")}</option>
+            <option value="business">{t("form.business" as "form.economy")}</option>
+            <option value="first">{t("form.first" as "form.economy")}</option>
+          </select>
+          <select
+            value={editStops}
+            onChange={(e) => setEditStops(e.target.value)}
+            className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 cursor-pointer"
+          >
+            <option value="any">Any stops</option>
+            <option value="non_stop">{t("parsed.directOnly")}</option>
+            <option value="one_stop_or_fewer">{t("parsed.oneStopMax")}</option>
+          </select>
+          <div className="inline-flex items-center gap-1">
+            <span className="text-[var(--color-text-muted)]">Max {sym}</span>
+            <input
+              type="number"
+              value={editMaxPrice}
+              onChange={(e) => setEditMaxPrice(e.target.value)}
+              placeholder="any"
+              className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 w-16"
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            onClick={submitEdit}
+            className="px-3 py-1 text-xs font-medium rounded-md bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-colors"
+          >
+            {tc("search")}
+          </button>
+          <button
+            onClick={() => setEditing(false)}
+            className="px-3 py-1 text-xs font-medium rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+          >
+            {tc("cancel")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`bg-[var(--color-surface)] border rounded-lg px-4 py-3 space-y-2 transition-colors duration-500 ${expandPhase === "expanding" ? "border-[var(--color-interactive)]/40" : "border-[var(--color-border)]"}`}>
@@ -2380,6 +2500,11 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, safeCount, totalCoun
           </button>
         ) : (
           <span className="font-medium text-[var(--color-text)]">{destLabel}</span>
+        )}
+        {onSearch && (
+          <button onClick={startEditing} className="ml-auto text-[var(--color-text-muted)]/50 hover:text-[var(--color-interactive)] transition-colors" aria-label={tc("editSearch")}>
+            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25a1.75 1.75 0 01.445-.758l8.61-8.61zm1.414 1.06a.25.25 0 00-.354 0L3.463 11.098a.25.25 0 00-.064.108l-.631 2.2 2.2-.631a.25.25 0 00.108-.064l8.61-8.61a.25.25 0 000-.354L12.427 2.487z"/></svg>
+          </button>
         )}
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
@@ -3198,29 +3323,6 @@ function HomePage() {
   };
 
   const isLoading = phase === "parsing" || phase === "searching";
-
-  const populateFormFromParsed = () => {
-    if (!parsed) return;
-    setForm({
-      from: parsed.origins[0] || "",
-      to: parsed.destinations[0] || "",
-      depart: parsed.dates[0] || "",
-      returnDate: parsed.return_dates?.[0] || "",
-      roundTrip: (parsed.return_dates?.length ?? 0) > 0,
-      flexibleDates: false,
-      maxPrice: parsed.max_price > 0 ? String(Math.round(parsed.max_price)) : "",
-      directOnly: parsed.stops === "non_stop",
-      cabin: parsed.cabin || "economy",
-      safeOnly: parsed.safe_only ?? true,
-    });
-    setSearchMode("structured");
-    setPhase("idle");
-    setFlights([]);
-    setReturnFlights(null);
-    setRoundTripResults(null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   const highlightRanges = useHighlightRanges(prompt);
 
   // Airline filter (post-results)
@@ -3314,7 +3416,7 @@ function HomePage() {
             /* Compact mode: original prompt + action */
             <div className="flex items-center justify-between gap-3">
               {prompt && (
-                <div className="text-[12px] text-[var(--color-text-muted)]/60 truncate min-w-0 flex-1">
+                <div className="text-sm text-[var(--color-text-muted)]/70 truncate min-w-0 flex-1">
                   {highlightRanges.length > 0
                     ? buildTextRuns(prompt, highlightRanges).map((run, i) =>
                         run.type === "plain"
@@ -3333,24 +3435,13 @@ function HomePage() {
                   {tc("cancel")}
                 </button>
               ) : (
-                <div className="flex items-center gap-2 shrink-0">
-                  {parsed && (
-                    <button
-                      onClick={populateFormFromParsed}
-                      aria-label={tc("editSearch")}
-                      className="px-4 py-1.5 text-sm font-medium rounded-lg bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-all duration-200"
-                    >
-                      {tc("editSearch")}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 0); }}
-                    aria-label={tc("newSearch")}
-                    className="px-4 py-1.5 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-text-muted)]/30 transition-all duration-200"
-                  >
-                    {tc("newSearch")}
-                  </button>
-                </div>
+                <button
+                  onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 0); }}
+                  aria-label={tc("newSearch")}
+                  className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-text-muted)]/30 transition-all duration-200"
+                >
+                  {tc("newSearch")}
+                </button>
               )}
             </div>
           ) : (
@@ -3459,7 +3550,7 @@ function HomePage() {
                     disabled={isLoading}
                     rows={2}
                     spellCheck={false}
-                    className="w-full bg-transparent border-none px-1 py-2 text-base leading-relaxed placeholder:text-[var(--color-text-muted)]/40 focus:outline-none resize-none relative"
+                    className="w-full bg-transparent border-none px-1 py-2 text-lg leading-relaxed placeholder:text-[var(--color-text-muted)]/40 focus:outline-none resize-none relative"
                     style={{ color: prompt && highlightRanges.length > 0 ? "transparent" : undefined, caretColor: "var(--color-text)" }}
                     aria-label={t("ariaLabel")}
                   />
@@ -3596,7 +3687,7 @@ function HomePage() {
         {isLoading && (
           <>
             {parsed && (
-              <ParsedConfig parsed={parsed} cacheAgeSeconds={null} onRefresh={() => search()} />
+              <ParsedConfig parsed={parsed} cacheAgeSeconds={null} onRefresh={() => search()} onSearch={(q) => search(q)} />
             )}
             <SearchingState parsed={parsed} progress={progress} filteredCount={safetyFilteredCount} workers={workers} />
             {previewFlights.length > 0 && (
@@ -3627,7 +3718,7 @@ function HomePage() {
             {(() => {
               const items = (tripTab === "roundtrip" && roundTripResults?.length) ? roundTripResults : flights;
               const safeCount = items.filter((f: { risk_level?: string }) => f.risk_level === "safe").length;
-              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} safeCount={safeCount} totalCount={items.length} expandPhase={expandPhase} expandProgress={expandProgress} expansionInfo={expansionInfo} expandCount={expandCount} />;
+              return <ParsedConfig parsed={parsed} cacheAgeSeconds={cacheAgeSeconds} onRefresh={() => search()} onSearch={(q) => search(q)} safeCount={safeCount} totalCount={items.length} expandPhase={expandPhase} expandProgress={expandProgress} expansionInfo={expansionInfo} expandCount={expandCount} />;
             })()}
 
             {/* Fix 5: Show warning if return date was before departure */}
@@ -4045,17 +4136,9 @@ function HomePage() {
           </>
         )}
 
-        {/* Edit / New search */}
+        {/* New search */}
         {phase === "done" && flights.length > 0 && (
-          <div className="flex items-center justify-center gap-4 mt-6 mb-4">
-            {parsed && (
-              <button
-                onClick={() => { trackEvent("edit_search_clicked", { previous_results: flights.length }); populateFormFromParsed(); }}
-                className="text-sm text-[var(--color-interactive)] hover:text-[var(--color-interactive-hover)] font-medium transition-colors"
-              >
-                {tc("editSearch")}
-              </button>
-            )}
+          <div className="text-center mt-6 mb-4">
             <button
               onClick={() => {
                 trackEvent("new_search_clicked", { previous_results: flights.length });
