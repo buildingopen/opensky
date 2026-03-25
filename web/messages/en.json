@@ -761,7 +761,18 @@
       "faqQuestion": "Is it safe to fly over {zone}?",
       "faqAnswer_do_not_fly": "No. {zone} airspace is classified as Do Not Fly. {details} Airlines automatically reroute flights around this zone.",
       "faqAnswer_high_risk": "{zone} is classified as High Risk. {details} Most airlines avoid this airspace.",
-      "faqAnswer_caution": "{zone} is classified as Caution. {details} Airports operate normally but flights may be rerouted near conflict zones."
+      "faqAnswer_caution": "{zone} is classified as Caution. {details} Airports operate normally but flights may be rerouted near conflict zones.",
+      "faqAirlinesQuestion": "Do airlines fly over {zone}?",
+      "faqAirlinesAnswer_do_not_fly": "No. Airlines do not fly over {zone}. The airspace is closed or restricted, and all commercial flights are rerouted around it. FlyFast automatically removes any routes that would pass through {zone} airspace.",
+      "faqAirlinesAnswer_high_risk": "Most airlines avoid flying over {zone} due to active security threats. Some carriers may still transit nearby airspace. FlyFast flags these routes so you can choose safer alternatives.",
+      "faqAirlinesAnswer_caution": "Yes, airlines still fly over {zone}. The zone has an advisory-level concern, meaning airports operate normally. Some overflights near conflict areas may be rerouted. FlyFast marks these flights with a Caution badge.",
+      "faqRouteQuestion": "What happens if my flight route passes over {zone}?",
+      "faqRouteAnswer_do_not_fly": "Your flight will not pass over {zone}. Airlines are prohibited from entering this airspace and automatically reroute around it. This may add flight time and cost. FlyFast filters out any routes that would cross {zone}.",
+      "faqRouteAnswer_high_risk": "If a flight route passes near {zone}, airlines typically reroute to avoid the high-risk airspace. This can increase flight duration. FlyFast removes high-risk routes from search results and flags nearby caution-level routes.",
+      "faqRouteAnswer_caution": "Flights passing over {zone} may proceed normally, though airlines monitor the situation and reroute if conditions change. FlyFast shows a Caution badge on affected flights so you can make an informed decision.",
+      "faqCheckQuestion": "How can I check if my flight avoids {zone}?",
+      "faqCheckAnswer": "Use FlyFast to search your route. FlyFast checks every flight against conflict zone data, including {zone}, and filters or flags affected routes. Safe routes are shown by default, and any flights near advisory zones are clearly labeled.",
+      "commonQuestions": "Common questions"
     },
     "alerts": {
       "title": "Get notified when risk levels change",

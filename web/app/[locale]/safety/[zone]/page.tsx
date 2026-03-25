@@ -32,6 +32,11 @@ export async function generateMetadata({
   const title = t("zone.safeToFlyTitle", { zone: zoneName });
   const riskDesc = t(`riskDescriptions.${zone.risk_level}` as "riskDescriptions.do_not_fly");
   const description = t("zone.safeToFlyDescription", { details: riskDesc, level: t(`groupLabels.${zone.risk_level}` as "groupLabels.do_not_fly"), updated: zone.updated });
+
+  const ogUrl = new URL("/api/og", siteUrl);
+  ogUrl.searchParams.set("route", zoneName);
+  ogUrl.searchParams.set("safety", zone.risk_level);
+
   return {
     title,
     description,
@@ -42,28 +47,63 @@ export async function generateMetadata({
       title,
       description,
       url: `${siteUrl}/${locale}/safety/${zone.id}`,
+      images: [
+        {
+          url: ogUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
     },
   };
 }
 
-const faqSchema = (question: string, answer: string) => ({
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
-    {
+function faqSchema(faqs: Array<{ question: string; answer: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
       "@type": "Question",
-      name: question,
-      acceptedAnswer: { "@type": "Answer", text: answer },
-    },
-  ],
-});
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  };
+}
+
+function breadcrumbSchema(zoneName: string, zoneId: string, locale: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: `${siteUrl}/${locale}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Safety",
+        item: `${siteUrl}/${locale}/safety`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: zoneName,
+        item: `${siteUrl}/${locale}/safety/${zoneId}`,
+      },
+    ],
+  };
+}
 
 export default async function ZonePage({
   params,
 }: {
-  params: Promise<{ zone: string }>;
+  params: Promise<{ locale: string; zone: string }>;
 }) {
-  const { zone: zoneId } = await params;
+  const { locale, zone: zoneId } = await params;
   const zone = await getZoneById(zoneId);
   if (!zone) notFound();
 
@@ -73,8 +113,27 @@ export default async function ZonePage({
   const advice = t(`travelerAdvice.${zone.risk_level}` as "travelerAdvice.do_not_fly");
   const zoneName = t(`zoneNames.${zone.id}` as "zoneNames.ukraine") || zone.name;
   const riskDesc = t(`riskDescriptions.${zone.risk_level}` as "riskDescriptions.do_not_fly");
-  const faqQuestion = t("zone.faqQuestion", { zone: zoneName });
-  const faqAnswer = t(`zone.faqAnswer_${zone.risk_level}` as "zone.faqAnswer_do_not_fly", { zone: zoneName, details: riskDesc });
+
+  // Build all FAQ items
+  const riskKey = zone.risk_level as "do_not_fly" | "high_risk" | "caution";
+  const faqs = [
+    {
+      question: t("zone.faqQuestion", { zone: zoneName }),
+      answer: t(`zone.faqAnswer_${riskKey}` as "zone.faqAnswer_do_not_fly", { zone: zoneName, details: riskDesc }),
+    },
+    {
+      question: t("zone.faqAirlinesQuestion", { zone: zoneName }),
+      answer: t(`zone.faqAirlinesAnswer_${riskKey}` as "zone.faqAirlinesAnswer_do_not_fly", { zone: zoneName }),
+    },
+    {
+      question: t("zone.faqRouteQuestion", { zone: zoneName }),
+      answer: t(`zone.faqRouteAnswer_${riskKey}` as "zone.faqRouteAnswer_do_not_fly", { zone: zoneName }),
+    },
+    {
+      question: t("zone.faqCheckQuestion", { zone: zoneName }),
+      answer: t("zone.faqCheckAnswer", { zone: zoneName }),
+    },
+  ];
 
   const countryNames = zone.countries
     .map((c) => {
@@ -89,7 +148,11 @@ export default async function ZonePage({
     <main id="main-content" className="max-w-3xl mx-auto px-4 py-12">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqQuestion, faqAnswer)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs)) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema(zoneName, zone.id, locale)) }}
       />
 
       <Link
@@ -205,6 +268,25 @@ export default async function ZonePage({
           <p>
             {zone.updated}. {t("zone.dataRefreshed")}
           </p>
+        </div>
+
+        {/* Common Questions */}
+        <div>
+          <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">
+            {t("zone.commonQuestions")}
+          </h2>
+          <dl className="space-y-4">
+            {faqs.map((faq, i) => (
+              <div key={i}>
+                <dt className="font-medium text-[var(--color-text)]">
+                  {faq.question}
+                </dt>
+                <dd className="mt-1 text-[var(--color-text-muted)]">
+                  {faq.answer}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
         {/* CTA */}
