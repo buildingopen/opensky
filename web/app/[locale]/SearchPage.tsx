@@ -2592,6 +2592,7 @@ function HomePage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const previousCurrencyRef = useRef(userCurrency);
   const savedSearches = useSavedSearches();
   const [minutesSaved, setMinutesSaved] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -2712,6 +2713,7 @@ function HomePage() {
   const search = async (q?: string) => {
     const text = q ?? getSearchPrompt();
     if (!text.trim()) return;
+    abortRef.current?.abort();
     trackEvent("search_submitted", {
       prompt_length: text.trim().length,
       mode: searchMode,
@@ -3076,6 +3078,44 @@ function HomePage() {
     }
   };
 
+  useEffect(() => {
+    if (!mounted) return;
+    if (previousCurrencyRef.current === userCurrency) return;
+
+    const hadCurrency = previousCurrencyRef.current;
+    previousCurrencyRef.current = userCurrency;
+
+    const hasActiveSearch =
+      flights.length > 0 ||
+      Boolean(roundTripResults?.length) ||
+      Boolean(returnFlights?.length) ||
+      Boolean(summary) ||
+      Boolean(parsed) ||
+      phase === "parsing" ||
+      phase === "searching" ||
+      phase === "done";
+
+    if (!hasActiveSearch) return;
+
+    trackEvent("search_currency_changed", {
+      from_currency: hadCurrency,
+      to_currency: userCurrency,
+      mode: searchMode,
+    });
+
+    void search();
+  }, [
+    userCurrency,
+    mounted,
+    flights.length,
+    roundTripResults,
+    returnFlights,
+    summary,
+    parsed,
+    phase,
+    searchMode,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleOutboundClick = (provider: "booking" | "compare", flight: FlightOut) => {
     trackEvent("outbound_click", {
       provider,
@@ -3158,6 +3198,29 @@ function HomePage() {
   };
 
   const isLoading = phase === "parsing" || phase === "searching";
+
+  const populateFormFromParsed = () => {
+    if (!parsed) return;
+    setForm({
+      from: parsed.origins[0] || "",
+      to: parsed.destinations[0] || "",
+      depart: parsed.dates[0] || "",
+      returnDate: parsed.return_dates?.[0] || "",
+      roundTrip: (parsed.return_dates?.length ?? 0) > 0,
+      flexibleDates: false,
+      maxPrice: parsed.max_price > 0 ? String(Math.round(parsed.max_price)) : "",
+      directOnly: parsed.stops === "non_stop",
+      cabin: parsed.cabin || "economy",
+      safeOnly: parsed.safe_only ?? true,
+    });
+    setSearchMode("structured");
+    setPhase("idle");
+    setFlights([]);
+    setReturnFlights(null);
+    setRoundTripResults(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const highlightRanges = useHighlightRanges(prompt);
 
   // Airline filter (post-results)
@@ -3270,13 +3333,24 @@ function HomePage() {
                   {tc("cancel")}
                 </button>
               ) : (
-                <button
-                  onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 0); }}
-                  aria-label={tc("newSearch")}
-                  className="shrink-0 px-4 py-1.5 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-text-muted)]/30 transition-all duration-200"
-                >
-                  {tc("newSearch")}
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {parsed && (
+                    <button
+                      onClick={populateFormFromParsed}
+                      aria-label={tc("editSearch")}
+                      className="px-4 py-1.5 text-sm font-medium rounded-lg bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-all duration-200"
+                    >
+                      {tc("editSearch")}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setPhase("idle"); setFlights([]); setRoundTripResults(null); setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 0); }}
+                    aria-label={tc("newSearch")}
+                    className="px-4 py-1.5 text-sm font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-text-muted)]/30 transition-all duration-200"
+                  >
+                    {tc("newSearch")}
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -3971,9 +4045,17 @@ function HomePage() {
           </>
         )}
 
-        {/* New search */}
+        {/* Edit / New search */}
         {phase === "done" && flights.length > 0 && (
-          <div className="text-center mt-6 mb-4">
+          <div className="flex items-center justify-center gap-4 mt-6 mb-4">
+            {parsed && (
+              <button
+                onClick={() => { trackEvent("edit_search_clicked", { previous_results: flights.length }); populateFormFromParsed(); }}
+                className="text-sm text-[var(--color-interactive)] hover:text-[var(--color-interactive-hover)] font-medium transition-colors"
+              >
+                {tc("editSearch")}
+              </button>
+            )}
             <button
               onClick={() => {
                 trackEvent("new_search_clicked", { previous_results: flights.length });
