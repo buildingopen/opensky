@@ -2356,8 +2356,8 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
   const [editDestList, setEditDestList] = useState<string[]>([]);
   const [editOriginInput, setEditOriginInput] = useState("");
   const [editDestInput, setEditDestInput] = useState("");
-  const [editDate, setEditDate] = useState("");
-  const [editReturnDate, setEditReturnDate] = useState("");
+  const [editDateList, setEditDateList] = useState<string[]>([]);
+  const [editReturnDateList, setEditReturnDateList] = useState<string[]>([]);
   const [editRoundTrip, setEditRoundTrip] = useState(false);
   const [editCabin, setEditCabin] = useState("");
   const [editMaxPrice, setEditMaxPrice] = useState("");
@@ -2368,8 +2368,8 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
     setEditDestList([...destinations]);
     setEditOriginInput("");
     setEditDestInput("");
-    setEditDate(dates[0] || "");
-    setEditReturnDate(return_dates?.[0] || "");
+    setEditDateList([...dates]);
+    setEditReturnDateList([...(return_dates || [])]);
     setEditRoundTrip((return_dates?.length ?? 0) > 0);
     setEditCabin(cabin || "economy");
     setEditMaxPrice(max_price > 0 ? String(Math.round(max_price)) : "");
@@ -2395,8 +2395,8 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
     if (o.length === 0 || d.length === 0) return;
     const parts: string[] = [];
     parts.push(`${o.join(", ")} to ${d.join(", ")}`);
-    if (editDate) parts.push(`on ${editDate}`);
-    if (editRoundTrip && editReturnDate) parts.push(`return ${editReturnDate}`);
+    if (editDateList.length > 0) parts.push(`on ${editDateList.join(", ")}`);
+    if (editRoundTrip && editReturnDateList.length > 0) parts.push(`return ${editReturnDateList.join(", ")}`);
     if (editCabin && editCabin !== "economy") parts.push(editCabin.replace("_", " "));
     if (editMaxPrice) parts.push(`under ${sym}${editMaxPrice}`);
     if (editStops === "non_stop") parts.push("direct only");
@@ -2485,12 +2485,21 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
         </div>
         {/* Date, return toggle, cabin, stops, price */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
+          {/* Departure date pills */}
+          {editDateList.map((d) => (
+            <span key={d} className={pillClass}>
+              {formatDate(d, locale)}
+              <button type="button" onClick={() => setEditDateList((prev) => prev.filter((x) => x !== d))} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] leading-none">&times;</button>
+            </span>
+          ))}
           <input
             type="date"
-            value={editDate}
-            onChange={(e) => setEditDate(e.target.value)}
-            className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:w-0"
+            value=""
+            onChange={(e) => { if (e.target.value && !editDateList.includes(e.target.value)) { setEditDateList((prev) => [...prev, e.target.value].sort()); } e.target.value = ""; }}
+            className={`${addInputClass} w-20 [&::-webkit-calendar-picker-indicator]:opacity-30`}
+            title="Add date"
           />
+          <span className="text-[var(--color-text-muted)]/40 mx-0.5">|</span>
           <label className="inline-flex items-center gap-1.5 cursor-pointer">
             <button
               type="button"
@@ -2504,12 +2513,21 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
             <span className="text-[var(--color-text-muted)]">{t("form.roundTrip" as "form.economy")}</span>
           </label>
           {editRoundTrip && (
-            <input
-              type="date"
-              value={editReturnDate}
-              onChange={(e) => setEditReturnDate(e.target.value)}
-              className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:w-0"
-            />
+            <>
+              {editReturnDateList.map((d) => (
+                <span key={d} className={pillClass}>
+                  {formatDate(d, locale)}
+                  <button type="button" onClick={() => setEditReturnDateList((prev) => prev.filter((x) => x !== d))} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] leading-none">&times;</button>
+                </span>
+              ))}
+              <input
+                type="date"
+                value=""
+                onChange={(e) => { if (e.target.value && !editReturnDateList.includes(e.target.value)) { setEditReturnDateList((prev) => [...prev, e.target.value].sort()); } e.target.value = ""; }}
+                className={`${addInputClass} w-20 [&::-webkit-calendar-picker-indicator]:opacity-30`}
+                title="Add return date"
+              />
+            </>
           )}
           <button
             type="button"
