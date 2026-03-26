@@ -79,11 +79,11 @@ function breadcrumbSchema(locale: string, homeLabel: string, flightsLabel: strin
   };
 }
 
-function itemListSchema(locale: string) {
+function itemListSchema(locale: string, listName: string) {
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Flight Routes",
+    name: listName,
     numberOfItems: ROUTES.length,
     itemListElement: ROUTES.map((route, i) => ({
       "@type": "ListItem",
@@ -138,7 +138,7 @@ export default async function FlightsIndexPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(itemListSchema(locale)),
+          __html: JSON.stringify(itemListSchema(locale, t("indexTitle").replace(" | FlyFast", ""))),
         }}
       />
 

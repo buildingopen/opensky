@@ -775,7 +775,9 @@
       "loading": "...",
       "error": "Une erreur est survenue.",
       "networkError": "Erreur réseau. Veuillez réessayer."
-    }
+    },
+    "breadcrumbHome": "Accueil",
+    "breadcrumbSafety": "Sécurité"
   },
   "consent": {
     "message": "Nous utilisons des cookies analytiques pour améliorer FlyFast. Pas de publicités, pas de suivi intersites.",
@@ -839,6 +841,7 @@
     "faq4A_safe": "{destination} n'est pas à proximité de zones de conflit connues. FlyFast vérifie la sécurité de chaque route en utilisant les données NOTAM et les zones de conflit en temps réel.",
     "faq4A_caution": "Cette route passe à proximité d'une zone de conflit active ({zone}). Les compagnies aériennes peuvent dérouter les vols pour des raisons de sécurité. Consultez FlyFast pour des informations de sécurité actualisées.",
     "faq4A_high_risk": "Cette route se trouve à proximité d'une zone de conflit à haut risque ({zone}). Certaines compagnies évitent complètement cet espace aérien. Consultez FlyFast pour obtenir des informations de sécurité actualisées.",
-    "breadcrumbHome": "Accueil"
+    "breadcrumbHome": "Accueil",
+    "faqHeading": "FAQ"
   }
 }

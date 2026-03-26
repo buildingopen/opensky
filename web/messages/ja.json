@@ -775,7 +775,9 @@
       "loading": "...",
       "error": "エラーが発生しました。",
       "networkError": "ネットワークエラー。もう一度お試しください。"
-    }
+    },
+    "breadcrumbHome": "ホーム",
+    "breadcrumbSafety": "安全性"
   },
   "consent": {
     "message": "FlyFastを改善するために分析クッキーを使用しています。広告なし、サイトをまたいだ追跡なし。",
@@ -839,6 +841,7 @@
     "faq4A_safe": "{destination}は既知の紛争地域の近くにありません。FlyFastはNOTAMデータとリアルタイムの紛争地域情報を使用して、すべての路線の安全性を確認しています。",
     "faq4A_caution": "この路線は活動中の紛争地域（{zone}）の近くを通過します。航空会社は安全のためにフライトルートを変更する場合があります。最新の安全情報はFlyFastでご確認ください。",
     "faq4A_high_risk": "この路線は高リスクの紛争地域（{zone}）の近くにあります。一部の航空会社はこの空域を完全に回避しています。最新の安全情報はFlyFastでご確認ください。",
-    "breadcrumbHome": "ホーム"
+    "breadcrumbHome": "ホーム",
+    "faqHeading": "よくある質問"
   }
 }

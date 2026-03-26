@@ -775,7 +775,9 @@
       "loading": "...",
       "error": "문제가 발생했습니다.",
       "networkError": "네트워크 오류. 다시 시도해 주세요."
-    }
+    },
+    "breadcrumbHome": "홈",
+    "breadcrumbSafety": "안전"
   },
   "consent": {
     "message": "FlyFast 개선을 위해 분석 쿠키를 사용합니다. 광고 없음, 사이트 간 추적 없음.",
@@ -839,6 +841,7 @@
     "faq4A_safe": "{destination}은(는) 알려진 분쟁 지역 근처에 있지 않습니다. FlyFast는 NOTAM 데이터와 실시간 분쟁 지역 정보를 사용하여 모든 노선의 안전을 확인합니다.",
     "faq4A_caution": "이 노선은 활성 분쟁 지역({zone}) 근처를 지나갑니다. 항공사는 안전을 위해 항로를 변경할 수 있습니다. 최신 안전 정보는 FlyFast에서 확인하세요.",
     "faq4A_high_risk": "이 노선은 고위험 분쟁 지역({zone}) 근처에 있습니다. 일부 항공사는 이 공역을 완전히 회피합니다. 최신 안전 정보는 FlyFast에서 확인하세요.",
-    "breadcrumbHome": "홈"
+    "breadcrumbHome": "홈",
+    "faqHeading": "자주 묻는 질문"
   }
 }

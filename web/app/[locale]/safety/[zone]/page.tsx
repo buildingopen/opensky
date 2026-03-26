@@ -76,7 +76,7 @@ function faqSchema(faqs: Array<{ question: string; answer: string }>) {
   };
 }
 
-function breadcrumbSchema(zoneName: string, zoneId: string, locale: string) {
+function breadcrumbSchema(zoneName: string, zoneId: string, locale: string, homeLabel: string, safetyLabel: string) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -84,13 +84,13 @@ function breadcrumbSchema(zoneName: string, zoneId: string, locale: string) {
       {
         "@type": "ListItem",
         position: 1,
-        name: "Home",
+        name: homeLabel,
         item: `${siteUrl}/${locale}`,
       },
       {
         "@type": "ListItem",
         position: 2,
-        name: "Safety",
+        name: safetyLabel,
         item: `${siteUrl}/${locale}/safety`,
       },
       {
@@ -157,7 +157,7 @@ export default async function ZonePage({
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema(zoneName, zone.id, locale)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema(zoneName, zone.id, locale, t("breadcrumbHome"), t("breadcrumbSafety"))) }}
       />
 
       <Link

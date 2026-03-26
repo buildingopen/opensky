@@ -427,7 +427,7 @@ export default async function RoutePage({
         {/* FAQ */}
         <div>
           <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">
-            FAQ
+            {t("faqHeading")}
           </h2>
           <dl className="space-y-4">
             {faqs.map((faq, i) => (
