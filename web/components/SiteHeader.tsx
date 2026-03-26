@@ -77,6 +77,7 @@ export function SiteHeader() {
   };
 
   const navLinks = [
+    { href: "/flights" as const, label: t("flights") },
     { href: "/methodology" as const, label: t("howItWorks") },
     { href: "/safety" as const, label: t("safety") },
     { href: "/contact" as const, label: t("contact") },
@@ -284,7 +285,8 @@ export function SiteHeader() {
           </div>
           <nav className="flex flex-col py-2 flex-1">
             {navLinks.map((link) => {
-              const icons = {
+              const icons: Record<string, React.ReactNode> = {
+                "/flights": <svg viewBox="0 0 20 20" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M3.105 2.289a.75.75 0 00-.826.95l1.414 4.926A1.5 1.5 0 005.135 9.25h6.115a.75.75 0 010 1.5H5.135a1.5 1.5 0 00-1.442 1.086l-1.414 4.926a.75.75 0 00.826.95l16.97-7.723a.75.75 0 000-1.378L3.105 2.289z"/></svg>,
                 "/methodology": <svg viewBox="0 0 20 20" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M10 1a.75.75 0 01.75.75v1.5a3.5 3.5 0 01-1.072 2.524l-.678.633A1.5 1.5 0 008.5 7.5v.5a.75.75 0 00.75.75h1.5a.75.75 0 00.75-.75v-.5a1.5 1.5 0 00-.5-1.093l-.678-.633A3.5 3.5 0 019.25 3.25v-1.5A.75.75 0 0110 1zM8.5 10.75a.75.75 0 00-.75.75v1a.75.75 0 00.75.75h3a.75.75 0 00.75-.75v-1a.75.75 0 00-.75-.75h-3zM8.75 15a.75.75 0 000 1.5h2.5a.75.75 0 000-1.5h-2.5z"/></svg>,
                 "/safety": <svg viewBox="0 0 20 20" className="w-4 h-4 shrink-0" fill="currentColor"><path fillRule="evenodd" d="M9.661 2.237a.75.75 0 01.678 0 12.2 12.2 0 006.024 2.193.75.75 0 01.665.734c.066 2.416-.46 4.678-1.45 6.434-1.003 1.778-2.539 3.14-4.508 3.47a.75.75 0 01-.24 0c-1.97-.33-3.506-1.692-4.509-3.47C5.33 9.862 4.805 7.6 4.872 5.164a.75.75 0 01.665-.734 12.2 12.2 0 006.024-2.193zM10 6.5a.75.75 0 01.75.75v2a.75.75 0 01-1.5 0v-2A.75.75 0 0110 6.5zm.75 5.75a.75.75 0 00-1.5 0v.01a.75.75 0 001.5 0v-.01z" clipRule="evenodd"/></svg>,
                 "/contact": <svg viewBox="0 0 20 20" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.161V6a2 2 0 00-2-2H3z"/><path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z"/></svg>,
