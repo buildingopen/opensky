@@ -3518,13 +3518,7 @@ function HomePage() {
             <div className="flex items-center justify-between gap-3">
               {prompt && (
                 <div className="text-sm text-[var(--color-text-muted)]/70 truncate min-w-0 flex-1">
-                  {highlightRanges.length > 0
-                    ? buildTextRuns(prompt, highlightRanges).map((run, i) =>
-                        run.type === "plain"
-                          ? <span key={i}>{run.text}</span>
-                          : <InlineHighlight key={i} text={run.text} airports={run.airports || []} resolvedDate={run.resolvedDate} tooltip={run.tooltip} />
-                      )
-                    : prompt}
+                  {prompt}
                 </div>
               )}
               {isLoading ? (
@@ -3641,7 +3635,6 @@ function HomePage() {
                 </div>
               ) : (
                 <div className="relative text-left">
-                  {prompt && highlightRanges.length > 0 && <HighlightOverlay prompt={prompt} ranges={highlightRanges} />}
                   <textarea
                     ref={inputRef}
                     value={prompt}
@@ -3652,7 +3645,6 @@ function HomePage() {
                     rows={2}
                     spellCheck={false}
                     className="w-full bg-transparent border-none px-1 py-2 text-lg leading-relaxed placeholder:text-[var(--color-text-muted)]/40 focus:outline-none resize-none relative"
-                    style={{ color: prompt && highlightRanges.length > 0 ? "transparent" : undefined, caretColor: "var(--color-text)" }}
                     aria-label={t("ariaLabel")}
                   />
                 </div>
