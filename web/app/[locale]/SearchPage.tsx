@@ -1490,12 +1490,8 @@ const ExternalLinkIcon = () => (
 );
 
 const GoogleFlightsIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="none">
-    <path d="M7.2 16.8L3 21l2.1.6 2.7-2.7L7.2 16.8z" fill="#1A73E8"/>
-    <path d="M21 3l-9 5.4 2.1 2.1L21 6v-3z" fill="#EA4335"/>
-    <path d="M7.2 16.8l2.1 2.1L21 6V3L7.2 16.8z" fill="#4285F4"/>
-    <path d="M3 21l4.2-4.2L5.1 14.7 3 16.8V21z" fill="#0D47A1"/>
-    <path d="M7.2 16.8L5.1 14.7 3 16.8l2.1 2.1 2.1 2.1 2.1-2.1-2.1-2.1z" fill="#1565C0"/>
+  <svg viewBox="0 0 24 24" className={className}>
+    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="#4285F4"/>
   </svg>
 );
 
