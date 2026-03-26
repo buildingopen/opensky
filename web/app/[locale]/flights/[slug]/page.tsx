@@ -11,6 +11,7 @@ import {
   getRouteMeta,
   getReverseRouteSlug,
   formatFlightTime,
+  getAirlineName,
   ROUTE_SAFETY_ZONES,
 } from "../../../../lib/routes";
 import { getRouteCache } from "../../../../lib/route-cache";
@@ -140,6 +141,30 @@ export default async function RoutePage({
   // Fetch cached price data (may be null if cron hasn't run yet)
   const cached = await getRouteCache(route.origin, route.destination);
 
+  // Format helpers
+  const formatPrice = (amount: number, currency: string) => {
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      }).format(amount);
+    } catch {
+      return `${currency} ${Math.round(amount)}`;
+    }
+  };
+  const formatDate = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleDateString(locale, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      return iso;
+    }
+  };
+
   // Safety zone data
   const safetyZoneIds = ROUTE_SAFETY_ZONES[slug] ?? [];
   const safetyZones = (
@@ -160,7 +185,7 @@ export default async function RoutePage({
 
   const airlinesText =
     cached?.airlines?.length
-      ? cached.airlines.join(", ")
+      ? cached.airlines.map(getAirlineName).join(", ")
       : t("airlinesGeneric");
 
   const safetyFaqKey = hasSafetyAngle
@@ -304,22 +329,22 @@ export default async function RoutePage({
               <div>
                 <span className="text-2xl font-bold text-[var(--color-interactive)]">
                   {t("priceFrom", {
-                    price: `${cached.currency} ${Math.round(cached.price_min)}`,
+                    price: formatPrice(cached.price_min!, cached.currency),
                   })}
                 </span>
                 {cached.price_max != null &&
                   cached.price_max !== cached.price_min && (
                     <span className="ml-2 text-[var(--color-text-muted)]">
                       {t("priceRange", {
-                        min: `${cached.currency} ${Math.round(cached.price_min)}`,
-                        max: `${cached.currency} ${Math.round(cached.price_max)}`,
+                        min: formatPrice(cached.price_min!, cached.currency),
+                        max: formatPrice(cached.price_max, cached.currency),
                       })}
                     </span>
                   )}
               </div>
               {cached.updated_at && (
                 <span className="text-xs text-[var(--color-text-muted)]">
-                  {t("updatedAt", { date: cached.updated_at })}
+                  {t("updatedAt", { date: formatDate(cached.updated_at) })}
                 </span>
               )}
             </div>
@@ -327,12 +352,12 @@ export default async function RoutePage({
             {/* Airline pills */}
             {cached.airlines?.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {cached.airlines.map((airline) => (
+                {cached.airlines.map((code) => (
                   <span
-                    key={airline}
+                    key={code}
                     className="text-xs px-2.5 py-1 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)]"
                   >
-                    {airline}
+                    {getAirlineName(code)}
                   </span>
                 ))}
               </div>
@@ -395,7 +420,7 @@ export default async function RoutePage({
             <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">
               {t("airlines")}
             </h2>
-            <p>{cached.airlines.join(", ")}</p>
+            <p>{cached.airlines.map(getAirlineName).join(", ")}</p>
           </div>
         ) : null}
 

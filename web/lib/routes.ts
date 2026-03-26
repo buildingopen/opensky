@@ -149,6 +149,31 @@ export function formatFlightTime(minutes: number): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
+/** IATA airline code to display name. Covers airlines appearing in cached route data. */
+const AIRLINE_NAMES: Record<string, string> = {
+  "6E": "IndiGo", AA: "American Airlines", AF: "Air France", AI: "Air India",
+  A3: "Aegean", AS: "Alaska Airlines", AT: "Royal Air Maroc", AY: "Finnair",
+  AZ: "ITA Airways", B6: "JetBlue", BA: "British Airways", BI: "Royal Brunei",
+  BR: "EVA Air", CI: "China Airlines", CM: "Copa Airlines", CX: "Cathay Pacific",
+  D8: "Norwegian", DE: "Condor", DL: "Delta", DY: "Norwegian",
+  EI: "Aer Lingus", EK: "Emirates", ET: "Ethiopian", EW: "Eurowings",
+  EY: "Etihad", FA: "FlySafair", FI: "Icelandair", FR: "Ryanair",
+  G9: "Air Arabia", GF: "Gulf Air", GQ: "Sky Express", HU: "Hainan Airlines",
+  JL: "Japan Airlines", JU: "Air Serbia", KE: "Korean Air", KL: "KLM",
+  LA: "LATAM", LG: "Luxair", LH: "Lufthansa", LO: "LOT Polish",
+  LX: "Swiss", MF: "Xiamen Air", MS: "EgyptAir", OS: "Austrian",
+  OZ: "Asiana", PC: "Pegasus", PG: "Bangkok Airways", QR: "Qatar Airways",
+  SA: "South African", SK: "SAS", SM: "Air Cairo", SN: "Brussels Airlines",
+  SQ: "Singapore Airlines", TG: "Thai Airways", TK: "Turkish Airlines",
+  TP: "TAP Portugal", TW: "T'way Air", U2: "easyJet", UA: "United",
+  UL: "SriLankan", UX: "Air Europa", VF: "Flynas", VL: "Volotea",
+  VY: "Vueling", WN: "Southwest", WY: "Oman Air",
+};
+
+export function getAirlineName(iata: string): string {
+  return AIRLINE_NAMES[iata] ?? iata;
+}
+
 /** Get the reverse route slug if it exists in our route list. */
 export function getReverseRouteSlug(slug: string): string | null {
   const route = ROUTES_BY_SLUG.get(slug);
