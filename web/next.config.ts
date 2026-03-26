@@ -6,6 +6,10 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 const apiOrigin = API_URL ? new URL(API_URL).origin : "";
 
+const isProduction =
+  (process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app") ===
+  "https://flyfast.app";
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
@@ -15,6 +19,9 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: [
+          ...(!isProduction
+            ? [{ key: "X-Robots-Tag", value: "noindex, nofollow" }]
+            : []),
           {
             key: "Content-Security-Policy",
             value: [

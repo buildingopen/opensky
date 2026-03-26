@@ -38,6 +38,7 @@ export function SiteFooter() {
             <Link href="/methodology" className="hover:text-[var(--color-text)]">{t("methodology")}</Link>
             <Link href="/contact" className="hover:text-[var(--color-text)]">{t("contact")}</Link>
             <Link href="/api-access" className="hover:text-[var(--color-text)]">{t("api")}</Link>
+            <Link href="/flights" className="hover:text-[var(--color-text)]">{t("flights")}</Link>
             <button
               type="button"
               onClick={() => {

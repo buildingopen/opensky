@@ -335,6 +335,20 @@ def _init_alerts_db() -> None:
     conn.execute("CREATE INDEX IF NOT EXISTS idx_zone_alerts_active ON zone_alerts(is_active, expires_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_zone_alerts_email ON zone_alerts(email)")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_zone_alerts_confirm_token ON zone_alerts(confirm_token)")
+    # Route price cache for programmatic SEO pages
+    conn.execute("""CREATE TABLE IF NOT EXISTS route_cache (
+        origin TEXT NOT NULL,
+        destination TEXT NOT NULL,
+        price_min REAL,
+        price_max REAL,
+        currency TEXT DEFAULT 'EUR',
+        airlines TEXT,
+        duration_min INTEGER,
+        duration_max INTEGER,
+        sample_count INTEGER DEFAULT 0,
+        updated_at TEXT,
+        PRIMARY KEY (origin, destination)
+    )""")
     conn.commit()
     conn.close()
 
@@ -3014,3 +3028,136 @@ async def create_access_request(req: AccessRequest, request: Request):
         log.warning("Access request email failed: %s", exc)
 
     return {"status": "ok", "message": "Request submitted. We'll be in touch."}
+
+
+# ---------------------------------------------------------------------------
+# Route cache endpoints (programmatic SEO)
+# ---------------------------------------------------------------------------
+
+_route_snapshot_log: dict[str, list[float]] = defaultdict(list)
+RATE_LIMIT_ROUTE_SNAPSHOT = int(os.environ.get("RATE_LIMIT_ROUTE_SNAPSHOT_PER_HOUR", "200"))
+
+
+class RouteSnapshotRequest(BaseModel):
+    origin: str
+    destination: str
+    dates: list[str]
+    currency: str = "EUR"
+
+
+@app.post("/api/route-snapshot")
+async def route_snapshot(req: RouteSnapshotRequest, request: Request):
+    """Internal endpoint: search flights for a route, cache aggregate stats."""
+    _require_internal_request(request)
+    ip = _get_client_ip(request)
+    await _check_rate_limit(
+        ip, limit=RATE_LIMIT_ROUTE_SNAPSHOT,
+        prefix=f"{RATE_LIMIT_PREFIX}:route-snapshot",
+        store=_route_snapshot_log, label="route snapshots",
+    )
+
+    origin = req.origin.upper().strip()
+    dest = req.destination.upper().strip()
+    if len(origin) != 3 or len(dest) != 3:
+        raise HTTPException(status_code=400, detail="Origin and destination must be 3-letter IATA codes.")
+
+    # Run search synchronously in a thread to avoid blocking
+    parsed = {
+        "origins": [origin],
+        "destinations": [dest],
+        "dates": req.dates,
+        "currency": req.currency,
+        "cabin": "economy",
+        "stops": "any",
+    }
+
+    loop = asyncio.get_event_loop()
+    scored, _ = await loop.run_in_executor(None, _run_scan, parsed)
+
+    if not scored:
+        return {"status": "ok", "sample_count": 0, "message": "No results found."}
+
+    prices = [s.flight.price for s in scored]
+    durations = [s.flight.duration_minutes for s in scored]
+    airlines_set: set[str] = set()
+    for s in scored:
+        for leg in s.flight.legs:
+            if leg.airline:
+                airlines_set.add(leg.airline)
+
+    price_min = min(prices)
+    price_max = max(prices)
+    duration_min = min(durations)
+    duration_max = max(durations)
+    airlines_list = sorted(airlines_set)
+    now_iso = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+
+    conn = _alerts_db()
+    try:
+        conn.execute(
+            """INSERT INTO route_cache (origin, destination, price_min, price_max, currency, airlines, duration_min, duration_max, sample_count, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT(origin, destination) DO UPDATE SET
+                 price_min=excluded.price_min, price_max=excluded.price_max,
+                 currency=excluded.currency, airlines=excluded.airlines,
+                 duration_min=excluded.duration_min, duration_max=excluded.duration_max,
+                 sample_count=excluded.sample_count, updated_at=excluded.updated_at""",
+            (origin, dest, price_min, price_max, req.currency,
+             json.dumps(airlines_list), duration_min, duration_max,
+             len(scored), now_iso),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {
+        "status": "ok",
+        "price_min": price_min,
+        "price_max": price_max,
+        "currency": req.currency,
+        "airlines": airlines_list,
+        "duration_min": duration_min,
+        "duration_max": duration_max,
+        "sample_count": len(scored),
+        "updated_at": now_iso,
+    }
+
+
+@app.get("/api/route-cache")
+async def get_route_cache(origin: str | None = None, destination: str | None = None):
+    """Public endpoint: return cached route price data."""
+    conn = _alerts_db()
+    try:
+        if origin and destination:
+            row = conn.execute(
+                "SELECT * FROM route_cache WHERE origin = ? AND destination = ?",
+                (origin.upper().strip(), destination.upper().strip()),
+            ).fetchone()
+            if not row:
+                return {"route": None}
+            return {"route": _route_cache_row_to_dict(row)}
+        else:
+            rows = conn.execute("SELECT * FROM route_cache ORDER BY origin, destination").fetchall()
+            return {"routes": [_route_cache_row_to_dict(r) for r in rows]}
+    finally:
+        conn.close()
+
+
+def _route_cache_row_to_dict(row: sqlite3.Row) -> dict:
+    airlines_raw = row["airlines"]
+    try:
+        airlines = json.loads(airlines_raw) if airlines_raw else []
+    except (json.JSONDecodeError, TypeError):
+        airlines = []
+    return {
+        "origin": row["origin"],
+        "destination": row["destination"],
+        "price_min": row["price_min"],
+        "price_max": row["price_max"],
+        "currency": row["currency"],
+        "airlines": airlines,
+        "duration_min": row["duration_min"],
+        "duration_max": row["duration_max"],
+        "sample_count": row["sample_count"],
+        "updated_at": row["updated_at"],
+    }

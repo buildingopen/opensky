@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { locales, defaultLocale } from "../i18n/config";
 import { getZones } from "./[locale]/safety/zones-data";
+import { ROUTES } from "../lib/routes";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app";
 
@@ -48,5 +49,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ]);
 
-  return [...staticPages, ...safetyPages];
+  // Flight route pages
+  const flightsIndex = locales.map((locale) => ({
+    url: `${siteUrl}/${locale}/flights`,
+    lastModified: now,
+    changeFrequency: "daily" as const,
+    priority: 0.9,
+    alternates: { languages: localeAlternates("/flights") },
+  }));
+
+  const flightRoutePages = ROUTES.flatMap((route) =>
+    locales.map((locale) => ({
+      url: `${siteUrl}/${locale}/flights/${route.slug}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+      alternates: { languages: localeAlternates(`/flights/${route.slug}`) },
+    })),
+  );
+
+  return [...staticPages, ...safetyPages, ...flightsIndex, ...flightRoutePages];
 }
