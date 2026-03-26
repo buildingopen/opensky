@@ -798,7 +798,7 @@
     "feature4Detail": "Per E-Mail"
   },
   "flights": {
-    "indexTitle": "Alle Flugrouten",
+    "indexTitle": "Alle Flugrouten | FlyFast",
     "indexDescription": "Flugrouten ab den größten europäischen Flughäfen mit aktuellen Preisen, Sicherheitsanalyse und Airline-Informationen.",
     "title": "Flüge von {origin} nach {destination}",
     "metaTitle": "Flug {origin} {destination}: Flugzeit, Airlines & Sicherheit | FlyFast",
