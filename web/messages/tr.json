@@ -760,7 +760,8 @@
       "faqQuestion": "{zone} üzerinden uçmak güvenli mi?",
       "faqAnswer_do_not_fly": "Hayır. {zone} hava sahası Uçuş Yasağı olarak sınıflandırılmıştır. {details} Havayolları uçuşları otomatik olarak bu bölgenin etrafından yönlendirir.",
       "faqAnswer_high_risk": "{zone} Yüksek Risk olarak sınıflandırılmıştır. {details} Çoğu havayolu bu hava sahasından kaçınır.",
-      "faqAnswer_caution": "{zone} Dikkat olarak sınıflandırılmıştır. {details} Havalimanları normal şekilde çalışır ancak uçuşlar çatışma bölgelerinin yakınında yönlendirilebilir."
+      "faqAnswer_caution": "{zone} Dikkat olarak sınıflandırılmıştır. {details} Havalimanları normal şekilde çalışır ancak uçuşlar çatışma bölgelerinin yakınında yönlendirilebilir.",
+      "routesNearZone": "Bu bölgeye yakın rotalar"
     },
     "alerts": {
       "title": "Risk seviyeleri değiştiğinde bildirim alın",
@@ -837,6 +838,7 @@
     "faq4Q": "Is it safe to fly from {origin} to {destination}?",
     "faq4A_safe": "Yes, this route has no active conflict zone warnings. FlyFast monitors all global airspace restrictions in real-time.",
     "faq4A_caution": "This route passes near an active conflict zone ({zone}). Airlines may reroute flights for safety. Check the latest safety status on FlyFast before booking.",
-    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast."
+    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast.",
+    "breadcrumbHome": "Ana Sayfa"
   }
 }

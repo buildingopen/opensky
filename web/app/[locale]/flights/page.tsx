@@ -9,6 +9,7 @@ import {
   getRouteMeta,
   formatFlightTime,
 } from "../../../lib/routes";
+import { getAllRouteCache } from "../../../lib/route-cache";
 
 export const revalidate = 3600;
 
@@ -31,6 +32,9 @@ export async function generateMetadata({
   }
   languages["x-default"] = `${siteUrl}/en/flights`;
 
+  const ogUrl = new URL("/api/og", siteUrl);
+  ogUrl.searchParams.set("route", "All Flight Routes");
+
   return {
     title,
     description,
@@ -38,10 +42,23 @@ export async function generateMetadata({
       canonical: `${siteUrl}/${locale}/flights`,
       languages,
     },
+    openGraph: {
+      title,
+      description,
+      url: `${siteUrl}/${locale}/flights`,
+      images: [
+        {
+          url: ogUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
   };
 }
 
-function breadcrumbSchema(locale: string) {
+function breadcrumbSchema(locale: string, homeLabel: string, flightsLabel: string) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -49,13 +66,13 @@ function breadcrumbSchema(locale: string) {
       {
         "@type": "ListItem",
         position: 1,
-        name: "Home",
+        name: homeLabel,
         item: `${siteUrl}/${locale}`,
       },
       {
         "@type": "ListItem",
         position: 2,
-        name: "Flights",
+        name: flightsLabel,
         item: `${siteUrl}/${locale}/flights`,
       },
     ],
@@ -84,6 +101,24 @@ export default async function FlightsIndexPage({
   const { locale } = await params;
   const t = await getTranslations("flights");
 
+  // Fetch all cached prices
+  const allCached = await getAllRouteCache();
+  const priceMap = new Map(
+    allCached.map((c) => [`${c.origin}-${c.destination}`, c]),
+  );
+
+  const formatPrice = (amount: number, currency: string) => {
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      }).format(amount);
+    } catch {
+      return `${currency} ${Math.round(amount)}`;
+    }
+  };
+
   // Group routes by origin city
   const grouped = new Map<string, typeof ROUTES>();
   for (const route of ROUTES) {
@@ -97,7 +132,7 @@ export default async function FlightsIndexPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbSchema(locale)),
+          __html: JSON.stringify(breadcrumbSchema(locale, t("breadcrumbHome"), t("breadcrumbFlights"))),
         }}
       />
       <script
@@ -112,7 +147,7 @@ export default async function FlightsIndexPage({
           href="/"
           className="hover:text-[var(--color-interactive)] transition-colors"
         >
-          Home
+          {t("breadcrumbHome")}
         </Link>
         <span>/</span>
         <span className="text-[var(--color-text)]">
@@ -139,6 +174,9 @@ export default async function FlightsIndexPage({
                 const destCountry =
                   getAirportCountry(route.destination).toLowerCase();
                 const meta = getRouteMeta(route.slug);
+                const cached = priceMap.get(
+                  `${route.origin}-${route.destination}`,
+                );
                 return (
                   <Link
                     key={route.slug}
@@ -161,12 +199,23 @@ export default async function FlightsIndexPage({
                         {route.origin} &rarr; {route.destination}
                       </span>
                     </div>
-                    {meta && (
-                      <span className="text-xs text-[var(--color-text-muted)]">
-                        {formatFlightTime(meta.flightTimeMin)} &middot;{" "}
-                        {meta.distanceKm.toLocaleString()} km
-                      </span>
-                    )}
+                    <div className="flex items-center gap-3">
+                      {cached?.price_min != null && (
+                        <span className="text-xs font-semibold text-[var(--color-interactive)]">
+                          {t("priceFrom", {
+                            price: formatPrice(
+                              cached.price_min,
+                              cached.currency,
+                            ),
+                          })}
+                        </span>
+                      )}
+                      {meta && (
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                          {formatFlightTime(meta.flightTimeMin)}
+                        </span>
+                      )}
+                    </div>
                   </Link>
                 );
               })}

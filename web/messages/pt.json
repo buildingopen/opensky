@@ -760,7 +760,8 @@
       "faqQuestion": "É seguro voar sobre {zone}?",
       "faqAnswer_do_not_fly": "Não. O espaço aéreo de {zone} é classificado como Proibido Voar. {details} As companhias aéreas redirecionam automaticamente os voos ao redor desta zona.",
       "faqAnswer_high_risk": "{zone} é classificado como Alto Risco. {details} A maioria das companhias aéreas evita este espaço aéreo.",
-      "faqAnswer_caution": "{zone} é classificado como Precaução. {details} Os aeroportos operam normalmente, mas os voos podem ser redirecionados perto de zonas de conflito."
+      "faqAnswer_caution": "{zone} é classificado como Precaução. {details} Os aeroportos operam normalmente, mas os voos podem ser redirecionados perto de zonas de conflito.",
+      "routesNearZone": "Rotas próximas a esta zona"
     },
     "alerts": {
       "title": "Receba notificações quando os níveis de risco mudarem",
@@ -837,6 +838,7 @@
     "faq4Q": "Is it safe to fly from {origin} to {destination}?",
     "faq4A_safe": "Yes, this route has no active conflict zone warnings. FlyFast monitors all global airspace restrictions in real-time.",
     "faq4A_caution": "This route passes near an active conflict zone ({zone}). Airlines may reroute flights for safety. Check the latest safety status on FlyFast before booking.",
-    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast."
+    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast.",
+    "breadcrumbHome": "Início"
   }
 }

@@ -9,6 +9,11 @@ import {
   RISK_CONFIG,
   ZONE_FLAGS,
 } from "../zones-data";
+import {
+  ROUTES,
+  ROUTE_SAFETY_ZONES,
+  getAirportCity,
+} from "../../../../lib/routes";
 
 export const revalidate = 3600;
 
@@ -288,6 +293,32 @@ export default async function ZonePage({
             ))}
           </dl>
         </div>
+
+        {/* Routes near this zone */}
+        {(() => {
+          const affectedRoutes = ROUTES.filter((r) =>
+            (ROUTE_SAFETY_ZONES[r.slug] ?? []).includes(zoneId),
+          );
+          if (affectedRoutes.length === 0) return null;
+          return (
+            <div>
+              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-3">
+                {t("zone.routesNearZone")}
+              </h2>
+              <div className="grid gap-2">
+                {affectedRoutes.map((route) => (
+                  <Link
+                    key={route.slug}
+                    href={`/flights/${route.slug}`}
+                    className="text-sm text-[var(--color-interactive)] hover:underline"
+                  >
+                    {getAirportCity(route.origin)} &rarr; {getAirportCity(route.destination)}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* CTA */}
         <div className="border-t border-[var(--color-border)] pt-8">

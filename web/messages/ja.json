@@ -760,7 +760,8 @@
       "faqQuestion": "{zone}上空の飛行は安全ですか？",
       "faqAnswer_do_not_fly": "いいえ。{zone}の空域は飛行禁止に分類されています。{details} 航空会社はこの空域を自動的に迂回します。",
       "faqAnswer_high_risk": "{zone}は高リスクに分類されています。{details} ほとんどの航空会社はこの空域を避けています。",
-      "faqAnswer_caution": "{zone}は注意に分類されています。{details} 空港は通常通り運営されていますが、紛争地帯付近ではフライトが迂回される場合があります。"
+      "faqAnswer_caution": "{zone}は注意に分類されています。{details} 空港は通常通り運営されていますが、紛争地帯付近ではフライトが迂回される場合があります。",
+      "routesNearZone": "このゾーン付近のルート"
     },
     "alerts": {
       "title": "リスクレベルの変更時に通知を受け取る",
@@ -837,6 +838,7 @@
     "faq4Q": "Is it safe to fly from {origin} to {destination}?",
     "faq4A_safe": "Yes, this route has no active conflict zone warnings. FlyFast monitors all global airspace restrictions in real-time.",
     "faq4A_caution": "This route passes near an active conflict zone ({zone}). Airlines may reroute flights for safety. Check the latest safety status on FlyFast before booking.",
-    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast."
+    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast.",
+    "breadcrumbHome": "ホーム"
   }
 }

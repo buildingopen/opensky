@@ -92,7 +92,7 @@ function faqSchema(faqs: Array<{ question: string; answer: string }>) {
   };
 }
 
-function breadcrumbSchema(routeName: string, slug: string, locale: string) {
+function breadcrumbSchema(routeName: string, slug: string, locale: string, homeLabel: string, flightsLabel: string) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -100,13 +100,13 @@ function breadcrumbSchema(routeName: string, slug: string, locale: string) {
       {
         "@type": "ListItem",
         position: 1,
-        name: "Home",
+        name: homeLabel,
         item: `${siteUrl}/${locale}`,
       },
       {
         "@type": "ListItem",
         position: 2,
-        name: "Flights",
+        name: flightsLabel,
         item: `${siteUrl}/${locale}/flights`,
       },
       {
@@ -244,7 +244,7 @@ export default async function RoutePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbSchema(routeName, slug, locale)),
+          __html: JSON.stringify(breadcrumbSchema(routeName, slug, locale, t("breadcrumbHome"), t("breadcrumbFlights"))),
         }}
       />
 
@@ -254,7 +254,7 @@ export default async function RoutePage({
           href="/"
           className="hover:text-[var(--color-interactive)] transition-colors"
         >
-          Home
+          {t("breadcrumbHome")}
         </Link>
         <span>/</span>
         <Link

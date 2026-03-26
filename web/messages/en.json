@@ -776,7 +776,8 @@
       "faqRouteAnswer_caution": "Flights passing over {zone} may proceed normally, though airlines monitor the situation and reroute if conditions change. FlyFast shows a Caution badge on affected flights so you can make an informed decision.",
       "faqCheckQuestion": "How can I check if my flight avoids {zone}?",
       "faqCheckAnswer": "Use FlyFast to search your route. FlyFast checks every flight against conflict zone data, including {zone}, and filters or flags affected routes. Safe routes are shown by default, and any flights near advisory zones are clearly labeled.",
-      "commonQuestions": "Common questions"
+      "commonQuestions": "Common questions",
+      "routesNearZone": "Routes near this zone"
     },
     "alerts": {
       "title": "Get notified when risk levels change",
@@ -866,6 +867,7 @@
     "faq4Q": "Is it safe to fly from {origin} to {destination}?",
     "faq4A_safe": "Yes, this route has no active conflict zone warnings. FlyFast monitors all global airspace restrictions in real-time.",
     "faq4A_caution": "This route passes near an active conflict zone ({zone}). Airlines may reroute flights for safety. Check the latest safety status on FlyFast before booking.",
-    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast."
+    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast.",
+    "breadcrumbHome": "Home"
   }
 }

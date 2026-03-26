@@ -760,7 +760,8 @@
       "faqQuestion": "Ist es sicher, über {zone} zu fliegen?",
       "faqAnswer_do_not_fly": "Nein. Der Luftraum über {zone} ist als Flugverbot eingestuft. {details} Fluggesellschaften leiten Flüge automatisch um diese Zone um.",
       "faqAnswer_high_risk": "{zone} ist als Hochrisikogebiet eingestuft. {details} Die meisten Fluggesellschaften meiden diesen Luftraum.",
-      "faqAnswer_caution": "{zone} ist als Vorsichtsgebiet eingestuft. {details} Flughäfen operieren normal, aber Flüge können in der Nähe von Konfliktzonen umgeleitet werden."
+      "faqAnswer_caution": "{zone} ist als Vorsichtsgebiet eingestuft. {details} Flughäfen operieren normal, aber Flüge können in der Nähe von Konfliktzonen umgeleitet werden.",
+      "routesNearZone": "Routen in der Nähe dieser Zone"
     },
     "alerts": {
       "title": "Benachrichtigung bei Änderungen der Risikostufe",
@@ -837,6 +838,7 @@
     "faq4Q": "Ist es sicher, von {origin} nach {destination} zu fliegen?",
     "faq4A_safe": "Ja, für diese Route gibt es keine aktiven Konfliktzonen-Warnungen. FlyFast überwacht alle globalen Luftraumbeschränkungen in Echtzeit.",
     "faq4A_caution": "Diese Route führt nahe an einer aktiven Konfliktzone ({zone}) vorbei. Airlines können Flüge aus Sicherheitsgründen umleiten. Prüfen Sie den aktuellen Sicherheitsstatus auf FlyFast vor der Buchung.",
-    "faq4A_high_risk": "Diese Route liegt in der Nähe einer Hochrisiko-Konfliktzone ({zone}). Einige Airlines meiden diesen Luftraum komplett. Prüfen Sie die aktuelle Sicherheitsanalyse auf FlyFast."
+    "faq4A_high_risk": "Diese Route liegt in der Nähe einer Hochrisiko-Konfliktzone ({zone}). Einige Airlines meiden diesen Luftraum komplett. Prüfen Sie die aktuelle Sicherheitsanalyse auf FlyFast.",
+    "breadcrumbHome": "Startseite"
   }
 }

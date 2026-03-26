@@ -760,7 +760,8 @@
       "faqQuestion": "هل من الآمن الطيران فوق {zone}؟",
       "faqAnswer_do_not_fly": "لا. المجال الجوي فوق {zone} مصنف كمنطقة حظر طيران. {details} تقوم شركات الطيران تلقائياً بتحويل مسار الرحلات حول هذه المنطقة.",
       "faqAnswer_high_risk": "{zone} مصنفة كمنطقة عالية الخطورة. {details} معظم شركات الطيران تتجنب هذا المجال الجوي.",
-      "faqAnswer_caution": "{zone} مصنفة كمنطقة تحذير. {details} المطارات تعمل بشكل طبيعي لكن قد يتم تحويل مسار الرحلات بالقرب من مناطق النزاع."
+      "faqAnswer_caution": "{zone} مصنفة كمنطقة تحذير. {details} المطارات تعمل بشكل طبيعي لكن قد يتم تحويل مسار الرحلات بالقرب من مناطق النزاع.",
+      "routesNearZone": "المسارات القريبة من هذه المنطقة"
     },
     "alerts": {
       "title": "احصل على إشعار عند تغيّر مستويات الخطورة",
@@ -837,6 +838,7 @@
     "faq4Q": "Is it safe to fly from {origin} to {destination}?",
     "faq4A_safe": "Yes, this route has no active conflict zone warnings. FlyFast monitors all global airspace restrictions in real-time.",
     "faq4A_caution": "This route passes near an active conflict zone ({zone}). Airlines may reroute flights for safety. Check the latest safety status on FlyFast before booking.",
-    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast."
+    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast.",
+    "breadcrumbHome": "الرئيسية"
   }
 }

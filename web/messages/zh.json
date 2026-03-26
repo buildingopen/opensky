@@ -760,7 +760,8 @@
       "faqQuestion": "飞越{zone}安全吗？",
       "faqAnswer_do_not_fly": "不安全。{zone}空域被列为禁飞区。{details} 航空公司会自动绕开该区域。",
       "faqAnswer_high_risk": "{zone}被列为高风险区域。{details} 大多数航空公司会避开该空域。",
-      "faqAnswer_caution": "{zone}被列为注意区域。{details} 机场正常运营，但航班可能会在冲突地区附近改道。"
+      "faqAnswer_caution": "{zone}被列为注意区域。{details} 机场正常运营，但航班可能会在冲突地区附近改道。",
+      "routesNearZone": "经过此区域附近的航线"
     },
     "alerts": {
       "title": "风险等级变化时通知我",
@@ -837,6 +838,7 @@
     "faq4Q": "Is it safe to fly from {origin} to {destination}?",
     "faq4A_safe": "Yes, this route has no active conflict zone warnings. FlyFast monitors all global airspace restrictions in real-time.",
     "faq4A_caution": "This route passes near an active conflict zone ({zone}). Airlines may reroute flights for safety. Check the latest safety status on FlyFast before booking.",
-    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast."
+    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast.",
+    "breadcrumbHome": "首页"
   }
 }

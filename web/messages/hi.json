@@ -760,7 +760,8 @@
       "faqQuestion": "क्या {zone} के ऊपर उड़ान भरना सुरक्षित है?",
       "faqAnswer_do_not_fly": "नहीं। {zone} का हवाई क्षेत्र उड़ान निषेध के रूप में वर्गीकृत है। {details} एयरलाइंस स्वचालित रूप से इस क्षेत्र के चारों ओर उड़ानें मोड़ देती हैं।",
       "faqAnswer_high_risk": "{zone} उच्च जोखिम के रूप में वर्गीकृत है। {details} अधिकांश एयरलाइंस इस हवाई क्षेत्र से बचती हैं।",
-      "faqAnswer_caution": "{zone} सावधानी के रूप में वर्गीकृत है। {details} हवाई अड्डे सामान्य रूप से संचालित होते हैं लेकिन संघर्ष क्षेत्रों के पास उड़ानें मोड़ी जा सकती हैं।"
+      "faqAnswer_caution": "{zone} सावधानी के रूप में वर्गीकृत है। {details} हवाई अड्डे सामान्य रूप से संचालित होते हैं लेकिन संघर्ष क्षेत्रों के पास उड़ानें मोड़ी जा सकती हैं।",
+      "routesNearZone": "इस क्षेत्र के पास के मार्ग"
     },
     "alerts": {
       "title": "जोखिम स्तर बदलने पर सूचना पाएं",
@@ -837,6 +838,7 @@
     "faq4Q": "Is it safe to fly from {origin} to {destination}?",
     "faq4A_safe": "Yes, this route has no active conflict zone warnings. FlyFast monitors all global airspace restrictions in real-time.",
     "faq4A_caution": "This route passes near an active conflict zone ({zone}). Airlines may reroute flights for safety. Check the latest safety status on FlyFast before booking.",
-    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast."
+    "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast.",
+    "breadcrumbHome": "होम"
   }
 }
