@@ -23,7 +23,7 @@ export async function getRouteCache(
   try {
     const res = await fetch(
       `${API_URL}/api/route-cache?origin=${origin}&destination=${destination}`,
-      { next: { revalidate: 3600 } },
+      { cache: "no-store" },
     );
     if (!res.ok) return null;
     const data = await res.json();
@@ -36,7 +36,7 @@ export async function getRouteCache(
 export async function getAllRouteCache(): Promise<RouteCache[]> {
   try {
     const res = await fetch(`${API_URL}/api/route-cache`, {
-      next: { revalidate: 3600 },
+      cache: "no-store",
     });
     if (!res.ok) return [];
     const data = await res.json();
