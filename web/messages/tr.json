@@ -146,6 +146,7 @@
       "bookDirect": "Doğrudan rezervasyon",
       "book": "Rezervasyon",
       "comparePrices": "Fiyatları karşılaştır",
+      "bookOnGoogleFlights": "Google Flights'ta rezervasyon yap",
       "compare": "Karşılaştır",
       "hideDetails": "Detayları gizle",
       "showSegments": "{count} uçuş segmentini göster",

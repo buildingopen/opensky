@@ -1489,6 +1489,16 @@ const ExternalLinkIcon = () => (
   </svg>
 );
 
+const GoogleFlightsIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none">
+    <path d="M7.2 16.8L3 21l2.1.6 2.7-2.7L7.2 16.8z" fill="#1A73E8"/>
+    <path d="M21 3l-9 5.4 2.1 2.1L21 6v-3z" fill="#EA4335"/>
+    <path d="M7.2 16.8l2.1 2.1L21 6V3L7.2 16.8z" fill="#4285F4"/>
+    <path d="M3 21l4.2-4.2L5.1 14.7 3 16.8V21z" fill="#0D47A1"/>
+    <path d="M7.2 16.8L5.1 14.7 3 16.8l2.1 2.1 2.1 2.1 2.1-2.1-2.1-2.1z" fill="#1565C0"/>
+  </svg>
+);
+
 
 function sortFlights(flights: FlightOut[], key: SortKey): FlightOut[] {
   return [...flights].sort((a, b) => {
@@ -1648,10 +1658,10 @@ function FlightCard({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => onOutboundClick("compare", flight)}
-                    aria-label={t("comparePrices")}
-                    className="px-3 py-2 border border-[var(--color-border)] hover:border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
+                    aria-label={t("bookOnGoogleFlights")}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-[var(--color-border)] hover:border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
                   >
-                    {t("comparePrices")} <ExternalLinkIcon />
+                    <GoogleFlightsIcon className="w-3.5 h-3.5" /> {t("bookOnGoogleFlights")} <ExternalLinkIcon />
                   </a>
                 </>
               )}
@@ -1786,9 +1796,9 @@ function RoundTripFlightRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onOutboundClick("compare", flight)}
-            className="px-3 py-1.5 border border-[var(--color-border)] hover:border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
+            className="inline-flex items-center gap-1 px-3 py-1.5 border border-[var(--color-border)] hover:border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-xs font-medium rounded-lg transition-colors"
           >
-            {t("results.comparePrices")} <ExternalLinkIcon />
+            <GoogleFlightsIcon className="w-3 h-3" /> {t("results.bookOnGoogleFlights")} <ExternalLinkIcon />
           </a>
         )}
       </div>
@@ -1976,9 +1986,9 @@ function CompactFlightRow({
           href={safeUrl(compareUrl) || "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-[var(--color-interactive)] hover:underline"
+          className="inline-flex items-center gap-1 text-xs text-[var(--color-interactive)] hover:underline"
         >
-          {t("results.compare")} <ExternalLinkIcon />
+          <GoogleFlightsIcon className="w-3 h-3" /> Google Flights <ExternalLinkIcon />
         </a>
       </div>
     </div>
@@ -2118,8 +2128,8 @@ function ScanSummaryExpanded({
                   </div>
                   <span className="text-[var(--color-text-muted)] text-xs shrink-0">{formatDate(f.date)}</span>
                   {compareUrl && (
-                    <a href={compareUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--color-interactive)] hover:underline shrink-0">
-                      {t("results.compare")} <ExternalLinkIcon />
+                    <a href={compareUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--color-interactive)] hover:underline shrink-0">
+                      <GoogleFlightsIcon className="w-3 h-3" /> Google Flights <ExternalLinkIcon />
                     </a>
                   )}
                 </div>

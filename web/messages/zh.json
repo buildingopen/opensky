@@ -146,6 +146,7 @@
       "bookDirect": "直接预订",
       "book": "预订",
       "comparePrices": "比较价格",
+      "bookOnGoogleFlights": "在 Google Flights 上预订",
       "compare": "比较",
       "hideDetails": "隐藏详情",
       "showSegments": "显示{count}个航段",
