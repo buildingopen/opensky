@@ -25,17 +25,27 @@ API_BASE = os.environ.get("FLYFAST_API_URL", "https://api.flyfast.app")
 API_TOKEN = os.environ.get("INTERNAL_API_TOKEN", "")
 
 ROUTES = [
+    # BER outbound (12)
     ("BER", "LHR"), ("BER", "CDG"), ("BER", "BCN"), ("BER", "IST"),
     ("BER", "ATH"), ("BER", "LIS"), ("BER", "FCO"), ("BER", "AMS"),
-    ("BER", "NRT"), ("BER", "JFK"), ("BER", "TLV"), ("BER", "BKK"),
+    ("BER", "NRT"), ("BER", "JFK"), ("BER", "TLV"), ("BER", "DXB"),
+    # BER long-haul
+    ("BER", "BKK"),
+    # FRA outbound (12)
     ("FRA", "JFK"), ("FRA", "NRT"), ("FRA", "SIN"), ("FRA", "BKK"),
     ("FRA", "DEL"), ("FRA", "DXB"), ("FRA", "GRU"), ("FRA", "JNB"),
-    ("FRA", "LAX"), ("FRA", "ORD"),
+    ("FRA", "LAX"), ("FRA", "ORD"), ("FRA", "LHR"), ("FRA", "IST"),
+    ("FRA", "BCN"), ("FRA", "FCO"),
+    # MUC outbound (9)
     ("MUC", "JFK"), ("MUC", "IST"), ("MUC", "ATH"), ("MUC", "BKK"),
-    ("MUC", "NRT"),
+    ("MUC", "NRT"), ("MUC", "LHR"), ("MUC", "BCN"), ("MUC", "DEL"),
+    ("MUC", "FCO"), ("MUC", "DXB"),
+    # HAM outbound (4)
     ("HAM", "LHR"), ("HAM", "IST"), ("HAM", "BCN"), ("HAM", "ATH"),
+    # DUS outbound (3)
     ("DUS", "IST"), ("DUS", "BCN"), ("DUS", "ATH"),
-    ("FRA", "SIN"),
+    # Reverse routes (2)
+    ("LHR", "BER"), ("DEL", "FRA"),
 ]
 
 CURRENCY = "EUR"
