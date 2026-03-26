@@ -2437,69 +2437,111 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
     setEditStops(stopsOptions[(idx + 1) % stopsOptions.length].value);
   };
 
-  if (editing) {
+  // Inline airport autocomplete for edit mode
+  const AirportPillInput = ({ list, setList, inputVal, setInputVal, addFn, id }: {
+    list: string[]; setList: React.Dispatch<React.SetStateAction<string[]>>;
+    inputVal: string; setInputVal: React.Dispatch<React.SetStateAction<string>>;
+    addFn: (v: string) => void; id: string;
+  }) => {
+    const [acOpen, setAcOpen] = useState(false);
+    const [acIdx, setAcIdx] = useState(-1);
+    const acMatches = inputVal.length >= 1
+      ? AIRPORTS.filter((a) => {
+          const q = inputVal.toLowerCase();
+          return a.iata.toLowerCase().startsWith(q) || a.city.toLowerCase().includes(q) || a.name.toLowerCase().includes(q);
+        }).slice(0, 6)
+      : [];
+    const showAc = acOpen && acMatches.length > 0;
+    const selectAc = (iata: string) => { addFn(iata); setAcOpen(false); setAcIdx(-1); };
     const pillClass = "inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-interactive)]/10 border border-[var(--color-interactive)]/20 text-[var(--color-text)] text-xs font-medium";
-    const removeBtnClass = "text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors";
-    const addInputClass = "bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text)] outline-none px-0.5 py-0.5 text-xs w-14 placeholder:text-[var(--color-text-muted)]/40";
     return (
-      <div className="bg-[var(--color-surface)] border border-[var(--color-interactive)]/40 rounded-lg px-4 py-3 space-y-3">
-        {/* Origins → Destinations */}
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {editOriginList.map((code) => (
-              <span key={code} className={pillClass}>
-                {airport_names?.[code] ? `${airport_names[code]} (${code})` : code}
-                <button type="button" onClick={() => setEditOriginList((prev) => prev.filter((c) => c !== code))} className={removeBtnClass} aria-label={`Remove ${code}`}>
-                  <svg viewBox="0 0 12 12" className="w-3 h-3" fill="currentColor"><path d="M3.05 3.05a.5.5 0 01.7 0L6 5.29l2.25-2.24a.5.5 0 11.7.7L6.71 6l2.24 2.25a.5.5 0 11-.7.7L6 6.71 3.75 8.95a.5.5 0 11-.7-.7L5.29 6 3.05 3.75a.5.5 0 010-.7z"/></svg>
-                </button>
-              </span>
-            ))}
-            <input
-              value={editOriginInput}
-              onChange={(e) => setEditOriginInput(e.target.value.toUpperCase())}
-              onKeyDown={(e) => { if ((e.key === "Enter" || e.key === ",") && editOriginInput.trim()) { e.preventDefault(); addOrigin(editOriginInput); } if (e.key === "Backspace" && !editOriginInput && editOriginList.length > 0) setEditOriginList((prev) => prev.slice(0, -1)); }}
-              onBlur={() => { if (editOriginInput.trim()) addOrigin(editOriginInput); }}
-              placeholder="+ add"
-              className={addInputClass}
-            />
+      <div className="flex flex-wrap items-center gap-1.5">
+        {list.map((code) => (
+          <span key={code} className={pillClass}>
+            {airport_names?.[code] ? `${airport_names[code]} (${code})` : code}
+            <button type="button" onClick={() => setList((prev) => prev.filter((c) => c !== code))} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors" aria-label={`Remove ${code}`}>
+              <svg viewBox="0 0 12 12" className="w-3 h-3" fill="currentColor"><path d="M3.05 3.05a.5.5 0 01.7 0L6 5.29l2.25-2.24a.5.5 0 11.7.7L6.71 6l2.24 2.25a.5.5 0 11-.7.7L6 6.71 3.75 8.95a.5.5 0 11-.7-.7L5.29 6 3.05 3.75a.5.5 0 010-.7z"/></svg>
+            </button>
+          </span>
+        ))}
+        <div className="relative">
+          <input
+            value={inputVal}
+            onChange={(e) => { setInputVal(e.target.value.toUpperCase()); setAcOpen(true); setAcIdx(-1); }}
+            onFocus={() => setAcOpen(true)}
+            onBlur={() => setTimeout(() => setAcOpen(false), 150)}
+            onKeyDown={(e) => {
+              if (showAc && e.key === "ArrowDown") { e.preventDefault(); setAcIdx((i) => Math.min(i + 1, acMatches.length - 1)); }
+              else if (showAc && e.key === "ArrowUp") { e.preventDefault(); setAcIdx((i) => Math.max(i - 1, 0)); }
+              else if (e.key === "Enter" && acIdx >= 0) { e.preventDefault(); selectAc(acMatches[acIdx].iata); }
+              else if ((e.key === "Enter" || e.key === ",") && inputVal.trim()) { e.preventDefault(); addFn(inputVal); }
+              else if (e.key === "Backspace" && !inputVal && list.length > 0) setList((prev) => prev.slice(0, -1));
+              else if (e.key === "Escape") { setAcOpen(false); setAcIdx(-1); }
+            }}
+            placeholder="+ add"
+            autoComplete="off"
+            className="bg-transparent border border-[var(--color-border)] rounded px-1.5 py-0.5 text-xs w-20 placeholder:text-[var(--color-text-muted)]/40 outline-none focus:border-[var(--color-interactive)]/50 text-[var(--color-text)]"
+          />
+          {showAc && (
+            <ul className="absolute z-50 top-full left-0 mt-1 min-w-[200px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-xl overflow-y-auto max-h-40">
+              {acMatches.map((a, i) => (
+                <li key={a.iata} onMouseDown={(e) => { e.preventDefault(); selectAc(a.iata); }}
+                  className={`px-2.5 py-1.5 text-xs cursor-pointer flex items-center gap-1.5 ${i === acIdx ? "bg-[var(--color-interactive)]/10 text-[var(--color-text)]" : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)]"}`}>
+                  <span className="font-mono font-semibold text-[var(--color-interactive)] w-8">{a.iata}</span>
+                  <span className="truncate">{a.city}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Date pills with visible calendar picker
+  const DatePillRow = ({ list, setList, label }: { list: string[]; setList: React.Dispatch<React.SetStateAction<string[]>>; label?: string }) => {
+    const dateRef = useRef<HTMLInputElement>(null);
+    const pillClass = "inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-interactive)]/10 border border-[var(--color-interactive)]/20 text-[var(--color-text)] text-xs font-medium";
+    return (
+      <div className="flex flex-wrap items-center gap-1.5">
+        {list.map((d) => (
+          <span key={d} className={pillClass}>
+            {formatDate(d, locale)}
+            <button type="button" onClick={() => setList((prev) => prev.filter((x) => x !== d))} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] leading-none">&times;</button>
+          </span>
+        ))}
+        <button type="button" onClick={() => dateRef.current?.showPicker?.()} className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs border border-[var(--color-border)] rounded text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-interactive)]/50 transition-colors cursor-pointer">
+          <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>
+          {label || "+"}
+        </button>
+        <input ref={dateRef} type="date" className="sr-only" onChange={(e) => { if (e.target.value && !list.includes(e.target.value)) { setList((prev) => [...prev, e.target.value].sort()); } e.target.value = ""; }} />
+      </div>
+    );
+  };
+
+  if (editing) {
+    const labelClass = "text-[10px] font-medium text-[var(--color-text-muted)]/60 uppercase tracking-wider shrink-0";
+    return (
+      <div className="bg-[var(--color-surface)] border border-[var(--color-interactive)]/40 rounded-lg px-4 py-3 space-y-2.5">
+        {/* Row 1: From → To */}
+        <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <span className={labelClass}>From</span>
+            <AirportPillInput list={editOriginList} setList={setEditOriginList} inputVal={editOriginInput} setInputVal={setEditOriginInput} addFn={addOrigin} id="edit-origin" />
           </div>
-          <span className="text-[var(--color-text-muted)]">→</span>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {editDestList.map((code) => (
-              <span key={code} className={pillClass}>
-                {airport_names?.[code] ? `${airport_names[code]} (${code})` : code}
-                <button type="button" onClick={() => setEditDestList((prev) => prev.filter((c) => c !== code))} className={removeBtnClass} aria-label={`Remove ${code}`}>
-                  <svg viewBox="0 0 12 12" className="w-3 h-3" fill="currentColor"><path d="M3.05 3.05a.5.5 0 01.7 0L6 5.29l2.25-2.24a.5.5 0 11.7.7L6.71 6l2.24 2.25a.5.5 0 11-.7.7L6 6.71 3.75 8.95a.5.5 0 11-.7-.7L5.29 6 3.05 3.75a.5.5 0 010-.7z"/></svg>
-                </button>
-              </span>
-            ))}
-            <input
-              value={editDestInput}
-              onChange={(e) => setEditDestInput(e.target.value.toUpperCase())}
-              onKeyDown={(e) => { if ((e.key === "Enter" || e.key === ",") && editDestInput.trim()) { e.preventDefault(); addDest(editDestInput); } if (e.key === "Backspace" && !editDestInput && editDestList.length > 0) setEditDestList((prev) => prev.slice(0, -1)); }}
-              onBlur={() => { if (editDestInput.trim()) addDest(editDestInput); }}
-              placeholder="+ add"
-              className={addInputClass}
-            />
+          <span className="text-[var(--color-text-muted)] mt-0.5">→</span>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <span className={labelClass}>To</span>
+            <AirportPillInput list={editDestList} setList={setEditDestList} inputVal={editDestInput} setInputVal={setEditDestInput} addFn={addDest} id="edit-dest" />
           </div>
         </div>
-        {/* Date, return toggle, cabin, stops, price */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          {/* Departure date pills */}
-          {editDateList.map((d) => (
-            <span key={d} className={pillClass}>
-              {formatDate(d, locale)}
-              <button type="button" onClick={() => setEditDateList((prev) => prev.filter((x) => x !== d))} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] leading-none">&times;</button>
-            </span>
-          ))}
-          <input
-            type="date"
-            value=""
-            onChange={(e) => { if (e.target.value && !editDateList.includes(e.target.value)) { setEditDateList((prev) => [...prev, e.target.value].sort()); } e.target.value = ""; }}
-            className={`${addInputClass} w-20 [&::-webkit-calendar-picker-indicator]:opacity-30`}
-            title="Add date"
-          />
-          <span className="text-[var(--color-text-muted)]/40 mx-0.5">|</span>
+        {/* Row 2: Dates */}
+        <div className="flex items-center gap-2">
+          <span className={labelClass}>Dates</span>
+          <DatePillRow list={editDateList} setList={setEditDateList} />
+        </div>
+        {/* Row 3: Return + Options */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
           <label className="inline-flex items-center gap-1.5 cursor-pointer">
             <button
               type="button"
@@ -2512,63 +2554,23 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
             </button>
             <span className="text-[var(--color-text-muted)]">{t("form.roundTrip" as "form.economy")}</span>
           </label>
-          {editRoundTrip && (
-            <>
-              {editReturnDateList.map((d) => (
-                <span key={d} className={pillClass}>
-                  {formatDate(d, locale)}
-                  <button type="button" onClick={() => setEditReturnDateList((prev) => prev.filter((x) => x !== d))} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] leading-none">&times;</button>
-                </span>
-              ))}
-              <input
-                type="date"
-                value=""
-                onChange={(e) => { if (e.target.value && !editReturnDateList.includes(e.target.value)) { setEditReturnDateList((prev) => [...prev, e.target.value].sort()); } e.target.value = ""; }}
-                className={`${addInputClass} w-20 [&::-webkit-calendar-picker-indicator]:opacity-30`}
-                title="Add return date"
-              />
-            </>
-          )}
-          <button
-            type="button"
-            onClick={cycleCabin}
-            className="border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-0.5 py-0.5 cursor-pointer transition-colors"
-          >
+          {editRoundTrip && <DatePillRow list={editReturnDateList} setList={setEditReturnDateList} label="Return" />}
+          <span className="text-[var(--color-text-muted)]/20">|</span>
+          <button type="button" onClick={cycleCabin} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-1 py-0.5 cursor-pointer transition-colors border border-[var(--color-border)] rounded">
             {cabinOptions.find((o) => o.value === editCabin)?.label}
           </button>
-          <button
-            type="button"
-            onClick={cycleStops}
-            className="border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-0.5 py-0.5 cursor-pointer transition-colors"
-          >
+          <button type="button" onClick={cycleStops} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-1 py-0.5 cursor-pointer transition-colors border border-[var(--color-border)] rounded">
             {stopsOptions.find((o) => o.value === editStops)?.label}
           </button>
-          <div className="inline-flex items-center gap-1">
+          <div className="inline-flex items-center gap-1 border border-[var(--color-border)] rounded px-1 py-0.5">
             <span className="text-[var(--color-text-muted)]">Max {sym}</span>
-            <input
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={editMaxPrice}
-              onChange={(e) => setEditMaxPrice(e.target.value.replace(/[^0-9]/g, ""))}
-              placeholder="any"
-              className="bg-transparent border-b border-[var(--color-interactive)]/40 text-[var(--color-text-muted)] outline-none px-0.5 py-0.5 w-16"
-            />
+            <input inputMode="numeric" pattern="[0-9]*" value={editMaxPrice} onChange={(e) => setEditMaxPrice(e.target.value.replace(/[^0-9]/g, ""))} placeholder="any" className="bg-transparent text-[var(--color-text)] outline-none w-12 text-xs" />
           </div>
         </div>
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-1">
-          <button
-            onClick={submitEdit}
-            className="px-3 py-1 text-xs font-medium rounded-md bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-colors"
-          >
-            {tc("search")}
-          </button>
-          <button
-            onClick={() => setEditing(false)}
-            className="px-3 py-1 text-xs font-medium rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
-          >
-            {tc("cancel")}
-          </button>
+        <div className="flex items-center gap-2 pt-0.5">
+          <button onClick={submitEdit} className="px-3 py-1 text-xs font-medium rounded-md bg-[var(--color-interactive)] text-white hover:bg-[var(--color-interactive-hover)] transition-colors">{tc("search")}</button>
+          <button onClick={() => setEditing(false)} className="px-3 py-1 text-xs font-medium rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">{tc("cancel")}</button>
         </div>
       </div>
     );
