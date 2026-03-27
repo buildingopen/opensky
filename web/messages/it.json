@@ -843,6 +843,7 @@
     "faq4A_high_risk": "Questa rotta è vicina a una zona di conflitto ad alto rischio ({zone}). Alcune compagnie evitano completamente questo spazio aereo. Consulta FlyFast per informazioni di sicurezza aggiornate.",
     "breadcrumbHome": "Home",
     "faqHeading": "Domande frequenti",
-    "noPriceConflict": "I voli possono essere limitati a causa di zone di conflitto vicine. Verifica la disponibilità cercando."
+    "noPriceConflict": "I voli possono essere limitati a causa di zone di conflitto vicine. Verifica la disponibilità cercando.",
+    "indexHeading": "Tutte le rotte aeree"
   }
 }

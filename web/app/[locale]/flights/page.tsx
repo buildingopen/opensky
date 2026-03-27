@@ -138,7 +138,7 @@ export default async function FlightsIndexPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(itemListSchema(locale, t("indexTitle").replace(" | FlyFast", ""))),
+          __html: JSON.stringify(itemListSchema(locale, t("indexHeading"))),
         }}
       />
 
@@ -156,7 +156,7 @@ export default async function FlightsIndexPage({
       </nav>
 
       <h1 className="mt-6 text-3xl font-bold text-[var(--color-text)]">
-        {t("indexTitle")}
+        {t("indexHeading")}
       </h1>
       <p className="mt-3 text-sm text-[var(--color-text-muted)]">
         {t("indexDescription")}

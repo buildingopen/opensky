@@ -843,6 +843,7 @@
     "faq4A_high_risk": "Diese Route liegt in der Nähe einer Hochrisiko-Konfliktzone ({zone}). Einige Airlines meiden diesen Luftraum komplett. Prüfen Sie die aktuelle Sicherheitsanalyse auf FlyFast.",
     "breadcrumbHome": "Startseite",
     "faqHeading": "Häufige Fragen",
-    "noPriceConflict": "Flüge können aufgrund nahegelegener Konfliktzonen eingeschränkt sein. Prüfen Sie die Verfügbarkeit per Suche."
+    "noPriceConflict": "Flüge können aufgrund nahegelegener Konfliktzonen eingeschränkt sein. Prüfen Sie die Verfügbarkeit per Suche.",
+    "indexHeading": "Alle Flugrouten"
   }
 }

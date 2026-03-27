@@ -872,6 +872,7 @@
     "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast.",
     "breadcrumbHome": "Home",
     "faqHeading": "FAQ",
-    "noPriceConflict": "Flights may be limited due to nearby conflict zones. Check availability by searching."
+    "noPriceConflict": "Flights may be limited due to nearby conflict zones. Check availability by searching.",
+    "indexHeading": "All Flight Routes"
   }
 }

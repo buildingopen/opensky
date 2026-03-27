@@ -132,6 +132,7 @@ export default async function RoutePage({
   if (!meta) notFound();
 
   const t = await getTranslations("flights");
+  const tSafety = await getTranslations("safety");
   const originCity = getAirportCity(route.origin, locale);
   const destCity = getAirportCity(route.destination, locale);
   const originCountry = getAirportCountry(route.origin).toLowerCase();
@@ -171,6 +172,12 @@ export default async function RoutePage({
     await Promise.all(safetyZoneIds.map((id) => getZoneById(id)))
   ).filter(Boolean);
   const hasSafetyAngle = safetyZones.length > 0;
+
+  // Translate zone name and risk level using safety namespace
+  const getZoneName = (zone: NonNullable<(typeof safetyZones)[0]>) =>
+    tSafety(`zoneNames.${zone.id}` as "zoneNames.ukraine") || zone.name;
+  const getRiskLabel = (zone: NonNullable<(typeof safetyZones)[0]>) =>
+    tSafety(`groupLabels.${zone.risk_level}` as "groupLabels.do_not_fly");
 
   // Reverse route
   const reverseSlug = getReverseRouteSlug(slug);
@@ -219,7 +226,7 @@ export default async function RoutePage({
     {
       question: t("faq4Q", { origin: originCity, destination: destCity }),
       answer: t(safetyFaqKey as "faq4A_safe", {
-        zone: hasSafetyAngle ? safetyZones[0]!.name : "",
+        zone: hasSafetyAngle ? getZoneName(safetyZones[0]!) : "",
       }),
     },
   ];
@@ -232,7 +239,7 @@ export default async function RoutePage({
     origin: originCity,
     destination: destCity,
     duration,
-    zone: hasSafetyAngle ? safetyZones[0]!.name : "",
+    zone: hasSafetyAngle ? getZoneName(safetyZones[0]!) : "",
   });
 
   return (
@@ -395,8 +402,8 @@ export default async function RoutePage({
                 >
                   <p>
                     {t("safetyWarning", {
-                      zone: zone!.name,
-                      level: risk.label,
+                      zone: getZoneName(zone!),
+                      level: getRiskLabel(zone!),
                     })}
                   </p>
                   <Link
