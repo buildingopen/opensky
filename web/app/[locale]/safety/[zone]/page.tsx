@@ -312,7 +312,7 @@ export default async function ZonePage({
                     href={`/flights/${route.slug}`}
                     className="text-sm text-[var(--color-interactive)] hover:underline"
                   >
-                    {getAirportCity(route.origin)} &rarr; {getAirportCity(route.destination)}
+                    {getAirportCity(route.origin, locale)} &rarr; {getAirportCity(route.destination, locale)}
                   </Link>
                 ))}
               </div>

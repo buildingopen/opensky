@@ -122,7 +122,7 @@ export default async function FlightsIndexPage({
   // Group routes by origin city
   const grouped = new Map<string, typeof ROUTES>();
   for (const route of ROUTES) {
-    const city = getAirportCity(route.origin);
+    const city = getAirportCity(route.origin, locale);
     if (!grouped.has(city)) grouped.set(city, []);
     grouped.get(city)!.push(route);
   }
@@ -170,7 +170,7 @@ export default async function FlightsIndexPage({
             </h2>
             <div className="grid gap-2">
               {routes.map((route) => {
-                const destCity = getAirportCity(route.destination);
+                const destCity = getAirportCity(route.destination, locale);
                 const destCountry =
                   getAirportCountry(route.destination).toLowerCase();
                 const meta = getRouteMeta(route.slug);

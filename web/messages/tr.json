@@ -842,6 +842,7 @@
     "faq4A_caution": "Bu rota aktif bir çatışma bölgesi ({zone}) yakınından geçmektedir. Havayolları güvenlik nedeniyle uçuş rotalarını değiştirebilir. Güncel güvenlik bilgileri için FlyFast'a başvurun.",
     "faq4A_high_risk": "Bu rota yüksek riskli bir çatışma bölgesi ({zone}) yakınındadır. Bazı havayolları bu hava sahasından tamamen kaçınmaktadır. Güncel güvenlik bilgileri için FlyFast'a başvurun.",
     "breadcrumbHome": "Ana Sayfa",
-    "faqHeading": "Sık sorulan sorular"
+    "faqHeading": "Sık sorulan sorular",
+    "noPriceConflict": "Yakın çatışma bölgeleri nedeniyle uçuşlar sınırlı olabilir. Arama yaparak müsaitliği kontrol edin."
   }
 }

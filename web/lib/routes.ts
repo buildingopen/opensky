@@ -57,8 +57,37 @@ export function getRouteBySlug(slug: string): Route | undefined {
 
 const AIRPORT_BY_IATA = new Map(AIRPORTS.map((a) => [a.iata, a]));
 
-export function getAirportCity(iata: string): string {
-  return AIRPORT_BY_IATA.get(iata)?.city ?? iata;
+/**
+ * Locale-aware city names for the 19 cities in our route list.
+ * Only includes entries where the localized name differs from English.
+ * Key = English city name (from airports.ts), value = locale → localized name.
+ */
+const LOCALIZED_CITY_NAMES: Record<string, Partial<Record<string, string>>> = {
+  London:    { de: "London", fr: "Londres", es: "Londres", it: "Londra", pt: "Londres", zh: "伦敦", ar: "لندن", hi: "लंदन", ja: "ロンドン", ko: "런던", tr: "Londra" },
+  Munich:    { de: "München", fr: "Munich", es: "Múnich", it: "Monaco di Baviera", pt: "Munique", zh: "慕尼黑", ar: "ميونخ", hi: "म्यूनिख", ja: "ミュンヘン", ko: "뮌헨", tr: "Münih" },
+  Rome:      { de: "Rom", fr: "Rome", es: "Roma", it: "Roma", pt: "Roma", zh: "罗马", ar: "روما", hi: "रोम", ja: "ローマ", ko: "로마", tr: "Roma" },
+  Lisbon:    { de: "Lissabon", fr: "Lisbonne", es: "Lisboa", it: "Lisbona", pt: "Lisboa", zh: "里斯本", ar: "لشبونة", hi: "लिस्बन", ja: "リスボン", ko: "리스본", tr: "Lizbon" },
+  Athens:    { de: "Athen", fr: "Athènes", es: "Atenas", it: "Atene", pt: "Atenas", zh: "雅典", ar: "أثينا", hi: "एथेंस", ja: "アテネ", ko: "아테네", tr: "Atina" },
+  Istanbul:  { de: "Istanbul", fr: "Istanbul", es: "Estambul", it: "Istanbul", pt: "Istambul", zh: "伊斯坦布尔", ar: "إسطنبول", hi: "इस्तांबुल", ja: "イスタンブール", ko: "이스탄불", tr: "İstanbul" },
+  Paris:     { zh: "巴黎", ar: "باريس", hi: "पेरिस", ja: "パリ", ko: "파리" },
+  Berlin:    { zh: "柏林", ar: "برلين", hi: "बर्लिन", ja: "ベルリン", ko: "베를린" },
+  Frankfurt: { zh: "法兰克福", ar: "فرانكفورت", hi: "फ्रैंकफर्ट", ja: "フランクフルト", ko: "프랑크푸르트" },
+  Hamburg:   { de: "Hamburg", fr: "Hambourg", it: "Amburgo", zh: "汉堡", ar: "هامبورغ", hi: "हैम्बर्ग", ja: "ハンブルク", ko: "함부르크" },
+  Barcelona: { fr: "Barcelone", it: "Barcellona", zh: "巴塞罗那", ar: "برشلونة", hi: "बार्सिलोना", ja: "バルセロナ", ko: "바르셀로나" },
+  Amsterdam: { zh: "阿姆斯特丹", ar: "أمستردام", hi: "एम्स्टर्डम", ja: "アムステルダム", ko: "암스테르담" },
+  "New York":{ zh: "纽约", ar: "نيويورك", hi: "न्यूयॉर्क", ja: "ニューヨーク", ko: "뉴욕" },
+  Delhi:     { fr: "Delhi", zh: "德里", ar: "دلهي", hi: "दिल्ली", ja: "デリー", ko: "델리" },
+  Dubai:     { fr: "Dubaï", zh: "迪拜", ar: "دبي", hi: "दुबई", ja: "ドバイ", ko: "두바이" },
+  Bangkok:   { zh: "曼谷", ar: "بانكوك", hi: "बैंकॉक", ja: "バンコク", ko: "방콕" },
+  Tokyo:     { de: "Tokio", es: "Tokio", pt: "Tóquio", zh: "东京", ar: "طوكيو", hi: "टोक्यो", ja: "東京", ko: "도쿄" },
+  Singapore: { de: "Singapur", fr: "Singapour", es: "Singapur", zh: "新加坡", ar: "سنغافورة", hi: "सिंगापुर", ja: "シンガポール", ko: "싱가포르", tr: "Singapur" },
+  "Tel Aviv":{ fr: "Tel-Aviv", zh: "特拉维夫", ar: "تل أبيب", hi: "तेल अवीव", ja: "テルアビブ", ko: "텔아비브" },
+};
+
+export function getAirportCity(iata: string, locale?: string): string {
+  const city = AIRPORT_BY_IATA.get(iata)?.city ?? iata;
+  if (!locale || locale === "en") return city;
+  return LOCALIZED_CITY_NAMES[city]?.[locale] ?? city;
 }
 
 export function getAirportCountry(iata: string): string {

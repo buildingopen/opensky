@@ -842,6 +842,7 @@
     "faq4A_caution": "此航线经过活跃冲突区域({zone})附近。航空公司可能会出于安全原因改变航线。请查阅FlyFast获取最新安全信息。",
     "faq4A_high_risk": "此航线靠近高风险冲突区域({zone})。一些航空公司完全避开该空域。请查阅FlyFast获取最新安全信息。",
     "breadcrumbHome": "首页",
-    "faqHeading": "常见问题"
+    "faqHeading": "常见问题",
+    "noPriceConflict": "由于附近冲突地区，航班可能受限。请搜索查看可用航班。"
   }
 }

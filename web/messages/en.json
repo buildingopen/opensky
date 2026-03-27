@@ -871,6 +871,7 @@
     "faq4A_caution": "This route passes near an active conflict zone ({zone}). Airlines may reroute flights for safety. Check the latest safety status on FlyFast before booking.",
     "faq4A_high_risk": "This route is near a high-risk conflict zone ({zone}). Some airlines avoid this airspace entirely. Check the latest safety analysis on FlyFast.",
     "breadcrumbHome": "Home",
-    "faqHeading": "FAQ"
+    "faqHeading": "FAQ",
+    "noPriceConflict": "Flights may be limited due to nearby conflict zones. Check availability by searching."
   }
 }

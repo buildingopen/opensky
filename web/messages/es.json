@@ -842,6 +842,7 @@
     "faq4A_caution": "Esta ruta pasa cerca de una zona de conflicto activa ({zone}). Las aerolíneas pueden desviar vuelos por seguridad. Consulta FlyFast para información de seguridad actualizada.",
     "faq4A_high_risk": "Esta ruta está cerca de una zona de conflicto de alto riesgo ({zone}). Algunas aerolíneas evitan completamente este espacio aéreo. Consulta FlyFast para información de seguridad actualizada.",
     "breadcrumbHome": "Inicio",
-    "faqHeading": "Preguntas frecuentes"
+    "faqHeading": "Preguntas frecuentes",
+    "noPriceConflict": "Los vuelos pueden estar limitados debido a zonas de conflicto cercanas. Verifique la disponibilidad buscando."
   }
 }

@@ -37,15 +37,15 @@ export async function generateMetadata({
   if (!route) return { title: "Not Found" };
 
   const t = await getTranslations("flights");
-  const originCity = getAirportCity(route.origin);
-  const destCity = getAirportCity(route.destination);
+  const originCity = getAirportCity(route.origin, locale);
+  const destCity = getAirportCity(route.destination, locale);
   const meta = getRouteMeta(slug);
 
   const title = t("metaTitle", { origin: originCity, destination: destCity });
   const description = t("metaDescription", { origin: originCity, destination: destCity });
 
   const ogUrl = new URL("/api/og", siteUrl);
-  ogUrl.searchParams.set("route", `${originCity} to ${destCity}`);
+  ogUrl.searchParams.set("route", `${getAirportCity(route.origin)} to ${getAirportCity(route.destination)}`);
   ogUrl.searchParams.set("codes", `${route.origin}-${route.destination}`);
   if (meta) ogUrl.searchParams.set("stops", String(meta.typicalStops));
   const safetyZones = ROUTE_SAFETY_ZONES[slug];
@@ -132,8 +132,8 @@ export default async function RoutePage({
   if (!meta) notFound();
 
   const t = await getTranslations("flights");
-  const originCity = getAirportCity(route.origin);
-  const destCity = getAirportCity(route.destination);
+  const originCity = getAirportCity(route.origin, locale);
+  const destCity = getAirportCity(route.destination, locale);
   const originCountry = getAirportCountry(route.origin).toLowerCase();
   const destCountry = getAirportCountry(route.destination).toLowerCase();
   const duration = formatFlightTime(meta.flightTimeMin);
@@ -224,7 +224,7 @@ export default async function RoutePage({
     },
   ];
 
-  const routeName = `${originCity} to ${destCity}`;
+  const routeName = `${originCity} – ${destCity}`;
 
   // Intro text
   const introKey = hasSafetyAngle ? "introSafety" : "intro";
@@ -368,7 +368,11 @@ export default async function RoutePage({
         {/* No price yet */}
         {(!cached || cached.price_min == null) && (
           <div className="rounded-lg border border-[var(--color-border)] p-5 text-center text-[var(--color-text-muted)]">
-            {t("noPriceYet")}
+            {hasSafetyAngle &&
+              (safetyZones[0]!.risk_level === "high_risk" ||
+                safetyZones[0]!.risk_level === "do_not_fly")
+              ? t("noPriceConflict")
+              : t("noPriceYet")}
           </div>
         )}
 
@@ -452,10 +456,10 @@ export default async function RoutePage({
             >
               {t("reverseRoute", {
                 origin: getAirportCity(
-                  getRouteBySlug(reverseSlug)!.origin,
+                  getRouteBySlug(reverseSlug)!.origin, locale,
                 ),
                 destination: getAirportCity(
-                  getRouteBySlug(reverseSlug)!.destination,
+                  getRouteBySlug(reverseSlug)!.destination, locale,
                 ),
               })}
             </Link>
