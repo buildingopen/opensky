@@ -854,6 +854,19 @@
     "editSearch": "Modifier la recherche",
     "resultsCount": "{count} vols trouvés",
     "bookDirect": "Réserver",
-    "compareFlights": "Comparer"
+    "compareFlights": "Comparer",
+    "hubHeading": "Vols au départ de {city}",
+    "hubMetaTitle": "Vols au départ de {city} : comparez {count} itinéraires et prix | FlyFast",
+    "hubMetaDescription": "Comparez {count} itinéraires de vol au départ de {city}. Prix en temps réel, analyse de sécurité et informations sur les compagnies.",
+    "hubIntro": "Parcourez les {count} itinéraires au départ de {city}. Comparez prix, durées et statut de sécurité.",
+    "hubFaq1Q": "Quelles destinations puis-je rejoindre depuis {city} ?",
+    "hubFaq1A": "Depuis {city}, vous pouvez rejoindre {count} destinations en Europe, au Moyen-Orient et en Asie.",
+    "hubFaq2Q": "Quel est le vol le moins cher au départ de {city} ?",
+    "hubFaq2A": "Les prix des vols au départ de {city} varient selon la destination et la saison. Utilisez FlyFast pour comparer les tarifs actuels.",
+    "hubFaq3Q": "Les vols au départ de {city} sont-ils sûrs ?",
+    "hubFaq3A": "FlyFast vérifie chaque itinéraire au départ de {city} avec les données de zones de conflit en temps réel. Les itinéraires proches de zones de conflit sont clairement signalés.",
+    "hubBreadcrumb": "Vols au départ de {city}",
+    "relatedRoutes": "Itinéraires similaires",
+    "allRoutesFrom": "Tous les vols au départ de {city}"
   }
 }

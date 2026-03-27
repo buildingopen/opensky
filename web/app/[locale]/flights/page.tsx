@@ -8,6 +8,7 @@ import {
   getAirportCountry,
   getRouteMeta,
   formatFlightTime,
+  ORIGIN_HUBS,
 } from "../../../lib/routes";
 import { getAllRouteCache } from "../../../lib/route-cache";
 
@@ -127,6 +128,9 @@ export default async function FlightsIndexPage({
     grouped.get(city)!.push(route);
   }
 
+  // Reverse lookup: IATA -> hub city slug
+  const hubByIata = new Map(ORIGIN_HUBS.map((h) => [h.iata, h.city]));
+
   return (
     <main id="main-content" className="max-w-3xl mx-auto px-4 py-12">
       <script
@@ -163,10 +167,21 @@ export default async function FlightsIndexPage({
       </p>
 
       <div className="mt-10 space-y-8">
-        {[...grouped.entries()].map(([city, routes]) => (
+        {[...grouped.entries()].map(([city, routes]) => {
+          const hubCity = hubByIata.get(routes[0].origin);
+          return (
           <section key={city}>
             <h2 className="text-lg font-semibold text-[var(--color-text)] mb-3">
-              {t("routesFrom", { city })}
+              {hubCity ? (
+                <Link
+                  href={`/flights/from/${hubCity}`}
+                  className="hover:text-[var(--color-interactive)] transition-colors"
+                >
+                  {t("routesFrom", { city })}
+                </Link>
+              ) : (
+                t("routesFrom", { city })
+              )}
             </h2>
             <div className="grid gap-2">
               {routes.map((route) => {
@@ -221,7 +236,8 @@ export default async function FlightsIndexPage({
               })}
             </div>
           </section>
-        ))}
+          );
+        })}
       </div>
     </main>
   );

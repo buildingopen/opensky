@@ -12,10 +12,12 @@ import {
   getReverseRouteSlug,
   formatFlightTime,
   getAirlineName,
+  getRelatedRoutes,
+  getHubByIata,
   ROUTE_SAFETY_ZONES,
 } from "../../../../lib/routes";
 import { RouteSearch } from "./RouteSearch";
-import { getRouteCache } from "../../../../lib/route-cache";
+import { getAllRouteCache } from "../../../../lib/route-cache";
 import { getZoneById, RISK_CONFIG } from "../../safety/zones-data";
 
 export const revalidate = 3600;
@@ -155,8 +157,12 @@ export default async function RoutePage({
   const destCountry = getAirportCountry(route.destination).toLowerCase();
   const duration = formatFlightTime(meta.flightTimeMin);
 
-  // Fetch cached price data (may be null if cron hasn't run yet)
-  const cached = await getRouteCache(route.origin, route.destination);
+  // Fetch all cached price data (serves current route + related routes)
+  const allCached = await getAllRouteCache();
+  const priceMap = new Map(
+    allCached.map((c) => [`${c.origin}-${c.destination}`, c]),
+  );
+  const cached = priceMap.get(`${route.origin}-${route.destination}`) ?? null;
 
   // Format helpers
   const formatPrice = (amount: number, currency: string) => {
@@ -197,6 +203,10 @@ export default async function RoutePage({
 
   // Reverse route
   const reverseSlug = getReverseRouteSlug(slug);
+
+  // Related routes + hub
+  const related = getRelatedRoutes(slug, 4);
+  const originHub = getHubByIata(route.origin);
 
   // Build FAQ
   const stopsLabel =
@@ -490,6 +500,74 @@ export default async function RoutePage({
                   getRouteBySlug(reverseSlug)!.destination, locale,
                 ),
               })}
+            </Link>
+          </div>
+        )}
+
+        {/* Related routes */}
+        {related.length > 0 && (
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--color-text)] mb-3">
+              {t("relatedRoutes")}
+            </h2>
+            <div className="grid gap-2">
+              {related.map(({ route: rel }) => {
+                const relOrigin = getAirportCity(rel.origin, locale);
+                const relDest = getAirportCity(rel.destination, locale);
+                const relDestCountry = getAirportCountry(rel.destination).toLowerCase();
+                const relMeta = getRouteMeta(rel.slug);
+                const relCached = priceMap.get(`${rel.origin}-${rel.destination}`);
+                return (
+                  <Link
+                    key={rel.slug}
+                    href={`/flights/${rel.slug}`}
+                    className="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-4 py-3 hover:bg-[var(--color-surface)] transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <img
+                        src={`https://flagcdn.com/20x15/${relDestCountry}.png`}
+                        srcSet={`https://flagcdn.com/40x30/${relDestCountry}.png 2x`}
+                        width={20}
+                        height={15}
+                        alt=""
+                        className="rounded-sm"
+                      />
+                      <span className="font-medium text-[var(--color-text)]">
+                        {relOrigin} &rarr; {relDest}
+                      </span>
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        {rel.origin}-{rel.destination}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {relCached?.price_min != null && (
+                        <span className="text-xs font-semibold text-[var(--color-interactive)]">
+                          {t("priceFrom", {
+                            price: formatPrice(relCached.price_min, relCached.currency),
+                          })}
+                        </span>
+                      )}
+                      {relMeta && (
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                          {formatFlightTime(relMeta.flightTimeMin)}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Hub backlink */}
+        {originHub && (
+          <div className="text-sm">
+            <Link
+              href={`/flights/from/${originHub.city}`}
+              className="text-[var(--color-interactive)] hover:underline"
+            >
+              {t("allRoutesFrom", { city: originCity })} &rarr;
             </Link>
           </div>
         )}

@@ -2,7 +2,26 @@
 
 ## OPEN
 
-*No open issues.*
+### Search filters not discoverable
+- **Status**: OPEN (product, not bug)
+- **Date**: 2026-03-26
+- **Source**: Yash (beta tester)
+- **Description**: User says "I don't see filters like non-stop." Filters exist in structured form mode ("Use search form instead") but user didn't discover them. The natural language mode also supports "nonstop", "direct", "business class" etc. but this isn't communicated. Consider: (a) hint text showing example modifiers, (b) making the structured form toggle more visible, (c) showing parsed query breakdown after search to surface the multi-combination power.
+
+### Differentiator not visible
+- **Status**: OPEN (product, not bug)
+- **Date**: 2026-03-26
+- **Source**: Yash (beta tester)
+- **Description**: User says "I can do the same search on any AI tool or Google." The multi-combination search (e.g. "Germany to Mexico" = 3 origins x 2 destinations x multiple dates) is genuinely unique but invisible. The expansion happens silently. Consider surfacing a "3 origins x 2 destinations x 4 dates = 24 combinations searched" summary after parsing to make the power visible.
+
+## FIXED
+
+### Cursor misaligned in search input (green highlights removed)
+- **Status**: FIXED
+- **Date**: 2026-03-26
+- **Source**: Yash (beta tester), screenshot confirmed
+- **Description**: Text cursor appeared detached from visible text in search textarea. Root cause: highlight overlay used `text-base` (16px) while textarea used `text-lg` (18px), causing cumulative width drift. Also, user reported green highlights "not important." Removed the real-time highlight overlay entirely. Highlight functions preserved in SearchPage.tsx for future reactivation (still used by form pre-fill logic).
+- **Commit**: 75d7f8d
 
 ## FIXED
 

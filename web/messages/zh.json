@@ -854,6 +854,19 @@
     "editSearch": "编辑搜索",
     "resultsCount": "找到 {count} 个航班",
     "bookDirect": "预订",
-    "compareFlights": "比较"
+    "compareFlights": "比较",
+    "hubHeading": "{city}出发的航班",
+    "hubMetaTitle": "{city}出发的航班：比较{count}条航线和价格 | FlyFast",
+    "hubMetaDescription": "比较{city}出发的{count}条航线。实时价格、安全分析和航空公司信息。",
+    "hubIntro": "浏览{city}出发的所有{count}条航线。比较价格、飞行时间和安全状态。",
+    "hubFaq1Q": "从{city}可以飞往哪些目的地？",
+    "hubFaq1A": "从{city}出发，可以飞往欧洲、中东和亚洲的{count}个目的地。",
+    "hubFaq2Q": "从{city}出发最便宜的航班是什么？",
+    "hubFaq2A": "从{city}出发的航班价格因目的地和季节而异。使用FlyFast比较所有航线的当前票价。",
+    "hubFaq3Q": "从{city}出发的航班安全吗？",
+    "hubFaq3A": "FlyFast根据实时冲突区域数据检查从{city}出发的每条航线。靠近冲突区域的航线会被明确标记。",
+    "hubBreadcrumb": "{city}出发的航班",
+    "relatedRoutes": "相关航线",
+    "allRoutesFrom": "{city}出发的所有航班"
   }
 }

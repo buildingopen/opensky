@@ -883,6 +883,19 @@
     "editSearch": "Edit search",
     "resultsCount": "{count} flights found",
     "bookDirect": "Book",
-    "compareFlights": "Compare"
+    "compareFlights": "Compare",
+    "hubHeading": "Flights from {city}",
+    "hubMetaTitle": "Flights from {city}: Compare {count} Routes & Prices | FlyFast",
+    "hubMetaDescription": "Compare {count} flight routes from {city}. Real-time prices, safety analysis, and airline information.",
+    "hubIntro": "Browse all {count} flight routes from {city}. Compare prices, flight times, and safety status.",
+    "hubFaq1Q": "What destinations can I fly to from {city}?",
+    "hubFaq1A": "From {city}, you can fly to {count} destinations across Europe, the Middle East, and Asia.",
+    "hubFaq2Q": "What is the cheapest flight from {city}?",
+    "hubFaq2A": "Flight prices from {city} vary by destination and season. Use FlyFast to compare current fares across all routes.",
+    "hubFaq3Q": "Are flights from {city} safe?",
+    "hubFaq3A": "FlyFast checks every route from {city} against real-time conflict zone data. Routes near conflict zones are clearly flagged.",
+    "hubBreadcrumb": "Flights from {city}",
+    "relatedRoutes": "Related routes",
+    "allRoutesFrom": "All flights from {city}"
   }
 }

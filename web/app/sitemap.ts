@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { locales, defaultLocale } from "../i18n/config";
 import { getZones } from "./[locale]/safety/zones-data";
-import { ROUTES } from "../lib/routes";
+import { ROUTES, ORIGIN_HUBS } from "../lib/routes";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app";
 
@@ -68,5 +68,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   );
 
-  return [...staticPages, ...safetyPages, ...flightsIndex, ...flightRoutePages];
+  // Origin hub pages
+  const hubPages = ORIGIN_HUBS.flatMap((hub) =>
+    locales.map((locale) => ({
+      url: `${siteUrl}/${locale}/flights/from/${hub.city}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+      alternates: { languages: localeAlternates(`/flights/from/${hub.city}`) },
+    })),
+  );
+
+  return [...staticPages, ...safetyPages, ...flightsIndex, ...hubPages, ...flightRoutePages];
 }

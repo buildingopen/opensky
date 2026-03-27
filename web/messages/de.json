@@ -854,6 +854,19 @@
     "editSearch": "Suche bearbeiten",
     "resultsCount": "{count} Flüge gefunden",
     "bookDirect": "Buchen",
-    "compareFlights": "Vergleichen"
+    "compareFlights": "Vergleichen",
+    "hubHeading": "Flüge ab {city}",
+    "hubMetaTitle": "Flüge ab {city}: {count} Routen & Preise vergleichen | FlyFast",
+    "hubMetaDescription": "Vergleichen Sie {count} Flugrouten ab {city}. Echtzeitpreise, Sicherheitsanalyse und Airline-Informationen.",
+    "hubIntro": "Alle {count} Flugrouten ab {city} durchstöbern. Preise, Flugzeiten und Sicherheitsstatus vergleichen.",
+    "hubFaq1Q": "Welche Ziele kann ich ab {city} anfliegen?",
+    "hubFaq1A": "Ab {city} können Sie {count} Ziele in Europa, dem Nahen Osten und Asien anfliegen.",
+    "hubFaq2Q": "Was ist der günstigste Flug ab {city}?",
+    "hubFaq2A": "Flugpreise ab {city} variieren je nach Ziel und Saison. Nutzen Sie FlyFast, um aktuelle Tarife aller Routen zu vergleichen.",
+    "hubFaq3Q": "Sind Flüge ab {city} sicher?",
+    "hubFaq3A": "FlyFast prüft jede Route ab {city} anhand von Echtzeit-Konfliktzonen-Daten. Routen in der Nähe von Konfliktzonen werden deutlich gekennzeichnet.",
+    "hubBreadcrumb": "Flüge ab {city}",
+    "relatedRoutes": "Verwandte Routen",
+    "allRoutesFrom": "Alle Flüge ab {city}"
   }
 }
