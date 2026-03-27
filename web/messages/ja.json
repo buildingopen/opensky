@@ -854,6 +854,19 @@
     "editSearch": "検索を編集",
     "resultsCount": "{count}件のフライトが見つかりました",
     "bookDirect": "予約",
-    "compareFlights": "比較"
+    "compareFlights": "比較",
+    "hubHeading": "{city}発のフライト",
+    "hubMetaTitle": "{city}発のフライト：{count}路線と料金を比較 | FlyFast",
+    "hubMetaDescription": "{city}発の{count}路線を比較。リアルタイム料金、安全分析、航空会社情報。",
+    "hubIntro": "{city}発の全{count}路線を閲覧。料金、飛行時間、安全状況を比較できます。",
+    "hubFaq1Q": "{city}からどの目的地に飛べますか？",
+    "hubFaq1A": "{city}からヨーロッパ、中東、アジアの{count}の目的地に就航しています。",
+    "hubFaq2Q": "{city}発の最安フライトは？",
+    "hubFaq2A": "{city}発の航空運賃は目的地や時期によって異なります。FlyFastで全路線の現在の運賃を比較してください。",
+    "hubFaq3Q": "{city}発のフライトは安全ですか？",
+    "hubFaq3A": "FlyFastは{city}発の全路線をリアルタイムの紛争地域データで確認しています。紛争地域付近の路線は明確に表示されます。",
+    "hubBreadcrumb": "{city}発のフライト",
+    "relatedRoutes": "関連路線",
+    "allRoutesFrom": "{city}発の全フライト"
   }
 }

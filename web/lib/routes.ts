@@ -47,6 +47,15 @@ export const ROUTES: Route[] = [
   { origin: "FRA", destination: "SIN", slug: "frankfurt-to-singapore" },
   { origin: "HAM", destination: "BCN", slug: "hamburg-to-barcelona" },
   { origin: "BER", destination: "TLV", slug: "berlin-to-tel-aviv" },
+  // Phase 2: 8 new high-value routes
+  { origin: "DUS", destination: "IST", slug: "dusseldorf-to-istanbul" },
+  { origin: "DUS", destination: "BCN", slug: "dusseldorf-to-barcelona" },
+  { origin: "DUS", destination: "ATH", slug: "dusseldorf-to-athens" },
+  { origin: "MUC", destination: "ATH", slug: "munich-to-athens" },
+  { origin: "MUC", destination: "NRT", slug: "munich-to-tokyo" },
+  { origin: "HAM", destination: "ATH", slug: "hamburg-to-athens" },
+  { origin: "FRA", destination: "LAX", slug: "frankfurt-to-los-angeles" },
+  { origin: "FRA", destination: "ORD", slug: "frankfurt-to-chicago" },
 ];
 
 export const ROUTES_BY_SLUG = new Map(ROUTES.map((r) => [r.slug, r]));
@@ -82,6 +91,9 @@ const LOCALIZED_CITY_NAMES: Record<string, Partial<Record<string, string>>> = {
   Tokyo:     { de: "Tokio", es: "Tokio", pt: "Tóquio", zh: "东京", ar: "طوكيو", hi: "टोक्यो", ja: "東京", ko: "도쿄" },
   Singapore: { de: "Singapur", fr: "Singapour", es: "Singapur", zh: "新加坡", ar: "سنغافورة", hi: "सिंगापुर", ja: "シンガポール", ko: "싱가포르", tr: "Singapur" },
   "Tel Aviv":{ fr: "Tel-Aviv", zh: "特拉维夫", ar: "تل أبيب", hi: "तेल अवीव", ja: "テルアビブ", ko: "텔아비브" },
+  Dusseldorf:{ de: "Düsseldorf", fr: "Düsseldorf", zh: "杜塞尔多夫", ar: "دوسلدورف", hi: "डसेलडॉर्फ", ja: "デュッセルドルフ", ko: "뒤셀도르프", tr: "Düsseldorf" },
+  "Los Angeles":{ es: "Los Ángeles", zh: "洛杉矶", ar: "لوس أنجلوس", hi: "लॉस एंजिल्स", ja: "ロサンゼルス", ko: "로스앤젤레스" },
+  Chicago:   { zh: "芝加哥", ar: "شيكاغو", hi: "शिकागो", ja: "シカゴ", ko: "시카고" },
 };
 
 export function getAirportCity(iata: string, locale?: string): string {
@@ -114,6 +126,7 @@ export const ROUTE_SAFETY_ZONES: Record<string, string[]> = {
   "delhi-to-frankfurt": ["pakistan_partial", "afghanistan"],
   "frankfurt-to-singapore": ["iran", "pakistan_partial"],
   "berlin-to-tel-aviv": ["israel"],
+  "dusseldorf-to-istanbul": ["ukraine"],
 };
 
 /**
@@ -165,6 +178,14 @@ export const ROUTE_META: Record<string, RouteMeta> = {
   "frankfurt-to-singapore": { distanceKm: 10200, flightTimeMin: 750, typicalStops: 0 },
   "hamburg-to-barcelona":   { distanceKm: 1500,  flightTimeMin: 155, typicalStops: 0 },
   "berlin-to-tel-aviv":     { distanceKm: 2800,  flightTimeMin: 255, typicalStops: 0 },
+  "dusseldorf-to-istanbul": { distanceKm: 2050,  flightTimeMin: 190, typicalStops: 0 },
+  "dusseldorf-to-barcelona":{ distanceKm: 1170,  flightTimeMin: 145, typicalStops: 0 },
+  "dusseldorf-to-athens":   { distanceKm: 2010,  flightTimeMin: 185, typicalStops: 0 },
+  "munich-to-athens":       { distanceKm: 1550,  flightTimeMin: 160, typicalStops: 0 },
+  "munich-to-tokyo":        { distanceKm: 9200,  flightTimeMin: 720, typicalStops: 0 },
+  "hamburg-to-athens":      { distanceKm: 2130,  flightTimeMin: 190, typicalStops: 0 },
+  "frankfurt-to-los-angeles":{ distanceKm: 9350, flightTimeMin: 690, typicalStops: 0 },
+  "frankfurt-to-chicago":   { distanceKm: 6960,  flightTimeMin: 570, typicalStops: 0 },
 };
 
 export function getRouteMeta(slug: string): RouteMeta | null {
@@ -201,6 +222,62 @@ const AIRLINE_NAMES: Record<string, string> = {
 
 export function getAirlineName(iata: string): string {
   return AIRLINE_NAMES[iata] ?? iata;
+}
+
+// --- Origin Hubs ---
+
+export interface OriginHub {
+  city: string;
+  iata: string;
+  country: string;
+}
+
+export const ORIGIN_HUBS: OriginHub[] = [
+  { city: "berlin",     iata: "BER", country: "DE" },
+  { city: "frankfurt",  iata: "FRA", country: "DE" },
+  { city: "munich",     iata: "MUC", country: "DE" },
+  { city: "hamburg",    iata: "HAM", country: "DE" },
+  { city: "dusseldorf", iata: "DUS", country: "DE" },
+];
+
+export function getHubByCity(city: string): OriginHub | undefined {
+  return ORIGIN_HUBS.find((h) => h.city === city.toLowerCase());
+}
+
+export function getHubByIata(iata: string): OriginHub | undefined {
+  return ORIGIN_HUBS.find((h) => h.iata === iata);
+}
+
+export function getRoutesForOrigin(iata: string): Route[] {
+  return ROUTES.filter((r) => r.origin === iata);
+}
+
+export interface RelatedRoute {
+  route: Route;
+  relation: "same-origin" | "same-destination";
+}
+
+/**
+ * Get related routes for a given route slug.
+ * Up to 3 same-origin + up to 2 same-destination, deduped, max `limit` total.
+ */
+export function getRelatedRoutes(slug: string, limit = 4): RelatedRoute[] {
+  const route = ROUTES_BY_SLUG.get(slug);
+  if (!route) return [];
+
+  const sameOrigin = ROUTES
+    .filter((r) => r.origin === route.origin && r.slug !== slug)
+    .slice(0, 3)
+    .map((r) => ({ route: r, relation: "same-origin" as const }));
+
+  const usedSlugs = new Set([slug, ...sameOrigin.map((r) => r.route.slug)]);
+
+  const sameDest = ROUTES
+    .filter((r) => r.destination === route.destination && !usedSlugs.has(r.slug))
+    .slice(0, 2)
+    .map((r) => ({ route: r, relation: "same-destination" as const }));
+
+  return [...sameOrigin, ...sameDest].slice(0, limit);
 }
 
 /** Get the reverse route slug if it exists in our route list. */

@@ -1870,7 +1870,7 @@ async def search_flights(req: PromptRequest, request: Request):
                             if key not in deduped or combined < deduped[key][1]:
                                 deduped[key] = (r, combined)
                         sorted_deduped = sorted(deduped.values(), key=lambda x: x[1])[:3]
-                        preview = [{"price": r["outbound"]["price"] + r["inbound"]["price"], "currency": r["outbound"].get("currency", "EUR"), "route": r["outbound"]["route"], "duration_minutes": r["outbound"]["duration_minutes"], "stops": r["outbound"]["stops"], "risk_level": r.get("risk_level", "safe"), "risk_details": r.get("risk_details", []), "legs": r["outbound"].get("legs", []), "_combined_price": r["outbound"]["price"] + r["inbound"]["price"]} for r, _ in sorted_deduped]
+                        preview = [{"price": r["outbound"]["price"] + r["inbound"]["price"], "currency": r["outbound"].get("currency", "EUR"), "route": r["outbound"]["route"], "duration_minutes": r["outbound"]["duration_minutes"], "stops": r["outbound"]["stops"], "risk_level": r.get("risk_level", ""), "risk_details": r.get("risk_details", []), "legs": r["outbound"].get("legs", []), "_combined_price": r["outbound"]["price"] + r["inbound"]["price"]} for r, _ in sorted_deduped]
                     else:
                         # Dedup by (route, date, stops) keeping lowest score
                         deduped_ow: dict[tuple, tuple] = {}

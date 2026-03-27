@@ -854,6 +854,19 @@
     "editSearch": "검색 수정",
     "resultsCount": "{count}개 항공편 발견",
     "bookDirect": "예약",
-    "compareFlights": "비교"
+    "compareFlights": "비교",
+    "hubHeading": "{city} 출발 항공편",
+    "hubMetaTitle": "{city} 출발 항공편: {count}개 노선 및 가격 비교 | FlyFast",
+    "hubMetaDescription": "{city} 출발 {count}개 항공 노선 비교. 실시간 가격, 안전 분석 및 항공사 정보.",
+    "hubIntro": "{city} 출발 {count}개 항공 노선을 모두 둘러보세요. 가격, 비행 시간 및 안전 상태를 비교하세요.",
+    "hubFaq1Q": "{city}에서 어떤 목적지로 갈 수 있나요?",
+    "hubFaq1A": "{city}에서 유럽, 중동, 아시아의 {count}개 목적지로 비행할 수 있습니다.",
+    "hubFaq2Q": "{city} 출발 가장 저렴한 항공편은?",
+    "hubFaq2A": "{city} 출발 항공 요금은 목적지와 시즌에 따라 다릅니다. FlyFast에서 모든 노선의 현재 요금을 비교하세요.",
+    "hubFaq3Q": "{city} 출발 항공편은 안전한가요?",
+    "hubFaq3A": "FlyFast는 {city} 출발 모든 노선을 실시간 분쟁 지역 데이터로 확인합니다. 분쟁 지역 근처 노선은 명확하게 표시됩니다.",
+    "hubBreadcrumb": "{city} 출발 항공편",
+    "relatedRoutes": "관련 노선",
+    "allRoutesFrom": "{city} 출발 전체 항공편"
   }
 }

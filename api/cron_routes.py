@@ -33,7 +33,7 @@ ROUTES = [
     ("BER", "BKK"),
     # FRA outbound (12)
     ("FRA", "JFK"), ("FRA", "NRT"), ("FRA", "SIN"), ("FRA", "BKK"),
-    ("FRA", "DEL"), ("FRA", "DXB"), ("FRA", "GRU"), ("FRA", "JNB"),
+    ("FRA", "DEL"), ("FRA", "DXB"),
     ("FRA", "LAX"), ("FRA", "ORD"), ("FRA", "LHR"), ("FRA", "IST"),
     ("FRA", "BCN"), ("FRA", "FCO"),
     # MUC outbound (9)

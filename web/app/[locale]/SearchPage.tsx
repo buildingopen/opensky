@@ -3216,7 +3216,7 @@ function HomePage() {
       url.searchParams.set("route", cityRoute);
       url.searchParams.set("codes", codes.join("-"));
       url.searchParams.set("currency", best.currency || parsed?.currency || "EUR");
-      url.searchParams.set("safety", best.risk_level || "safe");
+      url.searchParams.set("safety", best.risk_level || "");
       url.searchParams.set("stops", String(best.stops));
     }
     return url.toString();

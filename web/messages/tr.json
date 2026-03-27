@@ -854,6 +854,19 @@
     "editSearch": "Aramayı düzenle",
     "resultsCount": "{count} uçuş bulundu",
     "bookDirect": "Rezerve et",
-    "compareFlights": "Karşılaştır"
+    "compareFlights": "Karşılaştır",
+    "hubHeading": "{city} kalkışlı uçuşlar",
+    "hubMetaTitle": "{city} kalkışlı uçuşlar: {count} rota ve fiyatı karşılaştır | FlyFast",
+    "hubMetaDescription": "{city} kalkışlı {count} uçuş rotasını karşılaştırın. Anlık fiyatlar, güvenlik analizi ve havayolu bilgileri.",
+    "hubIntro": "{city} kalkışlı tüm {count} uçuş rotasını inceleyin. Fiyatları, uçuş sürelerini ve güvenlik durumunu karşılaştırın.",
+    "hubFaq1Q": "{city} şehrinden hangi destinasyonlara uçabilirim?",
+    "hubFaq1A": "{city} şehrinden Avrupa, Orta Doğu ve Asya'daki {count} destinasyona uçabilirsiniz.",
+    "hubFaq2Q": "{city} kalkışlı en ucuz uçuş hangisi?",
+    "hubFaq2A": "{city} kalkışlı uçuş fiyatları hedefe ve sezona göre değişir. Tüm rotaların güncel fiyatlarını karşılaştırmak için FlyFast'ı kullanın.",
+    "hubFaq3Q": "{city} kalkışlı uçuşlar güvenli mi?",
+    "hubFaq3A": "FlyFast, {city} kalkışlı her rotayı anlık çatışma bölgesi verileriyle kontrol eder. Çatışma bölgelerine yakın rotalar açıkça işaretlenir.",
+    "hubBreadcrumb": "{city} kalkışlı uçuşlar",
+    "relatedRoutes": "İlgili rotalar",
+    "allRoutesFrom": "{city} kalkışlı tüm uçuşlar"
   }
 }

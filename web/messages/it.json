@@ -854,6 +854,19 @@
     "editSearch": "Modifica ricerca",
     "resultsCount": "{count} voli trovati",
     "bookDirect": "Prenota",
-    "compareFlights": "Confronta"
+    "compareFlights": "Confronta",
+    "hubHeading": "Voli da {city}",
+    "hubMetaTitle": "Voli da {city}: confronta {count} rotte e prezzi | FlyFast",
+    "hubMetaDescription": "Confronta {count} rotte aeree da {city}. Prezzi in tempo reale, analisi di sicurezza e informazioni sulle compagnie.",
+    "hubIntro": "Esplora tutte le {count} rotte aeree da {city}. Confronta prezzi, tempi di volo e stato di sicurezza.",
+    "hubFaq1Q": "Quali destinazioni posso raggiungere da {city}?",
+    "hubFaq1A": "Da {city} puoi raggiungere {count} destinazioni in Europa, Medio Oriente e Asia.",
+    "hubFaq2Q": "Qual è il volo più economico da {city}?",
+    "hubFaq2A": "I prezzi dei voli da {city} variano in base alla destinazione e alla stagione. Usa FlyFast per confrontare le tariffe attuali.",
+    "hubFaq3Q": "I voli da {city} sono sicuri?",
+    "hubFaq3A": "FlyFast controlla ogni rotta da {city} con dati sulle zone di conflitto in tempo reale. Le rotte vicine a zone di conflitto sono chiaramente segnalate.",
+    "hubBreadcrumb": "Voli da {city}",
+    "relatedRoutes": "Rotte correlate",
+    "allRoutesFrom": "Tutti i voli da {city}"
   }
 }
