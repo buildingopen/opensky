@@ -3,18 +3,19 @@
 ## OPEN
 
 ### Search filters not discoverable
-- **Status**: OPEN (product, not bug)
+- **Status**: WONTFIX (product decision)
 - **Date**: 2026-03-26
 - **Source**: Yash (beta tester)
-- **Description**: User says "I don't see filters like non-stop." Filters exist in structured form mode ("Use search form instead") but user didn't discover them. The natural language mode also supports "nonstop", "direct", "business class" etc. but this isn't communicated. Consider: (a) hint text showing example modifiers, (b) making the structured form toggle more visible, (c) showing parsed query breakdown after search to surface the multi-combination power.
-
-### Differentiator not visible
-- **Status**: OPEN (product, not bug)
-- **Date**: 2026-03-26
-- **Source**: Yash (beta tester)
-- **Description**: User says "I can do the same search on any AI tool or Google." The multi-combination search (e.g. "Germany to Mexico" = 3 origins x 2 destinations x multiple dates) is genuinely unique but invisible. The expansion happens silently. Consider surfacing a "3 origins x 2 destinations x 4 dates = 24 combinations searched" summary after parsing to make the power visible.
+- **Description**: User says "I don't see filters like non-stop." NL parsing already supports "nonstop", "direct", "business class". Structured form exists behind toggle. Not worth adding more UI hints for marginal gain; NL parsing IS the feature.
 
 ## FIXED
+
+### Differentiator not visible (combination breakdown surfaced)
+- **Status**: FIXED
+- **Date**: 2026-03-28
+- **Source**: Yash (beta tester)
+- **Description**: Multi-combination search was invisible. Moved combination breakdown from buried inline pill to standalone prominent line in ParsedConfig: "Searching 3 origins x 2 destinations x 4 dates = 24 combinations". Translated across all 12 locales.
+- **Commit**: ffd4563
 
 ### Cursor misaligned in search input (green highlights removed)
 - **Status**: FIXED
