@@ -71,7 +71,7 @@ const LOCALIZED_CITY_NAMES: Record<string, Partial<Record<string, string>>> = {
   Istanbul:  { de: "Istanbul", fr: "Istanbul", es: "Estambul", it: "Istanbul", pt: "Istambul", zh: "伊斯坦布尔", ar: "إسطنبول", hi: "इस्तांबुल", ja: "イスタンブール", ko: "이스탄불", tr: "İstanbul" },
   Paris:     { zh: "巴黎", ar: "باريس", hi: "पेरिस", ja: "パリ", ko: "파리" },
   Berlin:    { zh: "柏林", ar: "برلين", hi: "बर्लिन", ja: "ベルリン", ko: "베를린" },
-  Frankfurt: { zh: "法兰克福", ar: "فرانكفورت", hi: "फ्रैंकफर्ट", ja: "フランクフルト", ko: "프랑크푸르트" },
+  Frankfurt: { fr: "Francfort", es: "Fráncfort", it: "Francoforte", pt: "Francoforte", zh: "法兰克福", ar: "فرانكفورت", hi: "फ्रैंकफर्ट", ja: "フランクフルト", ko: "프랑크푸르트" },
   Hamburg:   { de: "Hamburg", fr: "Hambourg", it: "Amburgo", zh: "汉堡", ar: "هامبورغ", hi: "हैम्बर्ग", ja: "ハンブルク", ko: "함부르크" },
   Barcelona: { fr: "Barcelone", it: "Barcellona", zh: "巴塞罗那", ar: "برشلونة", hi: "बार्सिलोना", ja: "バルセロナ", ko: "바르셀로나" },
   Amsterdam: { zh: "阿姆斯特丹", ar: "أمستردام", hi: "एम्स्टर्डम", ja: "アムステルダム", ko: "암스테르담" },
