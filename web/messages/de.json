@@ -845,6 +845,15 @@
     "faqHeading": "Häufige Fragen",
     "noPriceConflict": "Flüge können aufgrund nahegelegener Konfliktzonen eingeschränkt sein. Prüfen Sie die Verfügbarkeit per Suche.",
     "indexHeading": "Alle Flugrouten",
-    "routeOverview": "Routenübersicht"
+    "routeOverview": "Routenübersicht",
+    "searchButton": "Flüge suchen",
+    "searching": "Flüge werden gesucht...",
+    "noResults": "Keine Flüge für diese Daten gefunden. Versuche andere Daten oder ändere deine Suche.",
+    "searchError": "Suche fehlgeschlagen. Bitte versuche es erneut.",
+    "rateLimited": "Zu viele Suchen. Bitte warte {mins} Minuten.",
+    "editSearch": "Suche bearbeiten",
+    "resultsCount": "{count} Flüge gefunden",
+    "bookDirect": "Buchen",
+    "compareFlights": "Vergleichen"
   }
 }

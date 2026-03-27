@@ -845,6 +845,15 @@
     "faqHeading": "よくある質問",
     "noPriceConflict": "近隣の紛争地域のため、フライトが限定される場合があります。検索して空席状況をご確認ください。",
     "indexHeading": "全フライトルート",
-    "routeOverview": "ルート概要"
+    "routeOverview": "ルート概要",
+    "searchButton": "フライトを検索",
+    "searching": "フライトを検索中...",
+    "noResults": "この日程のフライトが見つかりませんでした。別の日程を試すか、検索を編集してください。",
+    "searchError": "検索に失敗しました。もう一度お試しください。",
+    "rateLimited": "検索回数が多すぎます。{mins}分お待ちください。",
+    "editSearch": "検索を編集",
+    "resultsCount": "{count}件のフライトが見つかりました",
+    "bookDirect": "予約",
+    "compareFlights": "比較"
   }
 }

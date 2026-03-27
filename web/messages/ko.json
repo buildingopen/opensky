@@ -845,6 +845,15 @@
     "faqHeading": "자주 묻는 질문",
     "noPriceConflict": "인근 분쟁 지역으로 인해 항공편이 제한될 수 있습니다. 검색하여 이용 가능 여부를 확인하세요.",
     "indexHeading": "모든 항공 노선",
-    "routeOverview": "노선 개요"
+    "routeOverview": "노선 개요",
+    "searchButton": "항공편 검색",
+    "searching": "항공편 검색 중...",
+    "noResults": "해당 날짜의 항공편을 찾을 수 없습니다. 다른 날짜를 시도하거나 검색을 수정하세요.",
+    "searchError": "검색에 실패했습니다. 다시 시도해 주세요.",
+    "rateLimited": "검색이 너무 많습니다. {mins}분 후에 다시 시도하세요.",
+    "editSearch": "검색 수정",
+    "resultsCount": "{count}개 항공편 발견",
+    "bookDirect": "예약",
+    "compareFlights": "비교"
   }
 }

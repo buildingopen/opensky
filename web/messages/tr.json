@@ -845,6 +845,15 @@
     "faqHeading": "Sık sorulan sorular",
     "noPriceConflict": "Yakın çatışma bölgeleri nedeniyle uçuşlar sınırlı olabilir. Arama yaparak müsaitliği kontrol edin.",
     "indexHeading": "Tüm uçuş rotaları",
-    "routeOverview": "Rota özeti"
+    "routeOverview": "Rota özeti",
+    "searchButton": "Uçuş ara",
+    "searching": "Uçuşlar aranıyor...",
+    "noResults": "Bu tarihler için uçuş bulunamadı. Farklı tarihler deneyin veya aramanızı düzenleyin.",
+    "searchError": "Arama başarısız oldu. Lütfen tekrar deneyin.",
+    "rateLimited": "Çok fazla arama. Lütfen {mins} dakika bekleyin.",
+    "editSearch": "Aramayı düzenle",
+    "resultsCount": "{count} uçuş bulundu",
+    "bookDirect": "Rezerve et",
+    "compareFlights": "Karşılaştır"
   }
 }

@@ -845,6 +845,15 @@
     "faqHeading": "常见问题",
     "noPriceConflict": "由于附近冲突地区，航班可能受限。请搜索查看可用航班。",
     "indexHeading": "所有航线",
-    "routeOverview": "航线概览"
+    "routeOverview": "航线概览",
+    "searchButton": "搜索航班",
+    "searching": "正在搜索航班...",
+    "noResults": "未找到该日期的航班。请尝试其他日期或修改搜索。",
+    "searchError": "搜索失败。请重试。",
+    "rateLimited": "搜索过于频繁。请等待 {mins} 分钟。",
+    "editSearch": "编辑搜索",
+    "resultsCount": "找到 {count} 个航班",
+    "bookDirect": "预订",
+    "compareFlights": "比较"
   }
 }

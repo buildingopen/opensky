@@ -874,6 +874,15 @@
     "faqHeading": "FAQ",
     "noPriceConflict": "Flights may be limited due to nearby conflict zones. Check availability by searching.",
     "indexHeading": "All Flight Routes",
-    "routeOverview": "Route overview"
+    "routeOverview": "Route overview",
+    "searchButton": "Search flights",
+    "searching": "Searching flights...",
+    "noResults": "No flights found for these dates. Try different dates or edit your search.",
+    "searchError": "Search failed. Please try again.",
+    "rateLimited": "Too many searches. Please wait {mins} minutes.",
+    "editSearch": "Edit search",
+    "resultsCount": "{count} flights found",
+    "bookDirect": "Book",
+    "compareFlights": "Compare"
   }
 }

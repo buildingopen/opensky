@@ -78,6 +78,26 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   };
 }
 
-export default function Page() {
-  return <SearchPage />;
+export default async function Page({ params }: PageProps) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "metadata" });
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [1, 2, 3, 4, 5, 6, 7].map((n) => ({
+              "@type": "Question",
+              name: t(`faq.q${n}` as "faq.q1"),
+              acceptedAnswer: { "@type": "Answer", text: t(`faq.a${n}` as "faq.a1") },
+            })),
+          }),
+        }}
+      />
+      <SearchPage />
+    </>
+  );
 }

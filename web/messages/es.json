@@ -845,6 +845,15 @@
     "faqHeading": "Preguntas frecuentes",
     "noPriceConflict": "Los vuelos pueden estar limitados debido a zonas de conflicto cercanas. Verifique la disponibilidad buscando.",
     "indexHeading": "Todas las rutas aéreas",
-    "routeOverview": "Resumen de la ruta"
+    "routeOverview": "Resumen de la ruta",
+    "searchButton": "Buscar vuelos",
+    "searching": "Buscando vuelos...",
+    "noResults": "No se encontraron vuelos para estas fechas. Prueba con otras fechas o edita tu búsqueda.",
+    "searchError": "La búsqueda falló. Inténtalo de nuevo.",
+    "rateLimited": "Demasiadas búsquedas. Espera {mins} minutos.",
+    "editSearch": "Editar búsqueda",
+    "resultsCount": "{count} vuelos encontrados",
+    "bookDirect": "Reservar",
+    "compareFlights": "Comparar"
   }
 }

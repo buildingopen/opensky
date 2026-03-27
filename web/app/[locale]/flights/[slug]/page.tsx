@@ -14,6 +14,7 @@ import {
   getAirlineName,
   ROUTE_SAFETY_ZONES,
 } from "../../../../lib/routes";
+import { RouteSearch } from "./RouteSearch";
 import { getRouteCache } from "../../../../lib/route-cache";
 import { getZoneById, RISK_CONFIG } from "../../safety/zones-data";
 
@@ -90,14 +91,19 @@ export async function generateMetadata({
   };
 }
 
-function faqSchema(faqs: Array<{ question: string; answer: string }>) {
+function faqSchema(faqs: Array<{ question: string; answer: string }>, baseUrl: string) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
+    mainEntity: faqs.map((faq, i) => ({
       "@type": "Question",
+      "@id": `${baseUrl}#faq-${i + 1}`,
       name: faq.question,
-      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+      acceptedAnswer: {
+        "@type": "Answer",
+        "@id": `${baseUrl}#faq-${i + 1}-answer`,
+        text: faq.answer,
+      },
     })),
   };
 }
@@ -256,7 +262,7 @@ export default async function RoutePage({
     <main id="main-content" className="max-w-3xl mx-auto px-4 py-12">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema(faqs, `${siteUrl}/${locale}/flights/${slug}`)) }}
       />
       <script
         type="application/ld+json"
@@ -488,14 +494,22 @@ export default async function RoutePage({
           </div>
         )}
 
-        {/* CTA */}
+        {/* Search */}
         <div className="border-t border-[var(--color-border)] pt-8">
-          <Link
-            href={`/?q=${route.origin}+to+${route.destination}&utm_source=seo&utm_medium=route_page&utm_campaign=programmatic`}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-interactive)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-interactive-hover)] transition-colors"
-          >
-            {t("searchCta", { origin: originCity, destination: destCity })}
-          </Link>
+          <RouteSearch
+            origin={route.origin}
+            destination={route.destination}
+            originCity={originCity}
+            destCity={destCity}
+          />
+          <noscript>
+            <a
+              href={`/?q=${encodeURIComponent(`${originCity} to ${destCity}`)}`}
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-interactive)] px-5 py-2.5 text-sm font-medium text-white"
+            >
+              {t("searchCta", { origin: originCity, destination: destCity })}
+            </a>
+          </noscript>
         </div>
       </section>
     </main>
