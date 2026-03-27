@@ -804,7 +804,7 @@
     "indexDescription": "प्रमुख यूरोपीय हवाई अड्डों से उड़ान मार्ग देखें, वास्तविक समय की कीमतों, सुरक्षा विश्लेषण और एयरलाइन जानकारी के साथ।",
     "title": "{origin} से {destination} की उड़ानें",
     "metaTitle": "{origin} से {destination} उड़ानें: उड़ान समय, एयरलाइंस और सुरक्षा | FlyFast",
-    "metaDescription": "{origin} से {destination} की उड़ानें खोजें। एयरलाइंस, उड़ान समय, कीमतें और मार्ग सुरक्षा की तुलना करें।",
+    "metaDescription": "{origin} से {destination} की उड़ानें: {duration} उड़ान समय, {distance} किमी, {stops}। एयरलाइन, कीमतें और सुरक्षा की तुलना करें। दैनिक अपडेट।",
     "breadcrumbFlights": "उड़ानें",
     "flightTime": "उड़ान का समय",
     "distance": "दूरी",
@@ -844,6 +844,7 @@
     "breadcrumbHome": "होम",
     "faqHeading": "अक्सर पूछे जाने वाले प्रश्न",
     "noPriceConflict": "पास के संघर्ष क्षेत्रों के कारण उड़ानें सीमित हो सकती हैं। खोज कर उपलब्धता जांचें।",
-    "indexHeading": "सभी उड़ान मार्ग"
+    "indexHeading": "सभी उड़ान मार्ग",
+    "routeOverview": "मार्ग अवलोकन"
   }
 }

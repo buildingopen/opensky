@@ -804,7 +804,7 @@
     "indexDescription": "浏览欧洲主要机场的航线，查看实时价格、安全分析和航空公司信息。",
     "title": "{origin}到{destination}的航班",
     "metaTitle": "{origin}至{destination}航班：飞行时间、航空公司与安全 | FlyFast",
-    "metaDescription": "查找{origin}到{destination}的航班。比较航空公司、飞行时间、价格和航线安全性。",
+    "metaDescription": "{origin}至{destination}航班：飞行时间{duration}，{distance}公里，{stops}。比较航空公司、价格和安全状态。每日更新。",
     "breadcrumbFlights": "航班",
     "flightTime": "飞行时间",
     "distance": "距离",
@@ -844,6 +844,7 @@
     "breadcrumbHome": "首页",
     "faqHeading": "常见问题",
     "noPriceConflict": "由于附近冲突地区，航班可能受限。请搜索查看可用航班。",
-    "indexHeading": "所有航线"
+    "indexHeading": "所有航线",
+    "routeOverview": "航线概览"
   }
 }

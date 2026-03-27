@@ -804,7 +804,7 @@
     "indexDescription": "Explore rotas de voo dos principais aeroportos europeus com preços atualizados, análise de segurança e informações sobre companhias aéreas.",
     "title": "Voos de {origin} para {destination}",
     "metaTitle": "Voos {origin} – {destination}: duração, companhias e segurança | FlyFast",
-    "metaDescription": "Encontre voos de {origin} para {destination}. Compare companhias aéreas, tempo de voo, preços e segurança da rota antes de reservar.",
+    "metaDescription": "Voos de {origin} para {destination}: {duration} de voo, {distance} km, {stops}. Compare companhias, preços e segurança. Atualizado diariamente.",
     "breadcrumbFlights": "Voos",
     "flightTime": "Tempo de voo",
     "distance": "Distância",
@@ -844,6 +844,7 @@
     "breadcrumbHome": "Início",
     "faqHeading": "Perguntas frequentes",
     "noPriceConflict": "Os voos podem estar limitados devido a zonas de conflito próximas. Verifique a disponibilidade pesquisando.",
-    "indexHeading": "Todas as rotas aéreas"
+    "indexHeading": "Todas as rotas aéreas",
+    "routeOverview": "Resumo da rota"
   }
 }

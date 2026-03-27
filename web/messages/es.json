@@ -804,7 +804,7 @@
     "indexDescription": "Explora rutas de vuelo desde los principales aeropuertos europeos con precios actualizados, análisis de seguridad e información de aerolíneas.",
     "title": "Vuelos de {origin} a {destination}",
     "metaTitle": "Vuelos {origin} – {destination}: tiempo de vuelo, aerolíneas y seguridad | FlyFast",
-    "metaDescription": "Encuentra vuelos de {origin} a {destination}. Compara aerolíneas, tiempo de vuelo, precios y seguridad de la ruta antes de reservar.",
+    "metaDescription": "Vuelos de {origin} a {destination}: {duration} de vuelo, {distance} km, {stops}. Compara aerolíneas, precios y seguridad. Actualizado diariamente.",
     "breadcrumbFlights": "Vuelos",
     "flightTime": "Tiempo de vuelo",
     "distance": "Distancia",
@@ -844,6 +844,7 @@
     "breadcrumbHome": "Inicio",
     "faqHeading": "Preguntas frecuentes",
     "noPriceConflict": "Los vuelos pueden estar limitados debido a zonas de conflicto cercanas. Verifique la disponibilidad buscando.",
-    "indexHeading": "Todas las rutas aéreas"
+    "indexHeading": "Todas las rutas aéreas",
+    "routeOverview": "Resumen de la ruta"
   }
 }

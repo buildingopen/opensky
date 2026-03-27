@@ -804,7 +804,7 @@
     "indexDescription": "ヨーロッパの主要空港からのフライトルートを、リアルタイム価格、安全性分析、航空会社情報とともにご覧ください。",
     "title": "{origin}から{destination}へのフライト",
     "metaTitle": "{origin}→{destination}便：飛行時間・航空会社・安全性 | FlyFast",
-    "metaDescription": "{origin}から{destination}へのフライトを検索。航空会社、飛行時間、価格、路線の安全性を比較できます。",
+    "metaDescription": "{origin}から{destination}へのフライト：飛行時間{duration}、{distance}km、{stops}。航空会社、料金、安全状況を比較。毎日更新。",
     "breadcrumbFlights": "フライト",
     "flightTime": "飛行時間",
     "distance": "距離",
@@ -844,6 +844,7 @@
     "breadcrumbHome": "ホーム",
     "faqHeading": "よくある質問",
     "noPriceConflict": "近隣の紛争地域のため、フライトが限定される場合があります。検索して空席状況をご確認ください。",
-    "indexHeading": "全フライトルート"
+    "indexHeading": "全フライトルート",
+    "routeOverview": "ルート概要"
   }
 }

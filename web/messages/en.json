@@ -833,7 +833,7 @@
     "indexDescription": "Browse flight routes from major European airports with real-time prices, safety analysis, and airline information.",
     "title": "Flights from {origin} to {destination}",
     "metaTitle": "Flights {origin} to {destination}: Flight Time, Airlines & Safety | FlyFast",
-    "metaDescription": "Find flights from {origin} to {destination}. Compare airlines, check flight times, and see route safety analysis. Updated daily.",
+    "metaDescription": "Flights from {origin} to {destination}: {duration} flight time, {distance} km, {stops}. Compare airlines, prices, and safety status. Updated daily.",
     "breadcrumbFlights": "Flights",
     "flightTime": "Flight time",
     "distance": "Distance",
@@ -873,6 +873,7 @@
     "breadcrumbHome": "Home",
     "faqHeading": "FAQ",
     "noPriceConflict": "Flights may be limited due to nearby conflict zones. Check availability by searching.",
-    "indexHeading": "All Flight Routes"
+    "indexHeading": "All Flight Routes",
+    "routeOverview": "Route overview"
   }
 }

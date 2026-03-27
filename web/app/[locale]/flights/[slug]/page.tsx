@@ -42,7 +42,17 @@ export async function generateMetadata({
   const meta = getRouteMeta(slug);
 
   const title = t("metaTitle", { origin: originCity, destination: destCity });
-  const description = t("metaDescription", { origin: originCity, destination: destCity });
+  const duration = meta ? formatFlightTime(meta.flightTimeMin) : "";
+  const stopsText = meta
+    ? meta.typicalStops === 0 ? t("direct") : meta.typicalStops === 1 ? t("oneStop") : t("multiStop", { count: meta.typicalStops })
+    : "";
+  const description = t("metaDescription", {
+    origin: originCity,
+    destination: destCity,
+    duration,
+    stops: stopsText,
+    distance: meta ? meta.distanceKm.toLocaleString() : "",
+  });
 
   const ogUrl = new URL("/api/og", siteUrl);
   ogUrl.searchParams.set("route", `${getAirportCity(route.origin)} to ${getAirportCity(route.destination)}`);
@@ -304,27 +314,32 @@ export default async function RoutePage({
 
       <section className="mt-10 space-y-8 text-sm text-[var(--color-text)]">
         {/* Route info card */}
-        <div className="rounded-lg border border-[var(--color-border)] p-5">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-xs text-[var(--color-text-muted)] mb-1">
-                {t("flightTime")}
+        <div>
+          <h2 className="text-lg font-semibold text-[var(--color-text)] mb-2">
+            {t("routeOverview")}
+          </h2>
+          <div className="rounded-lg border border-[var(--color-border)] p-5">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-xs text-[var(--color-text-muted)] mb-1">
+                  {t("flightTime")}
+                </div>
+                <div className="text-lg font-semibold">{duration}</div>
               </div>
-              <div className="text-lg font-semibold">{duration}</div>
-            </div>
-            <div>
-              <div className="text-xs text-[var(--color-text-muted)] mb-1">
-                {t("distance")}
+              <div>
+                <div className="text-xs text-[var(--color-text-muted)] mb-1">
+                  {t("distance")}
+                </div>
+                <div className="text-lg font-semibold">
+                  {meta.distanceKm.toLocaleString()} km
+                </div>
               </div>
-              <div className="text-lg font-semibold">
-                {meta.distanceKm.toLocaleString()} km
+              <div>
+                <div className="text-xs text-[var(--color-text-muted)] mb-1">
+                  {t("typicalStops")}
+                </div>
+                <div className="text-lg font-semibold">{stopsLabel}</div>
               </div>
-            </div>
-            <div>
-              <div className="text-xs text-[var(--color-text-muted)] mb-1">
-                {t("typicalStops")}
-              </div>
-              <div className="text-lg font-semibold">{stopsLabel}</div>
             </div>
           </div>
         </div>

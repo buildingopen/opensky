@@ -804,7 +804,7 @@
     "indexDescription": "Flugrouten ab den größten europäischen Flughäfen mit aktuellen Preisen, Sicherheitsanalyse und Airline-Informationen.",
     "title": "Flüge von {origin} nach {destination}",
     "metaTitle": "Flug {origin} {destination}: Flugzeit, Airlines & Sicherheit | FlyFast",
-    "metaDescription": "Flüge von {origin} nach {destination} finden. Airlines vergleichen, Flugzeiten prüfen und Sicherheitsanalyse der Route einsehen. Täglich aktualisiert.",
+    "metaDescription": "Flüge von {origin} nach {destination}: {duration} Flugzeit, {distance} km, {stops}. Vergleichen Sie Airlines, Preise und Sicherheitsstatus. Täglich aktualisiert.",
     "breadcrumbFlights": "Flüge",
     "flightTime": "Flugzeit",
     "distance": "Entfernung",
@@ -844,6 +844,7 @@
     "breadcrumbHome": "Startseite",
     "faqHeading": "Häufige Fragen",
     "noPriceConflict": "Flüge können aufgrund nahegelegener Konfliktzonen eingeschränkt sein. Prüfen Sie die Verfügbarkeit per Suche.",
-    "indexHeading": "Alle Flugrouten"
+    "indexHeading": "Alle Flugrouten",
+    "routeOverview": "Routenübersicht"
   }
 }

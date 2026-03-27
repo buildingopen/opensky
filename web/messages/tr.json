@@ -804,7 +804,7 @@
     "indexDescription": "Avrupa'nın büyük havalimanlarından uçuş rotalarını güncel fiyatlar, güvenlik analizi ve havayolu bilgileriyle keşfedin.",
     "title": "{origin} - {destination} Uçuşları",
     "metaTitle": "{origin} – {destination} Uçuşları: Süre, Havayolları ve Güvenlik | FlyFast",
-    "metaDescription": "{origin} ile {destination} arası uçuşları bulun. Havayollarını, uçuş süresini, fiyatları ve rota güvenliğini karşılaştırın.",
+    "metaDescription": "{origin} - {destination} uçuşları: {duration} uçuş süresi, {distance} km, {stops}. Havayolları, fiyatlar ve güvenlik durumunu karşılaştırın. Günlük güncelleme.",
     "breadcrumbFlights": "Uçuşlar",
     "flightTime": "Uçuş süresi",
     "distance": "Mesafe",
@@ -844,6 +844,7 @@
     "breadcrumbHome": "Ana Sayfa",
     "faqHeading": "Sık sorulan sorular",
     "noPriceConflict": "Yakın çatışma bölgeleri nedeniyle uçuşlar sınırlı olabilir. Arama yaparak müsaitliği kontrol edin.",
-    "indexHeading": "Tüm uçuş rotaları"
+    "indexHeading": "Tüm uçuş rotaları",
+    "routeOverview": "Rota özeti"
   }
 }

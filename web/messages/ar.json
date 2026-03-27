@@ -804,7 +804,7 @@
     "indexDescription": "تصفح مسارات الرحلات من المطارات الأوروبية الرئيسية مع أسعار محدثة وتحليل السلامة ومعلومات شركات الطيران.",
     "title": "رحلات من {origin} إلى {destination}",
     "metaTitle": "رحلات {origin} – {destination}: المدة والخطوط والسلامة | FlyFast",
-    "metaDescription": "ابحث عن رحلات من {origin} إلى {destination}. قارن شركات الطيران ومدة الرحلة والأسعار وسلامة المسار قبل الحجز.",
+    "metaDescription": "رحلات من {origin} إلى {destination}: {duration} وقت الرحلة، {distance} كم، {stops}. قارن شركات الطيران والأسعار وحالة السلامة. يُحدث يومياً.",
     "breadcrumbFlights": "رحلات",
     "flightTime": "مدة الرحلة",
     "distance": "المسافة",
@@ -844,6 +844,7 @@
     "breadcrumbHome": "الرئيسية",
     "faqHeading": "الأسئلة الشائعة",
     "noPriceConflict": "قد تكون الرحلات محدودة بسبب مناطق النزاع القريبة. تحقق من التوفر عبر البحث.",
-    "indexHeading": "جميع مسارات الطيران"
+    "indexHeading": "جميع مسارات الطيران",
+    "routeOverview": "نظرة عامة على المسار"
   }
 }

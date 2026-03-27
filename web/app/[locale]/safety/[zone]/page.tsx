@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "../../../../i18n/navigation";
+import { locales } from "../../../../i18n/config";
 import {
   getZones,
   getZoneById,
@@ -42,11 +43,18 @@ export async function generateMetadata({
   ogUrl.searchParams.set("route", zoneName);
   ogUrl.searchParams.set("safety", zone.risk_level);
 
+  const languages: Record<string, string> = {};
+  for (const l of locales) {
+    languages[l] = `${siteUrl}/${l}/safety/${zone.id}`;
+  }
+  languages["x-default"] = `${siteUrl}/en/safety/${zone.id}`;
+
   return {
     title,
     description,
     alternates: {
       canonical: `${siteUrl}/${locale}/safety/${zone.id}`,
+      languages,
     },
     openGraph: {
       title,

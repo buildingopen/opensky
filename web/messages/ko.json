@@ -804,7 +804,7 @@
     "indexDescription": "유럽 주요 공항의 항공 노선을 실시간 가격, 안전 분석, 항공사 정보와 함께 확인하세요.",
     "title": "{origin}에서 {destination}행 항공편",
     "metaTitle": "{origin}→{destination} 항공편: 비행 시간, 항공사, 안전 | FlyFast",
-    "metaDescription": "{origin}에서 {destination}행 항공편을 찾아보세요. 항공사, 비행 시간, 가격, 노선 안전성을 비교하세요.",
+    "metaDescription": "{origin}에서 {destination}행 항공편: 비행시간 {duration}, {distance}km, {stops}. 항공사, 가격, 안전 상태를 비교하세요. 매일 업데이트.",
     "breadcrumbFlights": "항공편",
     "flightTime": "비행 시간",
     "distance": "거리",
@@ -844,6 +844,7 @@
     "breadcrumbHome": "홈",
     "faqHeading": "자주 묻는 질문",
     "noPriceConflict": "인근 분쟁 지역으로 인해 항공편이 제한될 수 있습니다. 검색하여 이용 가능 여부를 확인하세요.",
-    "indexHeading": "모든 항공 노선"
+    "indexHeading": "모든 항공 노선",
+    "routeOverview": "노선 개요"
   }
 }

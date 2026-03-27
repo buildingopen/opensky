@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "../../../i18n/navigation";
+import { locales } from "../../../i18n/config";
 import { getZones, ZONE_FLAGS, ZONE_COUNTRIES } from "./zones-data";
 import { SafetyPageClient } from "./SafetyPageClient";
 
@@ -12,13 +13,16 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { setRequestLocale } = await import("next-intl/server");
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "safety" });
-  return { title: t("title"), description: t("description"), alternates: { canonical: `${siteUrl}/${locale}/safety` } };
+  const languages: Record<string, string> = {};
+  for (const l of locales) languages[l] = `${siteUrl}/${l}/safety`;
+  languages["x-default"] = `${siteUrl}/en/safety`;
+  return { title: t("title"), description: t("description"), alternates: { canonical: `${siteUrl}/${locale}/safety`, languages } };
 }
 
-const itemListSchema = (zoneIds: string[], locale: string) => ({
+const itemListSchema = (zoneIds: string[], locale: string, listName: string) => ({
   "@context": "https://schema.org",
   "@type": "ItemList",
-  name: "Conflict Zone Airspace Status",
+  name: listName,
   numberOfItems: zoneIds.length,
   itemListElement: zoneIds.map((id, i) => ({
     "@type": "ListItem",
@@ -70,7 +74,7 @@ export default async function SafetyIndexPage({ params }: { params: Promise<{ lo
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(itemListSchema(zones.map((z) => z.id), locale)),
+          __html: JSON.stringify(itemListSchema(zones.map((z) => z.id), locale, t("title"))),
         }}
       />
       <h1 className="text-3xl font-bold text-[var(--color-text)]">
