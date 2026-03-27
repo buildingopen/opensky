@@ -117,7 +117,7 @@
     "timeSaved": "FlyFast saved you ~{time} of manual searching",
     "loading": {
       "understanding": "Interpreting destinations, dates & preferences",
-      "agentsChecking": "{workers} agents checking {total} combinations across flight sources",
+      "searchingParallel": "Searching {total} flight combinations in parallel",
       "checkingRoute": "{route} on {date}",
       "checked": "{done}/{total} checked",
       "findingFlights": "Finding your flights",
@@ -276,7 +276,12 @@
       "roundTripReturn": "Round trip",
       "moreReturnDates": "+ {count} more",
       "airportCount": "{count, plural, one {# airport} other {# airports}}",
-      "combinations": "{count, plural, one {# combination} other {# combinations}}"
+      "combinations": "{count, plural, one {# combination} other {# combinations}}",
+      "searching": "Searching",
+      "origins": "origins",
+      "destinations": "destinations",
+      "dates": "dates",
+      "combinationsPlain": "combinations"
     },
     "compare": {
       "compareAll": "Compare all options ({flights, plural, one {1 flight} other {{flights} flights}}, {destinations, plural, one {1 destination} other {{destinations} destinations}})",

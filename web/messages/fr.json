@@ -108,7 +108,7 @@
     "timeSaved": "FlyFast vous a fait gagner ~{time} de recherche manuelle",
     "loading": {
       "understanding": "Interprétation des destinations, dates et préférences",
-      "agentsChecking": "{workers} agents vérifient {total} combinaisons sur toutes les sources de vols",
+      "searchingParallel": "Recherche de {total} combinaisons de vols en parallèle",
       "checkingRoute": "{route} le {date}",
       "checked": "{done}/{total} vérifiés",
       "findingFlights": "Recherche de vos vols",
@@ -258,7 +258,12 @@
       "roundTripReturn": "Aller-retour",
       "moreReturnDates": "+ {count} de plus",
       "airportCount": "{count, plural, one {# aéroport} other {# aéroports}}",
-      "combinations": "{count, plural, one {# combinaison} other {# combinaisons}}"
+      "combinations": "{count, plural, one {# combinaison} other {# combinaisons}}",
+      "searching": "Recherche de",
+      "origins": "origines",
+      "destinations": "destinations",
+      "dates": "dates",
+      "combinationsPlain": "combinaisons"
     },
     "compare": {
       "compareAll": "Comparer toutes les options ({flights, plural, one {1 vol} other {{flights} vols}}, {destinations, plural, one {1 destination} other {{destinations} destinations}})",

@@ -258,7 +258,12 @@
       "roundTripReturn": "Ida y vuelta",
       "moreReturnDates": "+ {count} más",
       "airportCount": "{count, plural, one {# aeropuerto} other {# aeropuertos}}",
-      "combinations": "{count, plural, one {# combinación} other {# combinaciones}}"
+      "combinations": "{count, plural, one {# combinación} other {# combinaciones}}",
+      "searching": "Buscando",
+      "origins": "orígenes",
+      "destinations": "destinos",
+      "dates": "fechas",
+      "combinationsPlain": "combinaciones"
     },
     "compare": {
       "compareAll": "Comparar todas las opciones ({flights, plural, one {1 vuelo} other {{flights} vuelos}}, {destinations, plural, one {1 destino} other {{destinations} destinos}})",

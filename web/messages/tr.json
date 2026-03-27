@@ -258,7 +258,12 @@
       "roundTripReturn": "Gidiş-dönüş",
       "moreReturnDates": "+ {count} daha",
       "airportCount": "{count, plural, one {# havalimanı} other {# havalimanı}}",
-      "combinations": "{count, plural, one {# kombinasyon} other {# kombinasyon}}"
+      "combinations": "{count, plural, one {# kombinasyon} other {# kombinasyon}}",
+      "searching": "Aranıyor",
+      "origins": "kalkış",
+      "destinations": "varış",
+      "dates": "tarih",
+      "combinationsPlain": "kombinasyon"
     },
     "compare": {
       "compareAll": "Tüm seçenekleri karşılaştır ({flights, plural, one {1 uçuş} other {{flights} uçuş}}, {destinations, plural, one {1 varış noktası} other {{destinations} varış noktası}})",

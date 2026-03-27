@@ -258,7 +258,12 @@
       "roundTripReturn": "往返",
       "moreReturnDates": "还有{count}个",
       "airportCount": "{count, plural, one {# 个机场} other {# 个机场}}",
-      "combinations": "{count} 个组合"
+      "combinations": "{count} 个组合",
+      "searching": "正在搜索",
+      "origins": "出发地",
+      "destinations": "目的地",
+      "dates": "日期",
+      "combinationsPlain": "个组合"
     },
     "compare": {
       "compareAll": "比较所有选项（{flights, plural, one {1个航班} other {{flights}个航班}}，{destinations, plural, one {1个目的地} other {{destinations}个目的地}}）",

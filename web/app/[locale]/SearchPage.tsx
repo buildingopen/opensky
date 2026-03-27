@@ -1717,9 +1717,9 @@ function SearchingState({ parsed, progress, filteredCount, workers }: { parsed: 
   const message = !parsed
     ? t("loading.understanding")
     : totalRoutes === 0
-      ? t("loading.agentsChecking", { workers: workers || 16, total: parsed.total_routes })
+      ? t("loading.searchingParallel", { total: parsed.total_routes })
       : pct < 70
-        ? t("loading.agentsChecking", { workers: workers || 16, total: totalRoutes })
+        ? t("loading.searchingParallel", { total: totalRoutes })
         : t("loading.checkingRemaining", { done: routesChecked, total: totalRoutes });
 
   // Derive route summary from parsed data
@@ -2479,7 +2479,6 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
         {parsed.safe_only && (
           <span className="px-1.5 py-0.5 rounded bg-[var(--color-safe)]/10 border border-[var(--color-safe)]/20 text-[var(--color-safe)] font-medium">{t("parsed.safeOnly")}</span>
         )}
-        {routeCount > 1 && <span>{t("parsed.combinations", { count: routeCount })}</span>}
         {totalCount != null && totalCount > 0 && !parsed.safe_only && (
           <span className={`px-1.5 py-0.5 rounded font-medium ${
             safeCount === totalCount
@@ -2498,6 +2497,20 @@ function ParsedConfig({ parsed, cacheAgeSeconds, onRefresh, onSearch, safeCount,
           </>
         )}
       </div>
+      {routeCount > 1 && (
+        <div className="text-xs text-[var(--color-interactive)] font-medium">
+          {(() => {
+            const o = origins.length, d = destinations.length, dt = dates.length;
+            const parts: string[] = [];
+            if (o > 1) parts.push(`${o} ${t("parsed.origins")}`);
+            if (d > 1) parts.push(`${d} ${t("parsed.destinations")}`);
+            if (dt > 1) parts.push(`${dt} ${t("parsed.dates")}`);
+            return parts.length > 0
+              ? `${t("parsed.searching")} ${parts.join(" × ")} = ${routeCount} ${t("parsed.combinationsPlain")}`
+              : t("parsed.combinations", { count: routeCount });
+          })()}
+        </div>
+      )}
       {expandPhase === "expanding" && (
         <div className="pt-1 space-y-1.5">
           <span className="text-xs text-[var(--color-interactive)]">{expansionInfo ? t("expand.expandingInfo", { info: expansionInfo }) : t("expand.expanding")}</span>
