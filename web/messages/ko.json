@@ -125,7 +125,11 @@
       "safetyFiltered": "{count, plural, one {1개 노선이 안전상 제외됨} other {{count}개 노선이 안전상 제외됨}}",
       "bestSoFar": "현재까지 최적 (검색 중 업데이트됨)",
       "roundTrip": "왕복",
-      "routesChecked": "경로 확인됨"
+      "routesChecked": "경로 확인됨",
+      "origin": "출발지",
+      "origins": "출발지",
+      "dest": "도착지",
+      "dests": "도착지"
     },
     "results": {
       "roundTripFrom": "왕복 {price}부터",

@@ -125,7 +125,11 @@
       "safetyFiltered": "{count, plural, one {1 मार्ग सुरक्षा के लिए फ़िल्टर किया गया} other {{count} मार्ग सुरक्षा के लिए फ़िल्टर किए गए}}",
       "bestSoFar": "अब तक का सबसे अच्छा (खोज जारी है)",
       "roundTrip": "आना-जाना",
-      "routesChecked": "मार्ग जांचे गए"
+      "routesChecked": "मार्ग जांचे गए",
+      "origin": "मूल",
+      "origins": "मूल",
+      "dest": "गंतव्य",
+      "dests": "गंतव्य"
     },
     "results": {
       "roundTripFrom": "{price} से आना-जाना",

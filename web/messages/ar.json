@@ -125,7 +125,11 @@
       "safetyFiltered": "{count, plural, =0 {لم يتم تصفية أي مسار للسلامة} one {تم تصفية مسار واحد للسلامة} two {تم تصفية مسارين للسلامة} few {تم تصفية {count} مسارات للسلامة} many {تم تصفية {count} مساراً للسلامة} other {تم تصفية {count} مسار للسلامة}}",
       "bestSoFar": "الأفضل حتى الآن (يتم التحديث أثناء البحث)",
       "roundTrip": "ذهاب وعودة",
-      "routesChecked": "مسارات تم فحصها"
+      "routesChecked": "مسارات تم فحصها",
+      "origin": "مطار",
+      "origins": "مطارات",
+      "dest": "وجهة",
+      "dests": "وجهات"
     },
     "results": {
       "roundTripFrom": "ذهاب وعودة من {price}",

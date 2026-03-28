@@ -125,7 +125,11 @@
       "safetyFiltered": "{count, plural, one {1条航线因安全原因被过滤} other {{count}条航线因安全原因被过滤}}",
       "bestSoFar": "目前最优（搜索中持续更新）",
       "roundTrip": "往返",
-      "routesChecked": "条航线已检查"
+      "routesChecked": "条航线已检查",
+      "origin": "出发地",
+      "origins": "出发地",
+      "dest": "目的地",
+      "dests": "目的地"
     },
     "results": {
       "roundTripFrom": "往返最低{price}",

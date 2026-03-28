@@ -134,7 +134,11 @@
       "safetyFiltered": "{count, plural, one {1 route filtered for safety} other {{count} routes filtered for safety}}",
       "bestSoFar": "Best so far (updating as we search)",
       "roundTrip": "round trip",
-      "routesChecked": "routes checked"
+      "routesChecked": "routes checked",
+      "origin": "origin",
+      "origins": "origins",
+      "dest": "dest",
+      "dests": "dests"
     },
     "results": {
       "roundTripFrom": "Round trip from {price}",

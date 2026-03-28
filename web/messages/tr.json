@@ -125,7 +125,11 @@
       "safetyFiltered": "{count, plural, one {1 rota güvenlik nedeniyle filtrelendi} other {{count} rota güvenlik nedeniyle filtrelendi}}",
       "bestSoFar": "Şu ana kadarki en iyi sonuç (arama devam ediyor)",
       "roundTrip": "gidiş-dönüş",
-      "routesChecked": "rota kontrol edildi"
+      "routesChecked": "rota kontrol edildi",
+      "origin": "kalkış",
+      "origins": "kalkış",
+      "dest": "varış",
+      "dests": "varış"
     },
     "results": {
       "roundTripFrom": "Gidiş-dönüş {price}'den başlayan fiyatlarla",

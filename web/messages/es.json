@@ -125,7 +125,11 @@
       "safetyFiltered": "{count, plural, one {1 ruta filtrada por seguridad} other {{count} rutas filtradas por seguridad}}",
       "bestSoFar": "Mejor resultado hasta ahora (actualizando mientras buscamos)",
       "roundTrip": "ida y vuelta",
-      "routesChecked": "rutas verificadas"
+      "routesChecked": "rutas verificadas",
+      "origin": "origen",
+      "origins": "orígenes",
+      "dest": "destino",
+      "dests": "destinos"
     },
     "results": {
       "roundTripFrom": "Ida y vuelta desde {price}",

@@ -1753,7 +1753,7 @@ function SearchingState({ parsed, progress, filteredCount, workers }: { parsed: 
             {originCount > 0 && destCount > 0 && (
               <>
                 <span className="w-px h-3 bg-[var(--color-border)]" />
-                <span>{originCount} {originCount === 1 ? "origin" : "origins"} &rarr; {destCount} {destCount === 1 ? "dest" : "dests"}</span>
+                <span>{originCount} {originCount === 1 ? t("loading.origin") : t("loading.origins")} &rarr; {destCount} {destCount === 1 ? t("loading.dest") : t("loading.dests")}</span>
               </>
             )}
           </div>

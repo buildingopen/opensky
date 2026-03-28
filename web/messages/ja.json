@@ -125,7 +125,11 @@
       "safetyFiltered": "{count, plural, one {1ルートを安全性で除外} other {{count}ルートを安全性で除外}}",
       "bestSoFar": "現時点のベスト（検索中、随時更新）",
       "roundTrip": "往復",
-      "routesChecked": "ルート確認済み"
+      "routesChecked": "ルート確認済み",
+      "origin": "出発地",
+      "origins": "出発地",
+      "dest": "目的地",
+      "dests": "目的地"
     },
     "results": {
       "roundTripFrom": "往復 {price}から",

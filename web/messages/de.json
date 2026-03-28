@@ -125,7 +125,11 @@
       "safetyFiltered": "{count, plural, one {1 Route aus Sicherheitsgründen gefiltert} other {{count} Routen aus Sicherheitsgründen gefiltert}}",
       "bestSoFar": "Bisher bestes Ergebnis (wird aktualisiert)",
       "roundTrip": "Hin und zurück",
-      "routesChecked": "Routen geprüft"
+      "routesChecked": "Routen geprüft",
+      "origin": "Abflughafen",
+      "origins": "Abflughäfen",
+      "dest": "Ziel",
+      "dests": "Ziele"
     },
     "results": {
       "roundTripFrom": "Hin und zurück ab {price}",
