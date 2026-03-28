@@ -66,8 +66,8 @@
   "search": {
     "heroTitle": "Prompt to",
     "heroTitleAccent": "fly.",
-    "heroSubtitle": "Mevcut tüm uçuşları arayın. Yapay zeka destekli, çatışma bölgeleri filtrelenmiş. Ücretsiz, giriş gerektirmez.",
-    "placeholder": "ör. İstanbul'dan Londra'ya gelecek hafta 15000 TL altında, business class",
+    "heroSubtitle": "Bir cümle. Her uçuş. Form yok, giriş yok.",
+    "placeholder": "ör. İstanbul'dan sıcak bir yere, 300€ altında, gelecek hafta",
     "ariaLabel": "Seyahatinizi kendi cümlelerinizle anlatın",
     "enterToSearch": "Aramak için Enter",
     "voiceInput": "Sesli giriş",
@@ -100,10 +100,10 @@
       "maxPricePlaceholder": "fark etmez"
     },
     "examples": [
-      "İstanbul'dan Londra'ya, gelecek hafta, 10000 TL altında",
-      "Ankara'dan Berlin'e, gelecek ay, business class",
-      "İstanbul'dan Barcelona'ya, gelecek hafta, gidiş dönüş",
-      "İzmir'den Amsterdam'a, gelecek ay, 8000 TL altında"
+      "İstanbul'dan sıcak bir yere, 300€ altında, gelecek hafta",
+      "İstanbul'dan Tokyo'ya, gelecek ay, business class",
+      "Yunanistan'da bir yerlere uzun hafta sonu için Ankara'dan",
+      "İstanbul'dan Avrupa'nın herhangi bir yerine, 500€ altında, gidiş dönüş"
     ],
     "timeSaved": "FlyFast size yaklaşık {time} manuel arama süresinden tasarruf ettirdi",
     "loading": {
@@ -450,11 +450,11 @@
     "searchFlights": "Uçuş ara"
   },
   "metadata": {
-    "title": "FlyFast - Dünyanın en akıllı uçuş araması",
-    "description": "Sadece \"İstanbul'dan sıcak bir yere 300$'ın altında\" yazın, FlyFast tüm uçuşları bulur, çatışma bölgelerini filtreler ve en güvenli rotayı gösterir. Ücretsiz, giriş gerektirmez.",
-    "ogAlt": "FlyFast: nereye uçmak istediğinizi yazın, en iyi rotayı bulalım",
+    "title": "FlyFast — Bir cümle. Her uçuş.",
+    "description": "\"Sıcak bir yere 300€ altında\" — ne istediğinizi yazın. FlyFast tüm havayollarını arar, çatışma bölgelerini filtreler ve en iyi seçenekleri gösterir. Form yok, giriş yok.",
+    "ogAlt": "FlyFast: bir cümle, her uçuş",
     "flightTitle": "{route} {price}'den itibaren - FlyFast",
-    "flightDescription": "{route} için {price}'den başlayan fiyatlar bulundu. Çatışma bölgeleri filtrelendi. FlyFast'te kendi uçuşlarınızı arayın.",
+    "flightDescription": "{route} {price}'den itibaren. Havayollarını karşılaştırın, rota güvenliğini kontrol edin. FlyFast'te bir cümleyle arayın.",
     "faq": {
       "q1": "FlyFast nasıl çalışır?",
       "a1": "Seyahatinizi doğal dilde yazın, örneğin 'Gelecek hafta Mumbai'den Hamburg'a 300 € altında'. FlyFast, mevcut tüm uçuşları arar, çatışma bölgelerini filtreler ve fiyat, süre ve rota güvenliğine göre sıralar. Doğrudan havayolu şirketinden rezervasyon yaparsınız.",

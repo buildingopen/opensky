@@ -115,16 +115,16 @@ export async function GET(req: NextRequest) {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div style={{ fontSize: "56px", fontWeight: 700, color: "#ffffff", letterSpacing: "-1px", display: "flex" }}>
-              Search flights in plain English.
+              One sentence. Every flight.
             </div>
             <div style={{ fontSize: "28px", color: "#a1a1aa", display: "flex" }}>
-              "Berlin to anywhere warm" — we find every option.
+              "Anywhere warm under $300" — just type what you want.
             </div>
           </div>
         )}
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "22px", color: "#71717a" }}>The world's smartest flight search. Free, no login.</span>
+          <span style={{ fontSize: "22px", color: "#71717a" }}>No forms, no login. Every airline searched.</span>
           <span style={{ fontSize: "22px", color: "#71717a" }}>flyfast.app</span>
         </div>
       </div>

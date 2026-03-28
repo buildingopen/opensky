@@ -66,8 +66,8 @@
   "search": {
     "heroTitle": "Prompt to",
     "heroTitleAccent": "fly.",
-    "heroSubtitle": "Pesquise todos os voos disponíveis. Com IA, zonas de conflito filtradas. Grátis, sem cadastro.",
-    "placeholder": "Ex: GRU para Lisboa semana que vem abaixo de R$3000, classe executiva",
+    "heroSubtitle": "Uma frase. Todos os voos. Sem formulários, sem login.",
+    "placeholder": "Ex: Qualquer lugar quente saindo de Lisboa, menos de 300€, semana que vem",
     "ariaLabel": "Descreva sua viagem em português",
     "enterToSearch": "Enter para buscar",
     "voiceInput": "Entrada de voz",
@@ -100,10 +100,10 @@
       "maxPricePlaceholder": "qualquer"
     },
     "examples": [
-      "São Paulo para Miami, semana que vem, menos de R$4000",
-      "Rio para Buenos Aires, mês que vem, classe executiva",
-      "Brasília para Lisboa, semana que vem, ida e volta",
-      "GRU para Santiago, mês que vem, menos de R$2500"
+      "Qualquer lugar quente saindo de Lisboa, menos de 300€, semana que vem",
+      "Lisboa para Tokyo, mês que vem, classe executiva",
+      "Algum lugar em Espanha para um fim de semana prolongado saindo do Porto",
+      "Lisboa para qualquer lugar na Europa, menos de 500€, ida e volta"
     ],
     "timeSaved": "O FlyFast economizou ~{time} de busca manual para você",
     "loading": {
@@ -450,11 +450,11 @@
     "searchFlights": "Buscar voos"
   },
   "metadata": {
-    "title": "FlyFast - A busca de voos mais inteligente do mundo",
-    "description": "Basta digitar \"Lisboa para qualquer lugar quente abaixo de 300€\" e o FlyFast encontra cada voo, filtra zonas de conflito e mostra a rota mais segura. Grátis, sem cadastro.",
-    "ogAlt": "FlyFast: diga para onde quer voar, encontramos a melhor rota",
+    "title": "FlyFast — Uma frase. Todos os voos.",
+    "description": "\"Qualquer lugar quente, menos de 300€\" — escreva o que quiser. O FlyFast pesquisa todas as companhias, filtra zonas de conflito e mostra as melhores opções. Sem formulários, sem login.",
+    "ogAlt": "FlyFast: uma frase, todos os voos",
     "flightTitle": "{route} a partir de {price} - FlyFast",
-    "flightDescription": "Encontrei {route} a partir de {price}. Zonas de conflito filtradas. Busque seus próprios voos no FlyFast.",
+    "flightDescription": "{route} a partir de {price}. Compare companhias, verifique a segurança da rota. Uma frase para buscar no FlyFast.",
     "faq": {
       "q1": "Como o FlyFast funciona?",
       "a1": "Descreva sua viagem em linguagem natural, por exemplo 'Mumbai para Hamburgo na próxima semana por menos de R$1500'. O FlyFast pesquisa todos os voos disponíveis, filtra zonas de conflito e classifica por preço, duração e segurança da rota. Você reserva diretamente com a companhia aérea.",

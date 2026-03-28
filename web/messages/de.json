@@ -66,8 +66,8 @@
   "search": {
     "heroTitle": "Prompt to",
     "heroTitleAccent": "fly.",
-    "heroSubtitle": "Durchsuche jeden verfügbaren Flug. KI-gestützt, Konfliktzonen gefiltert. Kostenlos, ohne Anmeldung.",
-    "placeholder": "z.B. Berlin nach London nächste Woche unter 500€, Business Class",
+    "heroSubtitle": "Ein Satz. Jeder Flug. Keine Formulare, kein Login.",
+    "placeholder": "z.B. Irgendwohin ans Warme ab Berlin unter 300€, nächste Woche",
     "ariaLabel": "Beschreibe deine Reise in natürlicher Sprache",
     "enterToSearch": "Enter zum Suchen",
     "voiceInput": "Spracheingabe",
@@ -100,10 +100,10 @@
       "maxPricePlaceholder": "beliebig"
     },
     "examples": [
-      "Berlin nach London, nächste Woche, unter 200€",
-      "München nach New York, nächsten Monat, Business Class",
-      "Hamburg nach Barcelona, nächste Woche, hin und zurück",
-      "Frankfurt nach Bangkok, nächsten Monat, unter 700€"
+      "Irgendwohin ans Warme ab Berlin, unter 300€, nächste Woche",
+      "London nach Tokio, nächsten Monat, Business Class",
+      "Irgendwo in Spanien für ein langes Wochenende ab München",
+      "Frankfurt nach überall in Europa, unter 500€, hin und zurück"
     ],
     "timeSaved": "FlyFast hat dir ~{time} manuelle Suche erspart",
     "loading": {
@@ -450,11 +450,11 @@
     "searchFlights": "Flüge suchen"
   },
   "metadata": {
-    "title": "FlyFast - Die weltweit smarteste Flugsuche",
-    "description": "Tippe einfach \"Berlin irgendwohin ans Warme unter 300€\" und FlyFast findet jeden Flug, filtert Konfliktzonen und zeigt die sicherste Route. Kostenlos, ohne Anmeldung.",
-    "ogAlt": "FlyFast: Sag uns wohin du fliegen willst, wir finden die beste Route",
+    "title": "FlyFast — Ein Satz. Jeder Flug.",
+    "description": "\"Irgendwohin ans Warme unter 300€\" — schreib einfach, was du willst. FlyFast durchsucht jede Airline, filtert Konfliktzonen und zeigt dir die besten Optionen. Keine Formulare, kein Login.",
+    "ogAlt": "FlyFast: ein Satz, jeder Flug",
     "flightTitle": "{route} ab {price} - FlyFast",
-    "flightDescription": "{route} ab {price} gefunden. Konfliktzonen gefiltert. Suche deine eigenen Flüge auf FlyFast.",
+    "flightDescription": "{route} ab {price}. Airlines vergleichen, Routensicherheit prüfen. Ein Satz zum Suchen auf FlyFast.",
     "faq": {
       "q1": "Wie funktioniert FlyFast?",
       "a1": "Beschreibe deine Reise in natürlicher Sprache, z.B. 'Mumbai nach Hamburg nächste Woche unter 300 €'. FlyFast durchsucht alle verfügbaren Flüge, filtert Konfliktzonen und sortiert nach Preis, Dauer und Routensicherheit. Du buchst direkt bei der Airline.",

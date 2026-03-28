@@ -101,7 +101,7 @@ export default async function RootLayout({
               "@type": "WebApplication",
               name: "FlyFast",
               url: siteUrl,
-              description: "Just type \"Berlin to anywhere warm under $300\" and FlyFast finds every flight, filters conflict zones, and shows the safest route. Free, no login.",
+              description: "Type what you want — \"anywhere warm under $300\" — and FlyFast searches every airline, filters conflict zones, and shows the best options. No forms, no login.",
               applicationCategory: "TravelApplication",
               operatingSystem: "All",
               browserRequirements: "Requires JavaScript",

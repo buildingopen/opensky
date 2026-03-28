@@ -66,8 +66,8 @@
   "search": {
     "heroTitle": "Prompt to",
     "heroTitleAccent": "fly.",
-    "heroSubtitle": "Busca todos los vuelos disponibles. Con IA, filtrado de zonas de conflicto. Gratis, sin registro.",
-    "placeholder": "p. ej. Madrid a Londres la próxima semana, menos de 500€, clase business",
+    "heroSubtitle": "Una frase. Todos los vuelos. Sin formularios, sin registro.",
+    "placeholder": "p. ej. A cualquier lugar con sol desde Madrid, menos de 300€, la próxima semana",
     "ariaLabel": "Describe tu viaje con tus propias palabras",
     "enterToSearch": "Pulsa Enter para buscar",
     "voiceInput": "Entrada de voz",
@@ -100,10 +100,10 @@
       "maxPricePlaceholder": "cualquiera"
     },
     "examples": [
-      "Madrid a Londres, la próxima semana, menos de 200€",
-      "Barcelona a Nueva York, el próximo mes, clase business",
-      "Madrid a Roma, la próxima semana, ida y vuelta",
-      "Málaga a Berlín, el próximo mes, menos de 150€"
+      "A cualquier lugar con sol desde Madrid, menos de 300€, la próxima semana",
+      "Barcelona a Tokio, el próximo mes, clase business",
+      "Algún lugar en Italia para un fin de semana largo desde Madrid",
+      "Madrid a cualquier parte de Europa, menos de 500€, ida y vuelta"
     ],
     "timeSaved": "FlyFast te ahorró ~{time} de búsqueda manual",
     "loading": {
@@ -450,11 +450,11 @@
     "searchFlights": "Buscar vuelos"
   },
   "metadata": {
-    "title": "FlyFast - El buscador de vuelos más inteligente del mundo",
-    "description": "Solo escribe \"Madrid a cualquier lugar con sol por menos de 300€\" y FlyFast encuentra cada vuelo, filtra zonas de conflicto y muestra la ruta más segura. Gratis, sin registro.",
-    "ogAlt": "FlyFast: escribe a dónde quieres volar, encontramos la mejor ruta",
+    "title": "FlyFast — Una frase. Todos los vuelos.",
+    "description": "\"A cualquier lugar con sol, menos de 300€\" — solo escribe lo que quieres. FlyFast busca en todas las aerolíneas, filtra zonas de conflicto y te muestra las mejores opciones. Sin formularios, sin registro.",
+    "ogAlt": "FlyFast: una frase, todos los vuelos",
     "flightTitle": "{route} desde {price} - FlyFast",
-    "flightDescription": "{route} desde {price}. Zonas de conflicto filtradas. Busca tus propios vuelos en FlyFast.",
+    "flightDescription": "{route} desde {price}. Compara aerolíneas, verifica la seguridad de la ruta. Una frase para buscar en FlyFast.",
     "faq": {
       "q1": "¿Cómo funciona FlyFast?",
       "a1": "Escribe tu viaje en lenguaje natural, por ejemplo 'Mumbai a Hamburgo la próxima semana por menos de 300 €'. FlyFast busca todos los vuelos disponibles, filtra zonas de conflicto y ordena por precio, duración y seguridad de la ruta. Reservas directamente con la aerolínea.",

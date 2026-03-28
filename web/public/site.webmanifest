@@ -1,7 +1,7 @@
 {
   "name": "FlyFast",
   "short_name": "FlyFast",
-  "description": "The world's smartest flight search. Type \"Berlin to anywhere warm\" and FlyFast finds every flight, filters conflict zones, and shows the safest route.",
+  "description": "One sentence. Every flight. Type what you want and FlyFast searches every airline, filters conflict zones, and shows the best options.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#070b14",

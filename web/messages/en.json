@@ -71,8 +71,8 @@
   "search": {
     "heroTitle": "Prompt to",
     "heroTitleAccent": "fly.",
-    "heroSubtitle": "Search every available flight. AI-powered, conflict zones filtered. Free, no login.",
-    "placeholder": "e.g. JFK to London next week under $500, business class",
+    "heroSubtitle": "One sentence. Every flight. No forms, no login.",
+    "placeholder": "e.g. Anywhere warm from Berlin under $300, next week",
     "airlineFilter": {
       "ariaLabel": "Filter by airline",
       "showing": "Showing {filtered} of {total} flights"
@@ -109,10 +109,10 @@
       "maxPricePlaceholder": "any"
     },
     "examples": [
-      "New York to London, next week, under $500",
-      "Los Angeles to Tokyo, next month, business class",
-      "Chicago to Miami, next week, return",
-      "Boston to Paris, next month, under $800"
+      "Anywhere warm from Berlin, under $300, next week",
+      "London to Tokyo, next month, business class",
+      "Somewhere in Spain for a long weekend from Munich",
+      "JFK to anywhere in Europe, under $500, return"
     ],
     "timeSaved": "FlyFast saved you ~{time} of manual searching",
     "loading": {
@@ -455,11 +455,11 @@
     "searchFlights": "Search flights"
   },
   "metadata": {
-    "title": "FlyFast - The world's smartest flight search",
-    "description": "Just type \"Berlin to anywhere warm under $300\" and FlyFast finds every flight, filters conflict zones, and shows the safest route. Free, no login.",
-    "ogAlt": "FlyFast: type where you want to fly, we find the best route",
-    "flightTitle": "{route} from {price} - FlyFast",
-    "flightDescription": "Found {route} from {price}. Conflict zones filtered. Search your own flights on FlyFast.",
+    "title": "FlyFast — One sentence. Every flight.",
+    "description": "\"Anywhere warm under $300\" — just type what you want. FlyFast searches every airline, filters conflict zones, and shows you the best options. No forms, no login.",
+    "ogAlt": "FlyFast: one sentence, every flight",
+    "flightTitle": "{route} from {price} — FlyFast",
+    "flightDescription": "{route} from {price}. Compare airlines, check route safety. One sentence to search on FlyFast.",
     "faq": {
       "q1": "How does FlyFast work?",
       "a1": "Type your trip in plain English, like 'Mumbai to Hamburg next week under $300'. FlyFast searches every available flight, filters conflict zones, and ranks by price, duration, and route safety. You book directly with the airline.",
