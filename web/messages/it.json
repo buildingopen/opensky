@@ -64,10 +64,10 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Cerca voli come scriveresti a un",
-    "heroTitleAccent": "amico.",
-    "heroSubtitle": "Scrivi e basta. Cerchiamo su tutte le compagnie.",
-    "placeholder": "Dove vuoi andare?",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
+    "heroSubtitle": "Una frase. Ogni volo. Nessun modulo, nessun login.",
+    "placeholder": "es. Ovunque al caldo da Roma, sotto 300€, la prossima settimana",
     "ariaLabel": "Descrivi il tuo viaggio in italiano",
     "enterToSearch": "Invio per cercare",
     "voiceInput": "Input vocale",
@@ -100,19 +100,11 @@
       "maxPricePlaceholder": "qualsiasi"
     },
     "examples": [
-      "Ovunque al caldo da Roma, sotto 300€",
-      "Weekend per addio al nubilato in Spagna",
-      "Tokyo da qualsiasi città in Italia, sotto 500€, ottobre",
-      "Surf senza muta, da Napoli, il mese prossimo"
+      "Ovunque al caldo da Roma, sotto 300€, la prossima settimana",
+      "Milano a Tokyo, il mese prossimo, business class",
+      "Da qualche parte in Grecia per un weekend lungo da Milano",
+      "Roma verso qualsiasi meta in Europa, sotto 500€, andata e ritorno"
     ],
-    "valueProp1Title": "Scrivi come parli",
-    "valueProp1Desc": "\"Ovunque al caldo\" funziona. Nessun modulo.",
-    "valueProp2Title": "Tutte le compagnie",
-    "valueProp2Desc": "500+ compagnie aeree. Una ricerca.",
-    "valueProp3Title": "Zone di conflitto filtrate",
-    "valueProp3Desc": "Le rotte attraverso zone di conflitto attive vengono rimosse automaticamente.",
-    "valueProp4Title": "100% gratis",
-    "valueProp4Desc": "Nessun login, nessuna pubblicità, nessun piano premium. Open source.",
     "timeSaved": "FlyFast ti ha risparmiato circa {time} di ricerca manuale",
     "loading": {
       "understanding": "Interpretazione di destinazioni, date e preferenze",
@@ -458,11 +450,11 @@
     "searchFlights": "Cerca voli"
   },
   "metadata": {
-    "title": "FlyFast — Cerca voli come scriveresti a un amico",
-    "description": "\"Ovunque al caldo da Roma, sotto 300€\" — scrivi e basta. FlyFast cerca su tutte le compagnie, filtra le zone di conflitto e mostra le migliori opzioni. Nessun modulo, nessun login.",
-    "ogAlt": "FlyFast: cerca voli come un messaggio a un amico",
+    "title": "FlyFast — Una frase. Ogni volo.",
+    "description": "\"Ovunque al caldo sotto 300€\" — scrivi quello che vuoi. FlyFast cerca su tutte le compagnie, filtra le zone di conflitto e ti mostra le migliori opzioni. Nessun modulo, nessun login.",
+    "ogAlt": "FlyFast: una frase, ogni volo",
     "flightTitle": "{route} da {price} - FlyFast",
-    "flightDescription": "{route} da {price}. Confronta compagnie, verifica la sicurezza della rotta. Cerca come un messaggio su FlyFast.",
+    "flightDescription": "{route} da {price}. Confronta compagnie, verifica la sicurezza della rotta. Una frase per cercare su FlyFast.",
     "faq": {
       "q1": "Come funziona FlyFast?",
       "a1": "Scrivi il tuo viaggio in linguaggio naturale, ad esempio 'Mumbai ad Amburgo la prossima settimana sotto i 300 €'. FlyFast cerca tutti i voli disponibili, filtra le zone di conflitto e ordina per prezzo, durata e sicurezza della rotta. Prenoti direttamente con la compagnia aerea.",

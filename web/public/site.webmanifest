@@ -1,7 +1,7 @@
 {
   "name": "FlyFast",
   "short_name": "FlyFast",
-  "description": "Search flights like you'd text a friend. Just type it and FlyFast searches every airline, filters conflict zones, and shows the best options.",
+  "description": "One sentence. Every flight. Type what you want and FlyFast searches every airline, filters conflict zones, and shows the best options.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#070b14",

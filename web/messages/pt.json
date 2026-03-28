@@ -64,10 +64,10 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Pesquise voos como se mandasse mensagem para um",
-    "heroTitleAccent": "amigo.",
-    "heroSubtitle": "Só digitar. A gente pesquisa todas as companhias.",
-    "placeholder": "Para onde você quer ir?",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
+    "heroSubtitle": "Uma frase. Todos os voos. Sem formulários, sem login.",
+    "placeholder": "Ex: Qualquer lugar quente saindo de Lisboa, menos de 300€, semana que vem",
     "ariaLabel": "Descreva sua viagem em português",
     "enterToSearch": "Enter para buscar",
     "voiceInput": "Entrada de voz",
@@ -100,19 +100,11 @@
       "maxPricePlaceholder": "qualquer"
     },
     "examples": [
-      "Qualquer lugar quente saindo de Lisboa, menos de 300€",
-      "Fim de semana de despedida de solteira em Espanha",
-      "Tóquio saindo de qualquer cidade em Portugal, menos de 500€, outubro",
-      "Surf sem fato, saindo do Porto, mês que vem"
+      "Qualquer lugar quente saindo de Lisboa, menos de 300€, semana que vem",
+      "Lisboa para Tokyo, mês que vem, classe executiva",
+      "Algum lugar em Espanha para um fim de semana prolongado saindo do Porto",
+      "Lisboa para qualquer lugar na Europa, menos de 500€, ida e volta"
     ],
-    "valueProp1Title": "Escreva naturalmente",
-    "valueProp1Desc": "\"Qualquer lugar quente\" funciona. Sem formulários.",
-    "valueProp2Title": "Todas as companhias",
-    "valueProp2Desc": "500+ companhias aéreas. Uma pesquisa.",
-    "valueProp3Title": "Zonas de conflito filtradas",
-    "valueProp3Desc": "Rotas por zonas de conflito ativas são removidas automaticamente.",
-    "valueProp4Title": "100% grátis",
-    "valueProp4Desc": "Sem login, sem anúncios, sem plano premium. Código aberto.",
     "timeSaved": "O FlyFast economizou ~{time} de busca manual para você",
     "loading": {
       "understanding": "Interpretando destinos, datas e preferências",
@@ -458,11 +450,11 @@
     "searchFlights": "Buscar voos"
   },
   "metadata": {
-    "title": "FlyFast — Pesquise voos como se mandasse mensagem para um amigo",
-    "description": "\"Qualquer lugar quente saindo de Lisboa, menos de 300€\" — só digitar. O FlyFast pesquisa todas as companhias, filtra zonas de conflito e mostra as melhores opções. Sem formulários, sem login.",
-    "ogAlt": "FlyFast: pesquise voos como uma mensagem para um amigo",
+    "title": "FlyFast — Uma frase. Todos os voos.",
+    "description": "\"Qualquer lugar quente, menos de 300€\" — escreva o que quiser. O FlyFast pesquisa todas as companhias, filtra zonas de conflito e mostra as melhores opções. Sem formulários, sem login.",
+    "ogAlt": "FlyFast: uma frase, todos os voos",
     "flightTitle": "{route} a partir de {price} - FlyFast",
-    "flightDescription": "{route} a partir de {price}. Compare companhias, verifique a segurança da rota. Pesquise como uma mensagem no FlyFast.",
+    "flightDescription": "{route} a partir de {price}. Compare companhias, verifique a segurança da rota. Uma frase para buscar no FlyFast.",
     "faq": {
       "q1": "Como o FlyFast funciona?",
       "a1": "Descreva sua viagem em linguagem natural, por exemplo 'Mumbai para Hamburgo na próxima semana por menos de R$1500'. O FlyFast pesquisa todos os voos disponíveis, filtra zonas de conflito e classifica por preço, duração e segurança da rota. Você reserva diretamente com a companhia aérea.",

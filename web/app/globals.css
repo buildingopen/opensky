@@ -115,16 +115,6 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Real sky photo for light mode — Unsplash CC0 (photo-1517483000871) */
-:root.light body {
-  background: url('/sky.jpg') center top / cover fixed no-repeat;
-}
-@media (prefers-color-scheme: light) {
-  :root:not(.dark) body {
-    background: url('/sky.jpg') center top / cover fixed no-repeat;
-  }
-}
-
 /* Autocomplete dropdown */
 .airport-dropdown {
   position: absolute;

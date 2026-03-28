@@ -64,10 +64,10 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "友達にメッセージするように、フライトを",
-    "heroTitleAccent": "検索。",
-    "heroSubtitle": "入力するだけ。全航空会社を一括検索。",
-    "placeholder": "どこに行きたい？",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
+    "heroSubtitle": "一文で。すべてのフライト。フォームなし、ログイン不要。",
+    "placeholder": "例: 東京からどこか暖かいところ、5万円以下、来週",
     "ariaLabel": "旅の内容を日本語で入力してください",
     "enterToSearch": "Enterで検索",
     "voiceInput": "音声入力",
@@ -100,19 +100,11 @@
       "maxPricePlaceholder": "指定なし"
     },
     "examples": [
-      "東京からどこか暖かいところ、5万円以下",
-      "女子旅でスペイン、週末に",
-      "ロンドン、日本のどこからでも、10万円以下、10月",
-      "サーフィンできるビーチ、大阪から、来月"
+      "東京からどこか暖かいところ、5万円以下、来週",
+      "東京からロンドン、来月、ビジネスクラス",
+      "沖縄かどこか南の島へ、連休に大阪から",
+      "成田からヨーロッパのどこか、20万円以内、往復"
     ],
-    "valueProp1Title": "自然に入力",
-    "valueProp1Desc": "「どこか暖かいところ」で検索OK。フォーム不要。",
-    "valueProp2Title": "全航空会社",
-    "valueProp2Desc": "500+の航空会社を一括検索。",
-    "valueProp3Title": "紛争地域を除外",
-    "valueProp3Desc": "紛争地域を通過する路線は自動的に除外されます。",
-    "valueProp4Title": "完全無料",
-    "valueProp4Desc": "ログイン不要、広告なし、有料プランなし。オープンソース。",
     "timeSaved": "FlyFastで手動検索の約{time}を節約しました",
     "loading": {
       "understanding": "目的地・日程・条件を解析中",
@@ -458,11 +450,11 @@
     "searchFlights": "フライト検索"
   },
   "metadata": {
-    "title": "FlyFast — 友達にメッセージするようにフライト検索",
-    "description": "「東京からどこか暖かいところ、5万円以下」— 入力するだけ。FlyFastが全航空会社を検索し、紛争地域をフィルターし、最適な選択肢を表示します。フォームなし、ログイン不要。",
-    "ogAlt": "FlyFast: 友達へのメッセージのようにフライト検索",
+    "title": "FlyFast — 一文で。すべてのフライト。",
+    "description": "「どこか暖かいところ、5万円以下」— 行きたい場所を書くだけ。FlyFastが全航空会社を検索し、紛争地域をフィルターし、最適な選択肢を表示します。フォームなし、ログイン不要。",
+    "ogAlt": "FlyFast: 一文で、すべてのフライト",
     "flightTitle": "{route} {price}から - FlyFast",
-    "flightDescription": "{route} {price}から。航空会社を比較、ルートの安全性を確認。FlyFastでメッセージのように検索。",
+    "flightDescription": "{route} {price}から。航空会社を比較、ルートの安全性を確認。FlyFastで一文検索。",
     "faq": {
       "q1": "FlyFastはどのように機能しますか？",
       "a1": "自然な言葉で旅を入力してください。例えば「来週ムンバイからハンブルクへ¥30000以内」。FlyFastは利用可能な全フライトを検索し、紛争地域をフィルターし、価格、所要時間、ルートの安全性で順位付けします。航空会社から直接予約できます。",

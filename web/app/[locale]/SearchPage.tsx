@@ -3582,23 +3582,6 @@ function HomePage() {
             {t("timeSaved", { time: minutesSaved >= 60 ? `${Math.floor(minutesSaved / 60)}h ${minutesSaved % 60}m` : `${minutesSaved} min` })}
           </p>
         )}
-
-        {/* Value props */}
-        {phase === "idle" && flights.length === 0 && (
-          <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-4">
-            {([
-              { title: t("valueProp1Title"), desc: t("valueProp1Desc") },
-              { title: t("valueProp2Title"), desc: t("valueProp2Desc") },
-              { title: t("valueProp3Title"), desc: t("valueProp3Desc") },
-              { title: t("valueProp4Title"), desc: t("valueProp4Desc") },
-            ] as const).map((prop, i) => (
-              <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 card-surface">
-                <h3 className="text-sm font-semibold text-[var(--color-heading)] mb-1">{prop.title}</h3>
-                <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed">{prop.desc}</p>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
       {/* Results */}

@@ -64,10 +64,10 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Uçuş ara, arkadaşına mesaj yazar gibi",
-    "heroTitleAccent": "rahatça.",
-    "heroSubtitle": "Sadece yaz. Tüm havayollarını arıyoruz.",
-    "placeholder": "Nereye gitmek istiyorsun?",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
+    "heroSubtitle": "Bir cümle. Her uçuş. Form yok, giriş yok.",
+    "placeholder": "ör. İstanbul'dan sıcak bir yere, 300€ altında, gelecek hafta",
     "ariaLabel": "Seyahatinizi kendi cümlelerinizle anlatın",
     "enterToSearch": "Aramak için Enter",
     "voiceInput": "Sesli giriş",
@@ -100,19 +100,11 @@
       "maxPricePlaceholder": "fark etmez"
     },
     "examples": [
-      "İstanbul'dan sıcak bir yere, 300€ altında",
-      "İspanya'da bekarlığa veda partisi için hafta sonu",
-      "Tokyo, Türkiye'nin herhangi bir yerinden, 500€ altında, ekim",
-      "Dalga sörfü, İzmir'den, gelecek ay"
+      "İstanbul'dan sıcak bir yere, 300€ altında, gelecek hafta",
+      "İstanbul'dan Tokyo'ya, gelecek ay, business class",
+      "Yunanistan'da bir yerlere uzun hafta sonu için Ankara'dan",
+      "İstanbul'dan Avrupa'nın herhangi bir yerine, 500€ altında, gidiş dönüş"
     ],
-    "valueProp1Title": "Doğal yaz",
-    "valueProp1Desc": "\"Sıcak bir yere\" yeter. Form doldurmaya gerek yok.",
-    "valueProp2Title": "Tüm havayolları",
-    "valueProp2Desc": "500+ havayolu. Tek arama.",
-    "valueProp3Title": "Çatışma bölgeleri filtrelendi",
-    "valueProp3Desc": "Aktif çatışma bölgelerinden geçen rotalar otomatik olarak kaldırılır.",
-    "valueProp4Title": "%100 ücretsiz",
-    "valueProp4Desc": "Giriş yok, reklam yok, premium yok. Açık kaynak.",
     "timeSaved": "FlyFast size yaklaşık {time} manuel arama süresinden tasarruf ettirdi",
     "loading": {
       "understanding": "Hedefler, tarihler ve tercihler yorumlanıyor",
@@ -458,11 +450,11 @@
     "searchFlights": "Uçuş ara"
   },
   "metadata": {
-    "title": "FlyFast — Arkadaşına mesaj yazar gibi uçuş ara",
-    "description": "\"İstanbul'dan sıcak bir yere, 300€ altında\" — sadece yaz. FlyFast tüm havayollarını arar, çatışma bölgelerini filtreler ve en iyi seçenekleri gösterir. Form yok, giriş yok.",
-    "ogAlt": "FlyFast: arkadaşına mesaj yazar gibi uçuş ara",
+    "title": "FlyFast — Bir cümle. Her uçuş.",
+    "description": "\"Sıcak bir yere 300€ altında\" — ne istediğinizi yazın. FlyFast tüm havayollarını arar, çatışma bölgelerini filtreler ve en iyi seçenekleri gösterir. Form yok, giriş yok.",
+    "ogAlt": "FlyFast: bir cümle, her uçuş",
     "flightTitle": "{route} {price}'den itibaren - FlyFast",
-    "flightDescription": "{route} {price}'den itibaren. Havayollarını karşılaştırın, rota güvenliğini kontrol edin. FlyFast'ta mesaj yazar gibi ara.",
+    "flightDescription": "{route} {price}'den itibaren. Havayollarını karşılaştırın, rota güvenliğini kontrol edin. FlyFast'te bir cümleyle arayın.",
     "faq": {
       "q1": "FlyFast nasıl çalışır?",
       "a1": "Seyahatinizi doğal dilde yazın, örneğin 'Gelecek hafta Mumbai'den Hamburg'a 300 € altında'. FlyFast, mevcut tüm uçuşları arar, çatışma bölgelerini filtreler ve fiyat, süre ve rota güvenliğine göre sıralar. Doğrudan havayolu şirketinden rezervasyon yaparsınız.",

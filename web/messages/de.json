@@ -64,10 +64,10 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Flüge suchen, wie du einem Freund",
-    "heroTitleAccent": "schreibst.",
-    "heroSubtitle": "Einfach eintippen. Wir durchsuchen jede Airline.",
-    "placeholder": "Wo willst du hin?",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
+    "heroSubtitle": "Ein Satz. Jeder Flug. Keine Formulare, kein Login.",
+    "placeholder": "z.B. Irgendwohin ans Warme ab Berlin unter 300€, nächste Woche",
     "ariaLabel": "Beschreibe deine Reise in natürlicher Sprache",
     "enterToSearch": "Enter zum Suchen",
     "voiceInput": "Spracheingabe",
@@ -100,19 +100,11 @@
       "maxPricePlaceholder": "beliebig"
     },
     "examples": [
-      "Irgendwo ins Warme ab Berlin, unter 300€",
-      "Junggesellinnenabschied in Spanien, Wochenende",
-      "Tokio ab irgendwo in Deutschland, unter 500€, Oktober",
-      "Surfen ohne Neopren, ab Hamburg, nächsten Monat"
+      "Irgendwohin ans Warme ab Berlin, unter 300€, nächste Woche",
+      "London nach Tokio, nächsten Monat, Business Class",
+      "Irgendwo in Spanien für ein langes Wochenende ab München",
+      "Frankfurt nach überall in Europa, unter 500€, hin und zurück"
     ],
-    "valueProp1Title": "Natürlich tippen",
-    "valueProp1Desc": "\"Irgendwo ins Warme\" funktioniert. Keine Formulare.",
-    "valueProp2Title": "Jede Airline",
-    "valueProp2Desc": "500+ Airlines. Eine Suche.",
-    "valueProp3Title": "Konfliktgebiete gefiltert",
-    "valueProp3Desc": "Routen durch aktive Konfliktgebiete werden automatisch entfernt.",
-    "valueProp4Title": "100% kostenlos",
-    "valueProp4Desc": "Kein Login, keine Werbung, kein Premium. Open Source.",
     "timeSaved": "FlyFast hat dir ~{time} manuelle Suche erspart",
     "loading": {
       "understanding": "Ziele, Daten & Präferenzen werden interpretiert",
@@ -458,11 +450,11 @@
     "searchFlights": "Flüge suchen"
   },
   "metadata": {
-    "title": "FlyFast — Flüge suchen, wie du einem Freund schreibst",
-    "description": "\"Irgendwo ins Warme ab Berlin, unter 300€\" — einfach eintippen. FlyFast durchsucht jede Airline, filtert Konfliktzonen und zeigt die besten Optionen. Keine Formulare, kein Login.",
-    "ogAlt": "FlyFast: Flüge suchen wie eine Nachricht an Freunde",
+    "title": "FlyFast — Ein Satz. Jeder Flug.",
+    "description": "\"Irgendwohin ans Warme unter 300€\" — schreib einfach, was du willst. FlyFast durchsucht jede Airline, filtert Konfliktzonen und zeigt dir die besten Optionen. Keine Formulare, kein Login.",
+    "ogAlt": "FlyFast: ein Satz, jeder Flug",
     "flightTitle": "{route} ab {price} - FlyFast",
-    "flightDescription": "{route} ab {price}. Airlines vergleichen, Routensicherheit prüfen. Suche wie eine Nachricht an FlyFast.",
+    "flightDescription": "{route} ab {price}. Airlines vergleichen, Routensicherheit prüfen. Ein Satz zum Suchen auf FlyFast.",
     "faq": {
       "q1": "Wie funktioniert FlyFast?",
       "a1": "Beschreibe deine Reise in natürlicher Sprache, z.B. 'Mumbai nach Hamburg nächste Woche unter 300 €'. FlyFast durchsucht alle verfügbaren Flüge, filtert Konfliktzonen und sortiert nach Preis, Dauer und Routensicherheit. Du buchst direkt bei der Airline.",

@@ -69,10 +69,10 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Search flights like you'd text a",
-    "heroTitleAccent": "friend.",
-    "heroSubtitle": "Just type it. We search every airline.",
-    "placeholder": "Where do you want to go?",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
+    "heroSubtitle": "One sentence. Every flight. No forms, no login.",
+    "placeholder": "e.g. Anywhere warm from Berlin under $300, next week",
     "airlineFilter": {
       "ariaLabel": "Filter by airline",
       "showing": "Showing {filtered} of {total} flights"
@@ -109,19 +109,11 @@
       "maxPricePlaceholder": "any"
     },
     "examples": [
-      "Somewhere warm from Berlin, under €300",
-      "A weekend in Spain for a bachelorette trip",
-      "Tokyo from anywhere in Germany, under €500, October",
-      "Surfing without wetsuit, from Hamburg, next month"
+      "Anywhere warm from Berlin, under $300, next week",
+      "London to Tokyo, next month, business class",
+      "Somewhere in Spain for a long weekend from Munich",
+      "JFK to anywhere in Europe, under $500, return"
     ],
-    "valueProp1Title": "Type naturally",
-    "valueProp1Desc": "\"Anywhere warm\" works. No forms needed.",
-    "valueProp2Title": "Every airline",
-    "valueProp2Desc": "500+ airlines. One search.",
-    "valueProp3Title": "Conflict zones filtered",
-    "valueProp3Desc": "Routes through active conflict zones are removed automatically.",
-    "valueProp4Title": "100% free",
-    "valueProp4Desc": "No login, no ads, no premium tier. Open source.",
     "timeSaved": "FlyFast saved you ~{time} of manual searching",
     "loading": {
       "understanding": "Interpreting destinations, dates & preferences",
@@ -463,11 +455,11 @@
     "searchFlights": "Search flights"
   },
   "metadata": {
-    "title": "FlyFast — Search flights like you'd text a friend",
-    "description": "\"Somewhere warm from Berlin, under 300\" — just type it. FlyFast searches every airline, filters conflict zones, and shows the best options. No forms, no login.",
-    "ogAlt": "FlyFast: search flights like you'd text a friend",
+    "title": "FlyFast — One sentence. Every flight.",
+    "description": "\"Anywhere warm under $300\" — just type what you want. FlyFast searches every airline, filters conflict zones, and shows you the best options. No forms, no login.",
+    "ogAlt": "FlyFast: one sentence, every flight",
     "flightTitle": "{route} from {price} — FlyFast",
-    "flightDescription": "{route} from {price}. Compare airlines, check route safety. Search like texting a friend on FlyFast.",
+    "flightDescription": "{route} from {price}. Compare airlines, check route safety. One sentence to search on FlyFast.",
     "faq": {
       "q1": "How does FlyFast work?",
       "a1": "Type your trip in plain English, like 'Mumbai to Hamburg next week under $300'. FlyFast searches every available flight, filters conflict zones, and ranks by price, duration, and route safety. You book directly with the airline.",

@@ -64,10 +64,10 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "친구에게 메시지 보내듯 항공편을",
-    "heroTitleAccent": "검색하세요.",
-    "heroSubtitle": "그냥 입력하세요. 모든 항공사를 검색합니다.",
-    "placeholder": "어디로 가고 싶으세요?",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
+    "heroSubtitle": "한 문장. 모든 항공편. 양식 없이, 로그인 없이.",
+    "placeholder": "예: 서울에서 따뜻한 곳 어디든, 30만원 이하, 다음 주",
     "ariaLabel": "여행 계획을 자유롭게 입력하세요",
     "enterToSearch": "Enter를 눌러 검색",
     "voiceInput": "음성 입력",
@@ -100,19 +100,11 @@
       "maxPricePlaceholder": "제한 없음"
     },
     "examples": [
-      "서울에서 따뜻한 곳 어디든, 30만원 이하",
-      "스페인에서 처녀파티 주말여행",
-      "도쿄, 한국 어디서든, 80만원 이하, 10월",
-      "서핑할 수 있는 해변, 부산에서, 다음 달"
+      "서울에서 따뜻한 곳 어디든, 30만원 이하, 다음 주",
+      "인천에서 런던, 다음 달, 비즈니스 클래스",
+      "동남아 어딘가 긴 주말에 부산에서",
+      "인천에서 유럽 어디든, 150만원 이하, 왕복"
     ],
-    "valueProp1Title": "자연스럽게 입력",
-    "valueProp1Desc": "\"따뜻한 곳 어디든\"으로 검색 가능. 양식 필요 없음.",
-    "valueProp2Title": "모든 항공사",
-    "valueProp2Desc": "500+ 항공사. 한 번의 검색.",
-    "valueProp3Title": "분쟁 지역 필터링",
-    "valueProp3Desc": "분쟁 지역을 통과하는 노선은 자동으로 제거됩니다.",
-    "valueProp4Title": "100% 무료",
-    "valueProp4Desc": "로그인 없음, 광고 없음, 유료 요금제 없음. 오픈 소스.",
     "timeSaved": "FlyFast가 수동 검색 대비 약 {time}을 절약해 드렸습니다",
     "loading": {
       "understanding": "목적지, 날짜, 선호사항을 해석하는 중",
@@ -458,11 +450,11 @@
     "searchFlights": "항공편 검색"
   },
   "metadata": {
-    "title": "FlyFast — 친구에게 메시지 보내듯 항공편 검색",
-    "description": "\"서울에서 따뜻한 곳 어디든, 30만원 이하\" — 그냥 입력하세요. FlyFast가 모든 항공사를 검색하고, 분쟁 지역을 필터링하고, 최적의 옵션을 보여줍니다. 양식 없이, 로그인 없이.",
-    "ogAlt": "FlyFast: 친구에게 메시지 보내듯 항공편 검색",
+    "title": "FlyFast — 한 문장. 모든 항공편.",
+    "description": "\"따뜻한 곳 어디든 30만원 이하\" — 원하는 걸 입력하세요. FlyFast가 모든 항공사를 검색하고, 분쟁 지역을 필터링하고, 최적의 옵션을 보여줍니다. 양식 없이, 로그인 없이.",
+    "ogAlt": "FlyFast: 한 문장, 모든 항공편",
     "flightTitle": "{route} {price}부터 - FlyFast",
-    "flightDescription": "{route} {price}부터. 항공사 비교, 노선 안전성 확인. FlyFast에서 메시지처럼 검색.",
+    "flightDescription": "{route} {price}부터. 항공사 비교, 노선 안전성 확인. FlyFast에서 한 문장으로 검색하세요.",
     "faq": {
       "q1": "FlyFast는 어떻게 작동하나요?",
       "a1": "자연스러운 문장으로 여행을 입력하세요. 예를 들어 '다음 주 뭄바이에서 함부르크, ₩400000 이하'. FlyFast가 이용 가능한 모든 항공편을 검색하고, 분쟁 지역을 필터링하며, 가격, 소요 시간, 노선 안전성 순으로 정렬합니다. 항공사에서 직접 예약합니다.",

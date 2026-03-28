@@ -64,10 +64,10 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Cherchez des vols comme vous écririez à un",
-    "heroTitleAccent": "ami.",
-    "heroSubtitle": "Tapez, c'est tout. On cherche toutes les compagnies.",
-    "placeholder": "Où voulez-vous aller ?",
+    "heroTitle": "Prompt to",
+    "heroTitleAccent": "fly.",
+    "heroSubtitle": "Une phrase. Tous les vols. Sans formulaire, sans login.",
+    "placeholder": "ex. N'importe où au soleil depuis Paris sous 300€, la semaine prochaine",
     "ariaLabel": "Décrivez votre voyage en quelques mots",
     "enterToSearch": "Entrée pour rechercher",
     "voiceInput": "Saisie vocale",
@@ -100,19 +100,11 @@
       "maxPricePlaceholder": "tous"
     },
     "examples": [
-      "Quelque part au soleil depuis Paris, sous 300€",
-      "Un week-end entre filles en Espagne",
-      "Tokyo depuis n'importe où en France, sous 500€, octobre",
-      "Surf sans combinaison, depuis Bordeaux, mois prochain"
+      "N'importe où au soleil depuis Paris, sous 300€, la semaine prochaine",
+      "Paris à Tokyo, le mois prochain, classe affaires",
+      "Quelque part en Grèce pour un long week-end depuis Lyon",
+      "CDG vers n'importe où en Europe, sous 500€, aller-retour"
     ],
-    "valueProp1Title": "Écrivez naturellement",
-    "valueProp1Desc": "\"N'importe où au soleil\" fonctionne. Sans formulaire.",
-    "valueProp2Title": "Toutes les compagnies",
-    "valueProp2Desc": "500+ compagnies. Une seule recherche.",
-    "valueProp3Title": "Zones de conflit filtrées",
-    "valueProp3Desc": "Les routes passant par des zones de conflit sont supprimées automatiquement.",
-    "valueProp4Title": "100% gratuit",
-    "valueProp4Desc": "Sans login, sans pub, sans abonnement. Open source.",
     "timeSaved": "FlyFast vous a fait gagner ~{time} de recherche manuelle",
     "loading": {
       "understanding": "Interprétation des destinations, dates et préférences",
@@ -458,11 +450,11 @@
     "searchFlights": "Rechercher des vols"
   },
   "metadata": {
-    "title": "FlyFast — Cherchez des vols comme vous écririez à un ami",
-    "description": "\"Quelque part au soleil depuis Paris, sous 300€\" — tapez, c'est tout. FlyFast cherche toutes les compagnies, filtre les zones de conflit et affiche les meilleures options. Sans formulaire, sans login.",
-    "ogAlt": "FlyFast: cherchez des vols comme un message à un ami",
+    "title": "FlyFast — Une phrase. Tous les vols.",
+    "description": "\"N'importe où au soleil sous 300€\" — écrivez ce que vous voulez. FlyFast compare toutes les compagnies, filtre les zones de conflit et affiche les meilleures options. Sans formulaire, sans login.",
+    "ogAlt": "FlyFast : une phrase, tous les vols",
     "flightTitle": "{route} à partir de {price} - FlyFast",
-    "flightDescription": "{route} à partir de {price}. Comparez les compagnies, vérifiez la sécurité du trajet. Cherchez comme un message sur FlyFast.",
+    "flightDescription": "{route} à partir de {price}. Comparez les compagnies, vérifiez la sécurité du trajet. Une phrase pour chercher sur FlyFast.",
     "faq": {
       "q1": "Comment fonctionne FlyFast ?",
       "a1": "Décrivez votre voyage en langage naturel, par exemple 'Mumbai à Hambourg la semaine prochaine pour moins de 300 €'. FlyFast recherche tous les vols disponibles, filtre les zones de conflit et classe par prix, durée et sécurité de la route. Vous réservez directement auprès de la compagnie aérienne.",
