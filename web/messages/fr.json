@@ -450,9 +450,9 @@
     "searchFlights": "Rechercher des vols"
   },
   "metadata": {
-    "title": "FlyFast - Le moteur de recherche de vols le plus intelligent",
-    "description": "Décrivez votre voyage en quelques mots. FlyFast recherche parmi des milliers de vols, filtre les zones de conflit et trouve la route la plus sûre et la moins chère. Gratuit, sans inscription.",
-    "ogAlt": "FlyFast : décrivez votre voyage, nous trouvons le meilleur vol",
+    "title": "FlyFast - Le moteur de recherche de vols le plus intelligent au monde",
+    "description": "Tapez simplement \"Paris vers le soleil sous 300€\" et FlyFast trouve chaque vol, filtre les zones de conflit et affiche la route la plus sûre. Gratuit, sans inscription.",
+    "ogAlt": "FlyFast : dites où vous voulez voler, nous trouvons la meilleure route",
     "flightTitle": "{route} à partir de {price} - FlyFast",
     "flightDescription": "{route} trouvé à partir de {price}. Zones de conflit filtrées. Recherchez vos propres vols sur FlyFast.",
     "faq": {

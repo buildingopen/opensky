@@ -450,9 +450,9 @@
     "searchFlights": "フライト検索"
   },
   "metadata": {
-    "title": "FlyFast - 最も賢いフライト検索",
-    "description": "旅の内容を入力するだけ。FlyFastが数千のフライトを検索し、紛争地域をフィルターし、最も安全で安いルートを見つけます。無料、ログイン不要。",
-    "ogAlt": "FlyFast: 旅を伝えて、最適なフライトを見つけよう",
+    "title": "FlyFast - 世界で最も賢いフライト検索",
+    "description": "「東京からどこか暖かいところへ5万円以下」と入力するだけ。FlyFastが全フライトを検索し、紛争地域をフィルターし、最も安全なルートを表示します。無料、ログイン不要。",
+    "ogAlt": "FlyFast: 行きたい場所を入力するだけ、最適なルートを見つけます",
     "flightTitle": "{route} {price}から - FlyFast",
     "flightDescription": "{route}が{price}から見つかりました。紛争地域フィルター済み。FlyFastであなたのフライトを検索しましょう。",
     "faq": {

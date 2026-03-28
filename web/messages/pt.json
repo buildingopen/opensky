@@ -450,9 +450,9 @@
     "searchFlights": "Buscar voos"
   },
   "metadata": {
-    "title": "FlyFast - A busca de voos mais inteligente",
-    "description": "Descreva sua viagem em português. O FlyFast pesquisa milhares de voos, filtra zonas de conflito e encontra a rota mais segura e barata. Grátis, sem cadastro.",
-    "ogAlt": "FlyFast: descreva sua viagem, encontramos o melhor voo",
+    "title": "FlyFast - A busca de voos mais inteligente do mundo",
+    "description": "Basta digitar \"Lisboa para qualquer lugar quente abaixo de 300€\" e o FlyFast encontra cada voo, filtra zonas de conflito e mostra a rota mais segura. Grátis, sem cadastro.",
+    "ogAlt": "FlyFast: diga para onde quer voar, encontramos a melhor rota",
     "flightTitle": "{route} a partir de {price} - FlyFast",
     "flightDescription": "Encontrei {route} a partir de {price}. Zonas de conflito filtradas. Busque seus próprios voos no FlyFast.",
     "faq": {

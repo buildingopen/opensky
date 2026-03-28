@@ -450,9 +450,9 @@
     "searchFlights": "Uçuş ara"
   },
   "metadata": {
-    "title": "FlyFast - En akıllı uçuş arama",
-    "description": "Seyahatinizi kendi cümlelerinizle anlatın. FlyFast, binlerce uçuşu arar, çatışma bölgelerini filtreler ve en güvenli, en ucuz rotayı bulur. Ücretsiz, giriş gerektirmez.",
-    "ogAlt": "FlyFast: seyahatinizi anlatın, en iyi uçuşu bulalım",
+    "title": "FlyFast - Dünyanın en akıllı uçuş araması",
+    "description": "Sadece \"İstanbul'dan sıcak bir yere 300$'ın altında\" yazın, FlyFast tüm uçuşları bulur, çatışma bölgelerini filtreler ve en güvenli rotayı gösterir. Ücretsiz, giriş gerektirmez.",
+    "ogAlt": "FlyFast: nereye uçmak istediğinizi yazın, en iyi rotayı bulalım",
     "flightTitle": "{route} {price}'den itibaren - FlyFast",
     "flightDescription": "{route} için {price}'den başlayan fiyatlar bulundu. Çatışma bölgeleri filtrelendi. FlyFast'te kendi uçuşlarınızı arayın.",
     "faq": {

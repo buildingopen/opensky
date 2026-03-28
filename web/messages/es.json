@@ -450,9 +450,9 @@
     "searchFlights": "Buscar vuelos"
   },
   "metadata": {
-    "title": "FlyFast - El buscador de vuelos más inteligente",
-    "description": "Describe tu viaje con tus propias palabras. FlyFast busca en miles de vuelos, filtra zonas de conflicto y encuentra la ruta más segura y barata. Gratis, sin registro.",
-    "ogAlt": "FlyFast: describe tu viaje, nosotros encontramos el mejor vuelo",
+    "title": "FlyFast - El buscador de vuelos más inteligente del mundo",
+    "description": "Solo escribe \"Madrid a cualquier lugar con sol por menos de 300€\" y FlyFast encuentra cada vuelo, filtra zonas de conflicto y muestra la ruta más segura. Gratis, sin registro.",
+    "ogAlt": "FlyFast: escribe a dónde quieres volar, encontramos la mejor ruta",
     "flightTitle": "{route} desde {price} - FlyFast",
     "flightDescription": "{route} desde {price}. Zonas de conflicto filtradas. Busca tus propios vuelos en FlyFast.",
     "faq": {

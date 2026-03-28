@@ -450,9 +450,9 @@
     "searchFlights": "搜索航班"
   },
   "metadata": {
-    "title": "FlyFast - 最智能的航班搜索",
-    "description": "用自然语言描述你的行程。FlyFast搜索比较价格，过滤冲突区域，找到最安全、最便宜的航线。免费，无需登录。",
-    "ogAlt": "FlyFast：描述你的行程，我们找到最佳航班",
+    "title": "FlyFast - 全球最智能的航班搜索",
+    "description": "只需输入\"北京到任何温暖的地方3000元以内\"，FlyFast就能找到所有航班，过滤冲突区域，显示最安全的航线。免费，无需登录。",
+    "ogAlt": "FlyFast：输入你想飞的目的地，我们找到最佳航线",
     "flightTitle": "{route} 最低{price} - FlyFast",
     "flightDescription": "找到{route}，最低{price}。已过滤冲突区域。在FlyFast上搜索你的航班。",
     "faq": {

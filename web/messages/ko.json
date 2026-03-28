@@ -450,9 +450,9 @@
     "searchFlights": "항공편 검색"
   },
   "metadata": {
-    "title": "FlyFast - 가장 똑똑한 항공편 검색",
-    "description": "여행을 자유롭게 설명하세요. FlyFast가 가격 비교를 검색하고, 분쟁 지역을 필터링하며, 가장 안전하고 저렴한 노선을 찾아드립니다. 무료, 로그인 불필요.",
-    "ogAlt": "FlyFast: 여행을 설명하면, 최적의 항공편을 찾아드립니다",
+    "title": "FlyFast - 세계에서 가장 똑똑한 항공편 검색",
+    "description": "\"서울에서 따뜻한 곳 어디든 30만원 이하\"라고 입력하면 FlyFast가 모든 항공편을 찾고, 분쟁 지역을 필터링하고, 가장 안전한 노선을 보여줍니다. 무료, 로그인 불필요.",
+    "ogAlt": "FlyFast: 어디로 가고 싶은지 입력하면 최적의 노선을 찾아드립니다",
     "flightTitle": "{route} {price}부터 - FlyFast",
     "flightDescription": "{route} {price}부터 찾았습니다. 분쟁 지역 필터링 완료. FlyFast에서 직접 항공편을 검색하세요.",
     "faq": {

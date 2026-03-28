@@ -450,9 +450,9 @@
     "searchFlights": "Flüge suchen"
   },
   "metadata": {
-    "title": "FlyFast - Die smarteste Flugsuche",
-    "description": "Beschreibe deine Reise in natürlicher Sprache. FlyFast durchsucht Tausende von Flügen, filtert Konfliktzonen und findet die sicherste, günstigste Route. Kostenlos, ohne Anmeldung.",
-    "ogAlt": "FlyFast: Beschreibe deine Reise, wir finden den besten Flug",
+    "title": "FlyFast - Die weltweit smarteste Flugsuche",
+    "description": "Tippe einfach \"Berlin irgendwohin ans Warme unter 300€\" und FlyFast findet jeden Flug, filtert Konfliktzonen und zeigt die sicherste Route. Kostenlos, ohne Anmeldung.",
+    "ogAlt": "FlyFast: Sag uns wohin du fliegen willst, wir finden die beste Route",
     "flightTitle": "{route} ab {price} - FlyFast",
     "flightDescription": "{route} ab {price} gefunden. Konfliktzonen gefiltert. Suche deine eigenen Flüge auf FlyFast.",
     "faq": {

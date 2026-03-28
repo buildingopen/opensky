@@ -455,9 +455,9 @@
     "searchFlights": "Search flights"
   },
   "metadata": {
-    "title": "FlyFast - The smartest flight search",
-    "description": "Describe your trip in plain English. FlyFast searches thousands of flights, filters conflict zones, and finds the safest, cheapest route. Free, no login.",
-    "ogAlt": "FlyFast: describe your trip, we find the best flight",
+    "title": "FlyFast - The world's smartest flight search",
+    "description": "Just type \"Berlin to anywhere warm under $300\" and FlyFast finds every flight, filters conflict zones, and shows the safest route. Free, no login.",
+    "ogAlt": "FlyFast: type where you want to fly, we find the best route",
     "flightTitle": "{route} from {price} - FlyFast",
     "flightDescription": "Found {route} from {price}. Conflict zones filtered. Search your own flights on FlyFast.",
     "faq": {

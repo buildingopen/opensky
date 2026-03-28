@@ -450,9 +450,9 @@
     "searchFlights": "Cerca voli"
   },
   "metadata": {
-    "title": "FlyFast - La ricerca voli più intelligente",
-    "description": "Descrivi il tuo viaggio in italiano. FlyFast cerca tra migliaia di voli, filtra le zone di conflitto e trova la rotta più sicura e conveniente. Gratis, senza registrazione.",
-    "ogAlt": "FlyFast: descrivi il tuo viaggio, troviamo il volo migliore",
+    "title": "FlyFast - La ricerca voli più intelligente al mondo",
+    "description": "Scrivi semplicemente \"Roma verso il mare sotto 300€\" e FlyFast trova ogni volo, filtra le zone di conflitto e mostra la rotta più sicura. Gratis, senza registrazione.",
+    "ogAlt": "FlyFast: scrivi dove vuoi volare, troviamo la rotta migliore",
     "flightTitle": "{route} da {price} - FlyFast",
     "flightDescription": "Trovato {route} da {price}. Zone di conflitto filtrate. Cerca i tuoi voli su FlyFast.",
     "faq": {
