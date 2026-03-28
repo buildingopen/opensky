@@ -64,10 +64,10 @@
     "tr": "Türkçe"
   },
   "search": {
-    "heroTitle": "Prompt to",
-    "heroTitleAccent": "fly.",
-    "heroSubtitle": "一句话。所有航班。无需填表，无需登录。",
-    "placeholder": "例如：从北京到任何温暖的地方，3000元以内，下周",
+    "heroTitle": "像给朋友发消息一样搜索",
+    "heroTitleAccent": "航班。",
+    "heroSubtitle": "直接输入就好。我们搜索所有航空公司。",
+    "placeholder": "你想去哪里？",
     "ariaLabel": "用自然语言描述你的行程",
     "enterToSearch": "按回车搜索",
     "voiceInput": "语音输入",
@@ -100,11 +100,19 @@
       "maxPricePlaceholder": "不限"
     },
     "examples": [
-      "从北京到任何温暖的地方，3000元以内，下周",
-      "上海到伦敦，下个月，商务舱",
-      "东南亚随便哪里，长周末，从广州出发",
-      "北京到欧洲任何地方，5000元以内，往返"
+      "从北京到温暖的地方，3000元以内",
+      "闺蜜周末去西班牙",
+      "东京，从中国任何城市出发，5000元以内，十月",
+      "能冲浪的海滩，从广州出发，下个月"
     ],
+    "valueProp1Title": "自然输入",
+    "valueProp1Desc": "\"温暖的地方\"就能搜索。无需填表。",
+    "valueProp2Title": "所有航空公司",
+    "valueProp2Desc": "500+航空公司，一次搜索。",
+    "valueProp3Title": "冲突区域已过滤",
+    "valueProp3Desc": "经过活跃冲突区域的航线会被自动移除。",
+    "valueProp4Title": "100%免费",
+    "valueProp4Desc": "无需登录，无广告，无付费版。开源。",
     "timeSaved": "FlyFast为你节省了约{time}的手动搜索时间",
     "loading": {
       "understanding": "正在解析目的地、日期和偏好",
@@ -450,11 +458,11 @@
     "searchFlights": "搜索航班"
   },
   "metadata": {
-    "title": "FlyFast — 一句话。所有航班。",
-    "description": "\"任何温暖的地方，3000元以内\" — 写下你想要的就行。FlyFast搜索所有航空公司，过滤冲突区域，为你展示最佳选择。无需填表，无需登录。",
-    "ogAlt": "FlyFast：一句话，所有航班",
+    "title": "FlyFast — 像给朋友发消息一样搜索航班",
+    "description": "\"从北京到温暖的地方，3000元以内\" — 直接输入就好。FlyFast搜索所有航空公司，过滤冲突区域，为你展示最佳选择。无需填表，无需登录。",
+    "ogAlt": "FlyFast: 像给朋友发消息一样搜索航班",
     "flightTitle": "{route} 最低{price} - FlyFast",
-    "flightDescription": "{route} 最低{price}。比较航空公司，检查航线安全。在FlyFast上一句话搜索。",
+    "flightDescription": "{route} 最低{price}。比较航空公司，检查航线安全。在FlyFast上像发消息一样搜索。",
     "faq": {
       "q1": "FlyFast 是如何工作的？",
       "a1": "用自然语言描述你的行程，例如'下周从孟买到汉堡，预算¥2000以内'。FlyFast 搜索 所有可用航班，过滤冲突区域，并按价格、时长和航线安全性排序。你直接在航空公司官网预订。",

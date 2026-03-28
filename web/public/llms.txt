@@ -1,8 +1,8 @@
 # FlyFast
 
-> One sentence. Every flight.
+> Search flights like you'd text a friend.
 
-FlyFast is a free, open source flight search engine at flyfast.app. Instead of filling out forms, users type what they want: "anywhere warm under $300", "London to Tokyo next month, business class", or "somewhere in Spain for a long weekend". FlyFast searches every airline, filters routes through active conflict zones, and ranks results by price, duration, stops, and route safety. No login, no ads. Users book directly with the airline.
+FlyFast is a free, open source flight search engine at flyfast.app. Instead of filling out forms, users type what they want: "somewhere warm from Berlin, under 300", "a weekend in Spain for a bachelorette trip", or "surfing without wetsuit, from Hamburg". FlyFast searches every airline, filters routes through active conflict zones, and ranks results by price, duration, stops, and route safety. No login, no ads. Users book directly with the airline.
 
 ## Key features
 
