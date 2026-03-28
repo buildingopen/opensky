@@ -16,7 +16,7 @@ export function SiteFooter() {
   const locale = useLocale();
 
   return (
-    <footer className="border-t border-[var(--color-border)] mt-auto">
+    <footer className="border-t border-[var(--color-border)] mt-auto relative z-10">
       <div className="max-w-[min(64rem,92vw)] mx-auto px-4 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-[var(--color-text-muted)]">
         <div className="flex flex-col gap-1">
           <span className="text-sm font-semibold tracking-tighter font-[family-name:var(--font-brand)]">

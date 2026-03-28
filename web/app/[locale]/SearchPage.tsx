@@ -3332,7 +3332,7 @@ function HomePage() {
 
   return (
     <AirportCountriesCtx.Provider value={airportCountries}>
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col relative z-10">
       {/* Referred-visit message */}
       {attributionParams.ref === "share" && (() => {
         const sp = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;

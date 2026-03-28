@@ -133,14 +133,25 @@ export function CloudsBackground() {
   const { theme } = useTheme();
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      {/* Stars: always mounted, fade in/out over 3s */}
+      {/* Sky photo: light mode only, with dreamy wash-out filters */}
+      <div
+        className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"
+        style={{
+          opacity: theme === "dark" ? 0 : 1,
+          backgroundImage: "url('/sky.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
+          filter: "brightness(1.22) saturate(0.4) contrast(0.88) sepia(0.08)",
+        }}
+      />
+      {/* Stars: dark mode only */}
       <div
         className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"
         style={{ opacity: theme === "dark" ? 1 : 0 }}
       >
         <StarsLayer />
       </div>
-      {/* Cloud orbs: dark mode only (light mode uses photo background) */}
+      {/* Cloud orbs: dark mode only */}
       <div
         className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"
         style={{ opacity: theme === "dark" ? 1 : 0 }}
