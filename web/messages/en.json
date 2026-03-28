@@ -72,7 +72,7 @@
     "heroTitle": "Search flights like you'd text a",
     "heroTitleAccent": "friend.",
     "heroSubtitle": "Just type it. We search every airline.",
-    "placeholder": "Where do you want to go?",
+    "placeholder": "Describe your perfect trip",
     "airlineFilter": {
       "ariaLabel": "Filter by airline",
       "showing": "Showing {filtered} of {total} flights"
