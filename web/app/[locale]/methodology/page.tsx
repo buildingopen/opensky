@@ -16,7 +16,7 @@ const howToSchema = {
   name: "How to search for safe flights using FlyFast",
   description: "Use natural language to search every available flight, filter conflict zones, and book directly.",
   step: [
-    { "@type": "HowToStep", name: "Describe your trip", text: "Go to flyfast.app and type your trip in plain English. For example: 'Berlin to anywhere warm under $300' or 'London to Tokyo next month, business class'." },
+    { "@type": "HowToStep", name: "Describe your trip", text: "Go to flyfast.app and type your trip like you'd text a friend. For example: 'Somewhere warm from Berlin, under 300' or 'a weekend in Spain for a bachelorette trip'." },
     { "@type": "HowToStep", name: "Review results", text: "FlyFast searches every available flight, filters conflict zones, and ranks by price, duration, stops, and route safety. Each flight shows a safety badge: Safe, Caution, High Risk, or Do Not Fly." },
     { "@type": "HowToStep", name: "Book your flight", text: "Click any result to go directly to the airline to compare and book. FlyFast does not sell tickets; you book with the provider." },
   ],

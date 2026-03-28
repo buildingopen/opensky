@@ -140,8 +140,13 @@ export function CloudsBackground() {
       >
         <StarsLayer />
       </div>
-      {/* Cloud orbs (both themes) */}
-      <CloudOrbs />
+      {/* Cloud orbs: dark mode only (light mode uses photo background) */}
+      <div
+        className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"
+        style={{ opacity: theme === "dark" ? 1 : 0 }}
+      >
+        <CloudOrbs />
+      </div>
     </div>
   );
 }
