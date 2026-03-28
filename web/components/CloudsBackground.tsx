@@ -138,7 +138,7 @@ export function CloudsBackground() {
         className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"
         style={{
           opacity: theme === "dark" ? 0 : 1,
-          backgroundImage: "url('/sky.jpg')",
+          backgroundImage: "url('/sky.webp')",
           backgroundSize: "cover",
           backgroundPosition: "center top",
           filter: "brightness(1.22) saturate(0.4) contrast(0.88) sepia(0.08)",

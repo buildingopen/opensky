@@ -3587,12 +3587,13 @@ function HomePage() {
         {phase === "idle" && flights.length === 0 && (
           <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-4">
             {([
-              { title: t("valueProp1Title"), desc: t("valueProp1Desc") },
-              { title: t("valueProp2Title"), desc: t("valueProp2Desc") },
-              { title: t("valueProp3Title"), desc: t("valueProp3Desc") },
-              { title: t("valueProp4Title"), desc: t("valueProp4Desc") },
-            ] as const).map((prop, i) => (
+              { title: t("valueProp1Title"), desc: t("valueProp1Desc"), icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg> },
+              { title: t("valueProp2Title"), desc: t("valueProp2Desc"), icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></svg> },
+              { title: t("valueProp3Title"), desc: t("valueProp3Desc"), icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg> },
+              { title: t("valueProp4Title"), desc: t("valueProp4Desc"), icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="12" cy="12" r="10" /><path d="M8 12h8M12 8v8" /></svg> },
+            ]).map((prop, i) => (
               <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 sm:p-5 card-surface">
+                <div className="text-[var(--color-interactive)] mb-2">{prop.icon}</div>
                 <h3 className="text-sm font-semibold text-[var(--color-heading)] mb-1">{prop.title}</h3>
                 <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed">{prop.desc}</p>
               </div>
