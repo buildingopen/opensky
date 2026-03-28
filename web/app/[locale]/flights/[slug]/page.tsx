@@ -58,7 +58,7 @@ export async function generateMetadata({
   });
 
   const ogUrl = new URL("/api/og", siteUrl);
-  ogUrl.searchParams.set("route", `${getAirportCity(route.origin)} to ${getAirportCity(route.destination)}`);
+  ogUrl.searchParams.set("route", `${originCity} \u2192 ${destCity}`);
   ogUrl.searchParams.set("codes", `${route.origin}-${route.destination}`);
   if (meta) ogUrl.searchParams.set("stops", String(meta.typicalStops));
   const safetyZones = ROUTE_SAFETY_ZONES[slug];

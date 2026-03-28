@@ -40,7 +40,7 @@ export async function generateMetadata({
   const description = t("hubMetaDescription", { city: cityName, count: routes.length });
 
   const ogUrl = new URL("/api/og", siteUrl);
-  ogUrl.searchParams.set("route", `Flights from ${getAirportCity(hub.iata)}`);
+  ogUrl.searchParams.set("route", t("hubHeading", { city: cityName }));
 
   const languages: Record<string, string> = {};
   for (const l of locales) {

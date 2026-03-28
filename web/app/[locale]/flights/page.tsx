@@ -34,7 +34,7 @@ export async function generateMetadata({
   languages["x-default"] = `${siteUrl}/en/flights`;
 
   const ogUrl = new URL("/api/og", siteUrl);
-  ogUrl.searchParams.set("route", "All Flight Routes");
+  ogUrl.searchParams.set("route", t("indexHeading"));
 
   return {
     title,

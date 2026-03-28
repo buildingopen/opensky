@@ -28,8 +28,8 @@ export async function GET(req: NextRequest) {
 
   const hasData = route && price;
   const stopsLabel = stops === "0" ? "Nonstop" : stops === "1" ? "1 stop" : stops ? `${stops} stops` : "";
-  // Show city names with arrow, e.g. "Mumbai \u2192 Frankfurt"
-  const routeDisplay = route.includes(" to ") ? route.replaceAll(" to ", " \u2192 ") : route.replaceAll("->", " \u2192 ");
+  // Show city names with arrow, e.g. "Mumbai → Frankfurt"
+  const routeDisplay = route.includes(" \u2192 ") ? route : route.includes(" to ") ? route.replaceAll(" to ", " \u2192 ") : route.replaceAll("->", " \u2192 ");
   // Show IATA codes as subtitle if available
   const codesDisplay = codes ? codes.replaceAll("-", " \u2192 ") : "";
   // Scale font for long routes (multi-leg or long city names)
