@@ -141,7 +141,7 @@ export function CloudsBackground() {
           backgroundImage: "url('/sky.webp')",
           backgroundSize: "cover",
           backgroundPosition: "center top",
-          filter: "brightness(1.22) saturate(0.4) contrast(0.88) sepia(0.08)",
+          filter: "brightness(1.08) saturate(0.7) contrast(0.92)",
         }}
       />
       {/* Stars: dark mode only */}
