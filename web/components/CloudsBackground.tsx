@@ -137,7 +137,7 @@ export function CloudsBackground() {
       <div
         className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"
         style={{
-          opacity: theme === "dark" ? 0 : 1,
+          opacity: theme === "dark" ? 0 : 0.55,
           backgroundImage: "url('/sky.webp')",
           backgroundSize: "cover",
           backgroundPosition: "center top",
