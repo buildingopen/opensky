@@ -70,6 +70,7 @@ export default async function SafetyIndexPage({ params }: { params: Promise<{ lo
   }));
 
   return (
+    <div className="flex-1 bg-[var(--color-background)]/80 backdrop-blur-md">
     <main id="main-content" className="max-w-6xl mx-auto px-4 py-12">
       <script
         type="application/ld+json"
@@ -103,5 +104,6 @@ export default async function SafetyIndexPage({ params }: { params: Promise<{ lo
         .
       </p>
     </main>
+    </div>
   );
 }
