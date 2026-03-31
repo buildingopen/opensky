@@ -61,7 +61,7 @@ export function SavedSearchesList({ searches, onSelect, onClear }: { searches: S
             onClick={() => onSelect(s.query)}
             title={s.query}
             aria-label={t("searchLabel", { query: s.query })}
-            className={`text-[13px] px-3.5 py-1.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)] transition-all duration-150 whitespace-nowrap max-w-[min(200px,calc(100vw-4rem))] truncate${i >= 4 ? " hidden sm:inline-flex" : ""}`}
+            className={`text-[13px] px-3.5 py-1.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)] transition-all duration-150 whitespace-nowrap max-w-[min(280px,calc(100vw-4rem))] truncate${i >= 6 ? " hidden sm:inline-flex" : ""}`}
           >
             {s.query}
           </button>
