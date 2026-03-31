@@ -113,6 +113,7 @@ body {
   background: var(--sky-gradient) fixed, var(--color-background);
   color: var(--color-text);
   font-family: var(--font-sans);
+  font-weight: 450;
 }
 
 /* Autocomplete dropdown */
