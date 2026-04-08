@@ -1,0 +1,378 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FlyFast Flight Search API",
+    "description": "Natural language flight search engine with conflict zone safety filtering. Search flights by describing your trip in plain text instead of filling out forms.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Building Open",
+      "url": "https://buildingopen.org",
+      "email": "hello@buildingopen.org"
+    },
+    "termsOfService": "https://flyfast.app/en/terms",
+    "license": {
+      "name": "MIT",
+      "url": "https://github.com/buildingopen/opensky/blob/main/LICENSE"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://flyfast.app",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/api/search": {
+      "post": {
+        "operationId": "searchFlights",
+        "summary": "Search flights using natural language",
+        "description": "Send a natural language prompt describing the trip you want. Returns parsed search parameters and flight results via Server-Sent Events (SSE). The stream emits three event types: `parsed` (structured parameters extracted from the prompt), `flight` (individual flight results), and `done` (search complete with result count).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SSE stream of flight results",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Server-Sent Events stream. Events: `parsed` (SearchParsed), `flight` (FlightResult), `done` (SearchDone)."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/zones": {
+      "get": {
+        "operationId": "getConflictZones",
+        "summary": "Get active conflict zones",
+        "description": "Returns all active conflict zones with risk levels, affected countries, airports, and source citations. Data sourced from EASA Safety Directives, FAA NOTAMs/TFRs, and safeairspace.net.",
+        "responses": {
+          "200": {
+            "description": "List of conflict zones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZonesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SearchRequest": {
+        "type": "object",
+        "required": ["prompt"],
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500,
+            "description": "Natural language flight query. Examples: \"Berlin to Barcelona next weekend under 200 euros\", \"somewhere warm from Frankfurt, under 300\", \"a weekend in Spain for a bachelorette trip\"."
+          },
+          "currency": {
+            "type": "string",
+            "default": "EUR",
+            "description": "ISO 4217 currency code for prices.",
+            "enum": ["EUR", "USD", "GBP", "CHF", "PLN", "CZK", "SEK", "NOK", "DKK", "TRY", "INR", "JPY", "CNY", "KRW", "AED", "SAR", "BRL", "ARS", "MXN", "CAD", "AUD", "NZD", "ZAR", "THB", "SGD", "HKD"]
+          },
+          "locale": {
+            "type": "string",
+            "default": "en",
+            "description": "Language for AI parsing of the prompt.",
+            "enum": ["en", "de", "es", "fr", "it", "pt", "zh", "ar", "hi", "ja", "ko", "tr"]
+          }
+        }
+      },
+      "SearchParsed": {
+        "type": "object",
+        "description": "Structured search parameters extracted from the natural language prompt. Sent as the `parsed` SSE event.",
+        "properties": {
+          "origins": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "IATA airport codes for origin airports.",
+            "example": ["BER"]
+          },
+          "destinations": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "IATA airport codes for destination airports.",
+            "example": ["BCN"]
+          },
+          "dates": {
+            "type": "array",
+            "items": { "type": "string", "format": "date" },
+            "description": "Departure dates (YYYY-MM-DD).",
+            "example": ["2026-04-11"]
+          },
+          "return_dates": {
+            "type": "array",
+            "items": { "type": "string", "format": "date" },
+            "description": "Return dates for round trips (YYYY-MM-DD). Empty for one-way."
+          },
+          "max_price": {
+            "type": "number",
+            "description": "Maximum price budget. 0 means no limit."
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency for the price budget."
+          },
+          "cabin": {
+            "type": "string",
+            "enum": ["economy", "premium_economy", "business", "first"],
+            "description": "Cabin class."
+          },
+          "stops": {
+            "type": "string",
+            "enum": ["any", "direct", "max1", "max2"],
+            "description": "Stop preference."
+          },
+          "total_routes": {
+            "type": "integer",
+            "description": "Number of origin-destination-date combinations to search."
+          },
+          "airport_names": {
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+            "description": "Map of IATA codes to human-readable airport/city names.",
+            "example": { "BER": "Berlin", "BCN": "Barcelona" }
+          }
+        }
+      },
+      "FlightResult": {
+        "type": "object",
+        "description": "Individual flight result. Sent as the `flight` SSE event.",
+        "properties": {
+          "price": {
+            "type": "number",
+            "description": "Total price for the flight."
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency of the price."
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "description": "Total travel time in minutes."
+          },
+          "stops": {
+            "type": "integer",
+            "description": "Number of stops (0 = direct)."
+          },
+          "route": {
+            "type": "string",
+            "description": "Route summary, e.g. \"BER-BCN\" or \"BER-IST-BCN\"."
+          },
+          "risk_level": {
+            "type": "string",
+            "enum": ["safe", "caution", "high_risk", "do_not_fly"],
+            "description": "Safety rating based on conflict zone analysis."
+          },
+          "risk_details": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Specific conflict zones affecting this route, if any."
+          },
+          "score": {
+            "type": "number",
+            "description": "Composite score (0-10) based on price, duration, stops, and safety."
+          },
+          "legs": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FlightLeg" },
+            "description": "Individual flight segments."
+          },
+          "provider": {
+            "type": "string",
+            "description": "Data provider identifier."
+          },
+          "booking_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Direct booking link (airline or OTA)."
+          },
+          "booking_label": {
+            "type": "string",
+            "description": "Human-readable name of the booking provider, e.g. \"Eurowings\"."
+          },
+          "booking_exact": {
+            "type": "boolean",
+            "description": "Whether the booking URL leads to this exact flight (true) or a search results page (false)."
+          },
+          "origin": {
+            "type": "string",
+            "description": "Origin IATA code."
+          },
+          "destination": {
+            "type": "string",
+            "description": "Destination IATA code."
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Departure date."
+          }
+        }
+      },
+      "FlightLeg": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "string",
+            "description": "Departure IATA code."
+          },
+          "destination": {
+            "type": "string",
+            "description": "Arrival IATA code."
+          },
+          "departure": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Departure time (ISO 8601)."
+          },
+          "arrival": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Arrival time (ISO 8601)."
+          },
+          "airline": {
+            "type": "string",
+            "description": "IATA airline code."
+          },
+          "flight_number": {
+            "type": "string",
+            "description": "Flight number."
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "description": "Segment duration in minutes."
+          }
+        }
+      },
+      "SearchDone": {
+        "type": "object",
+        "description": "Search completion event. Sent as the `done` SSE event.",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "description": "Total number of flights found."
+          },
+          "remaining_searches": {
+            "type": "integer",
+            "description": "Remaining searches in the current rate limit window."
+          }
+        }
+      },
+      "ConflictZone": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Zone identifier, e.g. \"ukraine\", \"iran\"."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable zone name."
+          },
+          "risk_level": {
+            "type": "string",
+            "enum": ["safe", "caution", "high_risk", "do_not_fly"],
+            "description": "Current risk assessment."
+          },
+          "countries": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "ISO 3166-1 alpha-2 country codes in the zone."
+          },
+          "airports": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "IATA codes of affected airports."
+          },
+          "source": {
+            "type": "string",
+            "description": "Data sources (e.g. \"EASA, FAA\")."
+          },
+          "details": {
+            "type": "string",
+            "description": "Human-readable description of the zone status."
+          },
+          "updated": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of last data update."
+          }
+        }
+      },
+      "ZonesResponse": {
+        "type": "object",
+        "properties": {
+          "zones": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ConflictZone" }
+          },
+          "warning": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional system-wide warning message."
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "Human-readable error message."
+          }
+        }
+      }
+    }
+  }
+}

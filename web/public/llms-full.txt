@@ -1,0 +1,353 @@
+# FlyFast - Full Documentation
+
+> Natural language flight search engine with conflict zone safety filtering.
+
+For a concise overview, see https://flyfast.app/llms.txt
+
+## Overview
+
+FlyFast (https://flyfast.app) lets users search flights by describing their trip in plain text. Instead of filling out origin/destination/date forms, users type queries like:
+
+- "Somewhere warm from Berlin, under 300"
+- "A weekend in Spain for a bachelorette trip"
+- "Surfing without wetsuit, from Hamburg"
+- "Berlin to Tokyo, business class, in March"
+- "Cheapest flight from Frankfurt to anywhere in Asia"
+
+FlyFast parses the query with AI (Gemini), searches all available airlines, filters through active conflict zones, and returns scored results. Users book directly with the airline. Free, no login, no ads.
+
+## API Reference
+
+Base URL: https://api.flyfast.app
+Authentication: API key via `X-API-Key` header or `Authorization: Bearer <key>` header.
+Request an API key: https://flyfast.app/en/api-access
+
+### POST /api/search
+
+Search flights using a natural language prompt. Returns results as a Server-Sent Events (SSE) stream.
+
+**Request:**
+```
+POST /api/search
+Content-Type: application/json
+X-API-Key: <your-key>
+
+{
+  "prompt": "Berlin to Barcelona next weekend under 200 euros",
+  "currency": "EUR",
+  "locale": "en"
+}
+```
+
+**Fields:**
+- `prompt` (string, required, 3-500 chars): Natural language flight query
+- `currency` (string, optional): ISO 4217 currency code. Default: EUR
+- `locale` (string, optional): Language for AI parsing. One of: en, de, es, fr, it, pt, zh, ar, hi, ja, ko, tr
+
+**Response (SSE stream):**
+
+Event: `parsed` - Structured search parameters extracted from the prompt
+```json
+{
+  "origins": ["BER"],
+  "destinations": ["BCN"],
+  "dates": ["2026-04-11"],
+  "return_dates": [],
+  "max_price": 200,
+  "currency": "EUR",
+  "cabin": "economy",
+  "stops": "any",
+  "total_routes": 1,
+  "airport_names": {"BER": "Berlin", "BCN": "Barcelona"}
+}
+```
+
+Event: `flight` - Individual flight result
+```json
+{
+  "price": 89.0,
+  "currency": "EUR",
+  "duration_minutes": 155,
+  "stops": 0,
+  "route": "BER-BCN",
+  "risk_level": "safe",
+  "risk_details": [],
+  "score": 8.5,
+  "legs": [
+    {
+      "origin": "BER",
+      "destination": "BCN",
+      "departure": "2026-04-11T06:30:00",
+      "arrival": "2026-04-11T09:05:00",
+      "airline": "EW",
+      "flight_number": "EW4561",
+      "duration_minutes": 155
+    }
+  ],
+  "provider": "kiwi",
+  "booking_url": "https://...",
+  "booking_label": "Eurowings",
+  "booking_exact": true,
+  "origin": "BER",
+  "destination": "BCN",
+  "date": "2026-04-11"
+}
+```
+
+Event: `done` - Search complete
+```json
+{
+  "count": 24,
+  "remaining_searches": 9
+}
+```
+
+### POST /api/parse
+
+Parse a natural language query into structured search parameters without executing a search. Useful for validation or building a search UI.
+
+**Request:**
+```
+POST /api/parse
+Content-Type: application/json
+
+{ "prompt": "cheap flights from Frankfurt to Tokyo in July" }
+```
+
+**Response:**
+```json
+{
+  "origins": ["FRA"],
+  "destinations": ["NRT"],
+  "dates": ["2026-07-01", "2026-07-08", "2026-07-15", "2026-07-22", "2026-07-29"],
+  "return_dates": [],
+  "max_price": 0,
+  "currency": "EUR",
+  "cabin": "economy",
+  "stops": "any",
+  "total_routes": 5,
+  "airport_names": {"FRA": "Frankfurt", "NRT": "Tokyo"}
+}
+```
+
+### GET /api/zones
+
+Returns all active conflict zones with risk levels, affected countries, airports, and source citations.
+
+**Response:**
+```json
+{
+  "zones": [
+    {
+      "id": "ukraine",
+      "name": "Ukraine",
+      "risk_level": "do_not_fly",
+      "countries": ["UA"],
+      "airports": ["KBP", "IEV", "ODS", "..."],
+      "source": "EASA, FAA",
+      "details": "Full airspace closure since February 2022...",
+      "updated": "2026-04-01"
+    }
+  ],
+  "warning": null
+}
+```
+
+Risk levels: `safe`, `caution`, `high_risk`, `do_not_fly`
+
+### POST /api/alerts
+
+Subscribe to email alerts for price drops on a specific route.
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "origin": "BER",
+  "destination": "BCN",
+  "max_price": 150,
+  "currency": "EUR"
+}
+```
+
+### POST /api/zone-alerts
+
+Subscribe to email alerts for conflict zone status changes.
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "zones": ["ukraine", "iran"]
+}
+```
+
+### POST /api/access-request
+
+Request API access.
+
+**Request:**
+```json
+{
+  "name": "Your Name",
+  "email": "you@example.com",
+  "company": "Company (optional)",
+  "use_case": "What you plan to build (min 10 chars)"
+}
+```
+
+### Rate limits
+
+- Web users: 10 searches per hour per IP, 2 concurrent streams
+- API key holders: higher limits (configured per key)
+- Parse endpoint: separate rate limit from search
+
+### Error responses
+
+All errors return JSON:
+```json
+{
+  "detail": "Rate limit exceeded. Try again in 42 seconds."
+}
+```
+
+HTTP status codes: 400 (bad request), 401 (invalid API key), 429 (rate limited), 500 (server error)
+
+## Site structure
+
+### Pages
+
+| Path | Description |
+|------|-------------|
+| / | Home - natural language flight search |
+| /flights | All flight routes index with live prices |
+| /flights/{origin}-to-{destination} | Route-specific page (e.g., /flights/berlin-to-london) |
+| /flights/from/{city} | All routes from a hub city (e.g., /flights/from/berlin) |
+| /safety | Conflict zone map with all zones |
+| /safety/{zone-id} | Individual zone detail (e.g., /safety/ukraine) |
+| /methodology | How FlyFast works, step by step |
+| /api-access | Request API key |
+| /contact | Contact form |
+| /privacy | Privacy policy |
+| /terms | Terms of service |
+| /imprint | Legal notice (Impressum) |
+
+All pages are available in 12 languages via /{locale}/ prefix: en, de, es, fr, it, pt, zh, ar, hi, ja, ko, tr.
+
+### Flight routes (43 routes)
+
+| Route | Slug | Distance | Flight time | Stops |
+|-------|------|----------|-------------|-------|
+| Berlin to London | berlin-to-london | 930 km | 1h 55m | Direct |
+| Frankfurt to New York | frankfurt-to-new-york | 6,200 km | 8h 30m | Direct |
+| Munich to Istanbul | munich-to-istanbul | 1,580 km | 2h 45m | Direct |
+| Berlin to Paris | berlin-to-paris | 880 km | 1h 50m | Direct |
+| Frankfurt to Delhi | frankfurt-to-delhi | 6,600 km | 8h | Direct |
+| Berlin to Istanbul | berlin-to-istanbul | 1,730 km | 2h 55m | Direct |
+| Hamburg to London | hamburg-to-london | 750 km | 1h 40m | Direct |
+| Frankfurt to Bangkok | frankfurt-to-bangkok | 9,000 km | 11h | Direct |
+| Frankfurt to Dubai | frankfurt-to-dubai | 4,850 km | 6h | Direct |
+| Frankfurt to Istanbul | frankfurt-to-istanbul | 1,860 km | 3h | Direct |
+| Berlin to Barcelona | berlin-to-barcelona | 1,500 km | 2h 35m | Direct |
+| Berlin to Amsterdam | berlin-to-amsterdam | 580 km | 1h 25m | Direct |
+| Frankfurt to London | frankfurt-to-london | 660 km | 1h 40m | Direct |
+| Munich to London | munich-to-london | 940 km | 1h 55m | Direct |
+| Munich to Bangkok | munich-to-bangkok | 8,900 km | 10h 50m | Direct |
+| Berlin to Rome | berlin-to-rome | 1,180 km | 2h 10m | Direct |
+| Berlin to Lisbon | berlin-to-lisbon | 2,310 km | 3h 15m | Direct |
+| Hamburg to Istanbul | hamburg-to-istanbul | 2,010 km | 3h 5m | Direct |
+| Berlin to New York | berlin-to-new-york | 6,400 km | 9h | Direct |
+| Berlin to Dubai | berlin-to-dubai | 4,750 km | 6h | Direct |
+| Frankfurt to Rome | frankfurt-to-rome | 960 km | 1h 50m | Direct |
+| London to Berlin | london-to-berlin | 930 km | 1h 50m | Direct |
+| Munich to Barcelona | munich-to-barcelona | 1,100 km | 2h 10m | Direct |
+| Munich to Delhi | munich-to-delhi | 6,300 km | 7h 50m | Direct |
+| Frankfurt to Tokyo | frankfurt-to-tokyo | 9,350 km | 12h 30m | Direct |
+| Frankfurt to Barcelona | frankfurt-to-barcelona | 1,100 km | 2h 10m | Direct |
+| Berlin to Tokyo | berlin-to-tokyo | 8,900 km | 12h 30m | 1 stop |
+| Munich to Rome | munich-to-rome | 690 km | 1h 35m | Direct |
+| Munich to Dubai | munich-to-dubai | 4,600 km | 5h 50m | Direct |
+| Munich to New York | munich-to-new-york | 6,500 km | 9h 30m | Direct |
+| Delhi to Frankfurt | delhi-to-frankfurt | 6,600 km | 8h | Direct |
+| Berlin to Athens | berlin-to-athens | 1,800 km | 2h 50m | Direct |
+| Frankfurt to Singapore | frankfurt-to-singapore | 10,200 km | 12h 30m | Direct |
+| Hamburg to Barcelona | hamburg-to-barcelona | 1,500 km | 2h 35m | Direct |
+| Berlin to Tel Aviv | berlin-to-tel-aviv | 2,800 km | 4h 15m | Direct |
+| Dusseldorf to Istanbul | dusseldorf-to-istanbul | 2,050 km | 3h 10m | Direct |
+| Dusseldorf to Barcelona | dusseldorf-to-barcelona | 1,170 km | 2h 25m | Direct |
+| Dusseldorf to Athens | dusseldorf-to-athens | 2,010 km | 3h 5m | Direct |
+| Munich to Athens | munich-to-athens | 1,550 km | 2h 40m | Direct |
+| Munich to Tokyo | munich-to-tokyo | 9,200 km | 12h | Direct |
+| Hamburg to Athens | hamburg-to-athens | 2,130 km | 3h 10m | Direct |
+| Frankfurt to Los Angeles | frankfurt-to-los-angeles | 9,350 km | 11h 30m | Direct |
+| Frankfurt to Chicago | frankfurt-to-chicago | 6,960 km | 9h 30m | Direct |
+
+### Origin hub cities
+
+- Berlin (BER) - Berlin Brandenburg Airport
+- Frankfurt (FRA) - Frankfurt Airport
+- Munich (MUC) - Munich Airport
+- Hamburg (HAM) - Hamburg Airport
+- Dusseldorf (DUS) - Dusseldorf Airport
+
+### Conflict zones tracked
+
+| Zone ID | Name | Risk level | Countries |
+|---------|------|-----------|-----------|
+| ukraine | Ukraine | do_not_fly | UA |
+| iran | Iran | high_risk | IR |
+| iraq | Iraq | do_not_fly | IQ |
+| syria | Syria | do_not_fly | SY |
+| israel | Israel | high_risk | IL |
+| lebanon | Lebanon | high_risk | LB |
+| yemen | Yemen | do_not_fly | YE |
+| libya | Libya | do_not_fly | LY |
+| somalia | Somalia | do_not_fly | SO |
+| afghanistan | Afghanistan | do_not_fly | AF |
+| north_korea | North Korea | do_not_fly | KP |
+| sudan | Sudan | do_not_fly | SD |
+| eritrea | Eritrea | caution | ER |
+| ethiopia_partial | Ethiopia (partial) | caution | ET |
+| mali | Mali | caution | ML |
+| niger | Niger | caution | NE |
+| gulf_states | Gulf States | caution | AE, QA, BH, KW, OM |
+| pakistan_partial | Pakistan (partial) | high_risk | PK |
+| russia_partial | Russia (partial) | do_not_fly | RU |
+
+Data sources: EASA Safety Directives, FAA NOTAMs/TFRs, safeairspace.net
+
+### Safety scoring
+
+Each flight receives a safety badge based on whether its route passes through or near conflict zones:
+- **Safe**: No conflict zones on route
+- **Caution**: Route passes near a caution-level zone
+- **High Risk**: Route passes through or near a high-risk zone
+- **Do Not Fly**: Route passes through a do-not-fly zone (excluded from default results)
+
+### Airlines covered
+
+FlyFast searches across all available airlines including: Lufthansa, Eurowings, Ryanair, easyJet, British Airways, Air France, KLM, Turkish Airlines, Emirates, Qatar Airways, Singapore Airlines, Thai Airways, Japan Airlines, Delta, United, American Airlines, Finnair, Austrian, Swiss, SAS, TAP Portugal, Aegean, Vueling, Condor, Pegasus, Air India, IndiGo, and many more.
+
+## Structured data
+
+FlyFast embeds Schema.org structured data on every page:
+- WebApplication schema on the root layout
+- Organization schema for Building Open
+- FAQPage schema on the home page
+- HowTo schema on the methodology page
+
+## Technology
+
+- Frontend: Next.js 15, React, TypeScript, Tailwind CSS
+- Backend: FastAPI (Python), Redis for rate limiting
+- AI parsing: Google Gemini
+- Flight data: Kiwi.com Tequila API
+- Conflict zone data: EASA, FAA, safeairspace.net
+- Hosting: Vercel (frontend), self-hosted (API)
+- Open source: https://github.com/buildingopen/opensky
+
+## Contact
+
+- Email: hello@buildingopen.org
+- Website: https://buildingopen.org
+- GitHub: https://github.com/buildingopen

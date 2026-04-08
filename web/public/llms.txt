@@ -1,74 +1,116 @@
 # FlyFast
 
-> Search flights like you'd text a friend.
+> Natural language flight search engine. Search flights by describing your trip in plain text.
 
-FlyFast is a free, open source flight search engine at flyfast.app. Instead of filling out forms, users type what they want: "somewhere warm from Berlin, under 300", "a weekend in Spain for a bachelorette trip", or "surfing without wetsuit, from Hamburg". FlyFast searches every airline, filters routes through active conflict zones, and ranks results by price, duration, stops, and route safety. No login, no ads. Users book directly with the airline.
+FlyFast (https://flyfast.app) is a free, open source flight search engine. Users type what they want in natural language instead of filling out forms: "somewhere warm from Berlin, under 300", "a weekend in Spain for a bachelorette trip", or "surfing without wetsuit, from Hamburg". FlyFast searches every airline, filters routes through active conflict zones, and ranks results by price, duration, stops, and route safety. No login, no ads, no account required. Users book directly with the airline.
+
+## API
+
+FlyFast exposes a REST API at https://api.flyfast.app. API access requires an API key (request one at https://flyfast.app/en/api-access).
+
+### Search flights (POST /api/search)
+
+Send a natural language prompt. Returns parsed search parameters and flight results via Server-Sent Events (SSE).
+
+Request body:
+```json
+{
+  "prompt": "Berlin to Barcelona next weekend under 200 euros",
+  "currency": "EUR",
+  "locale": "en"
+}
+```
+
+Response (SSE stream): events include `parsed` (structured parameters), `flight` (individual results), and `done` (summary).
+
+### Parse prompt only (POST /api/parse)
+
+Parses a natural language query into structured search parameters without executing a search.
+
+Request body:
+```json
+{ "prompt": "cheap flights from Frankfurt to Tokyo in July" }
+```
+
+Response:
+```json
+{
+  "origins": ["FRA"],
+  "destinations": ["NRT"],
+  "dates": ["2026-07-01", "2026-07-08", "..."],
+  "max_price": 0,
+  "currency": "EUR",
+  "cabin": "economy",
+  "stops": "any",
+  "total_routes": 7
+}
+```
+
+### Conflict zones (GET /api/zones)
+
+Returns all active conflict zones with risk levels, affected airports, and source citations.
+
+### Rate limits
+
+- Web search: 10 searches per hour per IP
+- API key: higher limits available on request
 
 ## Key features
 
 - Natural language search: type a sentence instead of filling forms
-- Conflict zone filtering: routes through high-risk airspace are removed or flagged
-- Safety badges: each flight is labeled Safe, Caution, High Risk, or Do Not Fly
-- Every available flight
+- Conflict zone safety filtering: routes through high-risk airspace are flagged or excluded
+- Safety badges per flight: Safe, Caution, High Risk, Do Not Fly
+- Multi-airline search across all available providers
 - Multi-city, flexible date, and budget-aware search
+- Round-trip support with return date parsing
+- Cabin class selection (economy, premium economy, business, first)
+- 12 languages: English, German, Spanish, French, Italian, Portuguese, Chinese, Arabic, Hindi, Japanese, Korean, Turkish
 - No login, no ads, no account required
-- Open source (github.com/buildingopen/opensky)
+- Open source: https://github.com/buildingopen/opensky
+
+## Supported origin hubs
+
+Berlin (BER), Frankfurt (FRA), Munich (MUC), Hamburg (HAM), Dusseldorf (DUS)
+
+## Popular routes
+
+Berlin to London, Frankfurt to New York, Munich to Istanbul, Berlin to Paris, Frankfurt to Delhi, Frankfurt to Bangkok, Frankfurt to Dubai, Berlin to Barcelona, Berlin to Amsterdam, Munich to London, Berlin to Rome, Berlin to Lisbon, Berlin to New York, Frankfurt to Tokyo, Frankfurt to Singapore, Berlin to Tel Aviv, Frankfurt to Los Angeles, Frankfurt to Chicago
+
+## Conflict zone safety pages
+
+Live conflict zone status with risk levels, source citations, affected airports, and traveler guidance, updated daily:
+https://flyfast.app/en/safety
+
+Zones: Ukraine, Iran, Iraq, Syria, Israel, Lebanon, Yemen, Libya, Somalia, Afghanistan, North Korea, Sudan, Eritrea, Ethiopia, Mali, Niger, Gulf States, Pakistan, Russia
 
 ## How it works
 
 1. User types a natural language query
 2. AI (Gemini) parses the query into structured search parameters (origins, destinations, dates, budget, cabin)
 3. FlyFast searches flight providers for all origin-destination-date combinations
-4. Each route is checked against a conflict zone dataset
+4. Each route is checked against a conflict zone dataset (sources: EASA, FAA, safeairspace.net)
 5. Results are scored by safety, price, duration, and stops
 6. User clicks through to book directly with the airline
 
-## Conflict zone filtering
-
-FlyFast maintains a dataset of active conflict zones, restricted airspace, and aviation advisory regions. Every flight route's airports and airways are checked against this data. High-risk routes are excluded from results. Caution-level routes are shown with a warning. The dataset is updated regularly; the last update date is shown in the footer.
-
 ## Pricing
 
-Free. No premium tier. Rate limited to 10 searches per hour per user.
+Free. No premium tier. API access available on request.
 
 ## Built by
 
-Building Open (buildingopen.org)
+Building Open (https://buildingopen.org)
 
 ## Contact
 
 hello@buildingopen.org
 
-## Conflict zone safety pages
-
-FlyFast publishes live conflict zone status pages at /safety/{zone-id}. Each page shows the current risk level, source citations, affected airports, and traveler guidance. Updated daily.
-
-- Index: https://flyfast.app/safety
-- https://flyfast.app/safety/ukraine
-- https://flyfast.app/safety/iran
-- https://flyfast.app/safety/iraq
-- https://flyfast.app/safety/syria
-- https://flyfast.app/safety/israel
-- https://flyfast.app/safety/lebanon
-- https://flyfast.app/safety/yemen
-- https://flyfast.app/safety/libya
-- https://flyfast.app/safety/somalia
-- https://flyfast.app/safety/afghanistan
-- https://flyfast.app/safety/north_korea
-- https://flyfast.app/safety/sudan
-- https://flyfast.app/safety/eritrea
-- https://flyfast.app/safety/ethiopia_partial
-- https://flyfast.app/safety/mali
-- https://flyfast.app/safety/niger
-- https://flyfast.app/safety/gulf_states
-- https://flyfast.app/safety/pakistan_partial
-- https://flyfast.app/safety/russia_partial
-
 ## Links
 
 - Website: https://flyfast.app
-- Methodology: https://flyfast.app/methodology
-- Safety: https://flyfast.app/safety
-- Privacy: https://flyfast.app/privacy
-- Terms: https://flyfast.app/terms
+- API docs: https://flyfast.app/en/api-access
+- Methodology: https://flyfast.app/en/methodology
+- Safety map: https://flyfast.app/en/safety
+- Privacy: https://flyfast.app/en/privacy
+- Terms: https://flyfast.app/en/terms
 - GitHub: https://github.com/buildingopen/opensky
+- Full documentation: https://flyfast.app/llms-full.txt

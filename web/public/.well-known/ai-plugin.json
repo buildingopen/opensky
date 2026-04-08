@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "FlyFast",
+  "name_for_model": "flyfast",
+  "description_for_human": "Search flights by describing your trip in plain text. Get prices, safety ratings, and direct booking links.",
+  "description_for_model": "Search for flights using natural language queries. The user describes their trip (origin, destination, dates, budget, preferences) in plain text and the API returns real-time flight results with prices, durations, airline info, safety ratings based on conflict zone analysis, and direct booking links. Also provides data on active conflict zones affecting aviation. Supported origins: Berlin (BER), Frankfurt (FRA), Munich (MUC), Hamburg (HAM), Dusseldorf (DUS). Prices default to EUR. The search endpoint returns results as a Server-Sent Events stream.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://flyfast.app/.well-known/openapi.json"
+  },
+  "logo_url": "https://flyfast.app/favicon.svg",
+  "contact_email": "hello@buildingopen.org",
+  "legal_info_url": "https://flyfast.app/en/terms"
+}

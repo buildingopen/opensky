@@ -93,6 +93,9 @@ export default async function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
+        <link rel="help" type="text/plain" href="/llms.txt" />
+        <link rel="help" type="text/plain" href="/llms-full.txt" title="Full documentation" />
+        <link rel="api-description" type="application/openapi+json" href="/.well-known/openapi.json" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

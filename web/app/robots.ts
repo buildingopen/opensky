@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+// OpenAPI spec available at /.well-known/openapi.json (served from public/)
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://flyfast.app";
 
 export default function robots(): MetadataRoute.Robots {
@@ -36,6 +37,14 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "Applebot-Extended",
+        allow: "/",
+      },
+      {
+        userAgent: "Google-Extended",
+        allow: "/",
+      },
+      {
+        userAgent: "cohere-ai",
         allow: "/",
       },
     ],
