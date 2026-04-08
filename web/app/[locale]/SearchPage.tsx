@@ -2692,6 +2692,15 @@ function HomePage() {
     if (searchMode === "natural") inputRef.current?.focus();
   }, [searchMode]);
 
+  // Hide scrollbar on homepage idle state; enable when results/loading are present
+  useEffect(() => {
+    if (hasResults) {
+      document.documentElement.style.overflowY = "";
+    } else {
+      document.documentElement.style.overflowY = "hidden";
+    }
+    return () => { document.documentElement.style.overflowY = ""; };
+  }, [hasResults]);
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
@@ -3358,21 +3367,21 @@ function HomePage() {
       })()}
 
       {/* Hero - outcome-focused */}
-      <section className={`max-w-3xl mx-auto px-4 w-full transition-all duration-300 ${hasResults ? "pt-6 pb-4 text-start" : "pt-10 sm:pt-16 pb-4 text-center"}`}>
+      <section className={`max-w-3xl mx-auto px-4 w-full transition-all duration-300 ${hasResults ? "pt-6 pb-4 text-start" : "pt-6 sm:pt-10 pb-4 text-center"}`}>
         {!hasResults && (
-          <h1 className="font-bold tracking-tighter leading-tight text-5xl sm:text-6xl text-[var(--color-heading)]">
+          <h1 className="font-bold tracking-tighter leading-tight text-4xl sm:text-6xl text-[var(--color-heading)]">
             {t("heroTitle")}{" "}
             <span className="text-[var(--color-accent)]">{t("heroTitleAccent")}</span>
           </h1>
         )}
         {!hasResults && (
-          <p className="mt-4 text-[var(--color-text)] text-base sm:text-lg max-w-xl mx-auto">
+          <p className="mt-3 text-[var(--color-text)] text-base sm:text-lg max-w-xl mx-auto">
             {t("heroSubtitle")}
           </p>
         )}
 
         {/* Search surface */}
-        <div className={`${hasResults ? "mt-4" : "mt-8"} bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
+        <div className={`${hasResults ? "mt-4" : "mt-6"} bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl ${hasResults ? "px-4 py-3 sm:px-5" : "p-5 sm:p-6"} search-surface transition-all duration-300`}>
           {hasResults ? (
             /* Compact mode: original prompt + action */
             <div className="flex items-center justify-between gap-3">
@@ -3585,7 +3594,7 @@ function HomePage() {
 
         {/* Value props */}
         {phase === "idle" && flights.length === 0 && (
-          <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4">
             {([
               { title: t("valueProp1Title"), desc: t("valueProp1Desc"), icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg> },
               { title: t("valueProp2Title"), desc: t("valueProp2Desc"), icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></svg> },
@@ -3605,7 +3614,7 @@ function HomePage() {
       </section>
 
       {/* Results */}
-      <section id="main-content" ref={resultsRef} aria-live="polite" className="max-w-3xl mx-auto px-4 py-4 w-full flex-1">
+      <section id="main-content" ref={resultsRef} aria-live="polite" className={`max-w-3xl mx-auto px-4 w-full flex-1 ${hasResults ? "py-4" : ""}`}>
         {error && (
           <div role="alert" className="mb-4 animate-fade-in">
             <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-8 card-surface">
