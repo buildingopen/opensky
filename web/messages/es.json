@@ -778,6 +778,17 @@
       "faqAnswer_do_not_fly": "No. El espacio aéreo de {zone} está clasificado como Prohibido Volar. {details} Las aerolíneas redirigen automáticamente los vuelos alrededor de esta zona.",
       "faqAnswer_high_risk": "{zone} está clasificado como Alto Riesgo. {details} La mayoría de las aerolíneas evitan este espacio aéreo.",
       "faqAnswer_caution": "{zone} está clasificado como Precaución. {details} Los aeropuertos operan normalmente, pero los vuelos pueden ser redirigidos cerca de zonas de conflicto.",
+      "faqAirlinesQuestion": "¿Las aerolíneas sobrevuelan {zone}?",
+      "faqAirlinesAnswer_do_not_fly": "No. Las aerolíneas no sobrevuelan {zone}. El espacio aéreo está cerrado o restringido y todos los vuelos comerciales son redirigidos. FlyFast elimina automáticamente las rutas que atravesarían el espacio aéreo de {zone}.",
+      "faqAirlinesAnswer_high_risk": "La mayoría de las aerolíneas evitan sobrevolar {zone} debido a amenazas de seguridad activas. Algunas aerolíneas podrían transitar por el espacio aéreo cercano. FlyFast señala estas rutas para que puedas elegir alternativas más seguras.",
+      "faqAirlinesAnswer_caution": "Sí, las aerolíneas siguen sobrevolando {zone}. La zona tiene un aviso de precaución, los aeropuertos operan normalmente. Algunos sobrevuelos cerca de áreas de conflicto pueden ser redirigidos. FlyFast marca estos vuelos con una insignia de Precaución.",
+      "faqRouteQuestion": "¿Qué pasa si mi ruta de vuelo pasa sobre {zone}?",
+      "faqRouteAnswer_do_not_fly": "Tu vuelo no pasará sobre {zone}. Las aerolíneas tienen prohibido entrar en este espacio aéreo y redirigen automáticamente. Esto puede aumentar el tiempo y coste del vuelo. FlyFast filtra las rutas que cruzarían {zone}.",
+      "faqRouteAnswer_high_risk": "Si una ruta de vuelo pasa cerca de {zone}, las aerolíneas normalmente redirigen para evitar el espacio aéreo de alto riesgo. Esto puede aumentar la duración del vuelo. FlyFast elimina las rutas de alto riesgo de los resultados y señala las rutas cercanas con un aviso de precaución.",
+      "faqRouteAnswer_caution": "Los vuelos que pasan sobre {zone} pueden realizarse normalmente, aunque las aerolíneas monitorizan la situación y redirigen si las condiciones cambian. FlyFast muestra una insignia de Precaución en los vuelos afectados para que puedas tomar una decisión informada.",
+      "faqCheckQuestion": "¿Cómo puedo verificar si mi vuelo evita {zone}?",
+      "faqCheckAnswer": "Usa FlyFast para buscar tu ruta. FlyFast verifica cada vuelo contra los datos de zonas de conflicto, incluyendo {zone}, y filtra o señala las rutas afectadas. Las rutas seguras se muestran por defecto y los vuelos cerca de zonas de riesgo están claramente etiquetados.",
+      "commonQuestions": "Preguntas frecuentes",
       "routesNearZone": "Rutas cerca de esta zona"
     },
     "alerts": {

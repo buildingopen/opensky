@@ -778,6 +778,17 @@
       "faqAnswer_do_not_fly": "Hayır. {zone} hava sahası Uçuş Yasağı olarak sınıflandırılmıştır. {details} Havayolları uçuşları otomatik olarak bu bölgenin etrafından yönlendirir.",
       "faqAnswer_high_risk": "{zone} Yüksek Risk olarak sınıflandırılmıştır. {details} Çoğu havayolu bu hava sahasından kaçınır.",
       "faqAnswer_caution": "{zone} Dikkat olarak sınıflandırılmıştır. {details} Havalimanları normal şekilde çalışır ancak uçuşlar çatışma bölgelerinin yakınında yönlendirilebilir.",
+      "faqAirlinesQuestion": "Havayolları {zone} üzerinden uçuyor mu?",
+      "faqAirlinesAnswer_do_not_fly": "Hayır. Havayolları {zone} üzerinden uçmuyor. Hava sahası kapalı veya kısıtlı ve tüm ticari uçuşlar yönlendirilmektedir. FlyFast, {zone} hava sahasından geçecek rotaları otomatik olarak kaldırır.",
+      "faqAirlinesAnswer_high_risk": "Çoğu havayolu aktif güvenlik tehditleri nedeniyle {zone} üzerinden uçmaktan kaçınır. Bazı taşıyıcılar hâlâ yakın hava sahasından geçebilir. FlyFast, daha güvenli alternatifler seçebilmeniz için bu rotaları işaretler.",
+      "faqAirlinesAnswer_caution": "Evet, havayolları hâlâ {zone} üzerinden uçuyor. Bölge için tavsiye düzeyinde uyarı var, havalimanları normal çalışıyor. Çatışma bölgelerine yakın bazı uçuşlar yönlendirilebilir. FlyFast bu uçuşları Dikkat rozeti ile işaretler.",
+      "faqRouteQuestion": "Uçuş rotam {zone} üzerinden geçerse ne olur?",
+      "faqRouteAnswer_do_not_fly": "Uçuşunuz {zone} üzerinden geçmeyecektir. Havayollarının bu hava sahasına girmesi yasaktır ve otomatik olarak yönlendirilir. Bu, uçuş süresini ve maliyetini artırabilir. FlyFast, {zone}'i geçecek rotaları filtreler.",
+      "faqRouteAnswer_high_risk": "Bir uçuş rotası {zone} yakınından geçiyorsa, havayolları genellikle yüksek riskli hava sahasından kaçınmak için yönlendirir. Bu, uçuş süresini uzatabilir. FlyFast, yüksek riskli rotaları sonuçlardan kaldırır ve yakındaki rotaları dikkat uyarısıyla işaretler.",
+      "faqRouteAnswer_caution": "{zone} üzerinden geçen uçuşlar normal şekilde devam edebilir, ancak havayolları durumu izler ve koşullar değişirse yönlendirir. FlyFast, bilinçli bir karar verebilmeniz için etkilenen uçuşlarda Dikkat rozeti gösterir.",
+      "faqCheckQuestion": "Uçuşumun {zone}'den kaçınıp kaçınmadığını nasıl kontrol edebilirim?",
+      "faqCheckAnswer": "Rotanızı aramak için FlyFast'ı kullanın. FlyFast, {zone} dahil çatışma bölgesi verilerine karşı her uçuşu kontrol eder ve etkilenen rotaları filtreler veya işaretler. Güvenli rotalar varsayılan olarak gösterilir ve uyarı bölgelerine yakın uçuşlar açıkça etiketlenir.",
+      "commonQuestions": "Sık sorulan sorular",
       "routesNearZone": "Bu bölgeye yakın rotalar"
     },
     "alerts": {

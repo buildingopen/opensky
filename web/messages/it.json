@@ -778,6 +778,17 @@
       "faqAnswer_do_not_fly": "No. Lo spazio aereo di {zone} è classificato come Divieto di Volo. {details} Le compagnie aeree deviano automaticamente i voli intorno a questa zona.",
       "faqAnswer_high_risk": "{zone} è classificato come Alto Rischio. {details} La maggior parte delle compagnie aeree evita questo spazio aereo.",
       "faqAnswer_caution": "{zone} è classificato come Cautela. {details} Gli aeroporti operano normalmente, ma i voli possono essere deviati vicino alle zone di conflitto.",
+      "faqAirlinesQuestion": "Le compagnie aeree volano sopra {zone}?",
+      "faqAirlinesAnswer_do_not_fly": "No. Le compagnie aeree non volano sopra {zone}. Lo spazio aereo è chiuso o limitato e tutti i voli commerciali vengono deviati. FlyFast rimuove automaticamente le rotte che attraverserebbero lo spazio aereo di {zone}.",
+      "faqAirlinesAnswer_high_risk": "La maggior parte delle compagnie aeree evita di sorvolare {zone} a causa di minacce alla sicurezza attive. Alcuni vettori potrebbero ancora transitare nello spazio aereo vicino. FlyFast segnala queste rotte per permetterti di scegliere alternative più sicure.",
+      "faqAirlinesAnswer_caution": "Sì, le compagnie aeree volano ancora sopra {zone}. La zona è soggetta a un avviso di cautela, gli aeroporti operano normalmente. Alcuni sorvoli vicino alle aree di conflitto possono essere deviati. FlyFast contrassegna questi voli con un badge Cautela.",
+      "faqRouteQuestion": "Cosa succede se la mia rotta di volo passa sopra {zone}?",
+      "faqRouteAnswer_do_not_fly": "Il tuo volo non passerà sopra {zone}. Alle compagnie aeree è vietato entrare in questo spazio aereo e deviano automaticamente. Questo può aumentare il tempo e il costo del volo. FlyFast filtra le rotte che attraverserebbero {zone}.",
+      "faqRouteAnswer_high_risk": "Se una rotta di volo passa vicino a {zone}, le compagnie aeree tipicamente deviano per evitare lo spazio aereo ad alto rischio. Questo può aumentare la durata del volo. FlyFast rimuove le rotte ad alto rischio dai risultati e segnala le rotte vicine con un avviso di cautela.",
+      "faqRouteAnswer_caution": "I voli che passano sopra {zone} possono procedere normalmente, anche se le compagnie aeree monitorano la situazione e deviano se le condizioni cambiano. FlyFast mostra un badge Cautela sui voli interessati per aiutarti a prendere una decisione informata.",
+      "faqCheckQuestion": "Come posso verificare se il mio volo evita {zone}?",
+      "faqCheckAnswer": "Usa FlyFast per cercare la tua rotta. FlyFast controlla ogni volo rispetto ai dati delle zone di conflitto, inclusa {zone}, e filtra o segnala le rotte interessate. Le rotte sicure vengono mostrate per impostazione predefinita e i voli vicino alle zone a rischio sono chiaramente etichettati.",
+      "commonQuestions": "Domande frequenti",
       "routesNearZone": "Rotte vicino a questa zona"
     },
     "alerts": {

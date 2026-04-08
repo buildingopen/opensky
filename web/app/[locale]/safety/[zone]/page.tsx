@@ -127,9 +127,10 @@ export default async function ZonePage({
   const zoneName = t(`zoneNames.${zone.id}` as "zoneNames.ukraine") || zone.name;
   const riskDesc = t(`riskDescriptions.${zone.risk_level}` as "riskDescriptions.do_not_fly");
 
-  // Build all FAQ items
+  // Build all FAQ items, filtering out any with missing translations
+  // (next-intl returns "safety.zone.<key>" when a key is absent)
   const riskKey = zone.risk_level as "do_not_fly" | "high_risk" | "caution";
-  const faqs = [
+  const rawFaqs = [
     {
       question: t("zone.faqQuestion", { zone: zoneName }),
       answer: t(`zone.faqAnswer_${riskKey}` as "zone.faqAnswer_do_not_fly", { zone: zoneName, details: riskDesc }),
@@ -147,6 +148,8 @@ export default async function ZonePage({
       answer: t("zone.faqCheckAnswer", { zone: zoneName }),
     },
   ];
+  const isMissingTranslation = (s: string) => /^safety\.zone\./.test(s);
+  const faqs = rawFaqs.filter((f) => !isMissingTranslation(f.question) && !isMissingTranslation(f.answer));
 
   const countryNames = zone.countries
     .map((c) => {

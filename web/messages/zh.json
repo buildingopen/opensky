@@ -778,6 +778,17 @@
       "faqAnswer_do_not_fly": "不安全。{zone}空域被列为禁飞区。{details} 航空公司会自动绕开该区域。",
       "faqAnswer_high_risk": "{zone}被列为高风险区域。{details} 大多数航空公司会避开该空域。",
       "faqAnswer_caution": "{zone}被列为注意区域。{details} 机场正常运营，但航班可能会在冲突地区附近改道。",
+      "faqAirlinesQuestion": "航空公司会飞越{zone}吗？",
+      "faqAirlinesAnswer_do_not_fly": "不会。航空公司不会飞越{zone}。该空域已关闭或受到限制，所有商业航班都会改道。FlyFast会自动移除穿越{zone}空域的航线。",
+      "faqAirlinesAnswer_high_risk": "由于活跃的安全威胁，大多数航空公司避免飞越{zone}。部分航空公司可能仍会在附近空域过境。FlyFast会标记这些航线，以便您选择更安全的替代方案。",
+      "faqAirlinesAnswer_caution": "是的，航空公司仍然飞越{zone}。该区域有建议级别的关注，机场正常运营。冲突地区附近的部分航班可能会改道。FlyFast会为这些航班标注注意徽章。",
+      "faqRouteQuestion": "如果我的航线经过{zone}上空会怎样？",
+      "faqRouteAnswer_do_not_fly": "您的航班不会经过{zone}上空。航空公司被禁止进入该空域并会自动改道。这可能会增加飞行时间和费用。FlyFast会过滤掉穿越{zone}的航线。",
+      "faqRouteAnswer_high_risk": "如果航线经过{zone}附近，航空公司通常会改道以避开高风险空域。这可能会延长飞行时间。FlyFast会从搜索结果中移除高风险航线，并为附近航线标注注意提示。",
+      "faqRouteAnswer_caution": "经过{zone}上空的航班可能会正常运营，但航空公司会监控情况，如条件发生变化则改道。FlyFast会在受影响的航班上显示注意徽章，帮助您做出明智的决定。",
+      "faqCheckQuestion": "如何检查我的航班是否避开了{zone}？",
+      "faqCheckAnswer": "使用FlyFast搜索您的航线。FlyFast会根据冲突区域数据（包括{zone}）检查每个航班，并过滤或标记受影响的航线。安全航线默认显示，靠近风险区域的航班会被清楚标注。",
+      "commonQuestions": "常见问题",
       "routesNearZone": "经过此区域附近的航线"
     },
     "alerts": {

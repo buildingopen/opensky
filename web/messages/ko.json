@@ -778,6 +778,17 @@
       "faqAnswer_do_not_fly": "아니요. {zone} 영공은 비행 금지로 분류됩니다. {details} 항공사들은 이 구역을 자동으로 우회합니다.",
       "faqAnswer_high_risk": "{zone}은(는) 고위험으로 분류됩니다. {details} 대부분의 항공사가 이 영공을 피합니다.",
       "faqAnswer_caution": "{zone}은(는) 주의로 분류됩니다. {details} 공항은 정상 운영되지만, 분쟁 지역 근처에서 항공편이 우회될 수 있습니다.",
+      "faqAirlinesQuestion": "항공사들이 {zone} 상공을 비행하나요?",
+      "faqAirlinesAnswer_do_not_fly": "아니요. 항공사들은 {zone} 상공을 비행하지 않습니다. 영공이 폐쇄되거나 제한되어 있으며 모든 상업 항공편이 우회됩니다. FlyFast는 {zone} 영공을 통과하는 노선을 자동으로 제거합니다.",
+      "faqAirlinesAnswer_high_risk": "대부분의 항공사는 활성 보안 위협으로 인해 {zone} 상공 비행을 피합니다. 일부 항공사는 여전히 인근 영공을 통과할 수 있습니다. FlyFast는 이러한 노선을 표시하여 더 안전한 대안을 선택할 수 있도록 합니다.",
+      "faqAirlinesAnswer_caution": "네, 항공사들은 여전히 {zone} 상공을 비행합니다. 이 지역에는 주의 수준의 우려가 있으며 공항은 정상 운영됩니다. 분쟁 지역 근처의 일부 비행은 우회될 수 있습니다. FlyFast는 이러한 항공편에 주의 배지를 표시합니다.",
+      "faqRouteQuestion": "내 비행 경로가 {zone} 상공을 통과하면 어떻게 되나요?",
+      "faqRouteAnswer_do_not_fly": "귀하의 항공편은 {zone} 상공을 통과하지 않습니다. 항공사는 이 영공에 진입할 수 없으며 자동으로 우회합니다. 이로 인해 비행 시간과 비용이 증가할 수 있습니다. FlyFast는 {zone}을 횡단하는 노선을 필터링합니다.",
+      "faqRouteAnswer_high_risk": "비행 경로가 {zone} 근처를 통과하는 경우, 항공사들은 일반적으로 고위험 영공을 피하기 위해 우회합니다. 이로 인해 비행 시간이 늘어날 수 있습니다. FlyFast는 고위험 노선을 검색 결과에서 제거하고 인근 노선에 주의 표시를 합니다.",
+      "faqRouteAnswer_caution": "{zone} 상공을 통과하는 항공편은 정상적으로 운항될 수 있지만, 항공사들은 상황을 모니터링하고 조건이 변경되면 우회합니다. FlyFast는 영향받는 항공편에 주의 배지를 표시하여 정보에 입각한 결정을 내릴 수 있도록 합니다.",
+      "faqCheckQuestion": "내 항공편이 {zone}을 피하는지 어떻게 확인할 수 있나요?",
+      "faqCheckAnswer": "FlyFast를 사용하여 노선을 검색하세요. FlyFast는 {zone}을 포함한 분쟁 지역 데이터에 대해 모든 항공편을 확인하고 영향받는 노선을 필터링하거나 표시합니다. 안전한 노선이 기본적으로 표시되며 위험 지역 인근 항공편은 명확하게 라벨링됩니다.",
+      "commonQuestions": "자주 묻는 질문",
       "routesNearZone": "이 지역 인근 노선"
     },
     "alerts": {

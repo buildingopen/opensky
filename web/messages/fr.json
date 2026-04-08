@@ -778,6 +778,17 @@
       "faqAnswer_do_not_fly": "Non. L'espace aérien de {zone} est classé comme Interdit de Vol. {details} Les compagnies aériennes déroutent automatiquement les vols autour de cette zone.",
       "faqAnswer_high_risk": "{zone} est classé comme Haut Risque. {details} La plupart des compagnies aériennes évitent cet espace aérien.",
       "faqAnswer_caution": "{zone} est classé comme Prudence. {details} Les aéroports fonctionnent normalement, mais les vols peuvent être déroutés près des zones de conflit.",
+      "faqAirlinesQuestion": "Les compagnies aériennes survolent-elles {zone} ?",
+      "faqAirlinesAnswer_do_not_fly": "Non. Les compagnies aériennes ne survolent pas {zone}. L'espace aérien est fermé ou restreint et tous les vols commerciaux sont déroutés. FlyFast supprime automatiquement les routes qui traverseraient l'espace aérien de {zone}.",
+      "faqAirlinesAnswer_high_risk": "La plupart des compagnies aériennes évitent de survoler {zone} en raison de menaces sécuritaires actives. Certains transporteurs peuvent encore transiter à proximité. FlyFast signale ces routes pour vous permettre de choisir des alternatives plus sûres.",
+      "faqAirlinesAnswer_caution": "Oui, les compagnies aériennes survolent encore {zone}. La zone fait l'objet d'un avis de prudence, les aéroports fonctionnent normalement. Certains survols près des zones de conflit peuvent être déroutés. FlyFast marque ces vols avec un badge Prudence.",
+      "faqRouteQuestion": "Que se passe-t-il si ma route de vol passe au-dessus de {zone} ?",
+      "faqRouteAnswer_do_not_fly": "Votre vol ne passera pas au-dessus de {zone}. Les compagnies aériennes n'ont pas le droit d'entrer dans cet espace aérien et déroutent automatiquement. Cela peut allonger la durée et le coût du vol. FlyFast filtre les routes qui traverseraient {zone}.",
+      "faqRouteAnswer_high_risk": "Si une route de vol passe près de {zone}, les compagnies déroutent généralement pour éviter l'espace aérien à haut risque. Cela peut augmenter la durée du vol. FlyFast supprime les routes à haut risque et signale les routes proches avec un avis de prudence.",
+      "faqRouteAnswer_caution": "Les vols passant au-dessus de {zone} peuvent se dérouler normalement, bien que les compagnies surveillent la situation et déroutent si nécessaire. FlyFast affiche un badge Prudence sur les vols concernés pour vous aider à décider.",
+      "faqCheckQuestion": "Comment vérifier si mon vol évite {zone} ?",
+      "faqCheckAnswer": "Utilisez FlyFast pour rechercher votre route. FlyFast vérifie chaque vol par rapport aux données des zones de conflit, y compris {zone}, et filtre ou signale les routes concernées. Les routes sûres sont affichées par défaut et les vols proches des zones à risque sont clairement indiqués.",
+      "commonQuestions": "Questions fréquentes",
       "routesNearZone": "Routes proches de cette zone"
     },
     "alerts": {

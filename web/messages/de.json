@@ -778,6 +778,17 @@
       "faqAnswer_do_not_fly": "Nein. Der Luftraum über {zone} ist als Flugverbot eingestuft. {details} Fluggesellschaften leiten Flüge automatisch um diese Zone um.",
       "faqAnswer_high_risk": "{zone} ist als Hochrisikogebiet eingestuft. {details} Die meisten Fluggesellschaften meiden diesen Luftraum.",
       "faqAnswer_caution": "{zone} ist als Vorsichtsgebiet eingestuft. {details} Flughäfen operieren normal, aber Flüge können in der Nähe von Konfliktzonen umgeleitet werden.",
+      "faqAirlinesQuestion": "Fliegen Airlines über {zone}?",
+      "faqAirlinesAnswer_do_not_fly": "Nein. Airlines fliegen nicht über {zone}. Der Luftraum ist gesperrt oder eingeschränkt und alle kommerziellen Flüge werden umgeleitet. FlyFast entfernt automatisch Routen, die den Luftraum von {zone} durchqueren würden.",
+      "faqAirlinesAnswer_high_risk": "Die meisten Airlines meiden den Luftraum über {zone} wegen aktiver Sicherheitsbedrohungen. Einige Fluggesellschaften könnten noch in der Nähe des Luftraums fliegen. FlyFast markiert diese Routen, damit du sicherere Alternativen wählen kannst.",
+      "faqAirlinesAnswer_caution": "Ja, Airlines fliegen weiterhin über {zone}. Für die Zone gilt eine Vorsichtswarnung, Flughäfen operieren normal. Einige Überflüge in der Nähe von Konfliktzonen können umgeleitet werden. FlyFast markiert diese Flüge mit einem Vorsichts-Badge.",
+      "faqRouteQuestion": "Was passiert, wenn meine Flugroute über {zone} führt?",
+      "faqRouteAnswer_do_not_fly": "Dein Flug wird nicht über {zone} führen. Airlines dürfen diesen Luftraum nicht betreten und leiten automatisch um. Das kann Flugzeit und Kosten erhöhen. FlyFast filtert Routen heraus, die {zone} durchqueren würden.",
+      "faqRouteAnswer_high_risk": "Wenn eine Flugroute nahe an {zone} vorbeiführt, leiten Airlines in der Regel um, um den Hochrisiko-Luftraum zu meiden. Das kann die Flugdauer verlängern. FlyFast entfernt Hochrisiko-Routen aus den Ergebnissen und markiert nahegelegene Routen mit einem Vorsichtshinweis.",
+      "faqRouteAnswer_caution": "Flüge über {zone} können normal stattfinden, obwohl Airlines die Lage beobachten und bei Bedarf umleiten. FlyFast zeigt ein Vorsichts-Badge auf betroffenen Flügen an, damit du eine informierte Entscheidung treffen kannst.",
+      "faqCheckQuestion": "Wie kann ich prüfen, ob mein Flug {zone} meidet?",
+      "faqCheckAnswer": "Nutze FlyFast, um deine Route zu suchen. FlyFast prüft jeden Flug anhand der Konfliktzonendaten, einschließlich {zone}, und filtert oder markiert betroffene Routen. Sichere Routen werden standardmäßig angezeigt und Flüge in der Nähe von Gefahrenzonen sind klar gekennzeichnet.",
+      "commonQuestions": "Häufige Fragen",
       "routesNearZone": "Routen in der Nähe dieser Zone"
     },
     "alerts": {
