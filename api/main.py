@@ -561,6 +561,7 @@ Rules:
 - For relative dates like "next week" or "tomorrow", calculate from today ({today}).
 - "next [weekday]": count forward day by day from today until you reach that weekday. Example: today=Saturday 2026-03-14, "next Friday" → count 1(Sun Mar15), 2(Mon), 3(Tue), 4(Wed), 5(Thu), 6(Fri Mar20) → return 2026-03-20. NEVER jump to the following week's occurrence.
 - "this weekend": if today IS Saturday → return today + tomorrow (Sunday). If today IS Sunday → return today only. If today is Mon–Fri → return the nearest upcoming Saturday + Sunday.
+- EVENT ARRIVAL DATE: If the user says "event/party/wedding/conference/meeting/funeral/ceremony is on [date]", "need to arrive by [date]", "arriving for [date]", or "need to be there on [date]" — set dates to the DAY BEFORE the event. The user needs to travel to get there, not depart on the event day. Example: "party is on April 25" → dates=["2026-04-24"]. If they say "arriving the day before" or "flying in early" use the stated date directly.
 - If no dates specified, use next 7 days from today.
 - return_dates: DEFAULTS TO EMPTY []. Most queries are ONE-WAY.
   - ONLY set return_dates to non-empty if the user EXPLICITLY uses a round-trip keyword:
