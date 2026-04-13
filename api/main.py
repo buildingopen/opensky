@@ -572,21 +572,27 @@ Rules:
     Portuguese: "ida e volta"
     Turkish: "gidiş dönüş"
     Japanese: "往復" | Korean: "왕복" | Chinese: "往返" | Arabic: "ذهاب وعودة" | Hindi: "राउंड ट्रिप"
-  - Also set if the query implies needing to come back (e.g., "I need to be back by...", "flying home on...")
+  - Also set if the query implies needing to come back (e.g., "I need to be back by...", "flying home on...", "stay a few more days", "stay a bit longer", "spend a few more days", "few extra days", "a couple more days", "extra days")
   - CRITICAL: If NONE of these keywords appear, return_dates MUST be []. Do NOT assume round trip.
   - PRIORITY: If a round-trip keyword IS present, you MUST include return_dates even if it means fewer destinations or dates. Never drop return_dates to stay under the combo limit; reduce destinations/dates instead.
   - "Berlin to Rome, July, under 100" -> return_dates=[] (NO round trip keyword = one-way)
   - "cheapest flight to Bangkok" -> return_dates=[] (one-way)
   - "JFK to London April 10 returning April 17" -> return_dates=["2026-04-17"] (has "returning")
   - "round trip March 10-12 returning March 20-22" -> return_dates=["2026-03-20","2026-03-21","2026-03-22"]
-  - If user indicates round trip but no specific return date, set return_dates to 7 days after each outbound date.
+  - If user indicates round trip but no specific return date (including "stay a few more days", "stay a bit longer", "spend a few more days"), set return_dates to 7 days after each outbound date.
+  - "fly to Autlán April 25, stay a few more days" -> return_dates=["2026-05-02"] (open return, +7 days)
 - max_price 0 means no limit.
+- If the user says "on a budget", "budget trip", "cheap", "cheapest", "affordable", "save money", "tight budget" WITHOUT specifying a number, set max_price based on route type: intra-continental → 300 (EUR/USD), intercontinental → 700 (EUR/USD). Use USD if origins/destinations suggest North America, EUR otherwise.
 - cabin: economy | premium_economy | business | first
 - stops: any | non_stop | one_stop_or_fewer | two_or_fewer_stops
 - If currency is mentioned ($ or USD), use "USD". Default is "EUR".
 - If the user says "direct" or "nonstop", set stops to "non_stop".
 - Always return valid IATA airport codes (3-letter), NOT city codes. For cities with multiple airports, use the main one (e.g. London=LHR, New York=JFK, Paris=CDG, Tokyo=NRT, Moscow=SVO, Milan=MXP, Chicago=ORD, Washington=IAD, Stockholm=ARN, Sao Paulo=GRU).
 - Never return city codes like LON, NYC, PAR, TYO, MOW, MIL, CHI, WAS, STO, SAO. Always use specific airport codes.
+CITIES WITHOUT DIRECT AIRPORTS:
+- If a destination city has no commercial airport, automatically use the nearest major airport within ~200km. Prefer the one with the most international connections.
+- NEVER return a non-existent or made-up IATA code. If unsure, use the nearest hub city.
+- Examples: Autlán (Jalisco, Mexico)→GDL (Guadalajara, 100km) | Tulum (Mexico)→CUN (Cancún, 130km) | Lake Tahoe (CA)→RNO (Reno, 65km) | Aspen (CO)→ASE | Sedona (AZ)→FLG (Flagstaff, 65km) | Queenstown (NZ)→ZQN | Amalfi Coast (Italy)→NAP (Naples) | Santorini→JTR | Mykonos→JMK | Tuscany→FLR (Florence) | Napa Valley→SFO | Hamptons→JFK | Maldives→MLE | Seychelles→SEZ | Bora Bora→BOB
 NEARBY AIRPORTS & GENEROUS EXPANSION:
 - When the user says "or nearby", "any airport around", "reachable by train", "flexible on airport", or similar: be GENEROUS. Include all major airports within ~3h by train/car. Hidden gems come from unexpected departure airports.
   - "Hamburg or nearby" → HAM, BRE, HAJ, BER, LBC (Berlin is 1.5h by ICE, a major hub, don't miss it!)
