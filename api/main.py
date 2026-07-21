@@ -156,6 +156,114 @@ def _mark_gemini_key_dead(key: str) -> str | None:
     return nxt if nxt else None
 
 
+# ---------------------------------------------------------------------------
+# Vertex AI (keyless via Workload Identity Federation) - preferred Gemini path.
+# Routes generateContent through Vertex using ADC/WIF (AWS creds -> impersonate
+# the GCP service account) instead of a capped AI-Studio API key. The AI-Studio
+# key path is kept as a dormant fallback, toggled off by GEMINI_USE_VERTEX=true.
+# ---------------------------------------------------------------------------
+GEMINI_USE_VERTEX = os.environ.get("GEMINI_USE_VERTEX", "true").lower() in ("1", "true", "yes")
+GEMINI_VERTEX_PROJECT = os.environ.get("GEMINI_VERTEX_PROJECT", "still-kit-499223-r8")
+GEMINI_VERTEX_LOCATION = os.environ.get("GEMINI_VERTEX_LOCATION", "us-central1")
+GEMINI_VERTEX_MODEL = os.environ.get("GEMINI_VERTEX_MODEL", "gemini-2.5-flash-lite")
+GEMINI_VERTEX_FALLBACK_MODEL = os.environ.get("GEMINI_VERTEX_FALLBACK_MODEL", "gemini-2.5-flash")
+_VERTEX_BASE = (
+    f"https://{GEMINI_VERTEX_LOCATION}-aiplatform.googleapis.com/v1/"
+    f"projects/{GEMINI_VERTEX_PROJECT}/locations/{GEMINI_VERTEX_LOCATION}/publishers/google/models"
+)
+GEMINI_VERTEX_URL = f"{_VERTEX_BASE}/{GEMINI_VERTEX_MODEL}:generateContent"
+GEMINI_VERTEX_FALLBACK_URL = f"{_VERTEX_BASE}/{GEMINI_VERTEX_FALLBACK_MODEL}:generateContent"
+
+_vertex_token: dict[str, object] = {"token": "", "exp": 0.0}
+_vertex_token_lock = asyncio.Lock()
+_VERTEX_TOKEN_SAFETY_SECONDS = 300  # refresh 5 min before reported expiry
+_VERTEX_TOKEN_FALLBACK_TTL = 1800   # used only if google-auth reports no expiry
+
+
+def _mint_vertex_token_sync() -> tuple[str, float]:
+    """Mint a Vertex access token via ADC/WIF (blocking; runs in a worker thread)."""
+    import google.auth
+    from google.auth.transport.requests import Request as GoogleAuthRequest
+
+    creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+    creds.refresh(GoogleAuthRequest())
+    token = creds.token or ""
+    expiry = getattr(creds, "expiry", None)
+    if expiry is not None:
+        # google-auth stores naive UTC datetimes; pin to UTC before comparing.
+        exp_ts = expiry.replace(tzinfo=timezone.utc).timestamp()
+    else:
+        exp_ts = time.time() + _VERTEX_TOKEN_FALLBACK_TTL
+    return token, exp_ts
+
+
+async def _get_vertex_token(force: bool = False) -> str:
+    """Return a cached Vertex bearer token, minting/refreshing under a lock."""
+    now = time.time()
+    if not force and _vertex_token["token"] and float(_vertex_token["exp"]) - _VERTEX_TOKEN_SAFETY_SECONDS > now:
+        return str(_vertex_token["token"])
+    async with _vertex_token_lock:
+        now = time.time()
+        if not force and _vertex_token["token"] and float(_vertex_token["exp"]) - _VERTEX_TOKEN_SAFETY_SECONDS > now:
+            return str(_vertex_token["token"])
+        token, exp_ts = await asyncio.to_thread(_mint_vertex_token_sync)
+        if not token:
+            raise RuntimeError("Vertex ADC returned no access token")
+        _vertex_token["token"] = token
+        _vertex_token["exp"] = exp_ts
+        return token
+
+
+def _gemini_available() -> bool:
+    """True if any Gemini path is configured: Vertex (keyless) or a live AI-Studio key.
+
+    This is a cheap config-level check used on hot request paths. Startup and
+    readiness use _gemini_reachable() below to actually verify Vertex auth works.
+    """
+    return GEMINI_USE_VERTEX or bool(_get_gemini_key())
+
+
+async def _gemini_reachable() -> bool:
+    """Actually verify a usable Gemini path: mint a Vertex token (cached) or hold a key.
+
+    Unlike _gemini_available(), this proves the Vertex WIF chain (cred file + AWS
+    creds -> impersonated token) really works, so startup/readiness never advertise
+    healthy on a misconfigured deploy.
+    """
+    if GEMINI_USE_VERTEX:
+        try:
+            return bool(await _get_vertex_token())
+        except Exception as exc:
+            log.warning("Vertex token mint failed: %s: %s", type(exc).__name__, exc)
+            return False
+    return bool(_get_gemini_key())
+
+
+async def _gemini_request(
+    client: httpx.AsyncClient,
+    payload: dict,
+    *,
+    fallback_model: bool = False,
+    api_key: str = "",
+) -> httpx.Response:
+    """POST a generateContent payload to Vertex (keyless) or AI-Studio (key path).
+
+    Vertex REST requires role:"user" in contents (callers set it). On a Vertex
+    auth failure (401/403) the cached token is force-refreshed once and retried.
+    Non-auth status handling (429/5xx retries) stays in the callers.
+    """
+    if GEMINI_USE_VERTEX:
+        url = GEMINI_VERTEX_FALLBACK_URL if fallback_model else GEMINI_VERTEX_URL
+        token = await _get_vertex_token()
+        resp = await client.post(url, headers={"Authorization": f"Bearer {token}"}, json=payload)
+        if resp.status_code in (401, 403):
+            token = await _get_vertex_token(force=True)
+            resp = await client.post(url, headers={"Authorization": f"Bearer {token}"}, json=payload)
+        return resp
+    url = GEMINI_FALLBACK_URL if fallback_model else GEMINI_URL
+    return await client.post(url, params={"key": api_key}, json=payload)
+
+
 # PostHog server-side analytics (optional)
 POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY", "")
 
@@ -680,7 +788,7 @@ async def parse_prompt(prompt: str) -> dict:
     """Use Gemini Flash to parse a natural language flight search prompt."""
     prompt = prompt[:500]
     api_key = _get_gemini_key()
-    if not api_key:
+    if not _gemini_available():
         raise HTTPException(status_code=503, detail="Search parser is not configured.")
 
     today = date.today().isoformat()
@@ -689,11 +797,10 @@ async def parse_prompt(prompt: str) -> dict:
     for attempt in range(GEMINI_MAX_RETRIES + 1):
         try:
             async with httpx.AsyncClient(timeout=GEMINI_TIMEOUT_SECONDS) as client:
-                resp = await client.post(
-                    GEMINI_URL,
-                    params={"key": api_key},
-                    json={
-                        "contents": [{"parts": [{"text": prompt}]}],
+                resp = await _gemini_request(
+                    client,
+                    {
+                        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
                         "systemInstruction": {"parts": [{"text": system}]},
                         "generationConfig": {
                             "temperature": 0,
@@ -701,6 +808,7 @@ async def parse_prompt(prompt: str) -> dict:
                             "responseSchema": PARSE_RESPONSE_SCHEMA,
                         },
                     },
+                    api_key=api_key,
                 )
         except httpx.RequestError as exc:
             log.warning("Gemini request failed (attempt %s): %s: %s", attempt + 1, type(exc).__name__, exc)
@@ -875,7 +983,7 @@ def _trim_to_limit(parsed: dict, return_dates: list, is_round_trip: bool, limit:
 async def suggest_narrowing(prompt: str, parsed: dict, combined_total: int) -> list[str]:
     """Ask Gemini to suggest 3 narrowed alternatives when a search is too broad."""
     api_key = _get_gemini_key()
-    if not api_key:
+    if not _gemini_available():
         return []
     context = (
         f"Original prompt: {prompt}\n"
@@ -887,14 +995,14 @@ async def suggest_narrowing(prompt: str, parsed: dict, combined_total: int) -> l
     )
     try:
         async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.post(
-                GEMINI_URL,
-                params={"key": api_key},
-                json={
-                    "contents": [{"parts": [{"text": context}]}],
+            resp = await _gemini_request(
+                client,
+                {
+                    "contents": [{"role": "user", "parts": [{"text": context}]}],
                     "systemInstruction": {"parts": [{"text": SUGGEST_SYSTEM}]},
                     "generationConfig": {"temperature": 0.3, "responseMimeType": "application/json"},
                 },
+                api_key=api_key,
             )
         if resp.status_code == 200:
             text = _extract_gemini_text(resp.json())
@@ -914,8 +1022,11 @@ async def lifespan(app: FastAPI):
     global redis_client
     global _zones_loaded
 
-    if REQUIRE_GEMINI_KEY and not _get_gemini_key():
-        raise RuntimeError("GEMINI_API_KEY is required for startup.")
+    if REQUIRE_GEMINI_KEY and not await _gemini_reachable():
+        raise RuntimeError(
+            "No usable Gemini path at startup: Vertex token mint failed "
+            "(check GOOGLE_APPLICATION_CREDENTIALS + AWS creds) and no live GEMINI_API_KEY."
+        )
 
     _init_alerts_db()
 
@@ -2144,7 +2255,7 @@ class ExpandRequest(BaseModel):
 async def _expand_params(original: ExpandOriginal, prompt: str) -> dict:
     """Use Gemini to decide how to expand the search."""
     api_key = _get_gemini_key()
-    if not api_key:
+    if not _gemini_available():
         raise HTTPException(status_code=503, detail="Search parser is not configured.")
 
     today = date.today().isoformat()
@@ -2157,14 +2268,12 @@ async def _expand_params(original: ExpandOriginal, prompt: str) -> dict:
 
     for attempt in range(GEMINI_MAX_RETRIES + 1):
         # Use fallback model on retries (primary may be overloaded)
-        url = GEMINI_URL if attempt == 0 else GEMINI_FALLBACK_URL
         try:
             async with httpx.AsyncClient(timeout=EXPAND_TIMEOUT_SECONDS) as client:
-                resp = await client.post(
-                    url,
-                    params={"key": api_key},
-                    json={
-                        "contents": [{"parts": [{"text": user_msg}]}],
+                resp = await _gemini_request(
+                    client,
+                    {
+                        "contents": [{"role": "user", "parts": [{"text": user_msg}]}],
                         "systemInstruction": {"parts": [{"text": system}]},
                         "generationConfig": {
                             "temperature": 0,
@@ -2172,6 +2281,8 @@ async def _expand_params(original: ExpandOriginal, prompt: str) -> dict:
                             "responseSchema": EXPAND_RESPONSE_SCHEMA,
                         },
                     },
+                    fallback_model=(attempt > 0),
+                    api_key=api_key,
                 )
             if resp.status_code != 200:
                 log.error("Expand Gemini HTTP %d (model=%s): %s", resp.status_code, "primary" if attempt == 0 else "fallback", _redact_key(resp.text[:200], api_key))
@@ -2474,12 +2585,13 @@ async def readyz():
             redis_connected = bool(await redis_client.ping())
         except RedisError:
             redis_connected = False
-    ready = _zones_loaded and (_get_gemini_key() or not REQUIRE_GEMINI_KEY)
+    gemini_ok = await _gemini_reachable()
+    ready = _zones_loaded and (gemini_ok or not REQUIRE_GEMINI_KEY)
     if REDIS_URL:
         ready = ready and (redis_connected or not redis_required)
     checks = {
         "zones_loaded": _zones_loaded,
-        "gemini_configured": bool(_get_gemini_key() or not REQUIRE_GEMINI_KEY),
+        "gemini_configured": bool(gemini_ok or not REQUIRE_GEMINI_KEY),
         "redis_required": redis_required,
         "redis_connected": redis_connected,
     }
